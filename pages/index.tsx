@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { GetServerSidePropsContext } from 'next';
 
 export const getServerSideProps = async (context: GetServerSidePropsContext) => {
-  const auth = await google.auth.getClient({ scopes: ['https://www.googleapis.com/auth/spreadsheets'] });
+  const auth = await google.auth.getClient({ credentials: JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS!), scopes: ['https://www.googleapis.com/auth/spreadsheets'] });
   const sheets = google.sheets({ version: 'v4', auth });
   
   const resDataFilter = await sheets.spreadsheets.values.batchGetByDataFilter({
