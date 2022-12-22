@@ -215,7 +215,7 @@ export default function Home({ res, resBatch }: {res: Array<TitleItem>, resBatch
       }
     }
 
-    return <form onSubmit={handleSubmit}><input autoFocus type='text' value={ogvalue} className='input-text text-center w-4/5'></input></form>
+    return <form onSubmit={handleSubmit}><input autoFocus type='text' defaultValue={ogvalue} className='input-text text-center w-4/5'></input></form>
   }
 
   return (
@@ -228,7 +228,7 @@ export default function Home({ res, resBatch }: {res: Array<TitleItem>, resBatch
       </Head>
 
       <main className='flex flex-col items-center justify-center'>
-        <h2 className='p-2 text-3xl'>Completed</h2>
+        <h2 className='p-2 text-3xl'>Completed{sortMethod ? <span onClick={() => {setResponse(res); setSortMethod('')}} className='cursor-pointer'> ↻</span> : null}</h2>
         <table>
           <tbody>
             <tr>
