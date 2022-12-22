@@ -4,7 +4,6 @@
 
 @layer components {
   .input-text {
-    font-size: theme('fontSize.xl');
     width: theme('width.full');
     border: theme('borderWidth.0');
     border-bottom: theme('borderWidth.2');
@@ -13,7 +12,7 @@
     outline: theme('outlineWidth.0');
     color: theme('colors.white');
     background-color: theme('colors.transparent');
-    transition: theme('transitionDuration.500');
+    transition: theme('transitionDuration.100');
   }
 
   .input-text:focus {
@@ -113,13 +112,16 @@ table, th, td {
   text-align: center;
 }
 
+th {
+  background: rgb(13, 130, 207);
+}
+
 td:not(:has(th)) {
   border: none;
 }
 
 tr:not(:first-child):hover {
   background-color: #3f3f3f;
-  cursor: pointer;
 }
 
 th, td {

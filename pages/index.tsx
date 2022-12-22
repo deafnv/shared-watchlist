@@ -1,6 +1,7 @@
 import Head from 'next/head'
+import axios from 'axios'
 import { google } from 'googleapis'
-import { useEffect, useState } from 'react'
+import { BaseSyntheticEvent, useEffect, useState } from 'react'
 import { GetServerSidePropsContext } from 'next';
 
 interface Rating {
@@ -14,6 +15,7 @@ interface WatchDates {
 }
 
 interface TitleItem {
+  id: number,
   title: string | undefined,
   type: string | undefined,
   episode: string | undefined,
@@ -38,7 +40,7 @@ export const getStaticProps = async (context: GetServerSidePropsContext) => {
   });
 
   const lenOfAvailableTitles = resDataFilter.data.valueRanges?.[0].valueRange?.values?.length;
-  const range = `Sheet1!B2:J${lenOfAvailableTitles}`;
+  const range = `Sheet1!A2:J${lenOfAvailableTitles}`;
   
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId: process.env.SHEET_ID,
@@ -52,30 +54,31 @@ export const getStaticProps = async (context: GetServerSidePropsContext) => {
     let [title, type, episode, rating1, rating2, rating3, start, end, notes] = item;
     fixed = [title, type, episode, rating1, rating2, rating3, start, end, notes];
     return {
-      title: fixed[0] ? fixed[0] : '',
-      type: fixed[1] ? fixed[1] : '',
-      episode: fixed[2] ? fixed[2] : '',
+      id: fixed[0] ? parseInt(fixed[0]) : -1,
+      title: fixed[1] ? fixed[1] : '',
+      type: fixed[2] ? fixed[2] : '',
+      episode: fixed[3] ? fixed[3] : '',
       rating1: {
-        actual: fixed[3] ? fixed[3] : '',
-        average: fixed[3] ? getAverage(fixed[3]) : ''
+        actual: fixed[4] ? fixed[4] : '',
+        average: fixed[4] ? getAverage(fixed[4]) : ''
       },
       rating2: {
-        actual: fixed[4] ? fixed[4] : '',
-        average: fixed[3] ? getAverage(fixed[4]) : ''
-      },
-      rating3: {
         actual: fixed[5] ? fixed[5] : '',
         average: fixed[5] ? getAverage(fixed[5]) : ''
       },
-      start: {
-        original: fixed[6] ? fixed[6] : '',
-        converted: fixed[6] ? new Date(fixed[6]).getTime() : 0
+      rating3: {
+        actual: fixed[6] ? fixed[6] : '',
+        average: fixed[6] ? getAverage(fixed[6]) : ''
       },
-      end: {
+      start: {
         original: fixed[7] ? fixed[7] : '',
         converted: fixed[7] ? new Date(fixed[7]).getTime() : 0
       },
-      notes: fixed[8] ? fixed[8] : ''
+      end: {
+        original: fixed[8] ? fixed[8] : '',
+        converted: fixed[8] ? new Date(fixed[8]).getTime() : 0
+      },
+      notes: fixed[9] ? fixed[9] : ''
     }
   });
 
@@ -101,6 +104,14 @@ export const getStaticProps = async (context: GetServerSidePropsContext) => {
 export default function Home({ res, resBatch }: {res: Array<TitleItem>, resBatch: string[]}) {
   const [response, setResponse] = useState<Array<TitleItem>>(res);
   const [sortMethod, setSortMethod] = useState<string>('');
+  const [isEdited, setIsEdited] = useState<any>(null);
+
+  useEffect(() => {
+    document.addEventListener('click', (e: any) => {
+      if (e.target?.tagName === 'INPUT') return;
+      setIsEdited(null);
+    })
+  },[])
 
   const sortListByName = (name: string) => {
     if (sortMethod === `titleasc_${name}`) {
@@ -153,38 +164,91 @@ export default function Home({ res, resBatch }: {res: Array<TitleItem>, resBatch
       return '';
     }
   }
+  
+  function editForm(field: string, id: number, ogvalue: string): React.ReactNode {
+    let column: string;
+    let row = (id + 1).toString();
+    switch (field) {
+      case 'title':
+        column = 'B';
+        break;
+      case 'type':
+        column = 'C';
+        break;
+      case 'episode':
+        column = 'D';
+        break;
+      case 'rating1':
+        column = 'E';
+        break;
+      case 'rating2':
+        column = 'F';
+        break;
+      case 'start':
+        column = 'H';
+        break;
+      case 'end':
+        column = 'I';
+        break;
+      default:
+        alert('Error: missing field');
+        return;
+    }
+
+    async function handleSubmit(event: BaseSyntheticEvent): Promise<void> {
+      event.preventDefault();
+      
+      try {
+        await axios.post('/api/update', {
+          content: event.target[0].value,
+          cell: column + row
+        })
+
+        const changed = response.slice();
+        (changed.find(item => item.id === id) as any)[field] = event.target[0].value;
+        setResponse(changed);
+        setIsEdited(null);
+      } 
+      catch (error) {
+        alert(error);
+        return;
+      }
+    }
+
+    return <form onSubmit={handleSubmit}><input autoFocus type='text' value={ogvalue} className='input-text text-center w-4/5'></input></form>
+  }
 
   return (
     <>
       <Head>
         <title>Cytube Watchlist</title>
-        <meta name="description" content="Cytube Watchlist" />
+        <meta name="description" content="Completed" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
       <main className='flex flex-col items-center justify-center'>
-        <h2 className='p-2 text-3xl'>Watchlist</h2>
+        <h2 className='p-2 text-3xl'>Completed</h2>
         <table>
           <tbody>
             <tr>
               <th onClick={() => sortListByName('title')} className='cursor-pointer'><span>Title</span><span className='absolute'>{sortSymbol('title')}</span></th>
-              <th>Type</th>
-              <th>Episode(s)</th>
+              <th className='w-32'>Type</th>
+              <th className='w-36'>Episode(s)</th>
               <th onClick={() => sortListByRating('rating1')} className='w-32 cursor-pointer'><span>GoodTaste</span><span className='absolute'>{sortSymbol('rating1')}</span></th>
               <th onClick={() => sortListByRating('rating2')} className='w-32 cursor-pointer'><span>TomoLover</span><span className='absolute'>{sortSymbol('rating2')}</span></th>
-              <th onClick={() => sortListByDate('start')} className='cursor-pointer'><span>Start Date</span><span className='absolute'>{sortSymbol('start')}</span></th>
-              <th onClick={() => sortListByDate('end')} className='cursor-pointer'><span>End Date</span><span className='absolute'>{sortSymbol('end')}</span></th>
+              <th onClick={() => sortListByDate('start')} className='w-40 cursor-pointer'><span>Start Date</span><span className='absolute'>{sortSymbol('start')}</span></th>
+              <th onClick={() => sortListByDate('end')} className='w-40  cursor-pointer'><span>End Date</span><span className='absolute'>{sortSymbol('end')}</span></th>
             </tr> 
             {response.map(item => {
               return <tr key={item.title}>
-                <td>{item.title}</td>
-                <td>{item.type}</td>
-                <td>{item.episode}</td>
-                <td>{item.rating1.actual}</td>
-                <td>{item.rating2.actual}</td>
-                <td>{item.start.original}</td>
-                <td>{item.end.original}</td>
+                <td onDoubleClick={() => {setIsEdited(`title${item.id}`)}}>{isEdited == `title${item.id}` ? editForm('title', item.id, item.title!) : item.title}</td>
+                <td onDoubleClick={() => {setIsEdited(`type${item.id}`)}}>{isEdited == `type${item.id}` ? editForm('type', item.id, item.type!) : item.type}</td>
+                <td onDoubleClick={() => {setIsEdited(`episode${item.id}`)}}>{isEdited == `episode${item.id}` ? editForm('episode', item.id, item.episode!) : item.episode}</td>
+                <td onDoubleClick={() => {setIsEdited(`rating1${item.id}`)}}>{isEdited == `rating1${item.id}` ? editForm('rating1', item.id, item.rating1.actual!) : item.rating1.actual}</td>
+                <td onDoubleClick={() => {setIsEdited(`rating2${item.id}`)}}>{isEdited == `rating2${item.id}` ? editForm('rating2', item.id, item.rating2.actual!) : item.rating2.actual}</td>
+                <td onDoubleClick={() => {setIsEdited(`start${item.id}`)}}>{isEdited == `start${item.id}` ? editForm('start', item.id, item.start.original!) : item.start.original}</td>
+                <td onDoubleClick={() => {setIsEdited(`end${item.id}`)}}>{isEdited == `end${item.id}` ? editForm('end', item.id, item.end.original!) : item.end.original}</td>
               </tr>
             })}
           </tbody>
