@@ -8,6 +8,11 @@ interface Rating {
   average: number | undefined
 }
 
+interface WatchDates {
+  original: string | undefined,
+  converted: number | undefined
+}
+
 interface TitleItem {
   title: string | undefined,
   type: string | undefined,
@@ -15,8 +20,8 @@ interface TitleItem {
   rating1: Rating,
   rating2: Rating,
   rating3: Rating,
-  start: string | undefined,
-  end: string | undefined,
+  start: WatchDates,
+  end: WatchDates
 }
 
 export const getStaticProps = async (context: GetServerSidePropsContext) => {
@@ -24,7 +29,7 @@ export const getStaticProps = async (context: GetServerSidePropsContext) => {
   const sheets = google.sheets({ version: 'v4', auth });
   
   const resDataFilter = await sheets.spreadsheets.values.batchGetByDataFilter({
-    spreadsheetId: '105TaxFl8ICFYglf0dzOBbvg6Iw2IjTNjlEb1V2czqQc',
+    spreadsheetId: process.env.SHEET_ID,
     requestBody: {
       dataFilters: [{
         a1Range: 'A1:A999'
@@ -62,8 +67,14 @@ export const getStaticProps = async (context: GetServerSidePropsContext) => {
         actual: fixed[5] ? fixed[5] : '',
         average: fixed[5] ? getAverage(fixed[5]) : ''
       },
-      start: fixed[6] ? fixed[6] : '',
-      end: fixed[7] ? fixed[7] : '',
+      start: {
+        original: fixed[6] ? fixed[6] : '',
+        converted: fixed[6] ? new Date(fixed[6]).getTime() : 0
+      },
+      end: {
+        original: fixed[7] ? fixed[7] : '',
+        converted: fixed[7] ? new Date(fixed[7]).getTime() : 0
+      },
       notes: fixed[8] ? fixed[8] : ''
     }
   });
@@ -91,6 +102,16 @@ export default function Home({ res, resBatch }: {res: Array<TitleItem>, resBatch
   const [response, setResponse] = useState<Array<TitleItem>>(res);
   const [sortMethod, setSortMethod] = useState<string>('');
 
+  const sortListByName = (name: string) => {
+    if (sortMethod === `titleasc_${name}`) {
+      setSortMethod(`titledesc_${name}`)
+      setResponse(res.slice().sort((a, b) => b.title!.localeCompare(a.title!)));
+    } else {
+      setSortMethod(`titleasc_${name}`);
+      setResponse(res.slice().sort((a, b) => a.title!.localeCompare(b.title!)));
+    }
+  }
+
   const sortListByRating = (rating: string) => {
     if (sortMethod === `ratingasc_${rating}`) {
       setSortMethod(`ratingdesc_${rating}`)
@@ -111,9 +132,23 @@ export default function Home({ res, resBatch }: {res: Array<TitleItem>, resBatch
     }
   }
 
-  const sortSymbol = (rating: string) => {
-    if(sortMethod.includes(rating)) {
-      return sortMethod.includes(`desc_${rating}`) ? '▼' : '▲';
+  const sortListByDate = (date: string) => {
+    if (sortMethod === `dateasc_${date}`) {
+      setSortMethod(`datedesc_${date}`)
+      setResponse(res.slice().sort((a, b) => {
+        return (b as any)[date].converted! - (a as any)[date].converted!;
+      }));
+    } else {
+      setSortMethod(`dateasc_${date}`);
+      setResponse(res.slice().sort((a, b) => {
+        return (a as any)[date].converted! - (b as any)[date].converted!;
+      }));
+    }
+  }
+
+  const sortSymbol = (type: string) => {
+    if(sortMethod.includes(type)) {
+      return sortMethod.includes(`desc_${type}`) ? '▼' : '▲';
     } else {
       return '';
     }
@@ -133,14 +168,14 @@ export default function Home({ res, resBatch }: {res: Array<TitleItem>, resBatch
         <table>
           <tbody>
             <tr>
-              <th>Title</th>
+              <th onClick={() => sortListByName('title')} className='cursor-pointer'><span>Title</span><span className='absolute'>{sortSymbol('title')}</span></th>
               <th>Type</th>
               <th>Episode(s)</th>
               <th onClick={() => sortListByRating('rating1')} className='w-32 cursor-pointer'><span>GoodTaste</span><span className='absolute'>{sortSymbol('rating1')}</span></th>
               <th onClick={() => sortListByRating('rating2')} className='w-32 cursor-pointer'><span>TomoLover</span><span className='absolute'>{sortSymbol('rating2')}</span></th>
-              <th>Start Date</th>
-              <th>End Date</th>
-            </tr>
+              <th onClick={() => sortListByDate('start')} className='cursor-pointer'><span>Start Date</span><span className='absolute'>{sortSymbol('start')}</span></th>
+              <th onClick={() => sortListByDate('end')} className='cursor-pointer'><span>End Date</span><span className='absolute'>{sortSymbol('end')}</span></th>
+            </tr> 
             {response.map(item => {
               return <tr key={item.title}>
                 <td>{item.title}</td>
@@ -148,8 +183,8 @@ export default function Home({ res, resBatch }: {res: Array<TitleItem>, resBatch
                 <td>{item.episode}</td>
                 <td>{item.rating1.actual}</td>
                 <td>{item.rating2.actual}</td>
-                <td>{item.start}</td>
-                <td>{item.end}</td>
+                <td>{item.start.original}</td>
+                <td>{item.end.original}</td>
               </tr>
             })}
           </tbody>
