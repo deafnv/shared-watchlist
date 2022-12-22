@@ -5,7 +5,7 @@ import { GetServerSidePropsContext } from 'next';
 
 interface Rating {
   actual: string | undefined,
-  average: string | undefined
+  average: number | undefined
 }
 
 interface TitleItem {
@@ -16,7 +16,7 @@ interface TitleItem {
   rating2: Rating,
   rating3: Rating,
   start: string | undefined,
-  end: string | undefined
+  end: string | undefined,
 }
 
 export const getStaticProps = async (context: GetServerSidePropsContext) => {
@@ -70,11 +70,11 @@ export const getStaticProps = async (context: GetServerSidePropsContext) => {
 
   //! This will give errors for ratings with more than 2 number probably.
   function getAverage(param: string) {
-    const arr = param.match(/(\d\.\d)|(\d)/g);
+    const arr = param.match(/(\d\.\d)|(\d+)/g);
     if (arr?.length! > 1) {
-      return ((parseFloat(arr![0]) + parseFloat(arr![1])) / 2).toString();
+      return ((parseFloat(arr![0]) + parseFloat(arr![1])) / 2);
     } else {
-      return param;
+      return parseFloat(param);
     }
   }
 
@@ -88,6 +88,37 @@ export const getStaticProps = async (context: GetServerSidePropsContext) => {
 }
 
 export default function Home({ res, resBatch }: {res: Array<TitleItem>, resBatch: string[]}) {
+  const [response, setResponse] = useState<Array<TitleItem>>(res);
+  const [sortMethod, setSortMethod] = useState<string>('');
+
+  const sortListByRating = (rating: string) => {
+    if (sortMethod === `ratingasc_${rating}`) {
+      setSortMethod(`ratingdesc_${rating}`)
+      setResponse(res.slice().sort((a, b) => {
+        if ((b as any)[rating].average! == null) {
+          return -1;
+        }
+        return (b as any)[rating].average! - (a as any)[rating].average!;
+      }));
+    } else {
+      setSortMethod(`ratingasc_${rating}`);
+      setResponse(res.slice().sort((a, b) => {
+        if ((a as any)[rating].average! == null) {
+          return -1;
+        }
+        return (a as any)[rating].average! - (b as any)[rating].average!;
+      }));
+    }
+  }
+
+  const sortSymbol = (rating: string) => {
+    if(sortMethod.includes(rating)) {
+      return sortMethod.includes(`desc_${rating}`) ? '▼' : '▲';
+    } else {
+      return '';
+    }
+  }
+
   return (
     <>
       <Head>
@@ -105,18 +136,18 @@ export default function Home({ res, resBatch }: {res: Array<TitleItem>, resBatch
               <th>Title</th>
               <th>Type</th>
               <th>Episode(s)</th>
-              <th>GoodTaste</th>
-              <th>TomoLover</th>
+              <th onClick={() => sortListByRating('rating1')} className='w-32 cursor-pointer'><span>GoodTaste</span><span className='absolute'>{sortSymbol('rating1')}</span></th>
+              <th onClick={() => sortListByRating('rating2')} className='w-32 cursor-pointer'><span>TomoLover</span><span className='absolute'>{sortSymbol('rating2')}</span></th>
               <th>Start Date</th>
               <th>End Date</th>
             </tr>
-            {res.map(item => {
+            {response.map(item => {
               return <tr key={item.title}>
                 <td>{item.title}</td>
                 <td>{item.type}</td>
                 <td>{item.episode}</td>
-                <td>{`${item.rating1.actual} (${item.rating1.average})`}</td>
-                <td>{`${item.rating2.actual} (${item.rating2.average})`}</td>
+                <td>{item.rating1.actual}</td>
+                <td>{item.rating2.actual}</td>
                 <td>{item.start}</td>
                 <td>{item.end}</td>
               </tr>
