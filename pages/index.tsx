@@ -1,8 +1,9 @@
 import Head from 'next/head'
 import axios from 'axios'
 import { google } from 'googleapis'
-import { BaseSyntheticEvent, useEffect, useState } from 'react'
+import { BaseSyntheticEvent, useEffect, useRef, useState } from 'react'
 import { GetServerSidePropsContext } from 'next';
+import { file } from 'googleapis/build/src/apis/file';
 
 interface Rating {
   actual: string | undefined,
@@ -24,6 +25,18 @@ interface TitleItem {
   rating3: Rating,
   start: WatchDates,
   end: WatchDates
+}
+
+const initialTitleItem: TitleItem = {
+  id: 0,
+  title: undefined,
+  type: undefined,
+  episode: undefined,
+  rating1: {actual: undefined, average: undefined},
+  rating2: {actual: undefined, average: undefined},
+  rating3: {actual: undefined, average: undefined},
+  start: {original: undefined, converted: undefined},
+  end: {original: undefined, converted: undefined}
 }
 
 export const getStaticProps = async (context: GetServerSidePropsContext) => {
@@ -105,11 +118,21 @@ export default function Home({ res, resBatch }: {res: Array<TitleItem>, resBatch
   const [response, setResponse] = useState<Array<TitleItem>>(res);
   const [sortMethod, setSortMethod] = useState<string>('');
   const [isEdited, setIsEdited] = useState<any>(null);
+  const searchRef = useRef<any>();
 
   useEffect(() => {
     document.addEventListener('click', (e: any) => {
       if (e.target?.tagName === 'INPUT') return;
       setIsEdited(null);
+    })
+    window.addEventListener("keydown",function (e) {
+      if (e.keyCode === 114 || (e.ctrlKey && e.keyCode === 70)) { 
+        e.preventDefault();
+        searchRef.current.focus();
+      }
+      if (e.key === 'Escape') {
+        setIsEdited(null);
+      }
     })
   },[])
 
@@ -205,7 +228,13 @@ export default function Home({ res, resBatch }: {res: Array<TitleItem>, resBatch
         })
 
         const changed = response.slice();
-        (changed.find(item => item.id === id) as any)[field] = event.target[0].value;
+        if (field.match('rating')) {
+          (changed.find(item => item.id === id) as any)[field].actual = event.target[0].value;
+        } else if (field.match('start') || field.match('end')) {
+          (changed.find(item => item.id === id) as any)[field].original = event.target[0].value;
+        } else {
+          (changed.find(item => item.id === id) as any)[field] = event.target[0].value;
+        }
         setResponse(changed);
         setIsEdited(null);
       } 
@@ -216,6 +245,29 @@ export default function Home({ res, resBatch }: {res: Array<TitleItem>, resBatch
     }
 
     return <form onSubmit={handleSubmit}><input autoFocus type='text' defaultValue={ogvalue} className='input-text text-center w-4/5'></input></form>
+  }
+
+  // TODO: add loading here to prevent spamming add record
+  async function addRecord(event: React.MouseEvent<HTMLButtonElement, MouseEvent>): Promise<void> {
+    if (!response[response.length - 1].title) {
+      alert('Insert title for latest row before adding a new one');
+      return;
+    }
+    try {
+      await axios.post('/api/update', {
+        content: (response.length + 1).toString(),
+        cell: 'A' + (response.length + 2).toString()
+      })
+
+      const changed = response.slice();
+      changed.push({...initialTitleItem, id: (response.length + 1)});
+      setResponse(changed);
+      setIsEdited(`title${response.length + 1}`);
+    } 
+    catch (error) {
+      alert(error);
+      return;
+    }
   }
 
   return (
@@ -229,6 +281,12 @@ export default function Home({ res, resBatch }: {res: Array<TitleItem>, resBatch
 
       <main className='flex flex-col items-center justify-center'>
         <h2 className='p-2 text-3xl'>Completed{sortMethod ? <span onClick={() => {setResponse(res); setSortMethod('')}} className='cursor-pointer'> ↻</span> : null}</h2>
+        <div className='flex items-center gap-2'>
+          <form>
+            <input ref={searchRef} type='search' placeholder='🔍︎ Search (non-functional)' className='input-text my-2 p-1 w-96 text-lg'></input>
+          </form>
+          <button onClick={addRecord} className='input-submit h-3/5 p-1 px-2 text-lg rounded-md'>➕ Add New</button>
+        </div>
         <table>
           <tbody>
             <tr>
@@ -239,10 +297,16 @@ export default function Home({ res, resBatch }: {res: Array<TitleItem>, resBatch
               <th onClick={() => sortListByRating('rating2')} className='w-32 cursor-pointer'><span>TomoLover</span><span className='absolute'>{sortSymbol('rating2')}</span></th>
               <th onClick={() => sortListByDate('start')} className='w-40 cursor-pointer'><span>Start Date</span><span className='absolute'>{sortSymbol('start')}</span></th>
               <th onClick={() => sortListByDate('end')} className='w-40  cursor-pointer'><span>End Date</span><span className='absolute'>{sortSymbol('end')}</span></th>
-            </tr> 
-            {response.map(item => {
+            </tr>
+            {response.slice().reverse().map(item => {
               return <tr key={item.title}>
-                <td onDoubleClick={() => {setIsEdited(`title${item.id}`)}}>{isEdited == `title${item.id}` ? editForm('title', item.id, item.title!) : item.title}</td>
+                <td onDoubleClick={() => {setIsEdited(`title${item.id}`)}}>
+                  {
+                    isEdited == `title${item.id}` 
+                    ? editForm('title', item.id, item.title!) : 
+                    item.title ? item.title : <span className='italic text-gray-400'>Untitled</span>
+                  }
+                </td>
                 <td onDoubleClick={() => {setIsEdited(`type${item.id}`)}}>{isEdited == `type${item.id}` ? editForm('type', item.id, item.type!) : item.type}</td>
                 <td onDoubleClick={() => {setIsEdited(`episode${item.id}`)}}>{isEdited == `episode${item.id}` ? editForm('episode', item.id, item.episode!) : item.episode}</td>
                 <td onDoubleClick={() => {setIsEdited(`rating1${item.id}`)}}>{isEdited == `rating1${item.id}` ? editForm('rating1', item.id, item.rating1.actual!) : item.rating1.actual}</td>
