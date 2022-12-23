@@ -52,6 +52,15 @@ export default function Home({ res }: {res: {id: number, title: string}[]}) {
       if (e.target?.tagName === 'INPUT') return;
       setIsEdited(null);
     })
+
+    const retrieveUpdates = setInterval(async () => {
+      const updateResponse = await axios.get('/api/getupdates/ptw');
+      setResponse(updateResponse.data);
+    }, 3000);
+    
+    return () => {
+      clearInterval(retrieveUpdates);
+    };
   },[])
 
   const sortListByName = (name: string) => {
