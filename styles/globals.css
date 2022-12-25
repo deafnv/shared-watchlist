@@ -21,7 +21,6 @@
 
   .input-submit {
     font-size: theme('fontSize.xl');
-    margin-top: theme('margin.4');
     background-color: theme('colors.pink.500');
     border-width: theme('borderWidth.DEFAULT');
     border-color: theme('colors.gray.400');
@@ -125,6 +124,10 @@ tr:not(:first-child):hover {
 }
 
 th, td {
+  padding: 0.5rem;
+}
+
+ul > li {
   padding: 0.5rem;
 }
 
