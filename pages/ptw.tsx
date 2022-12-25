@@ -3,7 +3,7 @@ import axios from 'axios'
 import { google } from 'googleapis'
 import { BaseSyntheticEvent, useEffect, useRef, useState } from 'react'
 import { GetServerSidePropsContext } from 'next';
-import { distance, motion, useMotionValue } from 'framer-motion';
+import { Reorder, distance, motion, useMotionValue } from 'framer-motion';
 import { clamp } from '@popmotion/popcorn';
 import { arrayMoveImmutable, arrayMoveMutable } from 'array-move'
 
@@ -151,13 +151,6 @@ export default function Home({ res }: {res: {id: number, title: string}[]}) {
     return clamp(0, response.length, target);
   };
 
-  const moveItem = (i: number, dragOffset: number, delta: number, e: MouseEvent | TouchEvent | PointerEvent) => {
-    const targetIndex = findIndex(i, dragOffset, delta, e);
-    if (targetIndex !== i) {
-      setResponse(arrayMoveImmutable(response, i, targetIndex));
-    }
-  };
-
   return (
     <>
       <Head>
@@ -174,30 +167,24 @@ export default function Home({ res }: {res: {id: number, title: string}[]}) {
             <tr>
               <th onClick={() => sortListByName('title')} className='w-[30rem] cursor-pointer'><span>Title</span><span className='absolute'>{sortSymbol('title')}</span></th>
             </tr> 
-            {response.map((item, i) => {
-              return ( 
-                <motion.tr 
-                  key={item.id} 
-                  initial={false}
-                  style={sortMethod ? undefined : {cursor: 'move'}}
-                  animate={draggingIndex === i ? {zIndex: 100} : {zIndex: 0}}
-                  drag={sortMethod ? false : 'y'} 
-                  dragConstraints={{top: 0, bottom: 0}} 
-                  dragElastic={1} 
-                  onDragStart={() => {setDragging(true); setDraggingIndex(i)}}
-                  onDragEnd={() => {setDragging(false); setDraggingIndex(-1)}}
-                  onDrag={(e, { point, delta }) => moveItem(i, point.y, delta.y, e)}
-                  layout={true}
-                >
-                  <td onDoubleClick={() => {setIsEdited(`title${item.id}`)}}><span className='cursor-text'>{isEdited == `title${item.id}` ? editForm('title', item.id, item.title) : item.title}</span></td>
-                </motion.tr>
-              )
-            })}
+            <Reorder.Group values={response} onReorder={setResponse}>
+              {response.map((item, i) => {
+                return ( 
+                  <Reorder.Item
+                    value={item}
+                    key={item.id}
+                    className='p-0 hover:bg-neutral-700'
+                  >
+                    <div style={sortMethod ? undefined : {cursor: 'move'}} onDoubleClick={() => {setIsEdited(`title${item.id}`)}} className='p-2'><span className='cursor-text'>{isEdited == `title${item.id}` ? editForm('title', item.id, item.title) : item.title}</span></div>
+                  </Reorder.Item>
+                )
+              })}
+            </Reorder.Group>
           </tbody>
         </table>
         {response != res && !sortMethod ? 
           <div className='flex gap-2 my-2'>
-            <button className='input-submit p-2 rounded-md' onClick={() => {}}>Save Changes</button>
+            <button className='input-submit p-2 rounded-md' onClick={() => {console.log(response)}}>Save Changes</button>
             <button className='input-submit p-2 rounded-md' onClick={() => {setResponse(res)}}>Cancel</button>
           </div>
          : null}
