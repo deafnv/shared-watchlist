@@ -1,11 +1,10 @@
 import Head from 'next/head'
+import { GetServerSidePropsContext } from 'next';
+import { BaseSyntheticEvent, useEffect, useState } from 'react'
 import axios from 'axios'
 import { google } from 'googleapis'
-import { BaseSyntheticEvent, useEffect, useRef, useState } from 'react'
-import { GetServerSidePropsContext } from 'next';
-import { Reorder, distance, motion, useMotionValue } from 'framer-motion';
-import { clamp } from '@popmotion/popcorn';
-import { arrayMoveImmutable, arrayMoveMutable } from 'array-move'
+import { Reorder } from 'framer-motion';
+import { PTWTItem, sortListByNamePTW, sortSymbol } from '../lib/list_methods';
 
 export const getStaticProps = async (context: GetServerSidePropsContext) => {
   const auth = await google.auth.getClient({ credentials: JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS!), scopes: ['https://www.googleapis.com/auth/spreadsheets'] });
@@ -45,17 +44,15 @@ export const getStaticProps = async (context: GetServerSidePropsContext) => {
   };
 }
 
-export default function Home({ res }: {res: {id: number, title: string}[]}) {
-  const [response, setResponse] = useState<{id: number, title: string}[]>(res);
+export default function Home({ res }: {res: PTWTItem[]}) {
+  const [response, setResponse] = useState<PTWTItem[]>(res);
   const [sortMethod, setSortMethod] = useState<string>('');
-  const [isEdited, setIsEdited] = useState<any>(null);
-  const [isDragging, setDragging] = useState(false);
-  const [draggingIndex, setDraggingIndex] = useState<number>();
+  const [isEdited, setIsEdited] = useState<string>('');
 
   useEffect(() => {
     document.addEventListener('click', (e: any) => {
       if (e.target?.tagName === 'INPUT') return;
-      setIsEdited(null);
+      setIsEdited('');
     })
 
     /* const retrieveUpdates = setInterval(async () => {
@@ -67,24 +64,6 @@ export default function Home({ res }: {res: {id: number, title: string}[]}) {
       clearInterval(retrieveUpdates);
     }; */
   },[])
-
-  const sortListByName = (name: string) => {
-    if (sortMethod === `titleasc_${name}`) {
-      setSortMethod(`titledesc_${name}`)
-      setResponse(res.slice().sort((a, b) => b.title!.localeCompare(a.title!)));
-    } else {
-      setSortMethod(`titleasc_${name}`);
-      setResponse(res.slice().sort((a, b) => a.title!.localeCompare(b.title!)));
-    }
-  }
-
-  const sortSymbol = (type: string) => {
-    if(sortMethod.includes(type)) {
-      return sortMethod.includes(`desc_${type}`) ? '▼' : '▲';
-    } else {
-      return '';
-    }
-  }
   
   function editForm(field: string, id: number, ogvalue: string): React.ReactNode {
     let column: string;
@@ -110,7 +89,7 @@ export default function Home({ res }: {res: {id: number, title: string}[]}) {
         const changed = response.slice();
         (changed.find(item => item.id === id) as any)[field] = event.target[0].value;
         setResponse(changed);
-        setIsEdited(null);
+        setIsEdited('');
       } 
       catch (error) {
         alert(error);
@@ -120,36 +99,6 @@ export default function Home({ res }: {res: {id: number, title: string}[]}) {
 
     return <form onSubmit={handleSubmit}><input autoFocus type='text' defaultValue={ogvalue} className='input-text text-center w-4/5'></input></form>
   }
-
-  const buffer = 5;
-
-  const findIndex = (
-    i: number,
-    yOffset: number,
-    delta: number,
-    e: any
-  ) => {
-    let target = i;
-    const prevSibling = e.target.parentNode.previousSibling;
-    const nextSibling = e.target.parentNode.nextSibling;
-
-    // If moving down
-    if (delta > 0) {
-      if (!e.target.parentNode.nextSibling) return i;
-
-      const swapThreshold = nextSibling?.getBoundingClientRect().y + nextSibling?.offsetHeight / 2 + buffer;
-      if (yOffset > swapThreshold) target = i + 1;
-  
-      // If moving up
-    } else if (delta < 0) {
-      if (e.target.parentNode.previousSibling?.childNodes[0].tagName === 'TH') return i;
-
-      const swapThreshold = prevSibling?.getBoundingClientRect().y + prevSibling?.offsetHeight / 2 + buffer;
-      if (yOffset < swapThreshold) target = i - 1;
-    }
-  
-    return clamp(0, response.length, target);
-  };
 
   return (
     <>
@@ -165,7 +114,7 @@ export default function Home({ res }: {res: {id: number, title: string}[]}) {
         <table>
           <tbody>
             <tr>
-              <th onClick={() => sortListByName('title')} className='w-[30rem] cursor-pointer'><span>Title</span><span className='absolute'>{sortSymbol('title')}</span></th>
+              <th onClick={() => sortListByNamePTW('title', res, sortMethod, setSortMethod, setResponse)} className='w-[30rem] cursor-pointer'><span>Title</span><span className='absolute'>{sortSymbol('title', sortMethod)}</span></th>
             </tr> 
             <Reorder.Group values={response} onReorder={setResponse}>
               {response.map((item, i) => {

@@ -1,43 +1,9 @@
 import Head from 'next/head'
+import { GetServerSidePropsContext } from 'next';
+import { BaseSyntheticEvent, useEffect, useRef, useState } from 'react'
 import axios from 'axios'
 import { google } from 'googleapis'
-import { BaseSyntheticEvent, useEffect, useRef, useState } from 'react'
-import { GetServerSidePropsContext } from 'next';
-import { file } from 'googleapis/build/src/apis/file';
-
-interface Rating {
-  actual: string | undefined,
-  average: number | undefined
-}
-
-interface WatchDates {
-  original: string | undefined,
-  converted: number | undefined
-}
-
-interface TitleItem {
-  id: number,
-  title: string | undefined,
-  type: string | undefined,
-  episode: string | undefined,
-  rating1: Rating,
-  rating2: Rating,
-  rating3: Rating,
-  start: WatchDates,
-  end: WatchDates
-}
-
-const initialTitleItem: TitleItem = {
-  id: 0,
-  title: undefined,
-  type: undefined,
-  episode: undefined,
-  rating1: {actual: undefined, average: undefined},
-  rating2: {actual: undefined, average: undefined},
-  rating3: {actual: undefined, average: undefined},
-  start: {original: undefined, converted: undefined},
-  end: {original: undefined, converted: undefined}
-}
+import { TitleItem, initialTitleItem, sortListByDate, sortListByName, sortListByRating, sortSymbol } from '../lib/list_methods';
 
 export const getStaticProps = async (context: GetServerSidePropsContext) => {
   const auth = await google.auth.getClient({ credentials: JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS!), scopes: ['https://www.googleapis.com/auth/spreadsheets'] });
@@ -108,85 +74,32 @@ export const getStaticProps = async (context: GetServerSidePropsContext) => {
   return {
     props: {
       res: objectifiedRes,
-      resBatch: resDataFilter.data.valueRanges?.[0].valueRange?.values
     },
     revalidate: 10,
   };
 }
 
-export default function Home({ res, resBatch }: {res: Array<TitleItem>, resBatch: string[]}) {
+export default function Home({ res }: {res: Array<TitleItem>}) {
   const [response, setResponse] = useState<Array<TitleItem>>(res);
   const [sortMethod, setSortMethod] = useState<string>('');
-  const [isEdited, setIsEdited] = useState<any>(null);
-  const searchRef = useRef<any>();
+  const [isEdited, setIsEdited] = useState<string>('');
+  const searchRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     document.addEventListener('click', (e: any) => {
       if (e.target?.tagName === 'INPUT') return;
-      setIsEdited(null);
+      setIsEdited('');
     })
     window.addEventListener("keydown",function (e) {
       if (e.keyCode === 114 || (e.ctrlKey && e.keyCode === 70)) { 
         e.preventDefault();
-        searchRef.current.focus();
+        searchRef.current?.focus();
       }
       if (e.key === 'Escape') {
-        setIsEdited(null);
+        setIsEdited('');
       }
     })
   },[])
-
-  const sortListByName = (name: string) => {
-    if (sortMethod === `titleasc_${name}`) {
-      setSortMethod(`titledesc_${name}`)
-      setResponse(res.slice().sort((a, b) => b.title!.localeCompare(a.title!)));
-    } else {
-      setSortMethod(`titleasc_${name}`);
-      setResponse(res.slice().sort((a, b) => a.title!.localeCompare(b.title!)));
-    }
-  }
-
-  const sortListByRating = (rating: string) => {
-    if (sortMethod === `ratingasc_${rating}`) {
-      setSortMethod(`ratingdesc_${rating}`)
-      setResponse(res.slice().sort((a, b) => {
-        if ((b as any)[rating].average! == null) {
-          return -1;
-        }
-        return (b as any)[rating].average! - (a as any)[rating].average!;
-      }));
-    } else {
-      setSortMethod(`ratingasc_${rating}`);
-      setResponse(res.slice().sort((a, b) => {
-        if ((a as any)[rating].average! == null) {
-          return -1;
-        }
-        return (a as any)[rating].average! - (b as any)[rating].average!;
-      }));
-    }
-  }
-
-  const sortListByDate = (date: string) => {
-    if (sortMethod === `dateasc_${date}`) {
-      setSortMethod(`datedesc_${date}`)
-      setResponse(res.slice().sort((a, b) => {
-        return (b as any)[date].converted! - (a as any)[date].converted!;
-      }));
-    } else {
-      setSortMethod(`dateasc_${date}`);
-      setResponse(res.slice().sort((a, b) => {
-        return (a as any)[date].converted! - (b as any)[date].converted!;
-      }));
-    }
-  }
-
-  const sortSymbol = (type: string) => {
-    if(sortMethod.includes(type)) {
-      return sortMethod.includes(`desc_${type}`) ? '▼' : '▲';
-    } else {
-      return '';
-    }
-  }
   
   function editForm(field: string, id: number, ogvalue: string): React.ReactNode {
     let column: string;
@@ -236,7 +149,7 @@ export default function Home({ res, resBatch }: {res: Array<TitleItem>, resBatch
           (changed.find(item => item.id === id) as any)[field] = event.target[0].value;
         }
         setResponse(changed);
-        setIsEdited(null);
+        setIsEdited('');
       } 
       catch (error) {
         alert(error);
@@ -290,13 +203,13 @@ export default function Home({ res, resBatch }: {res: Array<TitleItem>, resBatch
         <table>
           <tbody>
             <tr>
-              <th onClick={() => sortListByName('title')} className='cursor-pointer'><span>Title</span><span className='absolute'>{sortSymbol('title')}</span></th>
+              <th onClick={() => sortListByName('title', res, sortMethod, setSortMethod, setResponse)} className='cursor-pointer'><span>Title</span><span className='absolute'>{sortSymbol('title', sortMethod)}</span></th>
               <th className='w-32'>Type</th>
               <th className='w-36'>Episode(s)</th>
-              <th onClick={() => sortListByRating('rating1')} className='w-32 cursor-pointer'><span>GoodTaste</span><span className='absolute'>{sortSymbol('rating1')}</span></th>
-              <th onClick={() => sortListByRating('rating2')} className='w-32 cursor-pointer'><span>TomoLover</span><span className='absolute'>{sortSymbol('rating2')}</span></th>
-              <th onClick={() => sortListByDate('start')} className='w-40 cursor-pointer'><span>Start Date</span><span className='absolute'>{sortSymbol('start')}</span></th>
-              <th onClick={() => sortListByDate('end')} className='w-40  cursor-pointer'><span>End Date</span><span className='absolute'>{sortSymbol('end')}</span></th>
+              <th onClick={() => sortListByRating('rating1', res, sortMethod, setSortMethod, setResponse)} className='w-32 cursor-pointer'><span>GoodTaste</span><span className='absolute'>{sortSymbol('rating1', sortMethod)}</span></th>
+              <th onClick={() => sortListByRating('rating2', res, sortMethod, setSortMethod, setResponse)} className='w-32 cursor-pointer'><span>TomoLover</span><span className='absolute'>{sortSymbol('rating2', sortMethod)}</span></th>
+              <th onClick={() => sortListByDate('start' , res, sortMethod, setSortMethod, setResponse)} className='w-40 cursor-pointer'><span>Start Date</span><span className='absolute'>{sortSymbol('start', sortMethod)}</span></th>
+              <th onClick={() => sortListByDate('end' , res, sortMethod, setSortMethod, setResponse)} className='w-40  cursor-pointer'><span>End Date</span><span className='absolute'>{sortSymbol('end', sortMethod)}</span></th>
             </tr>
             {response.slice().reverse().map(item => {
               return <tr key={item.title}>
