@@ -66,7 +66,7 @@ export default function Home({ res }: {res: PTWTItem[]}) {
         if (delayed) {
           setPrevResponse(response);
         } else setDelayed(true);
-        if (isEqual(response, updateResponse.data)) {
+        if (!isEqual(response, updateResponse.data)) {
           if (sortMethod) {
             let oppSortMethod = sortMethod === `titleasc_title` ? 'titledesc_title' : 'titleasc_title';
             sortListByNamePTW('title', updateResponse.data, oppSortMethod, setSortMethod, setResponse);
@@ -129,7 +129,7 @@ export default function Home({ res }: {res: PTWTItem[]}) {
         <table>
           <tbody>
             <tr>
-              <th onClick={() => sortListByNamePTW('title', response, sortMethod, setSortMethod, setResponse)} className='w-[30rem] cursor-pointer'><span>Title</span><span className='absolute'>{sortSymbol('title', sortMethod)}</span></th>
+              <th onClick={() => {sortListByNamePTW('title', response, sortMethod, setSortMethod, setResponse); setReordered(false)}} className='w-[30rem] cursor-pointer'><span>Title</span><span className='absolute'>{sortSymbol('title', sortMethod)}</span></th>
             </tr> 
           </tbody>
         </table>
