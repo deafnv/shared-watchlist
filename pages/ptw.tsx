@@ -5,8 +5,9 @@ import axios from 'axios'
 import { google } from 'googleapis'
 import { Reorder } from 'framer-motion';
 import { PTWTItem, sortListByNamePTW, sortSymbol } from '../lib/list_methods';
+import isEqual from 'lodash/isEqual'
 
-export const getStaticProps = async (context: GetServerSidePropsContext) => {
+export const getServerSideProps = async (context: GetServerSidePropsContext) => {
   const auth = await google.auth.getClient({ credentials: JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS!), scopes: ['https://www.googleapis.com/auth/spreadsheets'] });
   const sheets = google.sheets({ version: 'v4', auth });
   
@@ -39,31 +40,45 @@ export const getStaticProps = async (context: GetServerSidePropsContext) => {
   return {
     props: {
       res: objectifiedRes,
-    },
-    revalidate: 10,
+    }
   };
 }
 
 export default function Home({ res }: {res: PTWTItem[]}) {
+  const [prevResponse, setPrevResponse] = useState<PTWTItem[]>(res);
   const [response, setResponse] = useState<PTWTItem[]>(res);
   const [sortMethod, setSortMethod] = useState<string>('');
   const [isEdited, setIsEdited] = useState<string>('');
+  const [reordered, setReordered] = useState(false);
+  const [delayed, setDelayed] = useState(false);
 
   useEffect(() => {
     document.addEventListener('click', (e: any) => {
       if (e.target?.tagName === 'INPUT') return;
       setIsEdited('');
     })
+  },[])
 
-    /* const retrieveUpdates = setInterval(async () => {
-      const updateResponse = await axios.get('/api/getupdates/ptw');
-      setResponse(updateResponse.data);
+  useEffect(() => {
+    const retrieveUpdates = setInterval(async () => {
+      if (!reordered) { 
+        const updateResponse = await axios.get('/api/getupdates/ptw');
+        if (delayed) {
+          setPrevResponse(response);
+        } else setDelayed(true);
+        if (isEqual(response, updateResponse.data)) {
+          if (sortMethod) {
+            let oppSortMethod = sortMethod === `titleasc_title` ? 'titledesc_title' : 'titleasc_title';
+            sortListByNamePTW('title', updateResponse.data, oppSortMethod, setSortMethod, setResponse);
+          } else setResponse(updateResponse.data);
+        }
+      }
     }, 3000);
     
     return () => {
       clearInterval(retrieveUpdates);
-    }; */
-  },[])
+    };
+  })
   
   function editForm(field: string, id: number, ogvalue: string): React.ReactNode {
     let column: string;
@@ -114,27 +129,32 @@ export default function Home({ res }: {res: PTWTItem[]}) {
         <table>
           <tbody>
             <tr>
-              <th onClick={() => sortListByNamePTW('title', res, sortMethod, setSortMethod, setResponse)} className='w-[30rem] cursor-pointer'><span>Title</span><span className='absolute'>{sortSymbol('title', sortMethod)}</span></th>
+              <th onClick={() => sortListByNamePTW('title', response, sortMethod, setSortMethod, setResponse)} className='w-[30rem] cursor-pointer'><span>Title</span><span className='absolute'>{sortSymbol('title', sortMethod)}</span></th>
             </tr> 
-            <Reorder.Group values={response} onReorder={setResponse}>
-              {response.map((item, i) => {
-                return ( 
-                  <Reorder.Item
-                    value={item}
-                    key={item.id}
-                    className='p-0 hover:bg-neutral-700'
-                  >
-                    <div style={sortMethod ? undefined : {cursor: 'move'}} onDoubleClick={() => {setIsEdited(`title${item.id}`)}} className='p-2'><span className='cursor-text'>{isEdited == `title${item.id}` ? editForm('title', item.id, item.title) : item.title}</span></div>
-                  </Reorder.Item>
-                )
-              })}
-            </Reorder.Group>
           </tbody>
         </table>
-        {response != res && !sortMethod ? 
-          <div className='flex gap-2 my-2'>
-            <button className='input-submit p-2 rounded-md' onClick={() => {console.log(response)}}>Save Changes</button>
-            <button className='input-submit p-2 rounded-md' onClick={() => {setResponse(res)}}>Cancel</button>
+        <Reorder.Group values={response} dragConstraints={{top: 500}} draggable={sortMethod ? true : false} onReorder={(newOrder) => {setResponse(newOrder); setReordered(true)}} className='w-[30.1rem] border-white border-solid border-[1px] border-t-0'>
+          {response.map((item, i) => {
+            return ( 
+              <Reorder.Item
+                value={item}
+                key={item.id}
+                className='p-0 hover:bg-neutral-700'
+              >
+                <div style={sortMethod ? undefined : {cursor: 'move'}} onDoubleClick={() => {setIsEdited(`title${item.id}`)}} className='p-2 text-center'>
+                  <span className='cursor-text'>{isEdited == `title${item.id}` ? editForm('title', item.id, item.title) : item.title}</span>
+                </div>
+              </Reorder.Item>
+            )
+          })}
+        </Reorder.Group>
+        {!sortMethod && reordered ? 
+          <div className='flex flex-col items-center'>
+            <span className='mt-2 text-red-500'>⚠ Live updates will be paused while changes are being made to this table</span>
+            <div className='flex gap-2 my-2'>
+              <button className='input-submit p-2 rounded-md' onClick={() => {console.log(response) /* TODO: PUt the reordered false here */}}>Save Changes</button>
+              <button className='input-submit p-2 rounded-md' onClick={() => {setResponse(prevResponse); setReordered(false)}}>Cancel</button>
+            </div>
           </div>
          : null}
       </main>
