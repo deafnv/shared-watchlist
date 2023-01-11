@@ -1,4 +1,5 @@
 import { Dispatch, SetStateAction } from "react"
+import { Database } from "./database.types"
 
 export interface Rating {
   actual: string | undefined,
@@ -90,6 +91,70 @@ export const sortSymbol = (type: string, sortMethod: string) => {
     return sortMethod.includes(`desc_${type}`) ? '▼' : '▲';
   } else {
     return '';
+  }
+}
+
+
+//* SUPABASE LIST METHODS
+
+export const initialTitleItemSupabase = {
+  end: null,
+  episode: null,
+  id: 0,
+  notes: null,
+  rating1: null,
+  rating1average: null,
+  rating2: null,
+  rating2average: null,
+  rating3: null,
+  rating3average: null,
+  start: null,
+  title: null,
+  type: null
+}
+
+export const sortListByNameSupabase = (name: string, res: Database['public']['Tables']['Completed']['Row'][], sortMethod: string, setSortMethod: Dispatch<SetStateAction<string>>, setResponse: Dispatch<SetStateAction<Database['public']['Tables']['Completed']['Row'][] | undefined>>) => {
+  if (sortMethod === `titleasc_${name}`) {
+    setSortMethod(`titledesc_${name}`)
+    setResponse(res.slice().sort((a, b) => b.title!.localeCompare(a.title!)));
+  } else {
+    setSortMethod(`titleasc_${name}`);
+    setResponse(res.slice().sort((a, b) => a.title!.localeCompare(b.title!)));
+  }
+}
+
+export const sortListByRatingSupabase = (rating: string, res: Database['public']['Tables']['Completed']['Row'][], sortMethod: string, setSortMethod: Dispatch<SetStateAction<string>>, setResponse: Dispatch<SetStateAction<Database['public']['Tables']['Completed']['Row'][] | undefined>>) => {
+  if (sortMethod === `ratingasc_${rating}`) {
+    setSortMethod(`ratingdesc_${rating}`)
+    setResponse(res.slice().sort((a, b) => {
+      if ((b as any)[`${rating}average`] == null) {
+        return -1;
+      }
+      return (a as any)[`${rating}average`] - (b as any)[`${rating}average`];
+    }));
+  } else {
+    setSortMethod(`ratingasc_${rating}`);
+    setResponse(res.slice().sort((a, b) => {
+      if ((a as any)[`${rating}average`] == null) {
+        return -1;
+      }
+      return (b as any)[`${rating}average`] - (a as any)[`${rating}average`];
+    }));
+  }
+}
+
+//TODO: THIS WILL NOT WORK!!!! FIX THIS SO IT CONVERTS TO DATES BEFORE SORTING
+export const sortListByDateSupabase = (date: string, res: Database['public']['Tables']['Completed']['Row'][], sortMethod: string, setSortMethod: Dispatch<SetStateAction<string>>, setResponse: Dispatch<SetStateAction<Database['public']['Tables']['Completed']['Row'][] | undefined>>) => {
+  if (sortMethod === `dateasc_${date}`) {
+    setSortMethod(`datedesc_${date}`)
+    setResponse(res.slice().sort((a, b) => {
+      return (b as any)[date] - (a as any)[date];
+    }));
+  } else {
+    setSortMethod(`dateasc_${date}`);
+    setResponse(res.slice().sort((a, b) => {
+      return (a as any)[date] - (b as any)[date];
+    }));
   }
 }
 

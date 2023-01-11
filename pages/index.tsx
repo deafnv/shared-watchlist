@@ -1,91 +1,44 @@
 import Head from 'next/head'
-import { GetServerSidePropsContext } from 'next';
 import { BaseSyntheticEvent, useEffect, useRef, useState } from 'react'
 import axios from 'axios'
-import { google } from 'googleapis'
-import { TitleItem, initialTitleItem, sortListByDate, sortListByName, sortListByRating, sortSymbol } from '../lib/list_methods';
+import { TitleItem, initialTitleItem, initialTitleItemSupabase, sortListByDate, sortListByDateSupabase, sortListByName, sortListByNameSupabase, sortListByRating, sortListByRatingSupabase, sortSymbol } from '../lib/list_methods';
+import { createClient } from '@supabase/supabase-js';
+import { Database } from '../lib/database.types';
 
-export const getStaticProps = async (context: GetServerSidePropsContext) => {
-  const auth = await google.auth.getClient({ credentials: JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS!), scopes: ['https://www.googleapis.com/auth/spreadsheets'] });
-  const sheets = google.sheets({ version: 'v4', auth });
-  
-  const resDataFilter = await sheets.spreadsheets.values.batchGetByDataFilter({
-    spreadsheetId: process.env.SHEET_ID,
-    requestBody: {
-      dataFilters: [{
-        a1Range: 'A1:A999'
-      }],
-    }
-  });
+//! Non-null assertion for the response state variable here will throw some errors if it does end up being null, fix maybe.
+//! ISSUES:
+//!   - Sorting date X
+//!   - Reset sort X
 
-  const lenOfAvailableTitles = resDataFilter.data.valueRanges?.[0].valueRange?.values?.length;
-  const range = `Sheet1!A2:J${lenOfAvailableTitles}`;
-  
-  const res = await sheets.spreadsheets.values.get({
-    spreadsheetId: process.env.SHEET_ID,
-    range
-  });
-
-  const objectifiedRes = res.data.values?.map(item => {
-    let fixed = new Array(9);
-    fixed.fill(null);
-    Object.seal(fixed);
-    let [title, type, episode, rating1, rating2, rating3, start, end, notes] = item;
-    fixed = [title, type, episode, rating1, rating2, rating3, start, end, notes];
-    return {
-      id: fixed[0] ? parseInt(fixed[0]) : -1,
-      title: fixed[1] ? fixed[1] : '',
-      type: fixed[2] ? fixed[2] : '',
-      episode: fixed[3] ? fixed[3] : '',
-      rating1: {
-        actual: fixed[4] ? fixed[4] : '',
-        average: fixed[4] ? getAverage(fixed[4]) : ''
-      },
-      rating2: {
-        actual: fixed[5] ? fixed[5] : '',
-        average: fixed[5] ? getAverage(fixed[5]) : ''
-      },
-      rating3: {
-        actual: fixed[6] ? fixed[6] : '',
-        average: fixed[6] ? getAverage(fixed[6]) : ''
-      },
-      start: {
-        original: fixed[7] ? fixed[7] : '',
-        converted: fixed[7] ? new Date(fixed[7]).getTime() : 0
-      },
-      end: {
-        original: fixed[8] ? fixed[8] : '',
-        converted: fixed[8] ? new Date(fixed[8]).getTime() : 0
-      },
-      notes: fixed[9] ? fixed[9] : ''
-    }
-  });
-
-  //! This will give errors for ratings with more than 2 number probably.
-  function getAverage(param: string) {
-    const arr = param.match(/(\d\.\d)|(\d+)/g);
-    if (arr?.length! > 1) {
-      return ((parseFloat(arr![0]) + parseFloat(arr![1])) / 2);
-    } else {
-      return parseFloat(param);
-    }
-  }
-
-  return {
-    props: {
-      res: objectifiedRes,
-    },
-    revalidate: 10,
-  };
-}
-
-export default function Home({ res }: {res: Array<TitleItem>}) {
-  const [response, setResponse] = useState<Array<TitleItem>>(res);
+export default function Home() {
+  const [response, setResponse] = useState<Database['public']['Tables']['Completed']['Row'][]>();
   const [sortMethod, setSortMethod] = useState<string>('');
   const [isEdited, setIsEdited] = useState<string>('');
   const searchRef = useRef<HTMLInputElement>(null);
 
+  const supabase = createClient<Database>('https://esjopxdrlewtpffznsxh.supabase.co', process.env.NEXT_PUBLIC_SUPABASE_API_KEY!);
+
+  const getInitialCompleted =async () => {
+    const data = await supabase 
+      .from('Completed')
+      .select().order('id', { ascending: true });
+
+      setResponse(data.data!);
+  }
+
   useEffect(() => {
+    getInitialCompleted();
+
+    const subscribe = supabase
+      .channel('public:Completed')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'Completed' }, payload => {
+        console.log('Change received!', payload)
+      })
+      .subscribe()
+
+    const subscriptions = supabase.getChannels();
+    console.log(subscriptions)
+    
     document.addEventListener('click', (e: any) => {
       if (e.target?.tagName === 'INPUT') return;
       setIsEdited('');
@@ -100,7 +53,7 @@ export default function Home({ res }: {res: Array<TitleItem>}) {
       }
     })
   },[])
-  
+
   function editForm(field: string, id: number, ogvalue: string): React.ReactNode {
     let column: string;
     let row = (id + 1).toString();
@@ -140,7 +93,7 @@ export default function Home({ res }: {res: Array<TitleItem>}) {
           cell: column + row
         })
 
-        const changed = response.slice();
+        const changed = response!.slice();
         if (field.match('rating')) {
           (changed.find(item => item.id === id) as any)[field].actual = event.target[0].value;
         } else if (field.match('start') || field.match('end')) {
@@ -162,20 +115,20 @@ export default function Home({ res }: {res: Array<TitleItem>}) {
 
   // TODO: add loading here to prevent spamming add record
   async function addRecord(event: React.MouseEvent<HTMLButtonElement, MouseEvent>): Promise<void> {
-    if (!response[response.length - 1].title) {
+    if (!response![response!.length - 1].title) {
       alert('Insert title for latest row before adding a new one');
       return;
     }
     try {
       await axios.post('/api/update', {
-        content: (response.length + 1).toString(),
-        cell: 'A' + (response.length + 2).toString()
+        content: (response!.length + 1).toString(),
+        cell: 'A' + (response!.length + 2).toString()
       })
 
-      const changed = response.slice();
-      changed.push({...initialTitleItem, id: (response.length + 1)});
+      const changed = response!.slice();
+      changed.push({...initialTitleItemSupabase, id: (response!.length + 1)});
       setResponse(changed);
-      setIsEdited(`title${response.length + 1}`);
+      setIsEdited(`title${response!.length + 1}`);
     } 
     catch (error) {
       alert(error);
@@ -193,7 +146,7 @@ export default function Home({ res }: {res: Array<TitleItem>}) {
       </Head>
 
       <main className='flex flex-col items-center justify-center'>
-        <h2 className='p-2 text-3xl'>Completed{sortMethod ? <span onClick={() => {setResponse(res); setSortMethod('')}} className='cursor-pointer'> ↻</span> : null}</h2>
+        <h2 className='p-2 text-3xl'>Completed{sortMethod ? <span onClick={() => {setResponse(response); setSortMethod('')}} className='cursor-pointer'> ↻</span> : null}</h2>
         <div className='flex items-center gap-2'>
           <form>
             <input ref={searchRef} type='search' placeholder='🔍︎ Search (non-functional)' className='input-text my-2 p-1 w-96 text-lg'></input>
@@ -203,15 +156,15 @@ export default function Home({ res }: {res: Array<TitleItem>}) {
         <table>
           <tbody>
             <tr>
-              <th onClick={() => sortListByName('title', res, sortMethod, setSortMethod, setResponse)} className='cursor-pointer'><span>Title</span><span className='absolute'>{sortSymbol('title', sortMethod)}</span></th>
+              <th onClick={() => sortListByNameSupabase('title', response!, sortMethod, setSortMethod, setResponse)} className='cursor-pointer'><span>Title</span><span className='absolute'>{sortSymbol('title', sortMethod)}</span></th>
               <th className='w-32'>Type</th>
               <th className='w-36'>Episode(s)</th>
-              <th onClick={() => sortListByRating('rating1', res, sortMethod, setSortMethod, setResponse)} className='w-32 cursor-pointer'><span>GoodTaste</span><span className='absolute'>{sortSymbol('rating1', sortMethod)}</span></th>
-              <th onClick={() => sortListByRating('rating2', res, sortMethod, setSortMethod, setResponse)} className='w-32 cursor-pointer'><span>TomoLover</span><span className='absolute'>{sortSymbol('rating2', sortMethod)}</span></th>
-              <th onClick={() => sortListByDate('start' , res, sortMethod, setSortMethod, setResponse)} className='w-40 cursor-pointer'><span>Start Date</span><span className='absolute'>{sortSymbol('start', sortMethod)}</span></th>
-              <th onClick={() => sortListByDate('end' , res, sortMethod, setSortMethod, setResponse)} className='w-40  cursor-pointer'><span>End Date</span><span className='absolute'>{sortSymbol('end', sortMethod)}</span></th>
+              <th onClick={() => sortListByRatingSupabase('rating1', response!, sortMethod, setSortMethod, setResponse)} className='w-32 cursor-pointer'><span>GoodTaste</span><span className='absolute'>{sortSymbol('rating1', sortMethod)}</span></th>
+              <th onClick={() => sortListByRatingSupabase('rating2', response!, sortMethod, setSortMethod, setResponse)} className='w-32 cursor-pointer'><span>TomoLover</span><span className='absolute'>{sortSymbol('rating2', sortMethod)}</span></th>
+              <th onClick={() => sortListByDateSupabase('start' , response!, sortMethod, setSortMethod, setResponse)} className='w-40 cursor-pointer'><span>Start Date</span><span className='absolute'>{sortSymbol('start', sortMethod)}</span></th>
+              <th onClick={() => sortListByDateSupabase('end' , response!, sortMethod, setSortMethod, setResponse)} className='w-40  cursor-pointer'><span>End Date</span><span className='absolute'>{sortSymbol('end', sortMethod)}</span></th>
             </tr>
-            {response.slice().reverse().map(item => {
+            {response?.slice().reverse().map(item => {
               return <tr key={item.title}>
                 <td onDoubleClick={() => {setIsEdited(`title${item.id}`)}}>
                   {
@@ -222,10 +175,10 @@ export default function Home({ res }: {res: Array<TitleItem>}) {
                 </td>
                 <td onDoubleClick={() => {setIsEdited(`type${item.id}`)}}>{isEdited == `type${item.id}` ? editForm('type', item.id, item.type!) : item.type}</td>
                 <td onDoubleClick={() => {setIsEdited(`episode${item.id}`)}}>{isEdited == `episode${item.id}` ? editForm('episode', item.id, item.episode!) : item.episode}</td>
-                <td onDoubleClick={() => {setIsEdited(`rating1${item.id}`)}}>{isEdited == `rating1${item.id}` ? editForm('rating1', item.id, item.rating1.actual!) : item.rating1.actual}</td>
-                <td onDoubleClick={() => {setIsEdited(`rating2${item.id}`)}}>{isEdited == `rating2${item.id}` ? editForm('rating2', item.id, item.rating2.actual!) : item.rating2.actual}</td>
-                <td onDoubleClick={() => {setIsEdited(`start${item.id}`)}}>{isEdited == `start${item.id}` ? editForm('start', item.id, item.start.original!) : item.start.original}</td>
-                <td onDoubleClick={() => {setIsEdited(`end${item.id}`)}}>{isEdited == `end${item.id}` ? editForm('end', item.id, item.end.original!) : item.end.original}</td>
+                <td onDoubleClick={() => {setIsEdited(`rating1${item.id}`)}}>{isEdited == `rating1${item.id}` ? editForm('rating1', item.id, item.rating1!) : item.rating1}</td>
+                <td onDoubleClick={() => {setIsEdited(`rating2${item.id}`)}}>{isEdited == `rating2${item.id}` ? editForm('rating2', item.id, item.rating2!) : item.rating2}</td>
+                <td onDoubleClick={() => {setIsEdited(`start${item.id}`)}}>{isEdited == `start${item.id}` ? editForm('start', item.id, item.start!) : item.start}</td>
+                <td onDoubleClick={() => {setIsEdited(`end${item.id}`)}}>{isEdited == `end${item.id}` ? editForm('end', item.id, item.end!) : item.end}</td>
               </tr>
             })}
           </tbody>
