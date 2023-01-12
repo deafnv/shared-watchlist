@@ -113,7 +113,7 @@ export const initialTitleItemSupabase = {
   type: null
 }
 
-export const sortListByNameSupabase = (name: string, res: Database['public']['Tables']['Completed']['Row'][], sortMethod: string, setSortMethod: Dispatch<SetStateAction<string>>, setResponse: Dispatch<SetStateAction<Database['public']['Tables']['Completed']['Row'][] | undefined>>) => {
+export const sortListByNameSupabase = (name: string, res: Database['public']['Tables']['Completed']['Row'][], sortMethod: string, setSortMethod: Dispatch<SetStateAction<string>>, setResponse: Dispatch<SetStateAction<Database['public']['Tables']['Completed']['Row'][]>>) => {
   if (sortMethod === `titleasc_${name}`) {
     setSortMethod(`titledesc_${name}`)
     setResponse(res.slice().sort((a, b) => b.title!.localeCompare(a.title!)));
@@ -123,7 +123,7 @@ export const sortListByNameSupabase = (name: string, res: Database['public']['Ta
   }
 }
 
-export const sortListByRatingSupabase = (rating: string, res: Database['public']['Tables']['Completed']['Row'][], sortMethod: string, setSortMethod: Dispatch<SetStateAction<string>>, setResponse: Dispatch<SetStateAction<Database['public']['Tables']['Completed']['Row'][] | undefined>>) => {
+export const sortListByRatingSupabase = (rating: string, res: Database['public']['Tables']['Completed']['Row'][], sortMethod: string, setSortMethod: Dispatch<SetStateAction<string>>, setResponse: Dispatch<SetStateAction<Database['public']['Tables']['Completed']['Row'][]>>) => {
   if (sortMethod === `ratingasc_${rating}`) {
     setSortMethod(`ratingdesc_${rating}`)
     setResponse(res.slice().sort((a, b) => {
@@ -144,7 +144,7 @@ export const sortListByRatingSupabase = (rating: string, res: Database['public']
 }
 
 //TODO: THIS WILL NOT WORK!!!! FIX THIS SO IT CONVERTS TO DATES BEFORE SORTING
-export const sortListByDateSupabase = (date: string, res: Database['public']['Tables']['Completed']['Row'][], sortMethod: string, setSortMethod: Dispatch<SetStateAction<string>>, setResponse: Dispatch<SetStateAction<Database['public']['Tables']['Completed']['Row'][] | undefined>>) => {
+export const sortListByDateSupabase = (date: string, res: Database['public']['Tables']['Completed']['Row'][], sortMethod: string, setSortMethod: Dispatch<SetStateAction<string>>, setResponse: Dispatch<SetStateAction<Database['public']['Tables']['Completed']['Row'][]>>) => {
   if (sortMethod === `dateasc_${date}`) {
     setSortMethod(`datedesc_${date}`)
     setResponse(res.slice().sort((a, b) => {

@@ -1,38 +1,50 @@
-import Head from 'next/head'
 import { BaseSyntheticEvent, useEffect, useRef, useState } from 'react'
+import { GetServerSidePropsContext } from 'next';
+import Head from 'next/head'
 import axios from 'axios'
-import { TitleItem, initialTitleItem, initialTitleItemSupabase, sortListByDate, sortListByDateSupabase, sortListByName, sortListByNameSupabase, sortListByRating, sortListByRatingSupabase, sortSymbol } from '../lib/list_methods';
 import { createClient } from '@supabase/supabase-js';
 import { Database } from '../lib/database.types';
+import { initialTitleItemSupabase, sortListByDateSupabase, sortListByNameSupabase, sortListByRatingSupabase, sortSymbol } from '../lib/list_methods';
 
 //! Non-null assertion for the response state variable here will throw some errors if it does end up being null, fix maybe.
 //! ISSUES:
 //!   - Sorting date X
 //!   - Reset sort X
 
-export default function Home() {
-  const [response, setResponse] = useState<Database['public']['Tables']['Completed']['Row'][]>();
+export const getServerSideProps = async (context: GetServerSidePropsContext) => {
+  const supabase = createClient<Database>('https://esjopxdrlewtpffznsxh.supabase.co', process.env.NEXT_PUBLIC_SUPABASE_API_KEY!);
+  const { data } = await supabase 
+    .from('Completed')
+    .select()
+    .order('id', { ascending: true });
+
+  //? data.data can be null, which isnt typed in the receiving Home() function.
+  return {
+    props: {
+      res: data
+    }
+  }
+}
+
+export default function Home({ res }: {res: Database['public']['Tables']['Completed']['Row'][]}) {
+  const [response, setResponse] = useState<Database['public']['Tables']['Completed']['Row'][]>(res);
   const [sortMethod, setSortMethod] = useState<string>('');
   const [isEdited, setIsEdited] = useState<string>('');
   const searchRef = useRef<HTMLInputElement>(null);
 
+  //FIXME: Don't expose API key to client side
   const supabase = createClient<Database>('https://esjopxdrlewtpffznsxh.supabase.co', process.env.NEXT_PUBLIC_SUPABASE_API_KEY!);
 
-  const getInitialCompleted =async () => {
-    const data = await supabase 
-      .from('Completed')
-      .select().order('id', { ascending: true });
-
-      setResponse(data.data!);
-  }
-
   useEffect(() => {
-    getInitialCompleted();
-
     const subscribe = supabase
       .channel('public:Completed')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'Completed' }, payload => {
-        console.log('Change received!', payload)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'Completed' }, async payload => {
+        //FIXME: Create timeout here so it doesn't query DB every change if change occurs too frequently
+        const { data } = await supabase 
+          .from('Completed')
+          .select()
+          .order('id', { ascending: true });
+        setResponse(data!)
       })
       .subscribe()
 
@@ -54,6 +66,7 @@ export default function Home() {
     })
   },[])
 
+  //TODO: Detect pressing tab so it jumps to the next field to be edited 
   function editForm(field: string, id: number, ogvalue: string): React.ReactNode {
     let column: string;
     let row = (id + 1).toString();
@@ -93,7 +106,7 @@ export default function Home() {
           cell: column + row
         })
 
-        const changed = response!.slice();
+        const changed = response.slice();
         if (field.match('rating')) {
           (changed.find(item => item.id === id) as any)[field].actual = event.target[0].value;
         } else if (field.match('start') || field.match('end')) {
@@ -115,20 +128,20 @@ export default function Home() {
 
   // TODO: add loading here to prevent spamming add record
   async function addRecord(event: React.MouseEvent<HTMLButtonElement, MouseEvent>): Promise<void> {
-    if (!response![response!.length - 1].title) {
+    if (!response[response.length - 1].title) {
       alert('Insert title for latest row before adding a new one');
       return;
     }
     try {
       await axios.post('/api/update', {
-        content: (response!.length + 1).toString(),
-        cell: 'A' + (response!.length + 2).toString()
+        content: (response.length + 1).toString(),
+        cell: 'A' + (response.length + 2).toString()
       })
 
-      const changed = response!.slice();
-      changed.push({...initialTitleItemSupabase, id: (response!.length + 1)});
+      const changed = response.slice();
+      changed.push({...initialTitleItemSupabase, id: (response.length + 1)});
       setResponse(changed);
-      setIsEdited(`title${response!.length + 1}`);
+      setIsEdited(`title${response.length + 1}`);
     } 
     catch (error) {
       alert(error);
@@ -146,7 +159,7 @@ export default function Home() {
       </Head>
 
       <main className='flex flex-col items-center justify-center'>
-        <h2 className='p-2 text-3xl'>Completed{sortMethod ? <span onClick={() => {setResponse(response); setSortMethod('')}} className='cursor-pointer'> ↻</span> : null}</h2>
+        <h2 className='p-2 text-3xl'>Completed{sortMethod ? <span onClick={() => {setResponse(res); setSortMethod('')}} className='cursor-pointer'> ↻</span> : null}</h2>
         <div className='flex items-center gap-2'>
           <form>
             <input ref={searchRef} type='search' placeholder='🔍︎ Search (non-functional)' className='input-text my-2 p-1 w-96 text-lg'></input>
@@ -156,13 +169,13 @@ export default function Home() {
         <table>
           <tbody>
             <tr>
-              <th onClick={() => sortListByNameSupabase('title', response!, sortMethod, setSortMethod, setResponse)} className='cursor-pointer'><span>Title</span><span className='absolute'>{sortSymbol('title', sortMethod)}</span></th>
+              <th onClick={() => sortListByNameSupabase('title', response, sortMethod, setSortMethod, setResponse)} className='cursor-pointer'><span>Title</span><span className='absolute'>{sortSymbol('title', sortMethod)}</span></th>
               <th className='w-32'>Type</th>
               <th className='w-36'>Episode(s)</th>
-              <th onClick={() => sortListByRatingSupabase('rating1', response!, sortMethod, setSortMethod, setResponse)} className='w-32 cursor-pointer'><span>GoodTaste</span><span className='absolute'>{sortSymbol('rating1', sortMethod)}</span></th>
-              <th onClick={() => sortListByRatingSupabase('rating2', response!, sortMethod, setSortMethod, setResponse)} className='w-32 cursor-pointer'><span>TomoLover</span><span className='absolute'>{sortSymbol('rating2', sortMethod)}</span></th>
-              <th onClick={() => sortListByDateSupabase('start' , response!, sortMethod, setSortMethod, setResponse)} className='w-40 cursor-pointer'><span>Start Date</span><span className='absolute'>{sortSymbol('start', sortMethod)}</span></th>
-              <th onClick={() => sortListByDateSupabase('end' , response!, sortMethod, setSortMethod, setResponse)} className='w-40  cursor-pointer'><span>End Date</span><span className='absolute'>{sortSymbol('end', sortMethod)}</span></th>
+              <th onClick={() => sortListByRatingSupabase('rating1', response, sortMethod, setSortMethod, setResponse)} className='w-32 cursor-pointer'><span>GoodTaste</span><span className='absolute'>{sortSymbol('rating1', sortMethod)}</span></th>
+              <th onClick={() => sortListByRatingSupabase('rating2', response, sortMethod, setSortMethod, setResponse)} className='w-32 cursor-pointer'><span>TomoLover</span><span className='absolute'>{sortSymbol('rating2', sortMethod)}</span></th>
+              <th onClick={() => sortListByDateSupabase('start' , response, sortMethod, setSortMethod, setResponse)} className='w-40 cursor-pointer'><span>Start Date</span><span className='absolute'>{sortSymbol('start', sortMethod)}</span></th>
+              <th onClick={() => sortListByDateSupabase('end' , response, sortMethod, setSortMethod, setResponse)} className='w-40  cursor-pointer'><span>End Date</span><span className='absolute'>{sortSymbol('end', sortMethod)}</span></th>
             </tr>
             {response?.slice().reverse().map(item => {
               return <tr key={item.title}>
@@ -173,12 +186,12 @@ export default function Home() {
                     item.title ? item.title : <span className='italic text-gray-400'>Untitled</span>
                   }
                 </td>
-                <td onDoubleClick={() => {setIsEdited(`type${item.id}`)}}>{isEdited == `type${item.id}` ? editForm('type', item.id, item.type!) : item.type}</td>
-                <td onDoubleClick={() => {setIsEdited(`episode${item.id}`)}}>{isEdited == `episode${item.id}` ? editForm('episode', item.id, item.episode!) : item.episode}</td>
-                <td onDoubleClick={() => {setIsEdited(`rating1${item.id}`)}}>{isEdited == `rating1${item.id}` ? editForm('rating1', item.id, item.rating1!) : item.rating1}</td>
-                <td onDoubleClick={() => {setIsEdited(`rating2${item.id}`)}}>{isEdited == `rating2${item.id}` ? editForm('rating2', item.id, item.rating2!) : item.rating2}</td>
-                <td onDoubleClick={() => {setIsEdited(`start${item.id}`)}}>{isEdited == `start${item.id}` ? editForm('start', item.id, item.start!) : item.start}</td>
-                <td onDoubleClick={() => {setIsEdited(`end${item.id}`)}}>{isEdited == `end${item.id}` ? editForm('end', item.id, item.end!) : item.end}</td>
+                <td onDoubleClick={() => {setIsEdited(`type${item.id}`)}}>{isEdited == `type${item.id}` ? editForm('type', item.id, item.type ?? '') : item.type}</td>
+                <td onDoubleClick={() => {setIsEdited(`episode${item.id}`)}}>{isEdited == `episode${item.id}` ? editForm('episode', item.id, item.episode ?? '') : item.episode}</td>
+                <td onDoubleClick={() => {setIsEdited(`rating1${item.id}`)}}>{isEdited == `rating1${item.id}` ? editForm('rating1', item.id, item.rating1 ?? '') : item.rating1}</td>
+                <td onDoubleClick={() => {setIsEdited(`rating2${item.id}`)}}>{isEdited == `rating2${item.id}` ? editForm('rating2', item.id, item.rating2 ?? '') : item.rating2}</td>
+                <td onDoubleClick={() => {setIsEdited(`start${item.id}`)}}>{isEdited == `start${item.id}` ? editForm('start', item.id, item.start ?? '') : item.start}</td>
+                <td onDoubleClick={() => {setIsEdited(`end${item.id}`)}}>{isEdited == `end${item.id}` ? editForm('end', item.id, item.end ?? '') : item.end}</td>
               </tr>
             })}
           </tbody>
