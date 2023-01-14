@@ -47,7 +47,7 @@ export default function Home({ res }: {res: Database['public']['Tables']['Comple
         setResponse(data!)
       })
       .subscribe()
-    
+
     document.addEventListener('click', (e: any) => {
       if (e.target?.tagName === 'INPUT') return;
       setIsEdited('');
@@ -62,7 +62,7 @@ export default function Home({ res }: {res: Database['public']['Tables']['Comple
       }
     })
 
-    return () => subscribe.unsubscribe()
+    return () => {supabase.removeAllChannels()}
   },[])
 
   //TODO: Detect pressing tab so it jumps to the next field to be edited 
