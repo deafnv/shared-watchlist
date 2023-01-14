@@ -28,6 +28,7 @@ export const getServerSideProps = async (context: GetServerSidePropsContext) => 
 
 export default function Home({ res }: {res: Database['public']['Tables']['Completed']['Row'][]}) {
   const [response, setResponse] = useState<Database['public']['Tables']['Completed']['Row'][]>(res);
+  const [response1, setResponse1] = useState<Database['public']['Tables']['Completed']['Row'][]>(res);
   const [sortMethod, setSortMethod] = useState<string>('');
   const [isEdited, setIsEdited] = useState<string>('');
   const searchRef = useRef<HTMLInputElement>(null);
@@ -36,18 +37,6 @@ export default function Home({ res }: {res: Database['public']['Tables']['Comple
   const supabase = createClient<Database>('https://esjopxdrlewtpffznsxh.supabase.co', process.env.NEXT_PUBLIC_SUPABASE_API_KEY!);
 
   useEffect(() => {
-    const subscribe = supabase
-      .channel('public:Completed')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'Completed' }, async payload => {
-        //FIXME: Create timeout here so it doesn't query DB every change if change occurs too frequently
-        const { data } = await supabase 
-          .from('Completed')
-          .select()
-          .order('id', { ascending: true });
-        setResponse(data!)
-      })
-      .subscribe()
-
     document.addEventListener('click', (e: any) => {
       if (e.target?.tagName === 'INPUT') return;
       setIsEdited('');
@@ -64,6 +53,31 @@ export default function Home({ res }: {res: Database['public']['Tables']['Comple
 
     return () => {supabase.removeAllChannels()}
   },[])
+
+  const subscribe = supabase
+      .channel('public:Completed')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'Completed' }, async payload => {
+        //FIXME: Create timeout here so it doesn't query DB every change if change occurs too frequently
+        const { data } = await supabase 
+          .from('Completed')
+          .select()
+          .order('id', { ascending: true });
+  
+        //? Meant to provide updates when user is in sort mode, currently non-functional, repeats the sorting 4 to 21 times.
+        /* if (sortMethod) {
+          if (sortMethod.includes('title')) {
+            console.log('title sorted')
+            sortListByNameSupabase('title', data!, sortMethod, setSortMethod, setResponse);
+          } else if (sortMethod.includes('rating')) {
+
+          } else if (sortMethod.includes('date')) {
+
+          }
+        } else setResponse(data!); */
+        setResponse(data!);
+        setResponse1(data!);
+      })
+      .subscribe()
 
   //TODO: Detect pressing tab so it jumps to the next field to be edited 
   function editForm(field: string, id: number, ogvalue: string): React.ReactNode {
@@ -158,7 +172,7 @@ export default function Home({ res }: {res: Database['public']['Tables']['Comple
       </Head>
 
       <main className='flex flex-col items-center justify-center'>
-        <h2 className='p-2 text-3xl'>Completed{sortMethod ? <span onClick={() => {setResponse(res); setSortMethod('')}} className='cursor-pointer'> ↻</span> : null}</h2>
+        <h2 className='p-2 text-3xl'>Completed{sortMethod ? <span onClick={() => {setResponse(response1); setSortMethod('')}} className='cursor-pointer'> ↻</span> : null}</h2>
         <div className='flex items-center gap-2'>
           <form>
             <input ref={searchRef} type='search' placeholder='🔍︎ Search (non-functional)' className='input-text my-2 p-1 w-96 text-lg'></input>
