@@ -47,9 +47,6 @@ export default function Home({ res }: {res: Database['public']['Tables']['Comple
         setResponse(data!)
       })
       .subscribe()
-
-    const subscriptions = supabase.getChannels();
-    console.log(subscriptions)
     
     document.addEventListener('click', (e: any) => {
       if (e.target?.tagName === 'INPUT') return;
@@ -64,6 +61,8 @@ export default function Home({ res }: {res: Database['public']['Tables']['Comple
         setIsEdited('');
       }
     })
+
+    return () => subscribe.unsubscribe()
   },[])
 
   //TODO: Detect pressing tab so it jumps to the next field to be edited 
@@ -178,7 +177,7 @@ export default function Home({ res }: {res: Database['public']['Tables']['Comple
               <th onClick={() => sortListByDateSupabase('end' , response, sortMethod, setSortMethod, setResponse)} className='w-40  cursor-pointer'><span>End Date</span><span className='absolute'>{sortSymbol('end', sortMethod)}</span></th>
             </tr>
             {response?.slice().reverse().map(item => {
-              return <tr key={item.title}>
+              return <tr key={item.id}>
                 <td onDoubleClick={() => {setIsEdited(`title${item.id}`)}}>
                   {
                     isEdited == `title${item.id}` 
