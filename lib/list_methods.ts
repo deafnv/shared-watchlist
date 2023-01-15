@@ -110,8 +110,39 @@ export const initialTitleItemSupabase = {
   rating3average: null,
   start: null,
   title: null,
-  type: null
+  type: null,
+  startconv: null,
+  endconv: null
 }
+
+/* export const sortBasedOnSortMethod = (res: Database['public']['Tables']['Completed']['Row'][], sortMethod: string) => {
+  if (sortMethod.includes('title')) {
+    if (sortMethod.includes('titleasc')) {
+      return res.slice().sort((a, b) => a.title!.localeCompare(b.title!)); // Ascending title
+    } else {
+      return res.slice().sort((a, b) => b.title!.localeCompare(a.title!)) //Descending title
+    }
+  } else if (sortMethod.includes('rating')) {
+    const rating = sortMethod.match(/(?<=_)[^_]+$/);
+    if (sortMethod.includes('ratingasc')) {
+      return res.slice().sort((a, b) => {
+        if ((a as any)[`${rating}average`] == null) {
+          return -1;
+        }
+        return (b as any)[`${rating}average`] - (a as any)[`${rating}average`];
+      });
+    } else {
+      return res.slice().sort((a, b) => {
+        if ((b as any)[`${rating}average`] == null) {
+          return -1;
+        }
+        return (a as any)[`${rating}average`] - (b as any)[`${rating}average`];
+      });
+    }
+  } else { //!Use this for date sorting
+
+  }
+} */
 
 export const sortListByNameSupabase = (name: string, res: Database['public']['Tables']['Completed']['Row'][], sortMethod: string, setSortMethod: Dispatch<SetStateAction<string>>, setResponse: Dispatch<SetStateAction<Database['public']['Tables']['Completed']['Row'][]>>) => {
   if (sortMethod === `titleasc_${name}`) {
