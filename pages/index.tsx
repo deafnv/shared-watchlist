@@ -8,8 +8,7 @@ import { initialTitleItemSupabase, sortListByDateSupabase, sortListByNameSupabas
 
 //! Non-null assertion for the response state variable here will throw some errors if it does end up being null, fix maybe.
 //! ISSUES:
-//!   - Sorting date X
-//!   - Reset sort X
+//!   - Fix sort symbol
 
 export const getServerSideProps = async (context: GetServerSidePropsContext) => {
   const supabase = createClient<Database>('https://esjopxdrlewtpffznsxh.supabase.co', process.env.NEXT_PUBLIC_SUPABASE_API_KEY!);
@@ -187,8 +186,8 @@ export default function Home({ res }: {res: Database['public']['Tables']['Comple
               <th className='w-36'>Episode(s)</th>
               <th onClick={() => sortListByRatingSupabase('rating1', response, sortMethod, setSortMethod, setResponse)} className='w-32 cursor-pointer'><span>GoodTaste</span><span className='absolute'>{sortSymbol('rating1', sortMethod)}</span></th>
               <th onClick={() => sortListByRatingSupabase('rating2', response, sortMethod, setSortMethod, setResponse)} className='w-32 cursor-pointer'><span>TomoLover</span><span className='absolute'>{sortSymbol('rating2', sortMethod)}</span></th>
-              <th onClick={() => sortListByDateSupabase('start' , response, sortMethod, setSortMethod, setResponse)} className='w-40 cursor-pointer'><span>Start Date</span><span className='absolute'>{sortSymbol('start', sortMethod)}</span></th>
-              <th onClick={() => sortListByDateSupabase('end' , response, sortMethod, setSortMethod, setResponse)} className='w-40  cursor-pointer'><span>End Date</span><span className='absolute'>{sortSymbol('end', sortMethod)}</span></th>
+              <th onClick={() => sortListByDateSupabase('startconv' , response, sortMethod, setSortMethod, setResponse)} className='w-40 cursor-pointer'><span>Start Date</span><span className='absolute'>{sortSymbol('start', sortMethod)}</span></th>
+              <th onClick={() => sortListByDateSupabase('endconv' , response, sortMethod, setSortMethod, setResponse)} className='w-40  cursor-pointer'><span>End Date</span><span className='absolute'>{sortSymbol('end', sortMethod)}</span></th>
             </tr>
             {response?.slice().reverse().map(item => {
               return <tr key={item.id}>
