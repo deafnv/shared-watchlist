@@ -79,7 +79,7 @@ export default function Home({ res }: {res: Database['public']['Tables']['Comple
       .subscribe()
 
   //TODO: Detect pressing tab so it jumps to the next field to be edited 
-  function editForm(field: string, id: number, ogvalue: string): React.ReactNode {
+  function editForm(field: 'title' | 'type' | 'episode' | 'rating1' | 'rating2' | 'start' | 'end', id: number, ogvalue: string): React.ReactNode {
     let column: string;
     let row = (id + 1).toString();
     switch (field) {
@@ -119,13 +119,7 @@ export default function Home({ res }: {res: Database['public']['Tables']['Comple
         })
 
         const changed = response.slice();
-        if (field.match('rating')) {
-          (changed.find(item => item.id === id) as any)[field].actual = event.target[0].value;
-        } else if (field.match('start') || field.match('end')) {
-          (changed.find(item => item.id === id) as any)[field].original = event.target[0].value;
-        } else {
-          (changed.find(item => item.id === id) as any)[field] = event.target[0].value;
-        }
+        changed.find(item => item.id === id)![field] = event.target[0].value;
         setResponse(changed);
         setIsEdited('');
       } 
@@ -181,7 +175,7 @@ export default function Home({ res }: {res: Database['public']['Tables']['Comple
         <table>
           <tbody>
             <tr>
-              <th onClick={() => sortListByNameSupabase('title', response, sortMethod, setSortMethod, setResponse)} className='cursor-pointer'><span>Title</span><span className='absolute'>{sortSymbol('title', sortMethod)}</span></th>
+              <th onClick={() => sortListByNameSupabase(response, sortMethod, setSortMethod, setResponse)} className='cursor-pointer'><span>Title</span><span className='absolute'>{sortSymbol('title', sortMethod)}</span></th>
               <th className='w-32'>Type</th>
               <th className='w-36'>Episode(s)</th>
               <th onClick={() => sortListByRatingSupabase('rating1', response, sortMethod, setSortMethod, setResponse)} className='w-32 cursor-pointer'><span>GoodTaste</span><span className='absolute'>{sortSymbol('rating1', sortMethod)}</span></th>
