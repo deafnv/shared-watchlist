@@ -191,7 +191,7 @@ export const sortListByDateSupabase = (date: 'startconv' | 'endconv', res: Datab
 
 //* PLAN TO WATCH LIST METHODS
 
-export const sortListByNamePTW = (name: string, res: Array<PTWTItem>, sortMethod: string, setSortMethod: Dispatch<SetStateAction<string>>, setResponse: Dispatch<SetStateAction<PTWTItem[]>>) => {
+export const sortListByNamePTW = (name: string, res: Database['public']['Tables']['PTW-Rolled']['Row'][], sortMethod: string, setSortMethod: Dispatch<SetStateAction<string>>, setResponse: Dispatch<SetStateAction<Database['public']['Tables']['PTW-Rolled']['Row'][]>>) => {
   if (sortMethod === `titleasc_${name}`) {
     setSortMethod(`titledesc_${name}`)
     setResponse(res.slice().sort((a, b) => b.title!.localeCompare(a.title!)));

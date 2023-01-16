@@ -78,6 +78,7 @@ export default function Home({ res }: {res: Database['public']['Tables']['Comple
         } else setResponse(data!); */
         setResponse(data!);
         setResponse1(data!);
+        setSortMethod('');
       })
       .subscribe()
 
