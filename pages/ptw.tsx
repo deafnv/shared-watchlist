@@ -21,25 +21,30 @@ export const getServerSideProps = async (context: GetServerSidePropsContext) => 
     .from('PTW-NonCasual')
     .select()
     .order('id', { ascending: true });
+  const dataMovies = await supabase 
+    .from('PTW-Movies')
+    .select()
+    .order('id', { ascending: true });
 
   return {
     props: {
       resRolled: dataRolled.data,
       resCasual: dataCasual.data,
-      resNonCasual: dataNonCasual.data
+      resNonCasual: dataNonCasual.data,
+      resMovies: dataMovies.data
     }
   }
 }
 
-export default function PTW({ resRolled, resCasual, resNonCasual }: { resRolled: Database['public']['Tables']['PTW-Rolled']['Row'][], resCasual: Database['public']['Tables']['PTW-Casual']['Row'][], resNonCasual: Database['public']['Tables']['PTW-NonCasual']['Row'][] }) {
+export default function PTW({ resRolled, resCasual, resNonCasual, resMovies }: { resRolled: Database['public']['Tables']['PTW-Rolled']['Row'][], resCasual: Database['public']['Tables']['PTW-Casual']['Row'][], resNonCasual: Database['public']['Tables']['PTW-NonCasual']['Row'][], resMovies: Database['public']['Tables']['PTW-Movies']['Row'][] }) {
   const [responseRolled, setResponseRolled] = useState<Database['public']['Tables']['PTW-Rolled']['Row'][]>(resRolled);
   const [responseRolled1, setResponseRolled1] = useState<Database['public']['Tables']['PTW-Rolled']['Row'][]>(resRolled);
   const [responseCasual, setResponseCasual] = useState<Database['public']['Tables']['PTW-Casual']['Row'][]>(resCasual);
   const [responseNonCasual, setResponseNonCasual] = useState<Database['public']['Tables']['PTW-NonCasual']['Row'][]>(resNonCasual);
+  const [responseMovies, setResponseMovies] = useState<Database['public']['Tables']['PTW-Movies']['Row'][]>(resMovies);
   const [sortMethod, setSortMethod] = useState<string>('');
   const [isEdited, setIsEdited] = useState<string>('');
   const [reordered, setReordered] = useState(false);
-  const [delayed, setDelayed] = useState(false);
 
   const supabase = createClient<Database>('https://esjopxdrlewtpffznsxh.supabase.co', process.env.NEXT_PUBLIC_SUPABASE_API_KEY!);
 
@@ -58,7 +63,7 @@ export default function PTW({ resRolled, resCasual, resNonCasual }: { resRolled:
   supabase
     .channel('*')
     .on('postgres_changes', { event: '*', schema: '*' }, async payload => {
-      if (payload.table == 'PTW-Rolled' || payload.table == 'PTW-Casual' || payload.table == 'PTW-NonCasual') {
+      if (payload.table == 'PTW-Rolled' || payload.table == 'PTW-Casual' || payload.table == 'PTW-NonCasual' || payload.table == 'PTW-Movies') {
         const { data } = await supabase 
           .from(payload.table)
           .select()
@@ -77,14 +82,18 @@ export default function PTW({ resRolled, resCasual, resNonCasual }: { resRolled:
           case 'PTW-NonCasual':
             setResponseNonCasual(data!);
             break;
+          case 'PTW-Movies':
+            setResponseMovies(data!);
+            break;
         }
       }
     })
     .subscribe()
 
-  function editForm(field: 'rolled_title' | 'casual_title' | 'noncasual_title', id: number, ogvalue: string): React.ReactNode {
+  function editForm(field: 'rolled_title' | 'casual_title' | 'noncasual_title' | 'movies_title', id: number, ogvalue: string): React.ReactNode {
     let column: string;
-    let row = (id + 1).toString();
+    let row = (id + 2).toString();
+    if (field == 'movies_title') row = (id + 22).toString();
     switch (field) {
       case 'rolled_title':
         column = 'N';
@@ -94,6 +103,9 @@ export default function PTW({ resRolled, resCasual, resNonCasual }: { resRolled:
         break;
       case 'noncasual_title':
         column = 'M';
+        break;
+      case 'movies_title':
+        column = 'L';
         break;
       default:
         alert('Error: missing field');
@@ -109,10 +121,33 @@ export default function PTW({ resRolled, resCasual, resNonCasual }: { resRolled:
           cell: column + row
         })
 
-        const changed = responseRolled.slice();
-        (changed.find(item => item.id === id) as any)[field] = event.target[0].value;
-        setResponseRolled(changed);
-        setIsEdited('');
+        switch (field) {
+          case 'rolled_title':
+            const changedRolled = responseRolled.slice();
+            changedRolled.find(item => item.id === id)!['title'] = event.target[0].value;
+            setResponseRolled(changedRolled);
+            setIsEdited('');
+            break;
+          case 'casual_title':
+            const changedCasual = responseCasual.slice();
+            changedCasual.find(item => item.id === id)!['title'] = event.target[0].value;
+            setResponseCasual(changedCasual);
+            setIsEdited('');
+            break;
+          case 'noncasual_title':
+            const changedNonCasual = responseNonCasual.slice();
+            changedNonCasual.find(item => item.id === id)!['title'] = event.target[0].value;
+            setResponseNonCasual(changedNonCasual);
+            setIsEdited('');
+            break;
+          case 'movies_title':
+            const changedMovies = responseMovies.slice();
+            changedMovies.find(item => item.id === id)!['title'] = event.target[0].value;
+            setResponseMovies(changedMovies);
+            setIsEdited('');
+            break;
+        }
+        
       } 
       catch (error) {
         alert(error);
@@ -174,46 +209,39 @@ export default function PTW({ resRolled, resCasual, resNonCasual }: { resRolled:
           : null}
         </div>
         <div className='flex gap-4'>
-          <div className='flex flex-col items-center'>
-            <h2 className='p-2 text-3xl'>Casual</h2>
-            <table>
-              <tbody>
-                <tr>
-                  <th className='w-[30rem]'><span>Title</span></th>
-                </tr> 
-                {responseCasual?.map((item, i) => {
-                  return (
-                    <tr key={item.id}>
-                      <td onDoubleClick={() => {setIsEdited(`casual_${item.title}_${item.id}`)}}>
-                        {isEdited == `casual_${item.title}_${item.id}` ? editForm('casual_title', item.id, item.title!) : item.title}
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
-          <div className='flex flex-col items-center'>
-            <h2 className='p-2 text-3xl'>Non-Casual</h2>
-            <table>
-              <tbody>
-                <tr>
-                  <th className='w-[30rem]'><span>Title</span></th>
-                </tr> 
-                {responseNonCasual?.map((item, i) => {
-                  return (
-                    <tr key={item.id}>
-                      <td onDoubleClick={() => {setIsEdited(`noncasual_${item.title}_${item.id}`)}}>
-                        {isEdited == `noncasual_${item.title}_${item.id}` ? editForm('noncasual_title', item.id, item.title!) : item.title}
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
+          {PTWTable(responseCasual, 'Casual', 'casual')}
+          {PTWTable(responseNonCasual, 'Non-Casual', 'noncasual')}
+          {PTWTable(responseMovies, 'Movies', 'movies')}
         </div>
       </main>
     </>
   )
+
+  function PTWTable(
+    response: { id: number; title: string | null; }[],
+    tableName: string,
+    tableId: 'casual' | 'noncasual' | 'movies'
+  ) {
+    return <div className='flex flex-col items-center'>
+      <h2 className='p-2 text-3xl'>{tableName}</h2>
+      <table>
+        <tbody>
+          <tr>
+            <th className='w-[30rem]'><span>Title</span></th>
+          </tr> 
+          {response?.map((item) => {
+            return (
+              <tr key={item.id}>
+                <td onDoubleClick={() => { setIsEdited(`${tableId}_${item.title}_${item.id}`); } }>
+                  {isEdited == `${tableId}_${item.title}_${item.id}` ? editForm(`${tableId}_title`, item.id, item.title!) : item.title}
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>;
+  }
 }
+
+
