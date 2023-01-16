@@ -55,46 +55,30 @@ export default function PTW({ resRolled, resCasual, resNonCasual }: { resRolled:
     return () => {supabase.removeAllChannels()}
   },[])
 
-  //! Alternative could be more efficient: listen to all database changes, and update if the change is related to these three tables
   supabase
-    .channel('public:PTW-Rolled')
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'PTW-Rolled' }, async payload => {
-      console.log('Change received: ', payload)
-      const { data } = await supabase 
-        .from('PTW-Rolled')
-        .select()
-        .order('id', { ascending: true });
+    .channel('*')
+    .on('postgres_changes', { event: '*', schema: '*' }, async payload => {
+      if (payload.table == 'PTW-Rolled' || payload.table == 'PTW-Casual' || payload.table == 'PTW-NonCasual') {
+        const { data } = await supabase 
+          .from(payload.table)
+          .select()
+          .order('id', { ascending: true });
 
-      setResponseRolled(data!);
-      setResponseRolled1(data!);
-      setReordered(false);
-      setSortMethod('');
-    })
-    .subscribe()
-
-  supabase
-    .channel('public:PTW-Casual')
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'PTW-Casual' }, async payload => {
-      console.log('Change received: ', payload)
-      const { data } = await supabase 
-        .from('PTW-Casual')
-        .select()
-        .order('id', { ascending: true });
-
-      setResponseCasual(data!);
-    })
-    .subscribe()
-
-  supabase
-    .channel('public:PTW-NonCasual')
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'PTW-NonCasual' }, async payload => {
-      console.log('Change received: ', payload)
-      const { data } = await supabase 
-        .from('PTW-NonCasual')
-        .select()
-        .order('id', { ascending: true });
-
-      setResponseNonCasual(data!);
+        switch (payload.table) {
+          case 'PTW-Rolled':
+            setResponseRolled(data!);
+            setResponseRolled1(data!);
+            setReordered(false);
+            setSortMethod('');
+            break;
+          case 'PTW-Casual':
+            setResponseCasual(data!);
+            break;
+          case 'PTW-NonCasual':
+            setResponseNonCasual(data!);
+            break;
+        }
+      }
     })
     .subscribe()
 
@@ -148,7 +132,7 @@ export default function PTW({ resRolled, resCasual, resNonCasual }: { resRolled:
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <main className='flex flex-col items-center justify-center'>
+      <main className='flex flex-col items-center justify-center gap-4'>
         <div className='flex flex-col items-center'>
           <h2 className='p-2 text-3xl'>Plan to Watch (Rolled){sortMethod ? <span onClick={() => {setResponseRolled(responseRolled1); setSortMethod('')}} className='cursor-pointer'> ↻</span> : null}</h2>
           <table>
