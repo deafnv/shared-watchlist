@@ -26,7 +26,7 @@ export default function Seasonal({ res }: {res: Database['public']['Tables']['PT
 
   useEffect(() => {
     document.addEventListener('click', (e: any) => {
-      if (e.target?.tagName === 'INPUT') return;
+      if (e.target?.tagName === 'INPUT' || e.target?.tagName === 'SELECT') return;
       setIsEdited('');
     })
     window.addEventListener('focusout', () => {
@@ -84,6 +84,40 @@ export default function Seasonal({ res }: {res: Database['public']['Tables']['PT
     return <form onSubmit={handleSubmit}><input autoFocus type='text' defaultValue={ogvalue} className='input-text text-center w-4/5'></input></form>
   }
 
+  function editStatus(id: number) {
+    async function handleSubmit(event: BaseSyntheticEvent) {
+      event.preventDefault();
+
+      let row = id + 2;
+      try {
+        await axios.post('/api/updatestatus', {
+          content: event.target.childNodes[0].value,
+          cells: `P${row}:P${row}`
+        })
+
+        const changed = response.slice();
+        changed.find(item => item.id === id)!['status'] = event.target.childNodes[0].value;
+        setResponse(changed);
+        setIsEdited('');
+      } 
+      catch (error) {
+        alert(error);
+        return;
+      }
+    }
+
+    return (
+      <form onSubmit={handleSubmit} className='text-gray-800'>
+        <select onChange={(e) => {(e.target.parentNode as HTMLFormElement)!.requestSubmit()}} className='h-full w-full'>
+          <option>Select status</option>
+          <option>Watched</option>
+          <option>Loaded</option>
+          <option>Not loaded</option>
+        </select>
+      </form>
+    )
+  }
+
   return (
     <>
       <Head>
@@ -98,13 +132,36 @@ export default function Seasonal({ res }: {res: Database['public']['Tables']['PT
         <table>
           <tbody>
             <tr>
-              <th className='w-[30rem]'><span>Title</span></th>
+              <th className='w-[30rem]'>Title</th>
+              <th className='w-[10rem]'>Status</th>
             </tr> 
             {response?.map((item) => {
+              let status;
+              switch (item.status) {
+                case 'Not loaded':
+                  status = 'crimson';
+                  break;
+                case 'Loaded':
+                  status = 'orange';
+                  break;
+                case 'Watched':
+                  status = 'green';
+                  break;
+                default:
+                  status = '';
+              }
               return (
                 <tr key={item.id}>
-                  <td onDoubleClick={() => { setIsEdited(`seasonal_${item.title}_${item.id}`); } }>
+                  <td onDoubleClick={() => { setIsEdited(`seasonal_title_${item.title}_${item.id}`) } }>
                     {isEdited == `seasonal_${item.title}_${item.id}` ? editForm(`seasonal_title`, item.id, item.title!) : item.title}
+                  </td>
+                  <td 
+                    onDoubleClick={() => { setIsEdited(`seasonal_status_${item.title}_${item.id}`) }}
+                    style={{
+                      backgroundColor: status
+                    }}
+                  >
+                    {isEdited == `seasonal_status_${item.title}_${item.id}` ? editStatus(item.id) : ''}
                   </td>
                 </tr>
               );

@@ -5,50 +5,30 @@ export default async function BatchUpdateSheet(req: NextApiRequest, res: NextApi
   const { body, method } = req;
   const { content, cells } = body; 
 
-  if (!Array.isArray(content)) return res.status(400).send("Invalid content provided");
-  const rowsToInsert = content.map(item => {
-    let red;
-    let green;
-    let blue;
-    switch (item.status) {
-      case 'Watched':
-        red = 0.20392157;
-        green = 0.65882355;
-        blue = 0.3254902;
-        break;
-      case 'Not loaded':
-        red = 0.91764706;
-        green = 0.2627451;
-        blue = 0.20784314;
-        break;
-      case 'Loaded':
-        red = 0.9843137;
-        green = 0.7372549;
-        blue = 0.015686275;
-        break;
-      default:
-        red = 0;
-        green = 0;
-        blue = 0;
-    }
-
-    return {
-      values: [
-        {
-          userEnteredValue: {
-            stringValue: item.title
-          },
-          userEnteredFormat: {
-            backgroundColor: {
-              red,
-              green,
-              blue
-            }
-          }
-        }
-      ]
-    }
-  })
+  let red;
+  let green;
+  let blue;
+  switch (content) {
+    case 'Watched':
+      red = 0.20392157;
+      green = 0.65882355;
+      blue = 0.3254902;
+      break;
+    case 'Not loaded':
+      red = 0.91764706;
+      green = 0.2627451;
+      blue = 0.20784314;
+      break;
+    case 'Loaded':
+      red = 0.9843137;
+      green = 0.7372549;
+      blue = 0.015686275;
+      break;
+    default:
+      red = 0;
+      green = 0;
+      blue = 0;
+  }
 
   let range = cells.split(':');
   if (range.length < 2) return res.status(400).send("Invalid range provided");
@@ -69,7 +49,7 @@ export default async function BatchUpdateSheet(req: NextApiRequest, res: NextApi
           requests: [
             {
               updateCells: {
-                fields: 'userEnteredValue/stringValue, userEnteredFormat/backgroundColor',
+                fields: 'userEnteredFormat/backgroundColor',
                 range: {
                   sheetId: 0,
                   startRowIndex,
@@ -77,7 +57,21 @@ export default async function BatchUpdateSheet(req: NextApiRequest, res: NextApi
                   startColumnIndex,
                   endColumnIndex
                 },
-                rows: rowsToInsert
+                rows: [
+                  {
+                    values: [
+                      {
+                        userEnteredFormat: {
+                          backgroundColor: {
+                            red,
+                            green,
+                            blue
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
               }
             }
           ]
