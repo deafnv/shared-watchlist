@@ -113,6 +113,7 @@ export default function Seasonal({ res }: {res: Database['public']['Tables']['PT
           <option>Watched</option>
           <option>Loaded</option>
           <option>Not loaded</option>
+          <option>Not aired</option>
         </select>
       </form>
     )
@@ -146,6 +147,9 @@ export default function Seasonal({ res }: {res: Database['public']['Tables']['PT
                   break;
                 case 'Watched':
                   status = 'green';
+                  break;
+                case 'Not aired':
+                  status = 'black';
                   break;
                 default:
                   status = '';

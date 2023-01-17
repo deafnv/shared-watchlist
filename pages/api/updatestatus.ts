@@ -24,10 +24,15 @@ export default async function BatchUpdateSheet(req: NextApiRequest, res: NextApi
       green = 0.7372549;
       blue = 0.015686275;
       break;
-    default:
+    case 'Not aired':
       red = 0;
       green = 0;
       blue = 0;
+      break;
+    default:
+      red = 1;
+      green = 1;
+      blue = 1;
   }
 
   let range = cells.split(':');
