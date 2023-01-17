@@ -24,8 +24,6 @@ export default function Seasonal({ res }: {res: Database['public']['Tables']['PT
   const [response, setResponse] = useState<Database['public']['Tables']['PTW-CurrentSeason']['Row'][]>(res);
   const [isEdited, setIsEdited] = useState<string>('');
 
-  const supabase = createClient<Database>('https://esjopxdrlewtpffznsxh.supabase.co', process.env.NEXT_PUBLIC_SUPABASE_API_KEY!);
-
   useEffect(() => {
     document.addEventListener('click', (e: any) => {
       if (e.target?.tagName === 'INPUT') return;
@@ -37,6 +35,8 @@ export default function Seasonal({ res }: {res: Database['public']['Tables']['PT
     window.addEventListener("keydown",(e) => {
       if (e.key === 'Escape') setIsEdited('');
     })
+    
+    const supabase = createClient<Database>('https://esjopxdrlewtpffznsxh.supabase.co', process.env.NEXT_PUBLIC_SUPABASE_API_KEY!);
 
     supabase
       .channel('public:PTW-CurrentSeason')

@@ -47,8 +47,6 @@ export default function PTW({ resRolled, resCasual, resNonCasual, resMovies }: {
   const [isEdited, setIsEdited] = useState<string>('');
   const [reordered, setReordered] = useState(false);
 
-  const supabase = createClient<Database>('https://esjopxdrlewtpffznsxh.supabase.co', process.env.NEXT_PUBLIC_SUPABASE_API_KEY!);
-
   useEffect(() => {
     document.addEventListener('click', (e: any) => {
       if (e.target?.tagName === 'INPUT') return;
@@ -60,6 +58,8 @@ export default function PTW({ resRolled, resCasual, resNonCasual, resMovies }: {
     window.addEventListener("keydown",(e) => {
       if (e.key === 'Escape') setIsEdited('');
     })
+
+    const supabase = createClient<Database>('https://esjopxdrlewtpffznsxh.supabase.co', process.env.NEXT_PUBLIC_SUPABASE_API_KEY!);
 
     supabase
       .channel('*')

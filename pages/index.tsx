@@ -32,9 +32,6 @@ export default function Home({ res }: {res: Database['public']['Tables']['Comple
   const [isEdited, setIsEdited] = useState<string>('');
   const searchRef = useRef<HTMLInputElement>(null);
 
-  //FIXME: Don't expose API key to client side
-  const supabase = createClient<Database>('https://esjopxdrlewtpffznsxh.supabase.co', process.env.NEXT_PUBLIC_SUPABASE_API_KEY!);
-
   useEffect(() => {
     document.addEventListener('click', (e: any) => {
       if (e.target?.tagName === 'INPUT') return;
@@ -50,6 +47,9 @@ export default function Home({ res }: {res: Database['public']['Tables']['Comple
       }
       if (e.key === 'Escape') setIsEdited('');
     })
+
+    //FIXME: Don't expose API key to client side
+    const supabase = createClient<Database>('https://esjopxdrlewtpffznsxh.supabase.co', process.env.NEXT_PUBLIC_SUPABASE_API_KEY!);
 
     supabase
       .channel('public:Completed')
