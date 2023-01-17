@@ -40,17 +40,15 @@ export default function Home({ res }: {res: Database['public']['Tables']['Comple
       if (e.target?.tagName === 'INPUT') return;
       setIsEdited('');
     })
-    window.addEventListener('focusout', (e: any) => {
+    window.addEventListener('focusout', () => {
       setIsEdited('');
     })
-    window.addEventListener("keydown",function (e) {
+    window.addEventListener("keydown", (e) => {
       if (e.keyCode === 114 || (e.ctrlKey && e.keyCode === 70)) { 
         e.preventDefault();
         searchRef.current?.focus();
       }
-      if (e.key === 'Escape') {
-        setIsEdited('');
-      }
+      if (e.key === 'Escape') setIsEdited('');
     })
 
     supabase

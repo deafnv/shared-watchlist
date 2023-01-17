@@ -54,8 +54,11 @@ export default function PTW({ resRolled, resCasual, resNonCasual, resMovies }: {
       if (e.target?.tagName === 'INPUT') return;
       setIsEdited('');
     })
-    window.addEventListener('focusout', (e: any) => {
+    window.addEventListener('focusout', () => {
       setIsEdited('');
+    })
+    window.addEventListener("keydown",(e) => {
+      if (e.key === 'Escape') setIsEdited('');
     })
 
     supabase
