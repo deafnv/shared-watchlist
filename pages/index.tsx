@@ -53,10 +53,7 @@ export default function Home({ res }: {res: Database['public']['Tables']['Comple
       }
     })
 
-    return () => {supabase.removeAllChannels()}
-  },[])
-
-  const subscribe = supabase
+    supabase
       .channel('public:Completed')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'Completed' }, async payload => {
         //FIXME: Create timeout here so it doesn't query DB every change if change occurs too frequently
@@ -81,6 +78,9 @@ export default function Home({ res }: {res: Database['public']['Tables']['Comple
         setSortMethod('');
       })
       .subscribe()
+
+    return () => {supabase.removeAllChannels()}
+  },[])
 
   //TODO: Detect pressing tab so it jumps to the next field to be edited 
   function editForm(field: 'title' | 'type' | 'episode' | 'rating1' | 'rating2' | 'start' | 'end', id: number, ogvalue: string): React.ReactNode {

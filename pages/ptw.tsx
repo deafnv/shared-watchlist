@@ -58,39 +58,39 @@ export default function PTW({ resRolled, resCasual, resNonCasual, resMovies }: {
       setIsEdited('');
     })
 
+    supabase
+      .channel('*')
+      .on('postgres_changes', { event: '*', schema: '*' }, async payload => {
+        if (payload.table == 'PTW-Rolled' || payload.table == 'PTW-Casual' || payload.table == 'PTW-NonCasual' || payload.table == 'PTW-Movies') {
+          console.log(payload)
+          const { data } = await supabase 
+            .from(payload.table)
+            .select()
+            .order('id', { ascending: true });
+
+          switch (payload.table) {
+            case 'PTW-Rolled':
+              setResponseRolled(data!);
+              setResponseRolled1(data!);
+              setReordered(false);
+              setSortMethod('');
+              break;
+            case 'PTW-Casual':
+              setResponseCasual(data!);
+              break;
+            case 'PTW-NonCasual':
+              setResponseNonCasual(data!);
+              break;
+            case 'PTW-Movies':
+              setResponseMovies(data!);
+              break;
+          }
+        }
+      })
+      .subscribe()
+
     return () => {supabase.removeAllChannels()}
   },[])
-
-  supabase
-    .channel('*')
-    .on('postgres_changes', { event: '*', schema: '*' }, async payload => {
-      if (payload.table == 'PTW-Rolled' || payload.table == 'PTW-Casual' || payload.table == 'PTW-NonCasual' || payload.table == 'PTW-Movies') {
-        console.log(payload)
-        const { data } = await supabase 
-          .from(payload.table)
-          .select()
-          .order('id', { ascending: true });
-
-        switch (payload.table) {
-          case 'PTW-Rolled':
-            setResponseRolled(data!);
-            setResponseRolled1(data!);
-            setReordered(false);
-            setSortMethod('');
-            break;
-          case 'PTW-Casual':
-            setResponseCasual(data!);
-            break;
-          case 'PTW-NonCasual':
-            setResponseNonCasual(data!);
-            break;
-          case 'PTW-Movies':
-            setResponseMovies(data!);
-            break;
-        }
-      }
-    })
-    .subscribe()
 
   function editForm(field: 'rolled_title' | 'casual_title' | 'noncasual_title' | 'movies_title', id: number, ogvalue: string): React.ReactNode {
     let column: string;
