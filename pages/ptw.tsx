@@ -6,6 +6,7 @@ import { Reorder } from 'framer-motion';
 import { sortListByNamePTW, sortSymbol } from '../lib/list_methods';
 import { createClient } from '@supabase/supabase-js';
 import { Database } from '../lib/database.types';
+import { google } from 'googleapis';
 
 export const getServerSideProps = async (context: GetServerSidePropsContext) => {
   const supabase = createClient<Database>('https://esjopxdrlewtpffznsxh.supabase.co', process.env.NEXT_PUBLIC_SUPABASE_API_KEY!);
@@ -64,6 +65,7 @@ export default function PTW({ resRolled, resCasual, resNonCasual, resMovies }: {
     .channel('*')
     .on('postgres_changes', { event: '*', schema: '*' }, async payload => {
       if (payload.table == 'PTW-Rolled' || payload.table == 'PTW-Casual' || payload.table == 'PTW-NonCasual' || payload.table == 'PTW-Movies') {
+        console.log(payload)
         const { data } = await supabase 
           .from(payload.table)
           .select()
@@ -158,6 +160,23 @@ export default function PTW({ resRolled, resCasual, resNonCasual, resMovies }: {
     return <form onSubmit={handleSubmit}><input autoFocus type='text' defaultValue={ogvalue} className='input-text text-center w-4/5'></input></form>
   }
 
+  async function saveReorder() {
+    let endRowIndex = responseRolled.length + 1;
+    try {
+      await axios.post('/api/batchupdate', {
+        content: responseRolled,
+        cells: `N2:N${endRowIndex}`
+      })
+
+      setReordered(false);
+    }
+    catch (error) {
+      alert(error);
+      console.log(error);
+      return;
+    }
+  }
+
   return (
     <>
       <Head>
@@ -200,9 +219,9 @@ export default function PTW({ resRolled, resCasual, resNonCasual, resMovies }: {
           </Reorder.Group>
           {!sortMethod && reordered ? 
             <div className='flex flex-col items-center'>
-              <span className='mt-2 text-red-500'>⚠ Live updates will be paused while changes are being made to this table</span>
+              <span className='mt-2 text-red-500'>⚠ Live updates will be paused while changes are being made to this table (Not really)</span>
               <div className='flex gap-2 my-2'>
-                <button className='input-submit p-2 rounded-md' onClick={() => {console.log(responseRolled) /* TODO: PUt the reordered false here */}}>Save Changes</button>
+                <button className='input-submit p-2 rounded-md' onClick={() => {saveReorder() /* TODO: PUt the reordered false here */}}>Save Changes</button>
                 <button className='input-submit p-2 rounded-md' onClick={() => {setResponseRolled(responseRolled1); setReordered(false)}}>Cancel</button>
               </div>
             </div>
