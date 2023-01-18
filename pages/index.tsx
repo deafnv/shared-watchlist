@@ -17,7 +17,7 @@ export const getServerSideProps = async (context: GetServerSidePropsContext) => 
     .select()
     .order('id', { ascending: true });
 
-  axios.get('http://update.ilovesabrina.org:3005/refresh');
+  axios.get('http://update.ilovesabrina.org:3004/refresh');
 
   //? data.data can be null, which isnt typed in the receiving Home() function.
   return {
@@ -35,7 +35,7 @@ export default function Home({ res }: {res: Database['public']['Tables']['Comple
   const searchRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const refresh = setInterval(() => axios.get('http://update.ilovesabrina.org:3005/refresh'), 3500000);
+    const refresh = setInterval(() => axios.get('http://update.ilovesabrina.org:3004/refresh'), 3500000);
 
     document.addEventListener('click', (e: any) => {
       if (e.target?.tagName === 'INPUT') return;

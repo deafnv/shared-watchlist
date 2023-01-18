@@ -6,7 +6,6 @@ import { Reorder } from 'framer-motion';
 import { sortListByNamePTW, sortSymbol } from '../lib/list_methods';
 import { createClient } from '@supabase/supabase-js';
 import { Database } from '../lib/database.types';
-import { google } from 'googleapis';
 
 export const getServerSideProps = async (context: GetServerSidePropsContext) => {
   const supabase = createClient<Database>('https://esjopxdrlewtpffznsxh.supabase.co', process.env.NEXT_PUBLIC_SUPABASE_API_KEY!);
@@ -27,7 +26,7 @@ export const getServerSideProps = async (context: GetServerSidePropsContext) => 
     .select()
     .order('id', { ascending: true });
 
-  axios.get('http://update.ilovesabrina.org:3005/refresh');
+  axios.get('http://update.ilovesabrina.org:3004/refresh');
 
   return {
     props: {
@@ -50,7 +49,7 @@ export default function PTW({ resRolled, resCasual, resNonCasual, resMovies }: {
   const [reordered, setReordered] = useState(false);
 
   useEffect(() => {
-    const refresh = setInterval(() => axios.get('http://update.ilovesabrina.org:3005/refresh'), 3500000);
+    const refresh = setInterval(() => axios.get('http://update.ilovesabrina.org:3004/refresh'), 3500000);
 
     document.addEventListener('click', (e: any) => {
       if (e.target?.tagName === 'INPUT') return;

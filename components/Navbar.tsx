@@ -21,7 +21,7 @@ export default function Navbar({children}: React.PropsWithChildren) {
 
   useEffect(() => {
     async function getTimer() {
-      axios.get('http://update.ilovesabrina.org:3005/timer').then(response => setTimer(response.data))
+      axios.get('https://update.ilovesabrina.org:3005/timer').then(response => setTimer(response.data))
     }
     getTimer();
   },[])
