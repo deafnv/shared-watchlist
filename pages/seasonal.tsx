@@ -164,7 +164,7 @@ export default function Seasonal({ res }: {res: Database['public']['Tables']['PT
               return (
                 <tr key={item.id}>
                   <td onDoubleClick={() => { setIsEdited(`seasonal_title_${item.title}_${item.id}`) } }>
-                    {isEdited == `seasonal_${item.title}_${item.id}` ? editForm(`seasonal_title`, item.id, item.title!) : item.title}
+                    {isEdited == `seasonal_title_${item.title}_${item.id}` ? editForm(`seasonal_title`, item.id, item.title!) : item.title}
                   </td>
                   <td 
                     onDoubleClick={() => { setIsEdited(`seasonal_status_${item.title}_${item.id}`) }}
