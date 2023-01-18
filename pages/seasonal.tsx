@@ -13,7 +13,7 @@ export const getServerSideProps = async (context: GetServerSidePropsContext) => 
     .select()
     .order('id', { ascending: true });
 
-  axios.get('http://update.ilovesabrina.org:3004/refresh');
+  axios.get('http://update.ilovesabrina.org:3004/refresh').catch(error => console.log(error));
 
   return {
     props: {

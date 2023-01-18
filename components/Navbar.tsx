@@ -21,7 +21,7 @@ export default function Navbar({children}: React.PropsWithChildren) {
 
   useEffect(() => {
     async function getTimer() {
-      axios.get('https://update.ilovesabrina.org:3005/timer').then(response => setTimer(response.data))
+      axios.get('https://update.ilovesabrina.org:3005/timer').then(response => setTimer(response.data)).catch(error => setTimer('Error'))
     }
     getTimer();
   },[])
@@ -33,7 +33,9 @@ export default function Navbar({children}: React.PropsWithChildren) {
         borderImageSlice: 1
       }}>
         <div className="flex items-center">
-          <span className='absolute left-8'>{new Intl.DateTimeFormat('en-GB', {dateStyle: 'medium', timeStyle: 'long'}).format(new Date(timer!))}</span>
+          <span className='absolute left-8'>
+            {timer == 'Error' ? 'Error' : new Intl.DateTimeFormat('en-GB', {dateStyle: 'medium', timeStyle: 'long'}).format(new Date(timer!))}
+          </span>
           <ul>
             {navLinks.map((link, index) => {
               return (
