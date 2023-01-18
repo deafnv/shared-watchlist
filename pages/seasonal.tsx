@@ -13,6 +13,8 @@ export const getServerSideProps = async (context: GetServerSidePropsContext) => 
     .select()
     .order('id', { ascending: true });
 
+  axios.get('http://update.ilovesabrina.org:3005/refresh');
+
   return {
     props: {
       res: data
@@ -25,6 +27,8 @@ export default function Seasonal({ res }: {res: Database['public']['Tables']['PT
   const [isEdited, setIsEdited] = useState<string>('');
 
   useEffect(() => {
+    const refresh = setInterval(() => axios.get('http://update.ilovesabrina.org:3005/refresh'), 3500000);
+
     document.addEventListener('click', (e: any) => {
       if (e.target?.tagName === 'INPUT' || e.target?.tagName === 'SELECT') return;
       setIsEdited('');
@@ -49,7 +53,10 @@ export default function Seasonal({ res }: {res: Database['public']['Tables']['PT
       })
       .subscribe()
 
-    return () => {supabase.removeAllChannels()}
+    return () => {
+      supabase.removeAllChannels();
+      clearInterval(refresh);
+    }
   },[])
 
   function editForm(field: 'seasonal_title', id: number, ogvalue: string): React.ReactNode {

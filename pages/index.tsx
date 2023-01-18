@@ -17,6 +17,8 @@ export const getServerSideProps = async (context: GetServerSidePropsContext) => 
     .select()
     .order('id', { ascending: true });
 
+  axios.get('http://update.ilovesabrina.org:3005/refresh');
+
   //? data.data can be null, which isnt typed in the receiving Home() function.
   return {
     props: {
@@ -33,6 +35,8 @@ export default function Home({ res }: {res: Database['public']['Tables']['Comple
   const searchRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    const refresh = setInterval(() => axios.get('http://update.ilovesabrina.org:3005/refresh'), 3500000);
+
     document.addEventListener('click', (e: any) => {
       if (e.target?.tagName === 'INPUT') return;
       setIsEdited('');
@@ -77,7 +81,10 @@ export default function Home({ res }: {res: Database['public']['Tables']['Comple
       })
       .subscribe()
 
-    return () => {supabase.removeAllChannels()}
+    return () => {
+      supabase.removeAllChannels();
+      clearInterval(refresh);
+    }
   },[])
 
   //TODO: Detect pressing tab so it jumps to the next field to be edited 

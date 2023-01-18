@@ -27,6 +27,8 @@ export const getServerSideProps = async (context: GetServerSidePropsContext) => 
     .select()
     .order('id', { ascending: true });
 
+  axios.get('http://update.ilovesabrina.org:3005/refresh');
+
   return {
     props: {
       resRolled: dataRolled.data,
@@ -48,6 +50,8 @@ export default function PTW({ resRolled, resCasual, resNonCasual, resMovies }: {
   const [reordered, setReordered] = useState(false);
 
   useEffect(() => {
+    const refresh = setInterval(() => axios.get('http://update.ilovesabrina.org:3005/refresh'), 3500000);
+
     document.addEventListener('click', (e: any) => {
       if (e.target?.tagName === 'INPUT') return;
       setIsEdited('');
@@ -92,7 +96,10 @@ export default function PTW({ resRolled, resCasual, resNonCasual, resMovies }: {
       })
       .subscribe()
 
-    return () => {supabase.removeAllChannels()}
+    return () => {
+      supabase.removeAllChannels();
+      clearInterval(refresh);
+    }
   },[])
 
   function editForm(field: 'rolled_title' | 'casual_title' | 'noncasual_title' | 'movies_title', id: number, ogvalue: string): React.ReactNode {
