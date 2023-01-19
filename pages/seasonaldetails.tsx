@@ -4,6 +4,8 @@ import { Database } from "../lib/database.types";
 import Head from "next/head";
 import Image from "next/image";
 import Link from "next/link";
+import axios from "axios";
+import { useRouter } from "next/router";
 
 export const getStaticProps = async (context: GetStaticPropsContext) => {
   const supabase = createClient<Database>('https://esjopxdrlewtpffznsxh.supabase.co', process.env.NEXT_PUBLIC_SUPABASE_API_KEY!);
@@ -20,7 +22,26 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
 }
 
 export default function SeasonalDetails({ res }: { res: Database['public']['Tables']['SeasonalDetails']['Row'][]}) {
-  const rows = Array(12).fill('asd')
+  const rows = Array(12).fill('asd');
+  const router = useRouter();
+
+  async function refresh() {
+    try {
+      await axios.get('/api/loadtracker');
+      router.reload();
+    } catch (error) {
+      alert(error);
+    }
+  }
+
+  async function reload() {
+    try {
+      await axios.get('/api/refreshseasonal');
+      router.reload();
+    } catch (error) {
+      alert(error);
+    }
+  }
 
   function determineEpisode(latestEpisode: number, index: number) {
     const accountFor2Cour = latestEpisode > 12 ? latestEpisode - 12 : latestEpisode;
@@ -39,6 +60,10 @@ export default function SeasonalDetails({ res }: { res: Database['public']['Tabl
       </Head>
 
       <main className='flex flex-col items-center justify-center p-4'>
+        <div className='absolute top-20 left-8 flex gap-2'>
+          <button onClick={refresh} title='Refresh episode tracking' className='input-submit px-2 p-1'>Refresh</button>
+          <button onClick={reload} title='Reload current season data from sheet' className='input-submit px-2 p-1'>Reload</button>
+        </div>
         <h2 className='mb-6 text-3xl'>Seasonal Details</h2>
         <div className='flex flex-col gap-6'>
           {res.map((item) => {
@@ -98,8 +123,6 @@ export default function SeasonalDetails({ res }: { res: Database['public']['Tabl
             )
           })}
         </div>
-        <button className='input-submit px-2 p-1'>Refresh</button>
-        <button className='input-submit px-2 p-1'>Reload</button>
       </main>
     </>
   )
