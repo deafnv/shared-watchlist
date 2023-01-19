@@ -19,6 +19,11 @@ export default async function RefreshSeasonal(req: NextApiRequest, res: NextApiR
 	    year: year,
 	    season: ['winter', 'spring', 'summer', 'fall'][season]
 	  }
+    const prevSeason = season - 1 == -1 ? 3 : season -1 
+    const compare2cour = {
+      year: season - 1 == -1 ? year - 1 : year,
+      season: ['winter', 'spring', 'summer', 'fall'][prevSeason]
+    }
 	  const malResponse = await Promise.all(data!.map(async (item, index) => {
 	      const { data } = await axios.get(`https://api.myanimelist.net/v2/anime`, {
 	        headers: { "X-MAL-CLIENT-ID": process.env.MAL_CLIENT_ID },
@@ -28,7 +33,7 @@ export default async function RefreshSeasonal(req: NextApiRequest, res: NextApiR
 	        }
 	      }) //TODO: Catch error here somehow, might have to put below in .then() (currently using try catch)
         const broadcast = data?.data[0].node.broadcast ? `${data?.data[0].node.broadcast.day_of_the_week} ${(data?.data[0].node.broadcast.start_time ?? '')}` : null;
-	      if (!isEqual(data?.data[0].node.start_season, compare)) {
+	      if (!isEqual(data?.data[0].node.start_season, compare) && !isEqual(data?.data[0].node.start_season, compare2cour)) {
 	        return {
 	          id: item.id,
 	          mal_id: data?.data[0].node.id,
