@@ -53,7 +53,13 @@ export default function SeasonalDetails({ res }: { res: Database['public']['Tabl
                     <tr>
                       <td className='w-96 p-2 flex flex-col items-center justify-center gap-3'>
                         <Image src={item.image_url ?? 'https://via.placeholder.com/400x566'} alt='Art' height={200} width={150}/>
-                        {item.title}
+                        <span className='font-bold'>{item.title}</span>
+                        <span style={{textTransform: 'capitalize'}}>
+                          <span className='font-semibold'>Broadcast: </span>{item.broadcast ?? 'Unknown'}
+                        </span>
+                        <span>
+                          <span className='font-semibold'>Episodes: </span>{item.num_episodes ? item.num_episodes : 'Unknown'}
+                        </span>
                         <Link href={`https://myanimelist.net/anime/${item.mal_id}`} target='_blank' className='link'>MyAnimeList</Link>
                       </td>
                       <td className='p-0'>

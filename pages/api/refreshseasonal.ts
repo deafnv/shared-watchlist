@@ -24,9 +24,10 @@ export default async function RefreshSeasonal(req: NextApiRequest, res: NextApiR
 	        headers: { "X-MAL-CLIENT-ID": process.env.MAL_CLIENT_ID },
 	        params: {
 	          q: item.title!.substring(0, 64),
-	          fields: 'start_season,start_date'
+	          fields: 'start_season,start_date,num_episodes,broadcast'
 	        }
 	      }) //TODO: Catch error here somehow, might have to put below in .then() (currently using try catch)
+        const broadcast = data?.data[0].node.broadcast ? `${data?.data[0].node.broadcast.day_of_the_week} ${(data?.data[0].node.broadcast.start_time ?? '')}` : null;
 	      if (!isEqual(data?.data[0].node.start_season, compare)) {
 	        return {
 	          id: item.id,
@@ -34,6 +35,8 @@ export default async function RefreshSeasonal(req: NextApiRequest, res: NextApiR
 	          title: data?.data[0].node.title,
 	          image_url: data?.data[0].node.main_picture.large ?? '',
 	          start_date: data?.data[0].node.start_date ?? '',
+            broadcast: broadcast,
+            num_episodes: data?.data[0].node.num_episodes,
 	          message: 'Validate'
 	        }
 	      }
@@ -43,6 +46,8 @@ export default async function RefreshSeasonal(req: NextApiRequest, res: NextApiR
 	        title: data?.data[0].node.title,
 	        image_url: data?.data[0].node.main_picture.large ?? '',
 	        start_date: data?.data[0].node.start_date ?? '',
+          broadcast: broadcast,
+          num_episodes: data?.data[0].node.num_episodes,
 	        message: ''
 	      }
 	  }))
