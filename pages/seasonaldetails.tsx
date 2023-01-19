@@ -3,6 +3,7 @@ import { GetStaticPropsContext } from "next";
 import { Database } from "../lib/database.types";
 import Head from "next/head";
 import Image from "next/image";
+import Link from "next/link";
 
 export const getStaticProps = async (context: GetStaticPropsContext) => {
   const supabase = createClient<Database>('https://esjopxdrlewtpffznsxh.supabase.co', process.env.NEXT_PUBLIC_SUPABASE_API_KEY!);
@@ -35,8 +36,7 @@ export default function SeasonalDetails({ res }: { res: Database['public']['Tabl
         <div className='flex flex-col gap-6'>
           {res.map((item) => {
             return (
-              <div className='' key={item.id}>
-                {item.message ? <span className='text-red-500'>⚠ This entry appears to be wrong</span> : null}
+              <div className='flex flex-col items-center gap-2' key={item.id}>
                 <table>
                   <tbody>
                     <tr>
@@ -44,9 +44,10 @@ export default function SeasonalDetails({ res }: { res: Database['public']['Tabl
                       <th>Episodes</th>
                     </tr>
                     <tr>
-                      <td className='w-96 p-2 flex flex-col items-center justify-center'>
+                      <td className='w-96 p-2 flex flex-col items-center justify-center gap-3'>
                         <Image src={item.image_url ?? 'https://via.placeholder.com/400x566'} alt='Art' height={200} width={150}/>
                         {item.title}
+                        <Link href={`https://myanimelist.net/anime/${item.mal_id}`} target='_blank' className='link'>MyAnimeList</Link>
                       </td>
                       <td className='p-0'>
                         <table>
@@ -67,6 +68,13 @@ export default function SeasonalDetails({ res }: { res: Database['public']['Tabl
                     </tr>
                   </tbody>
                 </table>
+                {item.message == 'Validate' ? 
+                  <div className='grid grid-cols-2 gap-2'>
+                    <span className='col-span-2 text-red-500 '>⚠ This entry appears to be wrong (Non-functional)</span>
+                    <button className='input-submit px-2 p-1'>Change</button>
+                    <button className='input-submit px-2 p-1 bg-rose-600 hover:bg-rose'>Ignore</button>
+                  </div>
+                : null}
               </div>
             )
           })}
