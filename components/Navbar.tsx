@@ -1,8 +1,10 @@
 import axios from "axios";
 import Link from "next/link";
+import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 
 export default function Navbar({children}: React.PropsWithChildren) {
+  const router = useRouter();
   const [timer, setTimer] = useState<string>("1970-01-01T11:18:58.453Z") 
   const navLinks = [
     {
@@ -44,7 +46,7 @@ export default function Navbar({children}: React.PropsWithChildren) {
             {navLinks.map((link, index) => {
               return (
                 <li className="inline mx-2" key={index}>
-                  <Link href={link.route} className="p-4 rounded-lg hover:bg-pink-400 focus:bg-pink-400 transition-colors duration-200">{link.name}</Link>
+                  <Link href={link.route} style={{background: link.route == router.pathname ? 'rgb(244 114 182)' : ''}} className="p-4 rounded-lg hover:bg-pink-400 focus:bg-pink-400 transition-colors duration-200">{link.name}</Link>
                 </li>
               )
             })}
