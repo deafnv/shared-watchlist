@@ -17,6 +17,10 @@ export default function Navbar({children}: React.PropsWithChildren) {
       name: 'Current Season',
       route: '/seasonal'
     },
+    {
+      name: 'Seasonal Details',
+      route: '/seasonaldetails'
+    }
   ]
 
   useEffect(() => {

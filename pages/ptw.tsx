@@ -76,8 +76,8 @@ export default function PTW({ resRolled, resCasual, resNonCasual, resMovies }: {
 
           switch (payload.table) {
             case 'PTW-Rolled':
-              setResponseRolled(data!);
-              setResponseRolled1(data!);
+              setResponseRolled(data as Database['public']['Tables']['PTW-Rolled']['Row'][]);
+              setResponseRolled1(data as Database['public']['Tables']['PTW-Rolled']['Row'][]);
               setReordered(false);
               setSortMethod('');
               break;
