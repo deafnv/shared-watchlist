@@ -18,7 +18,7 @@ export default async function EpisodeTracker(req: NextApiRequest, res: NextApiRe
 	    const idInt = parseInt(idString!)
 	    const countdown = $(element).find('time.episode-countdown').text()
 	    const latestEpisodeString = countdown.split(':')[0].substring(2)
-	    const latestEpisodeInt = parseInt(latestEpisodeString)
+	    const latestEpisodeInt = parseInt(latestEpisodeString) - 1
 	    
 	    animes.push({
 	      mal_id: idInt ? idInt : -1,
