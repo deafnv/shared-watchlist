@@ -17,6 +17,7 @@
     "@types/react-dom": "18.0.9",
     "array-move": "^4.0.0",
     "axios": "^1.2.1",
+    "cheerio": "^1.0.0-rc.12",
     "eslint": "8.30.0",
     "eslint-config-next": "13.0.7",
     "framer-motion": "^8.0.2",
