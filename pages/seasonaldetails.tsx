@@ -22,6 +22,13 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
 export default function SeasonalDetails({ res }: { res: Database['public']['Tables']['SeasonalDetails']['Row'][]}) {
   const rows = Array(12).fill('asd')
 
+  function determineEpisode(latestEpisode: number, index: number) {
+    const accountFor2Cour = latestEpisode > 12 ? latestEpisode - 12 : latestEpisode;
+    if (accountFor2Cour > index) { //* Not sure why this isn't index + 1
+      return 'red'
+    } else return 'black'
+  }
+
   return (
     <>
       <Head>
@@ -53,13 +60,19 @@ export default function SeasonalDetails({ res }: { res: Database['public']['Tabl
                         <table>
                           <tbody>
                             <tr>
-                              {rows.map((item, index) => {
-                                return <th className='w-11' key={index}>{index + 1}</th>
+                              {rows.map((item1, index1) => {
+                                return <th className='w-11' key={index1}>{item.latest_episode! > 12 ? index1 + 13 : index1 + 1}</th>
                               })}
                             </tr>
                             <tr>
-                              {rows.map((item, index) => {
-                                return <td className='p-6' key={index}></td>
+                              {rows.map((item1, index1) => {
+                                return <td 
+                                  style={{
+                                    background: determineEpisode(item.latest_episode!, index1)
+                                  }}
+                                  className='p-6' 
+                                  key={index1}
+                                ></td>
                               })}
                             </tr>
                           </tbody>
