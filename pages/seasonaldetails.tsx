@@ -7,6 +7,7 @@ import Link from "next/link";
 import axios from "axios";
 import { useRouter } from "next/router";
 import { useLoading } from "../components/LoadingContext";
+import { useState } from "react";
 
 export const getStaticProps = async (context: GetStaticPropsContext) => {
   const supabase = createClient<Database>('https://esjopxdrlewtpffznsxh.supabase.co', process.env.NEXT_PUBLIC_SUPABASE_API_KEY!);
@@ -23,9 +24,13 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
 }
 
 export default function SeasonalDetails({ res }: { res: Database['public']['Tables']['SeasonalDetails']['Row'][]}) {
+  const [response, setResponse] = useState(res);
+  const [validateArea, setValidateArea] = useState('');
   const rows = Array(12).fill('asd');
   const router = useRouter();
   const { setLoading } = useLoading();
+
+  const supabase = createClient<Database>('https://esjopxdrlewtpffznsxh.supabase.co', process.env.NEXT_PUBLIC_SUPABASE_API_KEY!);
 
   async function refresh() {
     try {
@@ -51,6 +56,54 @@ export default function SeasonalDetails({ res }: { res: Database['public']['Tabl
     }
   }
 
+  function validate(item1: Database['public']['Tables']['SeasonalDetails']['Row']) {
+    async function handleIgnore() {
+      try {
+        setLoading(true);
+        await supabase
+          .from('SeasonalDetails')
+          .update({message: ''})
+          .eq('mal_id', item1.mal_id)
+        
+        const changed = response.slice();
+        changed.find(item => item.id === item1.id)!['message'] = ''; 
+        setResponse(changed);
+        setLoading(false);
+      } 
+      catch (error) {
+        setLoading(false);
+        alert(error)
+      }
+    }
+
+    function validateForm() {
+      switch(validateArea) {
+        case `${item1.mal_id}_ignore`:
+          return (
+            <div className='grid grid-cols-2 gap-2'>
+              <span className='col-span-2 text-red-500 '>⚠ Are you sure?</span>
+              <button onClick={handleIgnore} className='input-submit px-2 p-1'>Yes</button>
+              <button onClick={() => setValidateArea('')} className='input-submit px-2 p-1 bg-rose-600 hover:bg-rose'>No</button>
+            </div>
+          )
+        default:
+          return (
+            <div className='grid grid-cols-2 gap-2'>
+              <span className='col-span-2 text-red-500 '>⚠ This entry appears to be wrong (Non-functional)</span>
+              <button className='input-submit px-2 p-1'>Change</button>
+              <button onClick={() => setValidateArea(`${item1.mal_id}_ignore`)} className='input-submit px-2 p-1 bg-rose-600 hover:bg-rose'>Ignore</button>
+            </div>
+          )
+      }
+    }
+
+    return (
+      item1.message == 'Validate' ? 
+        validateForm()
+      : null
+    )
+  }
+
   function determineEpisode(latestEpisode: number, index: number) {
     const accountFor2Cour = latestEpisode > 12 ? latestEpisode - 12 : latestEpisode;
     if (accountFor2Cour > index) { //* Not sure why this isn't index + 1
@@ -74,7 +127,7 @@ export default function SeasonalDetails({ res }: { res: Database['public']['Tabl
         </div>
         <h2 className='mb-6 text-3xl'>Seasonal Details</h2>
         <div className='flex flex-col gap-6'>
-          {res.map((item) => {
+          {response.map((item) => {
             return (
               <div className='flex flex-col items-center gap-2' key={item.id}>
                 <table>
@@ -120,13 +173,7 @@ export default function SeasonalDetails({ res }: { res: Database['public']['Tabl
                     </tr>
                   </tbody>
                 </table>
-                {item.message == 'Validate' ? 
-                  <div className='grid grid-cols-2 gap-2'>
-                    <span className='col-span-2 text-red-500 '>⚠ This entry appears to be wrong (Non-functional)</span>
-                    <button className='input-submit px-2 p-1'>Change</button>
-                    <button className='input-submit px-2 p-1 bg-rose-600 hover:bg-rose'>Ignore</button>
-                  </div>
-                : null}
+                {validate(item)}
               </div>
             )
           })}
