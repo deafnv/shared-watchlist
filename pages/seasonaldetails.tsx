@@ -28,6 +28,7 @@ export default function SeasonalDetails({ res }: { res: Database['public']['Tabl
   async function refresh() {
     try {
       await axios.get('/api/loadtracker');
+      await axios.get('/api/revalidate');
       router.reload();
     } catch (error) {
       alert(error);
@@ -37,6 +38,7 @@ export default function SeasonalDetails({ res }: { res: Database['public']['Tabl
   async function reload() {
     try {
       await axios.get('/api/refreshseasonal');
+      await axios.get('/api/revalidate');
       router.reload();
     } catch (error) {
       alert(error);
