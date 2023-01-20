@@ -7,48 +7,46 @@ import { sortListByNamePTW, sortSymbol } from '../lib/list_methods';
 import { createClient } from '@supabase/supabase-js';
 import { Database } from '../lib/database.types';
 
-export const getServerSideProps = async (context: GetServerSidePropsContext) => {
-  const supabase = createClient<Database>('https://esjopxdrlewtpffznsxh.supabase.co', process.env.NEXT_PUBLIC_SUPABASE_API_KEY!);
-  const dataRolled = await supabase 
-    .from('PTW-Rolled')
-    .select()
-    .order('id', { ascending: true });
-  const dataCasual = await supabase 
-    .from('PTW-Casual')
-    .select()
-    .order('id', { ascending: true });
-  const dataNonCasual = await supabase 
-    .from('PTW-NonCasual')
-    .select()
-    .order('id', { ascending: true });
-  const dataMovies = await supabase 
-    .from('PTW-Movies')
-    .select()
-    .order('id', { ascending: true });
-
-  axios.get('http://update.ilovesabrina.org:3004/refresh').catch(error => console.log(error));
-
-  return {
-    props: {
-      resRolled: dataRolled.data,
-      resCasual: dataCasual.data,
-      resNonCasual: dataNonCasual.data,
-      resMovies: dataMovies.data
-    }
-  }
-}
-
-export default function PTW({ resRolled, resCasual, resNonCasual, resMovies }: { resRolled: Database['public']['Tables']['PTW-Rolled']['Row'][], resCasual: Database['public']['Tables']['PTW-Casual']['Row'][], resNonCasual: Database['public']['Tables']['PTW-NonCasual']['Row'][], resMovies: Database['public']['Tables']['PTW-Movies']['Row'][] }) {
-  const [responseRolled, setResponseRolled] = useState<Database['public']['Tables']['PTW-Rolled']['Row'][]>(resRolled);
-  const [responseRolled1, setResponseRolled1] = useState<Database['public']['Tables']['PTW-Rolled']['Row'][]>(resRolled);
-  const [responseCasual, setResponseCasual] = useState<Database['public']['Tables']['PTW-Casual']['Row'][]>(resCasual);
-  const [responseNonCasual, setResponseNonCasual] = useState<Database['public']['Tables']['PTW-NonCasual']['Row'][]>(resNonCasual);
-  const [responseMovies, setResponseMovies] = useState<Database['public']['Tables']['PTW-Movies']['Row'][]>(resMovies);
+export default function PTW() {
+  const [responseRolled, setResponseRolled] = useState<Database['public']['Tables']['PTW-Rolled']['Row'][]>();
+  const [responseRolled1, setResponseRolled1] = useState<Database['public']['Tables']['PTW-Rolled']['Row'][]>();
+  const [responseCasual, setResponseCasual] = useState<Database['public']['Tables']['PTW-Casual']['Row'][]>();
+  const [responseNonCasual, setResponseNonCasual] = useState<Database['public']['Tables']['PTW-NonCasual']['Row'][]>();
+  const [responseMovies, setResponseMovies] = useState<Database['public']['Tables']['PTW-Movies']['Row'][]>();
   const [sortMethod, setSortMethod] = useState<string>('');
   const [isEdited, setIsEdited] = useState<string>('');
   const [reordered, setReordered] = useState(false);
 
   useEffect(() => {
+    const supabase = createClient<Database>('https://esjopxdrlewtpffznsxh.supabase.co', process.env.NEXT_PUBLIC_SUPABASE_API_KEY!);
+    const getData = async () => {
+      const dataRolled = await supabase 
+        .from('PTW-Rolled')
+        .select()
+        .order('id', { ascending: true });
+      const dataCasual = await supabase 
+        .from('PTW-Casual')
+        .select()
+        .order('id', { ascending: true });
+      const dataNonCasual = await supabase 
+        .from('PTW-NonCasual')
+        .select()
+        .order('id', { ascending: true });
+      const dataMovies = await supabase 
+        .from('PTW-Movies')
+        .select()
+        .order('id', { ascending: true });
+
+      setResponseRolled(dataRolled.data!)
+      setResponseRolled1(dataRolled.data!)
+      setResponseCasual(dataCasual.data!)
+      setResponseNonCasual(dataNonCasual.data!)
+      setResponseMovies(dataMovies.data!)
+
+      await axios.get('http://update.ilovesabrina.org:3004/refresh').catch(error => console.log(error));
+    }
+    getData();
+
     const refresh = setInterval(() => axios.get('http://update.ilovesabrina.org:3004/refresh'), 3500000);
 
     document.addEventListener('click', (e: any) => {
@@ -61,8 +59,6 @@ export default function PTW({ resRolled, resCasual, resNonCasual, resMovies }: {
     window.addEventListener("keydown",(e) => {
       if (e.key === 'Escape') setIsEdited('');
     })
-
-    const supabase = createClient<Database>('https://esjopxdrlewtpffznsxh.supabase.co', process.env.NEXT_PUBLIC_SUPABASE_API_KEY!);
 
     supabase
       .channel('*')
@@ -134,25 +130,29 @@ export default function PTW({ resRolled, resCasual, resNonCasual, resMovies }: {
 
         switch (field) {
           case 'rolled_title':
-            const changedRolled = responseRolled.slice();
+            const changedRolled = responseRolled?.slice();
+            if (!changedRolled) return;
             changedRolled.find(item => item.id === id)!['title'] = event.target[0].value;
             setResponseRolled(changedRolled);
             setIsEdited('');
             break;
           case 'casual_title':
-            const changedCasual = responseCasual.slice();
+            const changedCasual = responseCasual?.slice();
+            if (!changedCasual) return;
             changedCasual.find(item => item.id === id)!['title'] = event.target[0].value;
             setResponseCasual(changedCasual);
             setIsEdited('');
             break;
           case 'noncasual_title':
-            const changedNonCasual = responseNonCasual.slice();
+            const changedNonCasual = responseNonCasual?.slice();
+            if (!changedNonCasual) return;
             changedNonCasual.find(item => item.id === id)!['title'] = event.target[0].value;
             setResponseNonCasual(changedNonCasual);
             setIsEdited('');
             break;
           case 'movies_title':
-            const changedMovies = responseMovies.slice();
+            const changedMovies = responseMovies?.slice();
+            if (!changedMovies) return;
             changedMovies.find(item => item.id === id)!['title'] = event.target[0].value;
             setResponseMovies(changedMovies);
             setIsEdited('');
@@ -170,7 +170,7 @@ export default function PTW({ resRolled, resCasual, resNonCasual, resMovies }: {
   }
 
   async function saveReorder() {
-    let endRowIndex = responseRolled.length + 1;
+    let endRowIndex = responseRolled!.length + 1;
     try {
       await axios.post('/api/batchupdate', {
         content: responseRolled,
@@ -205,7 +205,7 @@ export default function PTW({ resRolled, resCasual, resNonCasual, resMovies }: {
               </tr> 
             </tbody>
           </table>
-          <Reorder.Group values={responseRolled} dragConstraints={{top: 500}} draggable={sortMethod ? true : false} onReorder={(newOrder) => {setResponseRolled(newOrder); setReordered(true)}} className='w-[30.1rem] border-white border-solid border-[1px] border-t-0'>
+          <Reorder.Group values={responseRolled ?? []} dragConstraints={{top: 500}} draggable={sortMethod ? true : false} onReorder={(newOrder) => {setResponseRolled(newOrder); setReordered(true)}} className='w-[30.1rem] border-white border-solid border-[1px] border-t-0'>
             {responseRolled?.map((item, i) => {
               return ( 
                 <Reorder.Item
@@ -246,7 +246,7 @@ export default function PTW({ resRolled, resCasual, resNonCasual, resMovies }: {
   )
 
   function PTWTable(
-    response: { id: number; title: string | null; }[],
+    response: { id: number; title: string | null; }[] | undefined,
     tableName: string,
     tableId: 'casual' | 'noncasual' | 'movies'
   ) {

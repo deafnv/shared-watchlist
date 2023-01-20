@@ -1,32 +1,26 @@
-import { GetServerSidePropsContext } from "next";
 import { createClient } from "@supabase/supabase-js";
 import { Database } from "../lib/database.types";
 import { BaseSyntheticEvent, useEffect, useState } from "react";
 import Head from "next/head";
 import axios from "axios";
 
-
-export const getServerSideProps = async (context: GetServerSidePropsContext) => {
-  const supabase = createClient<Database>('https://esjopxdrlewtpffznsxh.supabase.co', process.env.NEXT_PUBLIC_SUPABASE_API_KEY!);
-  const { data } = await supabase 
-    .from('PTW-CurrentSeason')
-    .select()
-    .order('id', { ascending: true });
-
-  axios.get('http://update.ilovesabrina.org:3004/refresh').catch(error => console.log(error));
-
-  return {
-    props: {
-      res: data
-    }
-  }
-}
-
 export default function Seasonal({ res }: {res: Database['public']['Tables']['PTW-CurrentSeason']['Row'][]}) {
-  const [response, setResponse] = useState<Database['public']['Tables']['PTW-CurrentSeason']['Row'][]>(res);
+  const [response, setResponse] = useState<Database['public']['Tables']['PTW-CurrentSeason']['Row'][]>();
   const [isEdited, setIsEdited] = useState<string>('');
 
   useEffect(() => {
+    const supabase = createClient<Database>('https://esjopxdrlewtpffznsxh.supabase.co', process.env.NEXT_PUBLIC_SUPABASE_API_KEY!);
+    const getData = async () => {
+      const { data } = await supabase 
+        .from('PTW-CurrentSeason')
+        .select()
+        .order('id', { ascending: true });
+      setResponse(data!);
+
+      await axios.get('http://update.ilovesabrina.org:3004/refresh').catch(error => console.log(error));
+    }
+    getData();
+
     const refresh = setInterval(() => axios.get('http://update.ilovesabrina.org:3004/refresh'), 3500000);
 
     document.addEventListener('click', (e: any) => {
@@ -39,8 +33,6 @@ export default function Seasonal({ res }: {res: Database['public']['Tables']['PT
     window.addEventListener("keydown",(e) => {
       if (e.key === 'Escape') setIsEdited('');
     })
-    
-    const supabase = createClient<Database>('https://esjopxdrlewtpffznsxh.supabase.co', process.env.NEXT_PUBLIC_SUPABASE_API_KEY!);
 
     supabase
       .channel('public:PTW-CurrentSeason')
@@ -77,7 +69,8 @@ export default function Seasonal({ res }: {res: Database['public']['Tables']['PT
           cell: column + row
         })
 
-        const changed = response.slice();
+        const changed = response?.slice();
+        if (!changed) return;
         changed.find(item => item.id === id)!['title'] = event.target[0].value;
         setResponse(changed);
         setIsEdited('');
@@ -102,7 +95,8 @@ export default function Seasonal({ res }: {res: Database['public']['Tables']['PT
           cells: `P${row}:P${row}`
         })
 
-        const changed = response.slice();
+        const changed = response?.slice();
+        if (!changed) return;
         changed.find(item => item.id === id)!['status'] = event.target.childNodes[0].value;
         setResponse(changed);
         setIsEdited('');

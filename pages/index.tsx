@@ -1,5 +1,4 @@
 import { BaseSyntheticEvent, useEffect, useRef, useState } from 'react'
-import { GetServerSidePropsContext } from 'next';
 import Head from 'next/head'
 import axios from 'axios'
 import { createClient } from '@supabase/supabase-js';
@@ -10,31 +9,28 @@ import { initialTitleItemSupabase, sortListByDateSupabase, sortListByNameSupabas
 //! ISSUES:
 //!   - Fix sort symbol
 
-export const getServerSideProps = async (context: GetServerSidePropsContext) => {
-  const supabase = createClient<Database>('https://esjopxdrlewtpffznsxh.supabase.co', process.env.NEXT_PUBLIC_SUPABASE_API_KEY!);
-  const { data } = await supabase 
-    .from('Completed')
-    .select()
-    .order('id', { ascending: true });
-
-  axios.get('http://update.ilovesabrina.org:3004/refresh').catch(error => console.log(error));
-
-  //? data.data can be null, which isnt typed in the receiving Home() function.
-  return {
-    props: {
-      res: data
-    }
-  }
-}
-
-export default function Home({ res }: {res: Database['public']['Tables']['Completed']['Row'][]}) {
-  const [response, setResponse] = useState<Database['public']['Tables']['Completed']['Row'][]>(res);
-  const [response1, setResponse1] = useState<Database['public']['Tables']['Completed']['Row'][]>(res);
+export default function Home() {
+  const [response, setResponse] = useState<Database['public']['Tables']['Completed']['Row'][]>();
+  const [response1, setResponse1] = useState<Database['public']['Tables']['Completed']['Row'][]>();
   const [sortMethod, setSortMethod] = useState<string>('');
   const [isEdited, setIsEdited] = useState<string>('');
   const searchRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    //FIXME: Don't expose API key to client side
+    const supabase = createClient<Database>('https://esjopxdrlewtpffznsxh.supabase.co', process.env.NEXT_PUBLIC_SUPABASE_API_KEY!);
+    const getData = async () => {
+      const { data } = await supabase 
+        .from('Completed')
+        .select()
+        .order('id', { ascending: true });
+      setResponse(data!);
+      setResponse1(data!);
+
+      await axios.get('http://update.ilovesabrina.org:3004/refresh').catch(error => console.log(error));
+    }
+    getData();
+
     const refresh = setInterval(() => axios.get('http://update.ilovesabrina.org:3004/refresh'), 3500000);
 
     document.addEventListener('click', (e: any) => {
@@ -51,9 +47,6 @@ export default function Home({ res }: {res: Database['public']['Tables']['Comple
       }
       if (e.key === 'Escape') setIsEdited('');
     })
-
-    //FIXME: Don't expose API key to client side
-    const supabase = createClient<Database>('https://esjopxdrlewtpffznsxh.supabase.co', process.env.NEXT_PUBLIC_SUPABASE_API_KEY!);
 
     supabase
       .channel('public:Completed')
@@ -127,7 +120,8 @@ export default function Home({ res }: {res: Database['public']['Tables']['Comple
           cell: column + row
         })
 
-        const changed = response.slice();
+        const changed = response?.slice();
+        if (!changed) return;
         changed.find(item => item.id === id)![field] = event.target[0].value;
         setResponse(changed);
         setIsEdited('');
@@ -143,7 +137,7 @@ export default function Home({ res }: {res: Database['public']['Tables']['Comple
 
   // TODO: add loading here to prevent spamming add record
   async function addRecord(event: React.MouseEvent<HTMLButtonElement, MouseEvent>): Promise<void> {
-    if (!response[response.length - 1].title) {
+    if (!response?.[response.length - 1].title) {
       alert('Insert title for latest row before adding a new one');
       return;
     }

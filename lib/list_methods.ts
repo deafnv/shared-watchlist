@@ -144,20 +144,20 @@ export const initialTitleItemSupabase = {
   }
 } */
 
-export const sortListByNameSupabase = (res: Database['public']['Tables']['Completed']['Row'][], sortMethod: string, setSortMethod: Dispatch<SetStateAction<string>>, setResponse: Dispatch<SetStateAction<Database['public']['Tables']['Completed']['Row'][]>>) => {
+export const sortListByNameSupabase = (res: Database['public']['Tables']['Completed']['Row'][] | undefined, sortMethod: string, setSortMethod: Dispatch<SetStateAction<string>>, setResponse: Dispatch<SetStateAction<Database['public']['Tables']['Completed']['Row'][] | undefined>>) => {
   if (sortMethod === `titleasc_title`) {
     setSortMethod(`titledesc_title`)
-    setResponse(res.slice().sort((a, b) => b.title!.localeCompare(a.title!)));
+    setResponse(res?.slice().sort((a, b) => b.title!.localeCompare(a.title!)));
   } else {
     setSortMethod(`titleasc_title`);
-    setResponse(res.slice().sort((a, b) => a.title!.localeCompare(b.title!)));
+    setResponse(res?.slice().sort((a, b) => a.title!.localeCompare(b.title!)));
   }
 }
 
-export const sortListByRatingSupabase = (rating: 'rating1' | 'rating2', res: Database['public']['Tables']['Completed']['Row'][], sortMethod: string, setSortMethod: Dispatch<SetStateAction<string>>, setResponse: Dispatch<SetStateAction<Database['public']['Tables']['Completed']['Row'][]>>) => {
+export const sortListByRatingSupabase = (rating: 'rating1' | 'rating2', res: Database['public']['Tables']['Completed']['Row'][] | undefined, sortMethod: string, setSortMethod: Dispatch<SetStateAction<string>>, setResponse: Dispatch<SetStateAction<Database['public']['Tables']['Completed']['Row'][] | undefined>>) => {
   if (sortMethod === `ratingasc_${rating}`) {
     setSortMethod(`ratingdesc_${rating}`)
-    setResponse(res.slice().sort((a, b) => {
+    setResponse(res?.slice().sort((a, b) => {
       if (b[`${rating}average`] == null) {
         return -1;
       }
@@ -165,7 +165,7 @@ export const sortListByRatingSupabase = (rating: 'rating1' | 'rating2', res: Dat
     }));
   } else {
     setSortMethod(`ratingasc_${rating}`);
-    setResponse(res.slice().sort((a, b) => {
+    setResponse(res?.slice().sort((a, b) => {
       if (a[`${rating}average`] == null) {
         return -1;
       }
@@ -174,15 +174,15 @@ export const sortListByRatingSupabase = (rating: 'rating1' | 'rating2', res: Dat
   }
 }
 
-export const sortListByDateSupabase = (date: 'startconv' | 'endconv', res: Database['public']['Tables']['Completed']['Row'][], sortMethod: string, setSortMethod: Dispatch<SetStateAction<string>>, setResponse: Dispatch<SetStateAction<Database['public']['Tables']['Completed']['Row'][]>>) => {
+export const sortListByDateSupabase = (date: 'startconv' | 'endconv', res: Database['public']['Tables']['Completed']['Row'][] | undefined, sortMethod: string, setSortMethod: Dispatch<SetStateAction<string>>, setResponse: Dispatch<SetStateAction<Database['public']['Tables']['Completed']['Row'][] | undefined>>) => {
   if (sortMethod === `dateasc_${date}`) {
     setSortMethod(`datedesc_${date}`)
-    setResponse(res.slice().sort((a, b) => {
+    setResponse(res?.slice().sort((a, b) => {
       return b[date]! - a[date]!;
     }));
   } else {
     setSortMethod(`dateasc_${date}`);
-    setResponse(res.slice().sort((a, b) => {
+    setResponse(res?.slice().sort((a, b) => {
       return a[date]! - b[date]!;
     }));
   }
@@ -191,12 +191,12 @@ export const sortListByDateSupabase = (date: 'startconv' | 'endconv', res: Datab
 
 //* PLAN TO WATCH LIST METHODS
 
-export const sortListByNamePTW = (name: string, res: Database['public']['Tables']['PTW-Rolled']['Row'][], sortMethod: string, setSortMethod: Dispatch<SetStateAction<string>>, setResponse: Dispatch<SetStateAction<Database['public']['Tables']['PTW-Rolled']['Row'][]>>) => {
+export const sortListByNamePTW = (name: string, res: Database['public']['Tables']['PTW-Rolled']['Row'][] | undefined, sortMethod: string, setSortMethod: Dispatch<SetStateAction<string>>, setResponse: Dispatch<SetStateAction<Database['public']['Tables']['PTW-Rolled']['Row'][] | undefined>>) => {
   if (sortMethod === `titleasc_${name}`) {
     setSortMethod(`titledesc_${name}`)
-    setResponse(res.slice().sort((a, b) => b.title!.localeCompare(a.title!)));
+    setResponse(res?.slice().sort((a, b) => b.title!.localeCompare(a.title!)));
   } else {
     setSortMethod(`titleasc_${name}`);
-    setResponse(res.slice().sort((a, b) => a.title!.localeCompare(b.title!)));
+    setResponse(res?.slice().sort((a, b) => a.title!.localeCompare(b.title!)));
   }
 }
