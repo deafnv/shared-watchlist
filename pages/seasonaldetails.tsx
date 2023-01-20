@@ -60,36 +60,38 @@ export default function SeasonalDetails({ res }: { res: Database['public']['Tabl
     async function handleChange(e: BaseSyntheticEvent) {
       e.preventDefault();
       setLoading(true)
+
       const linkInput = e.target[0].value;
-      //TODO: Fix this trash
-      try { //? Validate URL - could use some form validation library instead
-        const url = new URL(linkInput);
-        try {
-          const idInput = parseInt(url.pathname.split('/')[2])
-          if (!idInput) throw 'NaN'
-          try {
-            await axios.post('/api/changevalidated', {
-              id: item1.id,
-              mal_id: idInput
-            })
-            await axios.get('/api/revalidate')
-            router.reload()
-          } 
-          catch (error) {
-            setLoading(false)
-            alert(error)
-          }
-        }
-        catch {
-          setLoading(false)
-          alert('ID not found. Enter a valid link')
-        }
+      if (!linkInput.match(/https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/gi)) {
+        setLoading(false);
+        return alert('Enter a valid link')
+      }
+
+      const url = new URL(linkInput);
+      if (url.hostname != 'myanimelist.net') {
+        setLoading(false);
+        return alert('Enter a link from myanimelist.net')
+      }
+
+      const idInput = parseInt(url.pathname.split('/')[2])
+      if (!idInput) {
+        setLoading(false);
+        return alert('ID not found. Enter a valid link')
+      }
+
+      try {
+        await axios.post('/api/changevalidated', {
+          id: item1.id,
+          mal_id: idInput
+        })
+        await axios.get('/api/revalidate')
+        router.reload()
       } 
       catch (error) {
         setLoading(false)
-        alert('Enter a valid link');
+        alert(error)
       }
-    }
+  }
 
     async function handleIgnore() {
       try {
