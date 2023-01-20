@@ -1,11 +1,11 @@
 import Head from 'next/head'
-import { GetServerSidePropsContext } from 'next';
 import { BaseSyntheticEvent, useEffect, useState } from 'react'
 import axios from 'axios'
 import { Reorder } from 'framer-motion';
 import { sortListByNamePTW, sortSymbol } from '../lib/list_methods';
 import { createClient } from '@supabase/supabase-js';
 import { Database } from '../lib/database.types';
+import { loadingGlimmer } from '../components/LoadingGlimmer';
 
 export default function PTW() {
   const [responseRolled, setResponseRolled] = useState<Database['public']['Tables']['PTW-Rolled']['Row'][]>();
@@ -16,6 +16,7 @@ export default function PTW() {
   const [sortMethod, setSortMethod] = useState<string>('');
   const [isEdited, setIsEdited] = useState<string>('');
   const [reordered, setReordered] = useState(false);
+  const [isLoadingClient, setIsLoadingClient] = useState(true);  
 
   useEffect(() => {
     const supabase = createClient<Database>('https://esjopxdrlewtpffznsxh.supabase.co', process.env.NEXT_PUBLIC_SUPABASE_API_KEY!);
@@ -42,6 +43,7 @@ export default function PTW() {
       setResponseCasual(dataCasual.data!)
       setResponseNonCasual(dataNonCasual.data!)
       setResponseMovies(dataMovies.data!)
+      setIsLoadingClient(false)
 
       await axios.get('https://update.ilovesabrina.org:3005/refresh').catch(error => console.log(error));
     }
@@ -203,11 +205,12 @@ export default function PTW() {
               <tr>
                 <th onClick={() => {sortListByNamePTW('title', responseRolled, sortMethod, setSortMethod, setResponseRolled); setReordered(false)}} className='w-[30rem] cursor-pointer'><span>Title</span><span className='absolute'>{sortSymbol('title', sortMethod)}</span></th>
               </tr> 
+              {isLoadingClient ? loadingGlimmer(1) : null}
             </tbody>
           </table>
           <Reorder.Group values={responseRolled ?? []} dragConstraints={{top: 500}} draggable={sortMethod ? true : false} onReorder={(newOrder) => {setResponseRolled(newOrder); setReordered(true)}} className='w-[30.1rem] border-white border-solid border-[1px] border-t-0'>
             {responseRolled?.map((item, i) => {
-              return ( 
+              return (!isLoadingClient &&
                 <Reorder.Item
                   value={item}
                   key={item.id}
@@ -257,15 +260,16 @@ export default function PTW() {
           <tr>
             <th className='w-[30rem]'><span>Title</span></th>
           </tr> 
-          {response?.map((item) => {
-            return (
-              <tr key={item.id}>
-                <td onDoubleClick={() => { setIsEdited(`${tableId}_${item.title}_${item.id}`); } }>
-                  {isEdited == `${tableId}_${item.title}_${item.id}` ? editForm(`${tableId}_title`, item.id, item.title!) : item.title}
-                </td>
-              </tr>
-            );
-          })}
+          {isLoadingClient ? loadingGlimmer(1) :
+            response?.map((item) => {
+              return (
+                <tr key={item.id}>
+                  <td onDoubleClick={() => { setIsEdited(`${tableId}_${item.title}_${item.id}`); } }>
+                    {isEdited == `${tableId}_${item.title}_${item.id}` ? editForm(`${tableId}_title`, item.id, item.title!) : item.title}
+                  </td>
+                </tr>
+              );
+            })}
         </tbody>
       </table>
     </div>;

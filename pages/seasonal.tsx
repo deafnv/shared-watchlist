@@ -3,10 +3,12 @@ import { Database } from "../lib/database.types";
 import { BaseSyntheticEvent, useEffect, useState } from "react";
 import Head from "next/head";
 import axios from "axios";
+import { loadingGlimmer } from "../components/LoadingGlimmer";
 
 export default function Seasonal({ res }: {res: Database['public']['Tables']['PTW-CurrentSeason']['Row'][]}) {
   const [response, setResponse] = useState<Database['public']['Tables']['PTW-CurrentSeason']['Row'][]>();
   const [isEdited, setIsEdited] = useState<string>('');
+  const [isLoadingClient, setIsLoadingClient] = useState(true);
 
   useEffect(() => {
     const supabase = createClient<Database>('https://esjopxdrlewtpffznsxh.supabase.co', process.env.NEXT_PUBLIC_SUPABASE_API_KEY!);
@@ -15,7 +17,9 @@ export default function Seasonal({ res }: {res: Database['public']['Tables']['PT
         .from('PTW-CurrentSeason')
         .select()
         .order('id', { ascending: true });
+
       setResponse(data!);
+      setIsLoadingClient(false);
 
       await axios.get('https://update.ilovesabrina.org:3005/refresh').catch(error => console.log(error));
     }
@@ -137,7 +141,8 @@ export default function Seasonal({ res }: {res: Database['public']['Tables']['PT
               <th className='w-[30rem]'>Title</th>
               <th className='w-[10rem]'>Status</th>
             </tr> 
-            {response?.map((item) => {
+            {isLoadingClient ? loadingGlimmer(2) :
+              response?.map((item) => {
               let status;
               switch (item.status) {
                 case 'Not loaded':

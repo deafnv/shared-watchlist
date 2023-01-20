@@ -4,6 +4,7 @@ import axios from 'axios'
 import { createClient } from '@supabase/supabase-js';
 import { Database } from '../lib/database.types';
 import { initialTitleItemSupabase, sortListByDateSupabase, sortListByNameSupabase, sortListByRatingSupabase, sortSymbol } from '../lib/list_methods';
+import { loadingGlimmer } from '../components/LoadingGlimmer';
 
 //! Non-null assertion for the response state variable here will throw some errors if it does end up being null, fix maybe.
 //! ISSUES:
@@ -15,6 +16,7 @@ export default function Home() {
   const [sortMethod, setSortMethod] = useState<string>('');
   const [isEdited, setIsEdited] = useState<string>('');
   const searchRef = useRef<HTMLInputElement>(null);
+  const [isLoadingClient, setIsLoadingClient] = useState(true);
 
   useEffect(() => {
     //FIXME: Don't expose API key to client side
@@ -26,6 +28,7 @@ export default function Home() {
         .order('id', { ascending: true });
       setResponse(data!);
       setResponse1(data!);
+      setIsLoadingClient(false);
 
       await axios.get('https://update.ilovesabrina.org:3005/refresh').catch(error => console.log(error));
     }
@@ -186,7 +189,8 @@ export default function Home() {
               <th onClick={() => sortListByDateSupabase('startconv' , response, sortMethod, setSortMethod, setResponse)} className='w-40 cursor-pointer'><span>Start Date</span><span className='absolute'>{sortSymbol('start', sortMethod)}</span></th>
               <th onClick={() => sortListByDateSupabase('endconv' , response, sortMethod, setSortMethod, setResponse)} className='w-40  cursor-pointer'><span>End Date</span><span className='absolute'>{sortSymbol('end', sortMethod)}</span></th>
             </tr>
-            {response?.slice().reverse().map(item => {
+            {isLoadingClient ? loadingGlimmer(7) :
+            response?.slice().reverse().map(item => {
               return <tr key={item.id}>
                 <td onDoubleClick={() => {setIsEdited(`title${item.id}`)}}>
                   {
