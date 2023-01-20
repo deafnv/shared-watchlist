@@ -5,12 +5,41 @@ import type { AppProps } from 'next/app'
 import "../styles/nprogress.css";
 import NProgress from 'nprogress'
 import { useRouter } from 'next/router';
+import { LoadingProvider } from '../components/LoadingContext';
+import { ThemeProvider, createTheme } from '@mui/material';
+import { orange } from '@mui/material/colors';
+import Loading from '../components/LoadingComponent';
+
+declare module '@mui/material/styles' {
+  interface Theme {
+    status: {
+      danger: string;
+    };
+  }
+  // allow configuration using `createTheme`
+  interface ThemeOptions {
+    status?: {
+      danger?: string;
+    };
+  }
+}
 
 export default function App({ Component, pageProps }: AppProps) {
   const router = useRouter();
   NProgress.configure({
     showSpinner: false
   })
+
+  const theme = createTheme({
+    status: {
+      danger: orange[500],
+    },
+    palette: {
+      primary: {
+        main: '#14a1ff'
+      }
+    }
+  });
 
   useEffect(() => {
     const handleRouteStart = () => NProgress.start();
@@ -29,8 +58,12 @@ export default function App({ Component, pageProps }: AppProps) {
   }, []);
 
   return (
-    <Navbar>
-      <Component {...pageProps} />
-    </Navbar>
+    <ThemeProvider theme={theme}>
+      <LoadingProvider>
+        <Navbar>
+          <Component {...pageProps} />
+        </Navbar>
+      </LoadingProvider>
+    </ThemeProvider>
   )
 }

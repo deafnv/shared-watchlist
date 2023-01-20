@@ -6,6 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import axios from "axios";
 import { useRouter } from "next/router";
+import { useLoading } from "../components/LoadingContext";
 
 export const getStaticProps = async (context: GetStaticPropsContext) => {
   const supabase = createClient<Database>('https://esjopxdrlewtpffznsxh.supabase.co', process.env.NEXT_PUBLIC_SUPABASE_API_KEY!);
@@ -24,23 +25,28 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
 export default function SeasonalDetails({ res }: { res: Database['public']['Tables']['SeasonalDetails']['Row'][]}) {
   const rows = Array(12).fill('asd');
   const router = useRouter();
+  const { setLoading } = useLoading();
 
   async function refresh() {
     try {
+      setLoading(true);
       await axios.get('/api/loadtracker');
       await axios.get('/api/revalidate');
       router.reload();
     } catch (error) {
+      setLoading(false);
       alert(error);
     }
   }
 
   async function reload() {
     try {
+      setLoading(true);
       await axios.get('/api/refreshseasonal');
       await axios.get('/api/revalidate');
       router.reload();
     } catch (error) {
+      setLoading(false);
       alert(error);
     }
   }

@@ -2,9 +2,12 @@ import axios from "axios";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
+import Loading from "./LoadingComponent";
+import { useLoading } from "./LoadingContext";
 
 export default function Navbar({children}: React.PropsWithChildren) {
   const router = useRouter();
+  const { loading } = useLoading();
   const [timer, setTimer] = useState<string>("1970-01-01T11:18:58.453Z") 
   const navLinks = [
     {
@@ -33,7 +36,8 @@ export default function Navbar({children}: React.PropsWithChildren) {
   },[])
   
   return (  
-    <>
+    <>  
+      {loading && <Loading/>}
       <nav className="h-[60px] flex items-center justify-center gap-[20%] bg-black border-b-[1px]" style={{
         borderImage: 'linear-gradient(to right, rgb(218, 51, 190), rgb(191, 94, 255))',
         borderImageSlice: 1
