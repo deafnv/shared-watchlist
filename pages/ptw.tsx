@@ -43,11 +43,11 @@ export default function PTW() {
       setResponseNonCasual(dataNonCasual.data!)
       setResponseMovies(dataMovies.data!)
 
-      await axios.get('http://update.ilovesabrina.org:3004/refresh').catch(error => console.log(error));
+      await axios.get('https://update.ilovesabrina.org:3005/refresh').catch(error => console.log(error));
     }
     getData();
 
-    const refresh = setInterval(() => axios.get('http://update.ilovesabrina.org:3004/refresh'), 3500000);
+    const refresh = setInterval(() => axios.get('https://update.ilovesabrina.org:3005/refresh'), 3500000);
 
     document.addEventListener('click', (e: any) => {
       if (e.target?.tagName === 'INPUT') return;
