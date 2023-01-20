@@ -7,7 +7,7 @@ import Link from "next/link";
 import axios from "axios";
 import { useRouter } from "next/router";
 import { useLoading } from "../components/LoadingContext";
-import { useState } from "react";
+import { BaseSyntheticEvent, useState } from "react";
 
 export const getStaticProps = async (context: GetStaticPropsContext) => {
   const supabase = createClient<Database>('https://esjopxdrlewtpffznsxh.supabase.co', process.env.NEXT_PUBLIC_SUPABASE_API_KEY!);
@@ -57,6 +57,40 @@ export default function SeasonalDetails({ res }: { res: Database['public']['Tabl
   }
 
   function validate(item1: Database['public']['Tables']['SeasonalDetails']['Row']) {
+    async function handleChange(e: BaseSyntheticEvent) {
+      e.preventDefault();
+      setLoading(true)
+      const linkInput = e.target[0].value;
+      //TODO: Fix this trash
+      try { //? Validate URL - could use some form validation library instead
+        const url = new URL(linkInput);
+        try {
+          const idInput = parseInt(url.pathname.split('/')[2])
+          if (!idInput) throw 'NaN'
+          try {
+            await axios.post('/api/changevalidated', {
+              id: item1.id,
+              mal_id: idInput
+            })
+            await axios.get('/api/revalidate')
+            router.reload()
+          } 
+          catch (error) {
+            setLoading(false)
+            alert(error)
+          }
+        }
+        catch {
+          setLoading(false)
+          alert('ID not found. Enter a valid link')
+        }
+      } 
+      catch (error) {
+        setLoading(false)
+        alert('Enter a valid link');
+      }
+    }
+
     async function handleIgnore() {
       try {
         setLoading(true);
@@ -64,6 +98,8 @@ export default function SeasonalDetails({ res }: { res: Database['public']['Tabl
           .from('SeasonalDetails')
           .update({message: ''})
           .eq('mal_id', item1.mal_id)
+
+        await axios.get('/api/revalidate');
         
         const changed = response.slice();
         changed.find(item => item.id === item1.id)!['message'] = ''; 
@@ -78,6 +114,18 @@ export default function SeasonalDetails({ res }: { res: Database['public']['Tabl
 
     function validateForm() {
       switch(validateArea) {
+        case `${item1.mal_id}_change`:
+          return (
+            <div className='grid grid-cols-2 w-64'>
+              <span className='col-span-2 text-center'>Enter correct link: </span>
+              <Link href={item1.message?.split('Validate:')[1] ?? ''} target='_blank' className='link mb-4 col-span-2 text-center' >Search on MAL</Link>
+              <form onSubmit={handleChange} className='col-span-2 grid grid-cols-2 gap-2'>
+                <input autoFocus type='text' className='col-span-2 input-text text-center'></input>
+                <button type='submit' className='input-submit w-min mx-auto px-2 p-1'>Update</button>
+                <button onClick={() => setValidateArea('')} type='reset' className='input-submit w-min mx-auto px-2 p-1'>Cancel</button>
+              </form>
+            </div>
+          )
         case `${item1.mal_id}_ignore`:
           return (
             <div className='grid grid-cols-2 gap-2'>
@@ -89,8 +137,8 @@ export default function SeasonalDetails({ res }: { res: Database['public']['Tabl
         default:
           return (
             <div className='grid grid-cols-2 gap-2'>
-              <span className='col-span-2 text-red-500 '>⚠ This entry appears to be wrong (Non-functional)</span>
-              <button className='input-submit px-2 p-1'>Change</button>
+              <span className='col-span-2 text-red-500 '>⚠ This entry appears to be wrong</span>
+              <button onClick={() => setValidateArea(`${item1.mal_id}_change`)} className='input-submit px-2 p-1'>Change</button>
               <button onClick={() => setValidateArea(`${item1.mal_id}_ignore`)} className='input-submit px-2 p-1 bg-rose-600 hover:bg-rose'>Ignore</button>
             </div>
           )
@@ -98,7 +146,7 @@ export default function SeasonalDetails({ res }: { res: Database['public']['Tabl
     }
 
     return (
-      item1.message == 'Validate' ? 
+      item1.message?.includes('Validate') ? 
         validateForm()
       : null
     )
@@ -129,7 +177,7 @@ export default function SeasonalDetails({ res }: { res: Database['public']['Tabl
         <div className='flex flex-col gap-6'>
           {response.map((item) => {
             return (
-              <div className='flex flex-col items-center gap-2' key={item.id}>
+              <article className='flex flex-col items-center gap-2' key={item.id}>
                 <table>
                   <tbody>
                     <tr>
@@ -174,7 +222,7 @@ export default function SeasonalDetails({ res }: { res: Database['public']['Tabl
                   </tbody>
                 </table>
                 {validate(item)}
-              </div>
+              </article>
             )
           })}
         </div>
