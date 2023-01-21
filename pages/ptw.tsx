@@ -259,11 +259,11 @@ export default function PTW() {
     }
 
     return (
-      <div className='flex items-center justify-center relative'>
+      <div className='flex items-center justify-center relative w-full'>
         {isLoadingEditForm ? <CircularProgress size={30} className='absolute' /> : null}
-        <div style={{opacity: isLoadingEditForm ? 0.5 : 1, pointerEvents: isLoadingEditForm ? 'none' : 'unset'}}>
+        <div style={{opacity: isLoadingEditForm ? 0.5 : 1, pointerEvents: isLoadingEditForm ? 'none' : 'unset'}} className='w-full'>
           <form onSubmit={handleSubmit}>
-            <input autoFocus type='text' defaultValue={ogvalue} className='input-text text-center w-4/5' />
+            <input autoFocus type='text' defaultValue={ogvalue} className='input-text text-center w-full' />
           </form>
         </div>
       </div>
