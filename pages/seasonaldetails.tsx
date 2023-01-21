@@ -177,7 +177,7 @@ export default function SeasonalDetails({ res }: { res: Database['public']['Tabl
           {response.map((item) => {
             return (
               <article key={item.mal_id} className='flex flex-col gap-2 p-3 bg-slate-700 shadow-md shadow-gray-700 rounded-md'>
-                <span className='min-h-[3rem] font-bold self-center text-center line-clamp-2'>{item.title}</span>
+                <span onClick={showTitle} className='h-[3rem] font-bold self-center text-center line-clamp-2'>{item.title}</span>
                 <div className='flex'>
                   <Image src={item.image_url ?? 'https://via.placeholder.com/400x566'} alt='Art' height={200} width={150}/>
                   <div className='flex flex-col items-center justify-center w-full'>
@@ -207,6 +207,12 @@ export default function SeasonalDetails({ res }: { res: Database['public']['Tabl
       </main>
     </>
   )
+
+  function showTitle(e: BaseSyntheticEvent) {
+    const target = e.target as HTMLSpanElement; 
+    target.style.webkitLineClamp = '100'; 
+    target.style.overflow = 'auto';
+  }
 
   function EpisodeTable(item: Database['public']['Tables']['SeasonalDetails']['Row']) {
     let cutoff = 0
