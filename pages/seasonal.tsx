@@ -142,6 +142,7 @@ export default function Seasonal({ res }: {res: Database['public']['Tables']['PT
         setIsLoadingEditForm(false);
       } 
       catch (error) {
+        setIsLoadingEditForm(false);
         alert(error);
         return;
       }
@@ -162,6 +163,7 @@ export default function Seasonal({ res }: {res: Database['public']['Tables']['PT
   function editStatus(id: number) {
     async function handleSubmit(event: BaseSyntheticEvent) {
       event.preventDefault();
+      setIsLoadingEditForm(true);
 
       let row = id + 2;
       try {
@@ -175,23 +177,30 @@ export default function Seasonal({ res }: {res: Database['public']['Tables']['PT
         changed.find(item => item.id === id)!['status'] = event.target.childNodes[0].value;
         setResponse(changed);
         setIsEdited('');
+        setIsLoadingEditForm(false);
       } 
       catch (error) {
+        setIsLoadingEditForm(false);
         alert(error);
         return;
       }
     }
 
     return (
-      <form onSubmit={handleSubmit} className='text-gray-800'>
-        <select onChange={(e) => {(e.target.parentNode as HTMLFormElement)!.requestSubmit()}} className='h-full w-full'>
-          <option>Select status</option>
-          <option>Watched</option>
-          <option>Loaded</option>
-          <option>Not loaded</option>
-          <option>Not aired</option>
-        </select>
-      </form>
+      <div style={{backgroundColor: isLoadingEditForm ? 'black' : 'unset'}} className='flex items-center justify-center relative w-full'>
+        {isLoadingEditForm ? <CircularProgress size={30} className='absolute' /> : null}
+        <div style={{opacity: isLoadingEditForm ? 0.5 : 1, pointerEvents: isLoadingEditForm ? 'none' : 'unset'}} className='w-full'>
+          <form onSubmit={handleSubmit} className='text-gray-800'>
+            <select onChange={(e) => {(e.target.parentNode as HTMLFormElement)!.requestSubmit()}} className='h-full w-full'>
+              <option>Select status</option>
+              <option>Watched</option>
+              <option>Loaded</option>
+              <option>Not loaded</option>
+              <option>Not aired</option>
+            </select>
+          </form>
+        </div>
+      </div>
     )
   }
 }
