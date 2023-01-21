@@ -118,8 +118,8 @@ export default function SeasonalDetails({ res }: { res: Database['public']['Tabl
       switch(validateArea) {
         case `${item1.mal_id}_change`:
           return (
-            <div className='grid grid-cols-2 w-64'>
-              <span className='col-span-2 text-center'>Enter correct link: </span>
+            <div className='absolute top-[-35px] left-[-10px] h-[125%] w-[105%] flex flex-col justify-center items-center gap-2 glass'>
+              <span className='text-center text-lg'>Enter correct link: </span>
               <Link href={item1.message?.split('Validate:')[1] ?? ''} target='_blank' className='link mb-4 col-span-2 text-center' >Search on MAL</Link>
               <form onSubmit={handleChange} className='col-span-2 grid grid-cols-2 gap-2'>
                 <input autoFocus type='text' className='col-span-2 input-text text-center'></input>
@@ -130,18 +130,22 @@ export default function SeasonalDetails({ res }: { res: Database['public']['Tabl
           )
         case `${item1.mal_id}_ignore`:
           return (
-            <div className='grid grid-cols-2 gap-2'>
-              <span className='col-span-2 text-red-500 '>⚠ Are you sure?</span>
-              <button onClick={handleIgnore} className='input-submit px-2 p-1'>Yes</button>
-              <button onClick={() => setValidateArea('')} className='input-submit px-2 p-1 bg-rose-600 hover:bg-rose'>No</button>
+            <div className='absolute top-[-35px] left-[-10px] h-[125%] w-[105%] flex flex-col justify-center items-center gap-2 glass'>
+              <span className='text-red-500 text-lg'>⚠ Are you sure?</span>
+              <div className='flex gap-4'>
+                <button onClick={handleIgnore} className='input-submit px-2 p-1'>Yes</button>
+                <button onClick={() => setValidateArea('')} className='input-submit px-2 p-1 bg-rose-600 hover:bg-rose'>No</button>
+              </div>
             </div>
           )
         default:
           return (
-            <div className='grid grid-cols-2 gap-2'>
-              <span className='col-span-2 text-red-500 '>⚠ This entry appears to be wrong</span>
-              <button onClick={() => setValidateArea(`${item1.mal_id}_change`)} className='input-submit px-2 p-1'>Change</button>
-              <button onClick={() => setValidateArea(`${item1.mal_id}_ignore`)} className='input-submit px-2 p-1 bg-rose-600 hover:bg-rose'>Ignore</button>
+            <div className='absolute top-[-35px] left-[-10px] h-[125%] w-[105%] flex flex-col justify-center items-center gap-2 glass'>
+              <span className='text-red-500 text-lg'>⚠ This entry appears to be wrong</span>
+              <div className='flex gap-4'>
+                <button onClick={() => setValidateArea(`${item1.mal_id}_change`)} className='input-submit px-2 p-1'>Change</button>
+                <button onClick={() => setValidateArea(`${item1.mal_id}_ignore`)} className='input-submit px-2 p-1 bg-rose-600 hover:bg-rose'>Ignore</button>
+              </div>
             </div>
           )
       }
@@ -163,7 +167,7 @@ export default function SeasonalDetails({ res }: { res: Database['public']['Tabl
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <main className='flex flex-col items-center justify-center p-4'>
+      <main className='flex flex-col items-center justify-center p-6'>
         <div className='absolute top-20 left-8 flex gap-2'>
           <button onClick={refresh} title='Refresh episode tracking' className='input-submit px-2 p-1'>Refresh</button>
           <button onClick={reload} title='Reload current season data from sheet' className='input-submit px-2 p-1'>Reload</button>
@@ -191,8 +195,9 @@ export default function SeasonalDetails({ res }: { res: Database['public']['Tabl
                 </div>
                 <div>
                   <div className='w-full m-2 flex items-center justify-center'><span className='text-lg font-semibold'>Episodes</span></div>
-                  <div className='grid grid-cols-2 gap-4'>
+                  <div className='relative grid grid-cols-2 gap-4'>
                     {EpisodeTable(item)}
+                    {validate(item)}
                   </div>
                 </div>
               </article>
