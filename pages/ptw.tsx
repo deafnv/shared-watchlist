@@ -6,7 +6,7 @@ import { sortListByNamePTW, sortSymbol } from '../lib/list_methods';
 import { createClient } from '@supabase/supabase-js';
 import { Database } from '../lib/database.types';
 import { loadingGlimmer } from '../components/LoadingGlimmer';
-import { CircularProgress } from '@mui/material';
+import { CircularProgress, Skeleton } from '@mui/material';
 
 export default function PTW() {
   const [responseRolled, setResponseRolled] = useState<Database['public']['Tables']['PTW-Rolled']['Row'][]>();
@@ -118,6 +118,11 @@ export default function PTW() {
               <div onClick={() => {sortListByNamePTW('title', responseRolled, sortMethod, setSortMethod, setResponseRolled); setReordered(false)}} className='flex items-center justify-center h-10 w-full bg-sky-600 cursor-pointer border-white border-solid border-[1px]'>
                 <span className='font-bold'>Title</span>
               </div>
+              {isLoadingClient ? 
+                <div className='flex flex-col items-center justify-around h-[448px] w-[30.1rem] border-white border-solid border-[1px] border-t-0'>
+                  {Array(8).fill('').map(() => <Skeleton sx={{backgroundColor: 'grey.700'}} animation='wave' variant="rounded" width={460} height={40} />)}
+                </div>
+              :
               <Reorder.Group values={responseRolled ?? []} dragConstraints={{top: 500}} draggable={sortMethod ? true : false} onReorder={(newOrder) => {setResponseRolled(newOrder); setReordered(true)}} className='w-[30.1rem] border-white border-solid border-[1px] border-t-0'>
                 {responseRolled?.map((item, i) => {
                   return (!isLoadingClient &&
@@ -138,7 +143,7 @@ export default function PTW() {
                     </Reorder.Item>
                   )
                 })}
-              </Reorder.Group>
+              </Reorder.Group>}
             </div>
             {!sortMethod && reordered ? 
               <div className='flex flex-col items-center'>
