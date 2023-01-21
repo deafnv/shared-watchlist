@@ -17,7 +17,6 @@ export default function Home() {
   const [response1, setResponse1] = useState<Database['public']['Tables']['Completed']['Row'][]>();
   const [sortMethod, setSortMethod] = useState<string>('');
   const [isEdited, setIsEdited] = useState<string>('');
-  const searchRef = useRef<HTMLInputElement>(null);
   const [isLoadingClient, setIsLoadingClient] = useState(true);
   const [isLoadingEditForm, setIsLoadingEditForm] = useState(false);
   const { setLoading } = useLoading();
@@ -46,13 +45,6 @@ export default function Home() {
     })
     window.addEventListener('focusout', () => {
       setIsEdited('');
-    })
-    window.addEventListener("keydown", (e) => {
-      if (e.keyCode === 114 || (e.ctrlKey && e.keyCode === 70)) { 
-        e.preventDefault();
-        searchRef.current?.focus();
-      }
-      if (e.key === 'Escape') setIsEdited('');
     })
 
     supabase
@@ -100,7 +92,7 @@ export default function Home() {
         <h2 className='p-2 text-3xl'>Completed{sortMethod ? <span onClick={() => {setResponse(response1); setSortMethod('')}} className='cursor-pointer'> ↻</span> : null}</h2>
         <div className='flex items-center gap-2'>
           <form>
-            <input ref={searchRef} type='search' placeholder='🔍︎ Search (non-functional)' className='input-text my-2 p-1 w-96 text-lg'></input>
+            <input type='search' placeholder='🔍︎ Search (non-functional)' className='input-text my-2 p-1 w-96 text-lg'></input>
           </form>
           <button onClick={addRecord} className='input-submit h-3/5 p-1 px-2 text-lg rounded-md'>➕ Add New</button>
         </div>
