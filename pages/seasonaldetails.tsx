@@ -26,11 +26,63 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
 export default function SeasonalDetails({ res }: { res: Database['public']['Tables']['SeasonalDetails']['Row'][]}) {
   const [response, setResponse] = useState(res);
   const [validateArea, setValidateArea] = useState('');
-  const rows = Array(12).fill('asd');
   const router = useRouter();
   const { setLoading } = useLoading();
 
   const supabase = createClient<Database>('https://esjopxdrlewtpffznsxh.supabase.co', process.env.NEXT_PUBLIC_SUPABASE_API_KEY!);
+
+  return (
+    <>
+      <Head>
+        <title>Cytube Watchlist</title>
+        <meta name="description" content="Seasonal Details" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="icon" href="/favicon.ico" />
+      </Head>
+
+      <main className='flex flex-col items-center justify-center p-6'>
+        <div className='absolute top-20 left-8 flex gap-2'>
+          <button onClick={refresh} title='Refresh episode tracking' className='input-submit px-2 p-1'>Refresh</button>
+          <button onClick={reload} title='Reload current season data from sheet' className='input-submit px-2 p-1'>Reload</button>
+        </div>
+        <h2 className='mb-6 text-3xl'>Seasonal Details</h2>
+        <div className='grid grid-cols-4 gap-6'>
+          {response.map((item) => {
+            return (
+              <article key={item.mal_id} className='flex flex-col gap-2 p-3 bg-slate-700 shadow-md shadow-gray-700 rounded-md'>
+                <span onClick={showTitle} className='h-[3rem] font-bold self-center text-center line-clamp-2'>{item.title}</span>
+                <div className='flex'>
+                  <Image src={item.image_url ?? 'https://via.placeholder.com/400x566'} alt='Art' height={200} width={150}/>
+                  <div className='flex flex-col items-center justify-center w-full'>
+                    <span>
+                      <span className='font-semibold'>Start Date: </span>{item.start_date ? item.start_date : 'Unknown'}
+                    </span>
+                    <span style={{textTransform: 'capitalize'}}>
+                      <span className='font-semibold'>Broadcast: </span>{item.broadcast ?? 'Unknown'}
+                    </span>
+                    <span>
+                      <span className='font-semibold'>Episodes: </span>{item.num_episodes ? item.num_episodes : 'Unknown'}
+                    </span>
+                    <Link href={`https://myanimelist.net/anime/${item.mal_id}`} target='_blank' className='link'>MyAnimeList</Link>
+                  </div>
+                </div>
+                <div>
+                  <div className='w-full m-2 flex items-center justify-center'><span className='text-lg font-semibold'>Episodes</span></div>
+                  <EpisodeTable item={item} />
+                </div>
+              </article>
+            )
+          })}
+        </div>
+      </main>
+    </>
+  )
+
+  function showTitle(e: BaseSyntheticEvent) {
+    const target = e.target as HTMLSpanElement; 
+    target.style.webkitLineClamp = '100'; 
+    target.style.overflow = 'auto';
+  }
 
   async function refresh() {
     try {
@@ -56,7 +108,50 @@ export default function SeasonalDetails({ res }: { res: Database['public']['Tabl
     }
   }
 
-  function validate(item1: Database['public']['Tables']['SeasonalDetails']['Row']) {
+  function EpisodeTable({ item }: { item: Database['public']['Tables']['SeasonalDetails']['Row'] }) {
+    let cutoff = 0
+    let cutoff1 = -3
+    return (
+      <div className='relative grid grid-cols-2 gap-4'>
+        {Array(4).fill('').map((item1, index) => {
+          cutoff = cutoff + 3
+          cutoff1 = cutoff1 + 3
+          return (
+            <table key={index}>
+              <tbody>
+                <tr>
+                  {Array(12).fill('').map((item1, index1) => {
+                    if (index1 < cutoff && index1 >= cutoff1) return <th className='w-11' key={index1}>{item.latest_episode! > 12 ? index1 + 13 : index1 + 1}</th>
+                  })}
+                </tr>
+                <tr>
+                  {Array(12).fill('').map((item1, index1) => {
+                    if (index1 < cutoff && index1 >= cutoff1) return <td 
+                      style={{
+                        background: determineEpisode(item.latest_episode!, index1)
+                      }}
+                      className='p-6' 
+                      key={index1}
+                    ></td>
+                  })}
+                </tr>
+              </tbody>
+            </table>
+          )
+        })}
+        <Validate item1={item} />
+      </div>
+    )
+    
+    function determineEpisode(latestEpisode: number, index: number) {
+      const accountFor2Cour = latestEpisode > 12 ? latestEpisode - 12 : latestEpisode;
+      if (accountFor2Cour > index) { //* Not sure why this isn't index + 1
+        return 'red'
+      } else return 'black'
+    }
+  }
+
+  function Validate({ item1 }: {item1: Database['public']['Tables']['SeasonalDetails']['Row']}) {
     async function handleChange(e: BaseSyntheticEvent) {
       e.preventDefault();
       setLoading(true)
@@ -157,145 +252,4 @@ export default function SeasonalDetails({ res }: { res: Database['public']['Tabl
       : null
     )
   }
-
-  return (
-    <>
-      <Head>
-        <title>Cytube Watchlist</title>
-        <meta name="description" content="Seasonal Details" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
-
-      <main className='flex flex-col items-center justify-center p-6'>
-        <div className='absolute top-20 left-8 flex gap-2'>
-          <button onClick={refresh} title='Refresh episode tracking' className='input-submit px-2 p-1'>Refresh</button>
-          <button onClick={reload} title='Reload current season data from sheet' className='input-submit px-2 p-1'>Reload</button>
-        </div>
-        <h2 className='mb-6 text-3xl'>Seasonal Details</h2>
-        <div className='grid grid-cols-4 gap-6'>
-          {response.map((item) => {
-            return (
-              <article key={item.mal_id} className='flex flex-col gap-2 p-3 bg-slate-700 shadow-md shadow-gray-700 rounded-md'>
-                <span onClick={showTitle} className='h-[3rem] font-bold self-center text-center line-clamp-2'>{item.title}</span>
-                <div className='flex'>
-                  <Image src={item.image_url ?? 'https://via.placeholder.com/400x566'} alt='Art' height={200} width={150}/>
-                  <div className='flex flex-col items-center justify-center w-full'>
-                    <span>
-                      <span className='font-semibold'>Start Date: </span>{item.start_date ? item.start_date : 'Unknown'}
-                    </span>
-                    <span style={{textTransform: 'capitalize'}}>
-                      <span className='font-semibold'>Broadcast: </span>{item.broadcast ?? 'Unknown'}
-                    </span>
-                    <span>
-                      <span className='font-semibold'>Episodes: </span>{item.num_episodes ? item.num_episodes : 'Unknown'}
-                    </span>
-                    <Link href={`https://myanimelist.net/anime/${item.mal_id}`} target='_blank' className='link'>MyAnimeList</Link>
-                  </div>
-                </div>
-                <div>
-                  <div className='w-full m-2 flex items-center justify-center'><span className='text-lg font-semibold'>Episodes</span></div>
-                  <div className='relative grid grid-cols-2 gap-4'>
-                    {EpisodeTable(item)}
-                    {validate(item)}
-                  </div>
-                </div>
-              </article>
-            )
-          })}
-        </div>
-      </main>
-    </>
-  )
-
-  function showTitle(e: BaseSyntheticEvent) {
-    const target = e.target as HTMLSpanElement; 
-    target.style.webkitLineClamp = '100'; 
-    target.style.overflow = 'auto';
-  }
-
-  function EpisodeTable(item: Database['public']['Tables']['SeasonalDetails']['Row']) {
-    let cutoff = 0
-    let cutoff1 = -3
-    return Array(4).fill('').map((item1, index) => {
-      cutoff = cutoff + 3
-      cutoff1 = cutoff1 + 3
-      return (
-        <table key={index}>
-          <tbody>
-            <tr>
-              {rows.map((item1, index1) => {
-                if (index1 < cutoff && index1 >= cutoff1) return <th className='w-11' key={index1}>{item.latest_episode! > 12 ? index1 + 13 : index1 + 1}</th>
-              })}
-            </tr>
-            <tr>
-              {rows.map((item1, index1) => {
-                if (index1 < cutoff && index1 >= cutoff1) return <td 
-                  style={{
-                    background: determineEpisode(item.latest_episode!, index1)
-                  }}
-                  className='p-6' 
-                  key={index1}
-                ></td>
-              })}
-            </tr>
-          </tbody>
-        </table>
-      )
-    })
-    
-    function determineEpisode(latestEpisode: number, index: number) {
-      const accountFor2Cour = latestEpisode > 12 ? latestEpisode - 12 : latestEpisode;
-      if (accountFor2Cour > index) { //* Not sure why this isn't index + 1
-        return 'red'
-      } else return 'black'
-    }
-  }
 }
-
-{/* <article className='flex flex-col items-center gap-2' key={item.id}>
-  <table>
-    <tbody>
-      <tr>
-        <th>Title</th>
-        <th>Episodes</th>
-      </tr>
-      <tr>
-        <td className='w-96 p-2 flex flex-col items-center justify-center gap-3'>
-          <Image src={item.image_url ?? 'https://via.placeholder.com/400x566'} alt='Art' height={200} width={150}/>
-          <span className='font-bold'>{item.title}</span>
-          <span style={{textTransform: 'capitalize'}}>
-            <span className='font-semibold'>Broadcast: </span>{item.broadcast ?? 'Unknown'}
-          </span>
-          <span>
-            <span className='font-semibold'>Episodes: </span>{item.num_episodes ? item.num_episodes : 'Unknown'}
-          </span>
-          <Link href={`https://myanimelist.net/anime/${item.mal_id}`} target='_blank' className='link'>MyAnimeList</Link>
-        </td>
-        <td className='p-0'>
-          <table>
-            <tbody>
-              <tr>
-                {rows.map((item1, index1) => {
-                  return <th className='w-11' key={index1}>{item.latest_episode! > 12 ? index1 + 13 : index1 + 1}</th>
-                })}
-              </tr>
-              <tr>
-                {rows.map((item1, index1) => {
-                  return <td 
-                    style={{
-                      background: determineEpisode(item.latest_episode!, index1)
-                    }}
-                    className='p-6' 
-                    key={index1}
-                  ></td>
-                })}
-              </tr>
-            </tbody>
-          </table>
-        </td>
-      </tr>
-    </tbody>
-  </table>
-  {validate(item)}
-</article> */}

@@ -55,6 +55,64 @@ export default function Seasonal({ res }: {res: Database['public']['Tables']['PT
     }
   },[])
 
+  return (
+    <>
+      <Head>
+        <title>Cytube Watchlist</title>
+        <meta name="description" content="Current Season" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="icon" href="/favicon.ico" />
+      </Head>
+
+      <main className='flex flex-col items-center justify-center'>
+        <h2 className='p-2 text-3xl'>Current Season</h2>
+        <table>
+          <tbody>
+            <tr>
+              <th className='w-[30rem]'>Title</th>
+              <th className='w-[10rem]'>Status</th>
+            </tr> 
+            {isLoadingClient ? loadingGlimmer(2) :
+              response?.map((item) => {
+              let status;
+              switch (item.status) {
+                case 'Not loaded':
+                  status = 'crimson';
+                  break;
+                case 'Loaded':
+                  status = 'orange';
+                  break;
+                case 'Watched':
+                  status = 'green';
+                  break;
+                case 'Not aired':
+                  status = 'black';
+                  break;
+                default:
+                  status = '';
+              }
+              return (
+                <tr key={item.id}>
+                  <td onDoubleClick={() => { setIsEdited(`seasonal_title_${item.title}_${item.id}`) } }>
+                    {isEdited == `seasonal_title_${item.title}_${item.id}` ? editForm(`seasonal_title`, item.id, item.title!) : item.title}
+                  </td>
+                  <td 
+                    onDoubleClick={() => { setIsEdited(`seasonal_status_${item.title}_${item.id}`) }}
+                    style={{
+                      backgroundColor: status
+                    }}
+                  >
+                    {isEdited == `seasonal_status_${item.title}_${item.id}` ? editStatus(item.id) : ''}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </main>
+    </>
+  )
+
   function editForm(field: 'seasonal_title', id: number, ogvalue: string): React.ReactNode {
     let column: string;
     let row = (id + 2).toString();
@@ -123,62 +181,4 @@ export default function Seasonal({ res }: {res: Database['public']['Tables']['PT
       </form>
     )
   }
-
-  return (
-    <>
-      <Head>
-        <title>Cytube Watchlist</title>
-        <meta name="description" content="Current Season" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
-
-      <main className='flex flex-col items-center justify-center'>
-        <h2 className='p-2 text-3xl'>Current Season</h2>
-        <table>
-          <tbody>
-            <tr>
-              <th className='w-[30rem]'>Title</th>
-              <th className='w-[10rem]'>Status</th>
-            </tr> 
-            {isLoadingClient ? loadingGlimmer(2) :
-              response?.map((item) => {
-              let status;
-              switch (item.status) {
-                case 'Not loaded':
-                  status = 'crimson';
-                  break;
-                case 'Loaded':
-                  status = 'orange';
-                  break;
-                case 'Watched':
-                  status = 'green';
-                  break;
-                case 'Not aired':
-                  status = 'black';
-                  break;
-                default:
-                  status = '';
-              }
-              return (
-                <tr key={item.id}>
-                  <td onDoubleClick={() => { setIsEdited(`seasonal_title_${item.title}_${item.id}`) } }>
-                    {isEdited == `seasonal_title_${item.title}_${item.id}` ? editForm(`seasonal_title`, item.id, item.title!) : item.title}
-                  </td>
-                  <td 
-                    onDoubleClick={() => { setIsEdited(`seasonal_status_${item.title}_${item.id}`) }}
-                    style={{
-                      backgroundColor: status
-                    }}
-                  >
-                    {isEdited == `seasonal_status_${item.title}_${item.id}` ? editStatus(item.id) : ''}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </main>
-    </>
-  )
 }

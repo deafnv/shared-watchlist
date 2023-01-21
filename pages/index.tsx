@@ -83,6 +83,58 @@ export default function Home() {
     }
   },[])
 
+  return (
+    <>
+      <Head>
+        <title>Cytube Watchlist</title>
+        <meta name="description" content="Completed" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="icon" href="/favicon.ico" />
+      </Head>
+
+      <main className='flex flex-col items-center justify-center'>
+        <h2 className='p-2 text-3xl'>Completed{sortMethod ? <span onClick={() => {setResponse(response1); setSortMethod('')}} className='cursor-pointer'> ↻</span> : null}</h2>
+        <div className='flex items-center gap-2'>
+          <form>
+            <input ref={searchRef} type='search' placeholder='🔍︎ Search (non-functional)' className='input-text my-2 p-1 w-96 text-lg'></input>
+          </form>
+          <button onClick={addRecord} className='input-submit h-3/5 p-1 px-2 text-lg rounded-md'>➕ Add New</button>
+        </div>
+        <table>
+          <tbody>
+            <tr>
+              <th onClick={() => sortListByNameSupabase(response, sortMethod, setSortMethod, setResponse)} className='w-[48rem] cursor-pointer'><span>Title</span><span className='absolute'>{sortSymbol('title', sortMethod)}</span></th>
+              <th className='w-32'>Type</th>
+              <th className='w-36'>Episode(s)</th>
+              <th onClick={() => sortListByRatingSupabase('rating1', response, sortMethod, setSortMethod, setResponse)} className='w-32 cursor-pointer'><span>GoodTaste</span><span className='absolute'>{sortSymbol('rating1', sortMethod)}</span></th>
+              <th onClick={() => sortListByRatingSupabase('rating2', response, sortMethod, setSortMethod, setResponse)} className='w-32 cursor-pointer'><span>TomoLover</span><span className='absolute'>{sortSymbol('rating2', sortMethod)}</span></th>
+              <th onClick={() => sortListByDateSupabase('startconv' , response, sortMethod, setSortMethod, setResponse)} className='w-40 cursor-pointer'><span>Start Date</span><span className='absolute'>{sortSymbol('start', sortMethod)}</span></th>
+              <th onClick={() => sortListByDateSupabase('endconv' , response, sortMethod, setSortMethod, setResponse)} className='w-40  cursor-pointer'><span>End Date</span><span className='absolute'>{sortSymbol('end', sortMethod)}</span></th>
+            </tr>
+            {isLoadingClient ? loadingGlimmer(7) :
+            response?.slice().reverse().map(item => {
+              return <tr key={item.id}>
+                <td onDoubleClick={() => {setIsEdited(`title${item.id}`)}}>
+                  {
+                    isEdited == `title${item.id}` 
+                    ? editForm('title', item.id, item.title!) : 
+                    item.title ? item.title : <span className='italic text-gray-400'>Untitled</span>
+                  }
+                </td>
+                <td onDoubleClick={() => {setIsEdited(`type${item.id}`)}}>{isEdited == `type${item.id}` ? editForm('type', item.id, item.type ?? '') : item.type}</td>
+                <td onDoubleClick={() => {setIsEdited(`episode${item.id}`)}}>{isEdited == `episode${item.id}` ? editForm('episode', item.id, item.episode ?? '') : item.episode}</td>
+                <td onDoubleClick={() => {setIsEdited(`rating1${item.id}`)}}>{isEdited == `rating1${item.id}` ? editForm('rating1', item.id, item.rating1 ?? '') : item.rating1}</td>
+                <td onDoubleClick={() => {setIsEdited(`rating2${item.id}`)}}>{isEdited == `rating2${item.id}` ? editForm('rating2', item.id, item.rating2 ?? '') : item.rating2}</td>
+                <td onDoubleClick={() => {setIsEdited(`start${item.id}`)}}>{isEdited == `start${item.id}` ? editForm('start', item.id, item.start ?? '') : item.start}</td>
+                <td onDoubleClick={() => {setIsEdited(`end${item.id}`)}}>{isEdited == `end${item.id}` ? editForm('end', item.id, item.end ?? '') : item.end}</td>
+              </tr>
+            })}
+          </tbody>
+        </table>
+      </main>
+    </>
+  )
+
   //TODO: Detect pressing tab so it jumps to the next field to be edited 
   function editForm(field: 'title' | 'type' | 'episode' | 'rating1' | 'rating2' | 'start' | 'end', id: number, ogvalue: string): React.ReactNode {
     let column: string;
@@ -160,56 +212,4 @@ export default function Home() {
       return;
     }
   }
-
-  return (
-    <>
-      <Head>
-        <title>Cytube Watchlist</title>
-        <meta name="description" content="Completed" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
-
-      <main className='flex flex-col items-center justify-center'>
-        <h2 className='p-2 text-3xl'>Completed{sortMethod ? <span onClick={() => {setResponse(response1); setSortMethod('')}} className='cursor-pointer'> ↻</span> : null}</h2>
-        <div className='flex items-center gap-2'>
-          <form>
-            <input ref={searchRef} type='search' placeholder='🔍︎ Search (non-functional)' className='input-text my-2 p-1 w-96 text-lg'></input>
-          </form>
-          <button onClick={addRecord} className='input-submit h-3/5 p-1 px-2 text-lg rounded-md'>➕ Add New</button>
-        </div>
-        <table>
-          <tbody>
-            <tr>
-              <th onClick={() => sortListByNameSupabase(response, sortMethod, setSortMethod, setResponse)} className='w-[48rem] cursor-pointer'><span>Title</span><span className='absolute'>{sortSymbol('title', sortMethod)}</span></th>
-              <th className='w-32'>Type</th>
-              <th className='w-36'>Episode(s)</th>
-              <th onClick={() => sortListByRatingSupabase('rating1', response, sortMethod, setSortMethod, setResponse)} className='w-32 cursor-pointer'><span>GoodTaste</span><span className='absolute'>{sortSymbol('rating1', sortMethod)}</span></th>
-              <th onClick={() => sortListByRatingSupabase('rating2', response, sortMethod, setSortMethod, setResponse)} className='w-32 cursor-pointer'><span>TomoLover</span><span className='absolute'>{sortSymbol('rating2', sortMethod)}</span></th>
-              <th onClick={() => sortListByDateSupabase('startconv' , response, sortMethod, setSortMethod, setResponse)} className='w-40 cursor-pointer'><span>Start Date</span><span className='absolute'>{sortSymbol('start', sortMethod)}</span></th>
-              <th onClick={() => sortListByDateSupabase('endconv' , response, sortMethod, setSortMethod, setResponse)} className='w-40  cursor-pointer'><span>End Date</span><span className='absolute'>{sortSymbol('end', sortMethod)}</span></th>
-            </tr>
-            {isLoadingClient ? loadingGlimmer(7) :
-            response?.slice().reverse().map(item => {
-              return <tr key={item.id}>
-                <td onDoubleClick={() => {setIsEdited(`title${item.id}`)}}>
-                  {
-                    isEdited == `title${item.id}` 
-                    ? editForm('title', item.id, item.title!) : 
-                    item.title ? item.title : <span className='italic text-gray-400'>Untitled</span>
-                  }
-                </td>
-                <td onDoubleClick={() => {setIsEdited(`type${item.id}`)}}>{isEdited == `type${item.id}` ? editForm('type', item.id, item.type ?? '') : item.type}</td>
-                <td onDoubleClick={() => {setIsEdited(`episode${item.id}`)}}>{isEdited == `episode${item.id}` ? editForm('episode', item.id, item.episode ?? '') : item.episode}</td>
-                <td onDoubleClick={() => {setIsEdited(`rating1${item.id}`)}}>{isEdited == `rating1${item.id}` ? editForm('rating1', item.id, item.rating1 ?? '') : item.rating1}</td>
-                <td onDoubleClick={() => {setIsEdited(`rating2${item.id}`)}}>{isEdited == `rating2${item.id}` ? editForm('rating2', item.id, item.rating2 ?? '') : item.rating2}</td>
-                <td onDoubleClick={() => {setIsEdited(`start${item.id}`)}}>{isEdited == `start${item.id}` ? editForm('start', item.id, item.start ?? '') : item.start}</td>
-                <td onDoubleClick={() => {setIsEdited(`end${item.id}`)}}>{isEdited == `end${item.id}` ? editForm('end', item.id, item.end ?? '') : item.end}</td>
-              </tr>
-            })}
-          </tbody>
-        </table>
-      </main>
-    </>
-  )
 }

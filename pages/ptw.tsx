@@ -99,6 +99,89 @@ export default function PTW() {
     }
   },[])
 
+  return (
+    <>
+      <Head>
+        <title>Cytube Watchlist</title>
+        <meta name="description" content="Plan to Watch" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="icon" href="/favicon.ico" />
+      </Head>
+
+      <main className='flex flex-col items-center justify-center gap-4'>
+        <div className='flex flex-col items-center'>
+          <h2 className='p-2 text-3xl'>Plan to Watch (Rolled){sortMethod ? <span onClick={() => {setResponseRolled(responseRolled1); setSortMethod('')}} className='cursor-pointer'> ↻</span> : null}</h2>
+          <table>
+            <tbody>
+              <tr>
+                <th onClick={() => {sortListByNamePTW('title', responseRolled, sortMethod, setSortMethod, setResponseRolled); setReordered(false)}} className='w-[30rem] cursor-pointer'><span>Title</span><span className='absolute'>{sortSymbol('title', sortMethod)}</span></th>
+              </tr> 
+              {isLoadingClient ? loadingGlimmer(1) : null}
+            </tbody>
+          </table>
+          <Reorder.Group values={responseRolled ?? []} dragConstraints={{top: 500}} draggable={sortMethod ? true : false} onReorder={(newOrder) => {setResponseRolled(newOrder); setReordered(true)}} className='w-[30.1rem] border-white border-solid border-[1px] border-t-0'>
+            {responseRolled?.map((item, i) => {
+              return (!isLoadingClient &&
+                <Reorder.Item
+                  value={item}
+                  key={item.id}
+                  className='p-0 hover:bg-neutral-700'
+                >
+                  <div 
+                    style={sortMethod ? undefined : {cursor: 'move'}} 
+                    onDoubleClick={() => {setIsEdited(`rolled_${item.title}_${item.id}`)}} 
+                    className='p-2 text-center'
+                  >
+                    <span className='cursor-text'>
+                      {isEdited == `rolled_${item.title}_${item.id}` ? editForm('rolled_title', item.id, item.title!) : item.title}
+                    </span>
+                  </div>
+                </Reorder.Item>
+              )
+            })}
+          </Reorder.Group>
+          {!sortMethod && reordered ? 
+            <div className='flex flex-col items-center'>
+              <span className='mt-2 text-red-500'>⚠ Live updates will be paused while changes are being made to this table (Not really)</span>
+              <div className='flex gap-2 my-2'>
+                <button className='input-submit p-2 rounded-md' onClick={() => {saveReorder() /* TODO: PUt the reordered false here */}}>Save Changes</button>
+                <button className='input-submit p-2 rounded-md' onClick={() => {setResponseRolled(responseRolled1); setReordered(false)}}>Cancel</button>
+              </div>
+            </div>
+          : null}
+        </div>
+        <div className='flex gap-4'>
+          <PTWTable response={responseCasual} tableName='Casual' tableId='casual' />
+          <PTWTable response={responseNonCasual} tableName='Non-Casual' tableId='noncasual' />
+          <PTWTable response={responseMovies} tableName='Movies' tableId='movies' />
+        </div>
+      </main>
+    </>
+  )
+
+  function PTWTable({ response, tableName, tableId }: { response: Database['public']['Tables']['PTW-Casual']['Row'][] | undefined, tableName: string, tableId: 'casual' | 'noncasual' | 'movies' }) {
+    return <div className='flex flex-col items-center'>
+      <h2 className='p-2 text-3xl'>{tableName}</h2>
+      <table>
+        <tbody>
+          <tr>
+            <th className='w-[30rem]'><span>Title</span></th>
+          </tr> 
+          {isLoadingClient ? loadingGlimmer(1) :
+            response?.map((item) => {
+              return (
+                <tr key={item.id}>
+                  <td onDoubleClick={() => { setIsEdited(`${tableId}_${item.title}_${item.id}`); } }>
+                    {isEdited == `${tableId}_${item.title}_${item.id}` ? editForm(`${tableId}_title`, item.id, item.title!) : item.title}
+                  </td>
+                </tr>
+              );
+            })}
+        </tbody>
+      </table>
+    </div>;
+  }
+
   function editForm(field: 'rolled_title' | 'casual_title' | 'noncasual_title' | 'movies_title', id: number, ogvalue: string): React.ReactNode {
     let column: string;
     let row = (id + 2).toString();
@@ -186,93 +269,6 @@ export default function PTW() {
       console.log(error);
       return;
     }
-  }
-
-  return (
-    <>
-      <Head>
-        <title>Cytube Watchlist</title>
-        <meta name="description" content="Plan to Watch" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
-
-      <main className='flex flex-col items-center justify-center gap-4'>
-        <div className='flex flex-col items-center'>
-          <h2 className='p-2 text-3xl'>Plan to Watch (Rolled){sortMethod ? <span onClick={() => {setResponseRolled(responseRolled1); setSortMethod('')}} className='cursor-pointer'> ↻</span> : null}</h2>
-          <table>
-            <tbody>
-              <tr>
-                <th onClick={() => {sortListByNamePTW('title', responseRolled, sortMethod, setSortMethod, setResponseRolled); setReordered(false)}} className='w-[30rem] cursor-pointer'><span>Title</span><span className='absolute'>{sortSymbol('title', sortMethod)}</span></th>
-              </tr> 
-              {isLoadingClient ? loadingGlimmer(1) : null}
-            </tbody>
-          </table>
-          <Reorder.Group values={responseRolled ?? []} dragConstraints={{top: 500}} draggable={sortMethod ? true : false} onReorder={(newOrder) => {setResponseRolled(newOrder); setReordered(true)}} className='w-[30.1rem] border-white border-solid border-[1px] border-t-0'>
-            {responseRolled?.map((item, i) => {
-              return (!isLoadingClient &&
-                <Reorder.Item
-                  value={item}
-                  key={item.id}
-                  className='p-0 hover:bg-neutral-700'
-                >
-                  <div 
-                    style={sortMethod ? undefined : {cursor: 'move'}} 
-                    onDoubleClick={() => {setIsEdited(`rolled_${item.title}_${item.id}`)}} 
-                    className='p-2 text-center'
-                  >
-                    <span className='cursor-text'>
-                      {isEdited == `rolled_${item.title}_${item.id}` ? editForm('rolled_title', item.id, item.title!) : item.title}
-                    </span>
-                  </div>
-                </Reorder.Item>
-              )
-            })}
-          </Reorder.Group>
-          {!sortMethod && reordered ? 
-            <div className='flex flex-col items-center'>
-              <span className='mt-2 text-red-500'>⚠ Live updates will be paused while changes are being made to this table (Not really)</span>
-              <div className='flex gap-2 my-2'>
-                <button className='input-submit p-2 rounded-md' onClick={() => {saveReorder() /* TODO: PUt the reordered false here */}}>Save Changes</button>
-                <button className='input-submit p-2 rounded-md' onClick={() => {setResponseRolled(responseRolled1); setReordered(false)}}>Cancel</button>
-              </div>
-            </div>
-          : null}
-        </div>
-        <div className='flex gap-4'>
-          {PTWTable(responseCasual, 'Casual', 'casual')}
-          {PTWTable(responseNonCasual, 'Non-Casual', 'noncasual')}
-          {PTWTable(responseMovies, 'Movies', 'movies')}
-        </div>
-      </main>
-    </>
-  )
-
-  function PTWTable(
-    response: { id: number; title: string | null; }[] | undefined,
-    tableName: string,
-    tableId: 'casual' | 'noncasual' | 'movies'
-  ) {
-    return <div className='flex flex-col items-center'>
-      <h2 className='p-2 text-3xl'>{tableName}</h2>
-      <table>
-        <tbody>
-          <tr>
-            <th className='w-[30rem]'><span>Title</span></th>
-          </tr> 
-          {isLoadingClient ? loadingGlimmer(1) :
-            response?.map((item) => {
-              return (
-                <tr key={item.id}>
-                  <td onDoubleClick={() => { setIsEdited(`${tableId}_${item.title}_${item.id}`); } }>
-                    {isEdited == `${tableId}_${item.title}_${item.id}` ? editForm(`${tableId}_title`, item.id, item.title!) : item.title}
-                  </td>
-                </tr>
-              );
-            })}
-        </tbody>
-      </table>
-    </div>;
   }
 }
 
