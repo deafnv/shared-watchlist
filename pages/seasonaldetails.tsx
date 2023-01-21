@@ -176,54 +176,32 @@ export default function SeasonalDetails({ res }: { res: Database['public']['Tabl
           <button onClick={reload} title='Reload current season data from sheet' className='input-submit px-2 p-1'>Reload</button>
         </div>
         <h2 className='mb-6 text-3xl'>Seasonal Details</h2>
-        <div className='flex flex-col gap-6'>
+        <div className='grid grid-cols-4 gap-6'>
           {response.map((item) => {
             return (
-              <article className='flex flex-col items-center gap-2' key={item.id}>
-                <table>
-                  <tbody>
-                    <tr>
-                      <th>Title</th>
-                      <th>Episodes</th>
-                    </tr>
-                    <tr>
-                      <td className='w-96 p-2 flex flex-col items-center justify-center gap-3'>
-                        <Image src={item.image_url ?? 'https://via.placeholder.com/400x566'} alt='Art' height={200} width={150}/>
-                        <span className='font-bold'>{item.title}</span>
-                        <span style={{textTransform: 'capitalize'}}>
-                          <span className='font-semibold'>Broadcast: </span>{item.broadcast ?? 'Unknown'}
-                        </span>
-                        <span>
-                          <span className='font-semibold'>Episodes: </span>{item.num_episodes ? item.num_episodes : 'Unknown'}
-                        </span>
-                        <Link href={`https://myanimelist.net/anime/${item.mal_id}`} target='_blank' className='link'>MyAnimeList</Link>
-                      </td>
-                      <td className='p-0'>
-                        <table>
-                          <tbody>
-                            <tr>
-                              {rows.map((item1, index1) => {
-                                return <th className='w-11' key={index1}>{item.latest_episode! > 12 ? index1 + 13 : index1 + 1}</th>
-                              })}
-                            </tr>
-                            <tr>
-                              {rows.map((item1, index1) => {
-                                return <td 
-                                  style={{
-                                    background: determineEpisode(item.latest_episode!, index1)
-                                  }}
-                                  className='p-6' 
-                                  key={index1}
-                                ></td>
-                              })}
-                            </tr>
-                          </tbody>
-                        </table>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-                {validate(item)}
+              <article key={item.mal_id} className='flex flex-col gap-2 p-3 bg-slate-700 shadow-md shadow-gray-700 rounded-md'>
+                <span className='min-h-[3rem] font-bold self-center text-center line-clamp-2'>{item.title}</span>
+                <div className='flex'>
+                  <Image src={item.image_url ?? 'https://via.placeholder.com/400x566'} alt='Art' height={200} width={150}/>
+                  <div className='flex flex-col items-center justify-center w-full'>
+                    <span>
+                      <span className='font-semibold'>Start Date: </span>{item.start_date ? item.start_date : 'Unknown'}
+                    </span>
+                    <span style={{textTransform: 'capitalize'}}>
+                      <span className='font-semibold'>Broadcast: </span>{item.broadcast ?? 'Unknown'}
+                    </span>
+                    <span>
+                      <span className='font-semibold'>Episodes: </span>{item.num_episodes ? item.num_episodes : 'Unknown'}
+                    </span>
+                    <Link href={`https://myanimelist.net/anime/${item.mal_id}`} target='_blank' className='link'>MyAnimeList</Link>
+                  </div>
+                </div>
+                <div>
+                  <div className='w-full m-2 flex items-center justify-center'><span className='text-lg font-semibold'>Episodes</span></div>
+                  <div className='grid grid-cols-2 gap-4'>
+                    {EpisodeTable(item)}
+                  </div>
+                </div>
               </article>
             )
           })}
@@ -231,4 +209,82 @@ export default function SeasonalDetails({ res }: { res: Database['public']['Tabl
       </main>
     </>
   )
+
+  function EpisodeTable(item: Database['public']['Tables']['SeasonalDetails']['Row']) {
+    let cutoff = 0
+    let cutoff1 = -3
+    return Array(4).fill('').map((item1, index) => {
+      cutoff = cutoff + 3
+      cutoff1 = cutoff1 + 3
+      return (
+        <table key={index}>
+          <tbody>
+            <tr>
+              {rows.map((item1, index1) => {
+                if (index1 < cutoff && index1 >= cutoff1) return <th className='w-11' key={index1}>{item.latest_episode! > 12 ? index1 + 13 : index1 + 1}</th>
+              })}
+            </tr>
+            <tr>
+              {rows.map((item1, index1) => {
+                if (index1 < cutoff && index1 >= cutoff1) return <td 
+                  style={{
+                    background: determineEpisode(item.latest_episode!, index1)
+                  }}
+                  className='p-6' 
+                  key={index1}
+                ></td>
+              })}
+            </tr>
+          </tbody>
+        </table>
+      )
+    })
+  }
 }
+
+{/* <article className='flex flex-col items-center gap-2' key={item.id}>
+  <table>
+    <tbody>
+      <tr>
+        <th>Title</th>
+        <th>Episodes</th>
+      </tr>
+      <tr>
+        <td className='w-96 p-2 flex flex-col items-center justify-center gap-3'>
+          <Image src={item.image_url ?? 'https://via.placeholder.com/400x566'} alt='Art' height={200} width={150}/>
+          <span className='font-bold'>{item.title}</span>
+          <span style={{textTransform: 'capitalize'}}>
+            <span className='font-semibold'>Broadcast: </span>{item.broadcast ?? 'Unknown'}
+          </span>
+          <span>
+            <span className='font-semibold'>Episodes: </span>{item.num_episodes ? item.num_episodes : 'Unknown'}
+          </span>
+          <Link href={`https://myanimelist.net/anime/${item.mal_id}`} target='_blank' className='link'>MyAnimeList</Link>
+        </td>
+        <td className='p-0'>
+          <table>
+            <tbody>
+              <tr>
+                {rows.map((item1, index1) => {
+                  return <th className='w-11' key={index1}>{item.latest_episode! > 12 ? index1 + 13 : index1 + 1}</th>
+                })}
+              </tr>
+              <tr>
+                {rows.map((item1, index1) => {
+                  return <td 
+                    style={{
+                      background: determineEpisode(item.latest_episode!, index1)
+                    }}
+                    className='p-6' 
+                    key={index1}
+                  ></td>
+                })}
+              </tr>
+            </tbody>
+          </table>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  {validate(item)}
+</article> */}
