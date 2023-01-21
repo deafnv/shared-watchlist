@@ -154,13 +154,6 @@ export default function SeasonalDetails({ res }: { res: Database['public']['Tabl
     )
   }
 
-  function determineEpisode(latestEpisode: number, index: number) {
-    const accountFor2Cour = latestEpisode > 12 ? latestEpisode - 12 : latestEpisode;
-    if (accountFor2Cour > index) { //* Not sure why this isn't index + 1
-      return 'red'
-    } else return 'black'
-  }
-
   return (
     <>
       <Head>
@@ -239,6 +232,13 @@ export default function SeasonalDetails({ res }: { res: Database['public']['Tabl
         </table>
       )
     })
+    
+    function determineEpisode(latestEpisode: number, index: number) {
+      const accountFor2Cour = latestEpisode > 12 ? latestEpisode - 12 : latestEpisode;
+      if (accountFor2Cour > index) { //* Not sure why this isn't index + 1
+        return 'red'
+      } else return 'black'
+    }
   }
 }
 
