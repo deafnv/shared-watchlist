@@ -111,46 +111,45 @@ export default function PTW() {
       </Head>
 
       <main className='flex flex-col items-center justify-center gap-4'>
-        <div className='flex flex-col items-center'>
-          <h2 className='p-2 text-3xl'>Plan to Watch (Rolled){sortMethod ? <span onClick={() => {setResponseRolled(responseRolled1); setSortMethod('')}} className='cursor-pointer'> ↻</span> : null}</h2>
-          <table>
-            <tbody>
-              <tr>
-                <th onClick={() => {sortListByNamePTW('title', responseRolled, sortMethod, setSortMethod, setResponseRolled); setReordered(false)}} className='w-[30rem] cursor-pointer'><span>Title</span><span className='absolute'>{sortSymbol('title', sortMethod)}</span></th>
-              </tr> 
-              {isLoadingClient ? loadingGlimmer(1) : null}
-            </tbody>
-          </table>
-          <Reorder.Group values={responseRolled ?? []} dragConstraints={{top: 500}} draggable={sortMethod ? true : false} onReorder={(newOrder) => {setResponseRolled(newOrder); setReordered(true)}} className='w-[30.1rem] border-white border-solid border-[1px] border-t-0'>
-            {responseRolled?.map((item, i) => {
-              return (!isLoadingClient &&
-                <Reorder.Item
-                  value={item}
-                  key={item.id}
-                  className='p-0 hover:bg-neutral-700'
-                >
-                  <div 
-                    style={sortMethod ? undefined : {cursor: 'move'}} 
-                    onDoubleClick={() => {setIsEdited(`rolled_${item.title}_${item.id}`)}} 
-                    className='p-2 text-center'
-                  >
-                    <span className='cursor-text'>
-                      {isEdited == `rolled_${item.title}_${item.id}` ? editForm('rolled_title', item.id, item.title!) : item.title}
-                    </span>
-                  </div>
-                </Reorder.Item>
-              )
-            })}
-          </Reorder.Group>
-          {!sortMethod && reordered ? 
-            <div className='flex flex-col items-center'>
-              <span className='mt-2 text-red-500'>⚠ Live updates will be paused while changes are being made to this table (Not really)</span>
-              <div className='flex gap-2 my-2'>
-                <button className='input-submit p-2 rounded-md' onClick={() => {saveReorder() /* TODO: PUt the reordered false here */}}>Save Changes</button>
-                <button className='input-submit p-2 rounded-md' onClick={() => {setResponseRolled(responseRolled1); setReordered(false)}}>Cancel</button>
+        <div className='flex items-center'>
+          <div className='flex flex-col items-center'>
+            <h2 className='p-2 text-3xl'>Plan to Watch (Rolled){sortMethod ? <span onClick={() => {setResponseRolled(responseRolled1); setSortMethod('')}} className='cursor-pointer'> ↻</span> : null}</h2>
+            <div>
+              <div onClick={() => {sortListByNamePTW('title', responseRolled, sortMethod, setSortMethod, setResponseRolled); setReordered(false)}} className='flex items-center justify-center h-10 w-full bg-sky-600 cursor-pointer border-white border-solid border-[1px]'>
+                <span className='font-bold'>Title</span>
               </div>
+              <Reorder.Group values={responseRolled ?? []} dragConstraints={{top: 500}} draggable={sortMethod ? true : false} onReorder={(newOrder) => {setResponseRolled(newOrder); setReordered(true)}} className='w-[30.1rem] border-white border-solid border-[1px] border-t-0'>
+                {responseRolled?.map((item, i) => {
+                  return (!isLoadingClient &&
+                    <Reorder.Item
+                      value={item}
+                      key={item.id} 
+                      className='p-0 hover:bg-neutral-700'
+                    >
+                      <div 
+                        style={sortMethod ? undefined : {cursor: 'move'}} 
+                        onDoubleClick={() => {setIsEdited(`rolled_${item.title}_${item.id}`)}} 
+                        className='p-2 text-center'
+                      >
+                        <span className='cursor-text'>
+                          {isEdited == `rolled_${item.title}_${item.id}` ? editForm('rolled_title', item.id, item.title!) : item.title}
+                        </span>
+                      </div>
+                    </Reorder.Item>
+                  )
+                })}
+              </Reorder.Group>
             </div>
-          : null}
+            {!sortMethod && reordered ? 
+              <div className='flex flex-col items-center'>
+                <span className='mt-2 text-red-500'>⚠ Live updates will be paused while changes are being made to this table (Not really)</span>
+                <div className='flex gap-2 my-2'>
+                  <button className='input-submit p-2 rounded-md' onClick={() => {saveReorder() /* TODO: PUt the reordered false here */}}>Save Changes</button>
+                  <button className='input-submit p-2 rounded-md' onClick={() => {setResponseRolled(responseRolled1); setReordered(false)}}>Cancel</button>
+                </div>
+              </div>
+            : null}
+          </div>
         </div>
         <div className='flex gap-4'>
           <PTWTable response={responseCasual} tableName='Casual' tableId='casual' />
