@@ -28,6 +28,10 @@ export interface PTWTItem {
   title: string
 }
 
+export function getRandomInt(max: number) {
+  return Math.floor(Math.random() * max);
+}
+
 //* COMPLETED LIST METHODS
 
 export const initialTitleItem: TitleItem = {

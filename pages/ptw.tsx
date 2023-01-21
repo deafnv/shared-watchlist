@@ -2,11 +2,11 @@ import Head from 'next/head'
 import { BaseSyntheticEvent, useEffect, useState } from 'react'
 import axios from 'axios'
 import { Reorder } from 'framer-motion';
-import { sortListByNamePTW, sortSymbol } from '../lib/list_methods';
+import { getRandomInt, sortListByNamePTW, sortSymbol } from '../lib/list_methods';
 import { createClient } from '@supabase/supabase-js';
 import { Database } from '../lib/database.types';
 import { loadingGlimmer } from '../components/LoadingGlimmer';
-import { CircularProgress, Skeleton } from '@mui/material';
+import { Checkbox, CircularProgress, Radio, Skeleton } from '@mui/material';
 
 export default function PTW() {
   const [responseRolled, setResponseRolled] = useState<Database['public']['Tables']['PTW-Rolled']['Row'][]>();
@@ -19,6 +19,7 @@ export default function PTW() {
   const [reordered, setReordered] = useState(false);
   const [isLoadingClient, setIsLoadingClient] = useState(true); 
   const [isLoadingEditForm, setIsLoadingEditForm] = useState(false); 
+  const [gachaValue, setGachaValue] = useState<{value: string, categoryCasual: boolean, movies: boolean}>({value: '???', categoryCasual: true, movies: false});
 
   useEffect(() => {
     const supabase = createClient<Database>('https://esjopxdrlewtpffznsxh.supabase.co', process.env.NEXT_PUBLIC_SUPABASE_API_KEY!);
@@ -110,20 +111,19 @@ export default function PTW() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <main className='flex flex-col items-center justify-center gap-4'>
-        <div className='flex items-center'>
+      <main className='flex flex-col items-center justify-center gap-4 p-6'>
+        <div className='flex items-center justify-center gap-12'>
           <div className='flex flex-col items-center'>
             <h2 className='p-2 text-3xl'>Plan to Watch (Rolled){sortMethod ? <span onClick={() => {setResponseRolled(responseRolled1); setSortMethod('')}} className='cursor-pointer'> ↻</span> : null}</h2>
-            <div>
-              <div onClick={() => {sortListByNamePTW('title', responseRolled, sortMethod, setSortMethod, setResponseRolled); setReordered(false)}} className='flex items-center justify-center h-10 w-full bg-sky-600 cursor-pointer border-white border-solid border-[1px]'>
-                <span className='font-bold'>Title</span>
+            <div onClick={() => {sortListByNamePTW('title', responseRolled, sortMethod, setSortMethod, setResponseRolled); setReordered(false)}} className='flex items-center justify-center h-10 w-[30rem] bg-sky-600 cursor-pointer border-white border-solid border-[1px]'>
+              <span className='font-bold'>Title</span>
+            </div>
+            {isLoadingClient ? 
+              <div className='flex flex-col items-center justify-around h-[448px] w-[30.1rem] border-white border-solid border-[1px] border-t-0'>
+                {Array(8).fill('').map((item, index) => <Skeleton key={index} sx={{backgroundColor: 'grey.700'}} animation='wave' variant="rounded" width={460} height={40} />)}
               </div>
-              {isLoadingClient ? 
-                <div className='flex flex-col items-center justify-around h-[448px] w-[30.1rem] border-white border-solid border-[1px] border-t-0'>
-                  {Array(8).fill('').map((item, index) => <Skeleton key={index} sx={{backgroundColor: 'grey.700'}} animation='wave' variant="rounded" width={460} height={40} />)}
-                </div>
-              :
-              <Reorder.Group values={responseRolled ?? []} dragConstraints={{top: 500}} draggable={sortMethod ? true : false} onReorder={(newOrder) => {setResponseRolled(newOrder); setReordered(true)}} className='w-[30.1rem] border-white border-solid border-[1px] border-t-0'>
+            :
+              <Reorder.Group values={responseRolled ?? []} dragConstraints={{top: 500}} draggable={sortMethod ? true : false} onReorder={(newOrder) => {setResponseRolled(newOrder); setReordered(true)}} className='w-[30rem] border-white border-solid border-[1px] border-t-0'>
                 {responseRolled?.map((item, i) => {
                   return (!isLoadingClient &&
                     <Reorder.Item
@@ -144,17 +144,15 @@ export default function PTW() {
                   )
                 })}
               </Reorder.Group>}
-            </div>
-            {!sortMethod && reordered ? 
-              <div className='flex flex-col items-center'>
-                <span className='mt-2 text-red-500'>⚠ Live updates will be paused while changes are being made to this table (Not really)</span>
-                <div className='flex gap-2 my-2'>
-                  <button className='input-submit p-2 rounded-md' onClick={() => {saveReorder() /* TODO: PUt the reordered false here */}}>Save Changes</button>
-                  <button className='input-submit p-2 rounded-md' onClick={() => {setResponseRolled(responseRolled1); setReordered(false)}}>Cancel</button>
-                </div>
+            <div style={{visibility: !sortMethod && reordered ? 'visible' : 'hidden'}} className='flex flex-col items-center w-[30rem] px-2'>
+              <span className='mt-2 text-red-500 text-center'>⚠ Live updates will be paused while changes are being made to this table (Not really)</span>
+              <div className='flex gap-2 my-2'>
+                <button className='input-submit p-2 rounded-md' onClick={() => {saveReorder(); setReordered(false)}}>Save Changes</button>
+                <button className='input-submit p-2 rounded-md' onClick={() => {setResponseRolled(responseRolled1); setReordered(false)}}>Cancel</button>
               </div>
-            : null}
+            </div>
           </div>
+          <Gacha />
         </div>
         <div className='flex gap-4'>
           <PTWTable response={responseCasual} tableName='Casual' tableId='casual' />
@@ -164,6 +162,61 @@ export default function PTW() {
       </main>
     </>
   )
+
+  function Gacha() {
+    function handleSubmit(e: BaseSyntheticEvent) {
+      e.preventDefault();
+      if (!responseCasual || !responseNonCasual || !responseMovies) return;
+
+      const target = e.target as any;
+      const categoryCasual = target[0].checked;
+      const movies = target[2].checked;
+      let concatArr;
+      if (movies) {
+        concatArr = responseMovies?.concat(categoryCasual ? responseCasual : responseNonCasual)
+      } else {
+        concatArr = categoryCasual ? responseCasual : responseNonCasual;
+      }
+
+      if (categoryCasual) {
+        setGachaValue({
+          value: concatArr?.[getRandomInt(responseCasual.length)].title!,
+          categoryCasual: categoryCasual,
+          movies: movies
+        })
+      } else {
+        setGachaValue({
+          value: concatArr?.[getRandomInt(responseNonCasual.length)].title!,
+          categoryCasual: categoryCasual,
+          movies: movies
+        })
+      }
+    }
+
+    return (
+      <div className='relative flex flex-col items-center justify-center gap-4 h-[30rem] w-[25rem] bg-slate-700 rounded-lg -translate-y-8'>
+        <h2 className='absolute top-5 p-2 text-3xl'>Gacha</h2>
+        <div className='absolute top-20 flex items-center justify-center h-60 max-h-60 w-80'>
+          <div className='max-h-full bg-slate-100 border-black border-solid border-[1px] overflow-auto'>
+            <h3 className='p-2 text-black text-2xl text-center'>{gachaValue.value}</h3>
+          </div>
+        </div>
+        <form onSubmit={handleSubmit} className='flex flex-col items-center gap-2 pt-80'>
+          <div className='flex'>
+            <input type='radio' name='table_to_roll' value='Casual' defaultChecked={gachaValue.categoryCasual} />
+            <label className='mr-4'>Casual</label>
+            <input type='radio' name='table_to_roll' value='NonCasual' defaultChecked={!gachaValue.categoryCasual} />
+            <label>Non-Casual</label>
+          </div>
+          <div>
+            <input type='checkbox' value='IncludeMovies' defaultChecked={gachaValue.movies} />
+            <label>Include movies?</label>
+          </div>
+          <input type='submit' value='Roll' className='input-submit px-2 p-1' />
+        </form>
+      </div>
+    )
+  }
 
   function PTWTable({ response, tableName, tableId }: { response: Database['public']['Tables']['PTW-Casual']['Row'][] | undefined, tableName: string, tableId: 'casual' | 'noncasual' | 'movies' }) {
     return <div className='flex flex-col items-center'>
@@ -187,7 +240,7 @@ export default function PTW() {
       </table>
     </div>;
   }
-
+ 
   function editForm(field: 'rolled_title' | 'casual_title' | 'noncasual_title' | 'movies_title', id: number, ogvalue: string): React.ReactNode {
     let column: string;
     let row = (id + 2).toString();
