@@ -181,7 +181,7 @@ export default function Home() {
         <table>
           <tbody>
             <tr>
-              <th onClick={() => sortListByNameSupabase(response, sortMethod, setSortMethod, setResponse)} className='cursor-pointer'><span>Title</span><span className='absolute'>{sortSymbol('title', sortMethod)}</span></th>
+              <th onClick={() => sortListByNameSupabase(response, sortMethod, setSortMethod, setResponse)} className='w-[48rem] cursor-pointer'><span>Title</span><span className='absolute'>{sortSymbol('title', sortMethod)}</span></th>
               <th className='w-32'>Type</th>
               <th className='w-36'>Episode(s)</th>
               <th onClick={() => sortListByRatingSupabase('rating1', response, sortMethod, setSortMethod, setResponse)} className='w-32 cursor-pointer'><span>GoodTaste</span><span className='absolute'>{sortSymbol('rating1', sortMethod)}</span></th>
