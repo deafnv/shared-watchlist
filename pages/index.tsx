@@ -5,6 +5,7 @@ import { createClient } from '@supabase/supabase-js';
 import { Database } from '../lib/database.types';
 import { initialTitleItemSupabase, sortListByDateSupabase, sortListByNameSupabase, sortListByRatingSupabase, sortSymbol } from '../lib/list_methods';
 import { loadingGlimmer } from '../components/LoadingGlimmer';
+import { CircularProgress } from '@mui/material';
 
 //! Non-null assertion for the response state variable here will throw some errors if it does end up being null, fix maybe.
 //! ISSUES:
@@ -17,6 +18,7 @@ export default function Home() {
   const [isEdited, setIsEdited] = useState<string>('');
   const searchRef = useRef<HTMLInputElement>(null);
   const [isLoadingClient, setIsLoadingClient] = useState(true);
+  const [isLoadingEditForm, setIsLoadingEditForm] = useState(false);
 
   useEffect(() => {
     //FIXME: Don't expose API key to client side
@@ -168,6 +170,7 @@ export default function Home() {
 
     async function handleSubmit(event: BaseSyntheticEvent): Promise<void> {
       event.preventDefault();
+      setIsLoadingEditForm(true);
       
       try {
         await axios.post('/api/update', {
@@ -180,14 +183,25 @@ export default function Home() {
         changed.find(item => item.id === id)![field] = event.target[0].value;
         setResponse(changed);
         setIsEdited('');
+        setIsLoadingEditForm(false);
       } 
       catch (error) {
+        setIsLoadingEditForm(false);
         alert(error);
         return;
       }
     }
 
-    return <form onSubmit={handleSubmit}><input autoFocus type='text' defaultValue={ogvalue} className='input-text text-center w-4/5'></input></form>
+    return (
+      <div className='flex items-center justify-center relative'>
+        {isLoadingEditForm ? <CircularProgress size={30} className='absolute' /> : null}
+        <div style={{opacity: isLoadingEditForm ? 0.5 : 1, pointerEvents: isLoadingEditForm ? 'none' : 'unset'}}>
+          <form onSubmit={handleSubmit}>
+            <input autoFocus type='text' defaultValue={ogvalue} className='input-text text-center w-4/5' />
+          </form>
+        </div>
+      </div>
+    )
   }
 
   // TODO: add loading here to prevent spamming add record

@@ -6,6 +6,7 @@ import { sortListByNamePTW, sortSymbol } from '../lib/list_methods';
 import { createClient } from '@supabase/supabase-js';
 import { Database } from '../lib/database.types';
 import { loadingGlimmer } from '../components/LoadingGlimmer';
+import { CircularProgress } from '@mui/material';
 
 export default function PTW() {
   const [responseRolled, setResponseRolled] = useState<Database['public']['Tables']['PTW-Rolled']['Row'][]>();
@@ -16,7 +17,8 @@ export default function PTW() {
   const [sortMethod, setSortMethod] = useState<string>('');
   const [isEdited, setIsEdited] = useState<string>('');
   const [reordered, setReordered] = useState(false);
-  const [isLoadingClient, setIsLoadingClient] = useState(true);  
+  const [isLoadingClient, setIsLoadingClient] = useState(true); 
+  const [isLoadingEditForm, setIsLoadingEditForm] = useState(false); 
 
   useEffect(() => {
     const supabase = createClient<Database>('https://esjopxdrlewtpffznsxh.supabase.co', process.env.NEXT_PUBLIC_SUPABASE_API_KEY!);
@@ -206,6 +208,7 @@ export default function PTW() {
 
     async function handleSubmit(event: BaseSyntheticEvent): Promise<void> {
       event.preventDefault();
+      setIsLoadingEditForm(true);
       
       try {
         await axios.post('/api/update', {
@@ -220,6 +223,7 @@ export default function PTW() {
             changedRolled.find(item => item.id === id)!['title'] = event.target[0].value;
             setResponseRolled(changedRolled);
             setIsEdited('');
+            setIsLoadingEditForm(false);
             break;
           case 'casual_title':
             const changedCasual = responseCasual?.slice();
@@ -227,6 +231,7 @@ export default function PTW() {
             changedCasual.find(item => item.id === id)!['title'] = event.target[0].value;
             setResponseCasual(changedCasual);
             setIsEdited('');
+            setIsLoadingEditForm(false);
             break;
           case 'noncasual_title':
             const changedNonCasual = responseNonCasual?.slice();
@@ -234,6 +239,7 @@ export default function PTW() {
             changedNonCasual.find(item => item.id === id)!['title'] = event.target[0].value;
             setResponseNonCasual(changedNonCasual);
             setIsEdited('');
+            setIsLoadingEditForm(false);
             break;
           case 'movies_title':
             const changedMovies = responseMovies?.slice();
@@ -241,6 +247,7 @@ export default function PTW() {
             changedMovies.find(item => item.id === id)!['title'] = event.target[0].value;
             setResponseMovies(changedMovies);
             setIsEdited('');
+            setIsLoadingEditForm(false);
             break;
         }
         
@@ -251,7 +258,16 @@ export default function PTW() {
       }
     }
 
-    return <form onSubmit={handleSubmit}><input autoFocus type='text' defaultValue={ogvalue} className='input-text text-center w-4/5'></input></form>
+    return (
+      <div className='flex items-center justify-center relative'>
+        {isLoadingEditForm ? <CircularProgress size={30} className='absolute' /> : null}
+        <div style={{opacity: isLoadingEditForm ? 0.5 : 1, pointerEvents: isLoadingEditForm ? 'none' : 'unset'}}>
+          <form onSubmit={handleSubmit}>
+            <input autoFocus type='text' defaultValue={ogvalue} className='input-text text-center w-4/5' />
+          </form>
+        </div>
+      </div>
+    )
   }
 
   async function saveReorder() {

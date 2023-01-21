@@ -4,11 +4,13 @@ import { BaseSyntheticEvent, useEffect, useState } from "react";
 import Head from "next/head";
 import axios from "axios";
 import { loadingGlimmer } from "../components/LoadingGlimmer";
+import { CircularProgress } from "@mui/material";
 
 export default function Seasonal({ res }: {res: Database['public']['Tables']['PTW-CurrentSeason']['Row'][]}) {
   const [response, setResponse] = useState<Database['public']['Tables']['PTW-CurrentSeason']['Row'][]>();
   const [isEdited, setIsEdited] = useState<string>('');
   const [isLoadingClient, setIsLoadingClient] = useState(true);
+  const [isLoadingEditForm, setIsLoadingEditForm] = useState(false);
 
   useEffect(() => {
     const supabase = createClient<Database>('https://esjopxdrlewtpffznsxh.supabase.co', process.env.NEXT_PUBLIC_SUPABASE_API_KEY!);
@@ -124,6 +126,7 @@ export default function Seasonal({ res }: {res: Database['public']['Tables']['PT
 
     async function handleSubmit(event: BaseSyntheticEvent): Promise<void> {
       event.preventDefault();
+      setIsLoadingEditForm(true);
       
       try {
         await axios.post('/api/update', {
@@ -136,6 +139,7 @@ export default function Seasonal({ res }: {res: Database['public']['Tables']['PT
         changed.find(item => item.id === id)!['title'] = event.target[0].value;
         setResponse(changed);
         setIsEdited('');
+        setIsLoadingEditForm(false);
       } 
       catch (error) {
         alert(error);
@@ -143,7 +147,16 @@ export default function Seasonal({ res }: {res: Database['public']['Tables']['PT
       }
     }
 
-    return <form onSubmit={handleSubmit}><input autoFocus type='text' defaultValue={ogvalue} className='input-text text-center w-4/5'></input></form>
+    return (
+      <div className='flex items-center justify-center relative'>
+        {isLoadingEditForm ? <CircularProgress size={30} className='absolute' /> : null}
+        <div style={{opacity: isLoadingEditForm ? 0.5 : 1, pointerEvents: isLoadingEditForm ? 'none' : 'unset'}}>
+          <form onSubmit={handleSubmit}>
+            <input autoFocus type='text' defaultValue={ogvalue} className='input-text text-center w-4/5' />
+          </form>
+        </div>
+      </div>
+    )
   }
 
   function editStatus(id: number) {
