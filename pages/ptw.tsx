@@ -120,7 +120,7 @@ export default function PTW() {
               </div>
               {isLoadingClient ? 
                 <div className='flex flex-col items-center justify-around h-[448px] w-[30.1rem] border-white border-solid border-[1px] border-t-0'>
-                  {Array(8).fill('').map(() => <Skeleton sx={{backgroundColor: 'grey.700'}} animation='wave' variant="rounded" width={460} height={40} />)}
+                  {Array(8).fill('').map((item, index) => <Skeleton key={index} sx={{backgroundColor: 'grey.700'}} animation='wave' variant="rounded" width={460} height={40} />)}
                 </div>
               :
               <Reorder.Group values={responseRolled ?? []} dragConstraints={{top: 500}} draggable={sortMethod ? true : false} onReorder={(newOrder) => {setResponseRolled(newOrder); setReordered(true)}} className='w-[30.1rem] border-white border-solid border-[1px] border-t-0'>
