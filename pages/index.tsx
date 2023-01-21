@@ -6,6 +6,7 @@ import { Database } from '../lib/database.types';
 import { initialTitleItemSupabase, sortListByDateSupabase, sortListByNameSupabase, sortListByRatingSupabase, sortSymbol } from '../lib/list_methods';
 import { loadingGlimmer } from '../components/LoadingGlimmer';
 import { CircularProgress } from '@mui/material';
+import { useLoading } from '../components/LoadingContext';
 
 //! Non-null assertion for the response state variable here will throw some errors if it does end up being null, fix maybe.
 //! ISSUES:
@@ -19,6 +20,7 @@ export default function Home() {
   const searchRef = useRef<HTMLInputElement>(null);
   const [isLoadingClient, setIsLoadingClient] = useState(true);
   const [isLoadingEditForm, setIsLoadingEditForm] = useState(false);
+  const { setLoading } = useLoading();
 
   useEffect(() => {
     //FIXME: Don't expose API key to client side
@@ -210,6 +212,8 @@ export default function Home() {
       alert('Insert title for latest row before adding a new one');
       return;
     }
+
+    setLoading(true);
     try {
       await axios.post('/api/update', {
         content: (response.length + 1).toString(),
@@ -220,8 +224,10 @@ export default function Home() {
       changed.push({...initialTitleItemSupabase, id: (response.length + 1)});
       setResponse(changed);
       setIsEdited(`title${response.length + 1}`);
+      setLoading(false);
     } 
     catch (error) {
+      setLoading(false);
       alert(error);
       return;
     }
