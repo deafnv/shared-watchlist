@@ -6,7 +6,8 @@ import { getRandomInt, sortListByNamePTW, sortSymbol } from '../lib/list_methods
 import { createClient } from '@supabase/supabase-js';
 import { Database } from '../lib/database.types';
 import { loadingGlimmer } from '../components/LoadingGlimmer';
-import { Checkbox, CircularProgress, Radio, Skeleton } from '@mui/material';
+import { CircularProgress, Skeleton } from '@mui/material';
+import DoneIcon from '@mui/icons-material/Done';
 
 export default function PTW() {
   const [responseRolled, setResponseRolled] = useState<Database['public']['Tables']['PTW-Rolled']['Row'][]>();
@@ -203,14 +204,24 @@ export default function PTW() {
         </div>
         <form onSubmit={handleSubmit} className='flex flex-col items-center gap-2 pt-80'>
           <div className='flex'>
-            <input type='radio' name='table_to_roll' value='Casual' defaultChecked={gachaValue.categoryCasual} />
-            <label className='mr-4'>Casual</label>
-            <input type='radio' name='table_to_roll' value='NonCasual' defaultChecked={!gachaValue.categoryCasual} />
-            <label>Non-Casual</label>
+            <label className='relative flex gap-1 items-center mr-3 radio-container'>
+              <div className='custom-radio' />
+              <input type='radio' name='table_to_roll' value='Casual' defaultChecked={gachaValue.categoryCasual} />
+              Casual
+            </label>
+            <label className='relative flex gap-1 items-center radio-container'>
+              <div className='custom-radio' />
+              <input type='radio' name='table_to_roll' value='NonCasual' defaultChecked={!gachaValue.categoryCasual} />
+              Non-Casual
+            </label>
           </div>
-          <div>
-            <input type='checkbox' value='IncludeMovies' defaultChecked={gachaValue.movies} />
-            <label>Include movies?</label>
+          <div className='flex gap-1'>
+            <label className='relative flex gap-1 items-center checkbox-container'>
+              <div className='custom-checkbox' />
+              <DoneIcon fontSize='inherit' className='absolute checkmark' />
+              <input type='checkbox' value='IncludeMovies' defaultChecked={gachaValue.movies} />
+              Include movies?
+            </label>
           </div>
           <input type='submit' value='Roll' className='input-submit px-2 p-1' />
         </form>

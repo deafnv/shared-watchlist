@@ -139,4 +139,96 @@ ul > li {
   padding: 0.5rem;
 }
 
+/** Custom radio button styling */
+.radio-container, input[type=radio] {
+  cursor: pointer;
+}
+
+.radio-container input {
+  opacity: 0;
+  position: absolute;
+}
+
+.radio-container .custom-radio {
+  position: relative;
+  height: 1rem;
+  width: 1rem;
+  background-color: rgb(230, 230, 230);
+  border-radius: 50%;
+  border-width: 1px;
+  border-color: rgb(13, 130, 207);
+}
+
+.radio-container:hover > .custom-radio {
+  background-color: rgb(201, 201, 201);
+}
+
+.radio-container:has(input[type=radio]:focus-visible) > .custom-radio {
+  border-width: 2px;
+  border-color: black;
+}
+
+.radio-container:has(input[type=radio]:checked) > .custom-radio::after {
+  content: '';
+  display: block;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  height: 0.6rem;
+  width: 0.6rem;
+  background-color: rgb(13, 130, 207);
+  border-radius: 50%;
+  animation: fadeInSize 100ms ease-in-out;
+}
+
+/** Custom checkbox styling */
+.checkbox-container, input[type=checkbox] {
+  cursor: pointer;
+}
+
+.checkbox-container input {
+  opacity: 0;
+  position: absolute;
+}
+
+.checkbox-container .custom-checkbox {
+  position: relative;
+  height: 1rem;
+  width: 1rem;
+  background-color: rgb(230, 230, 230);
+  border-radius: 15%;
+  border-width: 1px;
+  border-color: rgb(13, 130, 207);
+}
+
+.checkbox-container:hover > .custom-checkbox {
+  background-color: rgb(201, 201, 201);
+}
+
+.checkbox-container:has(input[type=checkbox]:focus-visible) > .custom-checkbox {
+  border-width: 2px;
+  border-color: black;
+}
+
+.checkbox-container:has(input[type=checkbox]:checked) > .custom-checkbox {
+  background-color: rgb(13, 130, 207);
+  transition-property: background-color;
+  transition-duration: 100ms;
+}
+
+.checkbox-container:has(input[type=checkbox]:not(:checked)) > .checkmark {
+  visibility: hidden;
+}
+
+@keyframes fadeInSize {
+  0% {
+    height: 0;
+    width: 0;
+  }
+  100% {
+    height: 0.6rem;
+    width: 0.6rem;
+  }
+}
 /* .grecaptcha-badge { visibility: hidden; } */
