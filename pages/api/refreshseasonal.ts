@@ -30,7 +30,8 @@ export default async function RefreshSeasonal(req: NextApiRequest, res: NextApiR
 				headers: { "X-MAL-CLIENT-ID": process.env.MAL_CLIENT_ID },
 				params: {
 					q: item.title!.substring(0, 64),
-					fields: 'start_season,start_date,num_episodes,broadcast'
+					fields: 'start_season,start_date,num_episodes,broadcast',
+					limit: 5
 				}
 			}) //TODO: Catch error here somehow, might have to put below in .then() (currently using try catch)
 			const broadcast = data?.data[0].node.broadcast ? `${data?.data[0].node.broadcast.day_of_the_week} ${(data?.data[0].node.broadcast.start_time ?? '')}` : null;
