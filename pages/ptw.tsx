@@ -8,6 +8,7 @@ import { Database } from '../lib/database.types';
 import { loadingGlimmer } from '../components/LoadingGlimmer';
 import { CircularProgress, Skeleton } from '@mui/material';
 import DoneIcon from '@mui/icons-material/Done';
+import { useLoading } from '../components/LoadingContext';
 
 export default function PTW() {
   const [responseRolled, setResponseRolled] = useState<Database['public']['Tables']['PTW-Rolled']['Row'][]>();
@@ -21,6 +22,7 @@ export default function PTW() {
   const [isLoadingClient, setIsLoadingClient] = useState(true); 
   const [isLoadingEditForm, setIsLoadingEditForm] = useState(false); 
   const [gachaValue, setGachaValue] = useState<{value: string, categoryCasual: boolean, movies: boolean}>({value: '???', categoryCasual: true, movies: false});
+  const { setLoading } = useLoading();
 
   useEffect(() => {
     const supabase = createClient<Database>('https://esjopxdrlewtpffznsxh.supabase.co', process.env.NEXT_PUBLIC_SUPABASE_API_KEY!);
@@ -194,15 +196,97 @@ export default function PTW() {
       }
     }
 
+    async function addGachaRoll() {
+      if (!responseCasual || !responseNonCasual || !responseMovies || !responseRolled) return;
+      setLoading(true);
+      const isInMovies = responseMovies.find(item => item.title == gachaValue.value);
+
+      if (gachaValue.movies && isInMovies) { //? If rolled title is a movie
+        const changed = responseMovies.slice().filter(item => item.title != gachaValue.value);
+
+        const range = `L22:L${22 + responseMovies.length - 1}`;
+        const updatePayload = changed.map(item => item.title);
+        updatePayload.push('');
+
+        const addCell = `N${responseRolled.length + 2}:N${responseRolled.length + 2}`;
+        try {
+          await addRolledAPI(range, updatePayload, addCell);
+          setLoading(false);
+          setGachaValue({...gachaValue, value: '???'});
+          return;
+        }
+        catch (error) {
+          setLoading(false);
+          alert(error);
+          return;
+        }
+      } 
+      
+      if (gachaValue.categoryCasual) { //? If rolled title is in category casual
+        const changed = responseCasual.slice().filter(item => item.title != gachaValue.value);
+        
+        const range = `L2:L${responseCasual.length + 1}`;
+        const updatePayload = changed.map(item => item.title);
+        updatePayload.push('');
+
+        const addCell = `N${responseRolled.length + 2}:N${responseRolled.length + 2}`;
+        try {
+          await addRolledAPI(range, updatePayload, addCell);
+          setLoading(false);
+          setGachaValue({...gachaValue, value: '???'});
+          return;
+        }
+        catch (error) {
+          setLoading(false);
+          alert(error);
+          return;
+        }
+      } 
+      else { //? If rolled title is in category non-casual
+        const changed = responseNonCasual.slice().filter(item => item.title != gachaValue.value);
+
+        const range = `M2:M${responseNonCasual.length + 1}`;
+        const updatePayload = changed.map(item => item.title);
+        updatePayload.push('');
+
+        const addCell = `N${responseRolled.length + 2}:N${responseRolled.length + 2}`;
+        try {
+          await addRolledAPI(range, updatePayload, addCell);
+          setLoading(false);
+          setGachaValue({...gachaValue, value: '???'});
+          return;
+        }
+        catch (error) {
+          setLoading(false);
+          alert(error);
+          return;
+        }
+      }
+
+      async function addRolledAPI(range: string, updatePayload: Array<string | null>, addCell: string) {
+        await axios.post('/api/addrolled', {
+          deleteStep: {
+            range: range,
+            content: updatePayload
+          },
+          addStep: {
+            cell: addCell,
+            content: gachaValue.value
+          }
+        })
+      }
+    }
+
     return (
       <div className='relative flex flex-col items-center justify-center gap-4 h-[30rem] w-[25rem] bg-slate-700 rounded-lg -translate-y-8'>
         <h2 className='absolute top-5 p-2 text-3xl'>Gacha</h2>
-        <div className='absolute top-20 flex items-center justify-center h-60 max-h-60 w-80'>
+        <div className='absolute top-20 flex items-center justify-center h-52 max-h-52 w-80'>
           <div className='max-h-full bg-slate-100 border-black border-solid border-[1px] overflow-auto'>
             <h3 className='p-2 text-black text-2xl text-center'>{gachaValue.value}</h3>
           </div>
         </div>
-        <form onSubmit={handleSubmit} className='flex flex-col items-center gap-2 pt-80'>
+        {gachaValue.value !== '???' ? <button onClick={addGachaRoll} className='absolute bottom-36 px-2 p-1 input-submit'>Add to List</button> : null}
+        <form onSubmit={handleSubmit} className='absolute flex flex-col items-center gap-2 bottom-6'>
           <div className='flex'>
             <label className='relative flex gap-1 items-center mr-3 radio-container'>
               <div className='custom-radio' />
@@ -341,7 +425,7 @@ export default function PTW() {
   async function saveReorder() {
     let endRowIndex = responseRolled!.length + 1;
     try {
-      await axios.post('/api/batchupdate', {
+      await axios.post('/api/reorder', {
         content: responseRolled,
         cells: `N2:N${endRowIndex}`
       })
