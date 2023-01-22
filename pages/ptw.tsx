@@ -9,6 +9,7 @@ import { loadingGlimmer } from '../components/LoadingGlimmer';
 import { CircularProgress, Skeleton } from '@mui/material';
 import DoneIcon from '@mui/icons-material/Done';
 import { useLoading } from '../components/LoadingContext';
+import CancelIcon from '@mui/icons-material/Cancel';
 
 export default function PTW() {
   const [responseRolled, setResponseRolled] = useState<Database['public']['Tables']['PTW-Rolled']['Row'][]>();
@@ -285,7 +286,12 @@ export default function PTW() {
             <h3 className='p-2 text-black text-2xl text-center'>{gachaValue.value}</h3>
           </div>
         </div>
-        {gachaValue.value !== '???' ? <button onClick={addGachaRoll} className='absolute bottom-36 px-2 p-1 input-submit'>Add to List</button> : null}
+        {gachaValue.value !== '???' ? 
+          <div className='absolute bottom-36'>
+            <button onClick={addGachaRoll} className=' px-2 p-1 input-submit'>Add to List</button>
+            <CancelIcon onClick={() => setGachaValue({...gachaValue, value: '???'})} className='absolute top-2 right-[-32px] cursor-pointer transition-colors duration-100 hover:text-red-500' />
+          </div>
+        : null}
         <form onSubmit={handleSubmit} className='absolute flex flex-col items-center gap-2 bottom-6'>
           <div className='flex'>
             <label className='relative flex gap-1 items-center mr-3 radio-container'>
