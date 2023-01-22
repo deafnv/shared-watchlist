@@ -6,7 +6,8 @@ import isEqual from 'lodash/isEqual'
 
 export default async function RefreshSeasonal(req: NextApiRequest, res: NextApiResponse) {
   try {
-	  const supabase = createClient<Database>('https://esjopxdrlewtpffznsxh.supabase.co', process.env.NEXT_PUBLIC_SUPABASE_API_KEY!);
+		//* Through testing, these API routes with restricted queries like UPDATE, DELETE, or INSERT fails silently if the public API key is provided instead of the service key
+	  const supabase = createClient<Database>('https://esjopxdrlewtpffznsxh.supabase.co', process.env.SUPABASE_SERVICE_API_KEY!);
 	  const { data } = await supabase 
 	    .from('PTW-CurrentSeason')
 	    .select()
