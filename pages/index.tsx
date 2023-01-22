@@ -7,6 +7,7 @@ import { initialTitleItemSupabase, sortListByDateSupabase, sortListByNameSupabas
 import { loadingGlimmer } from '../components/LoadingGlimmer';
 import { CircularProgress } from '@mui/material';
 import { useLoading } from '../components/LoadingContext';
+import AddIcon from '@mui/icons-material/Add';
 
 //! Non-null assertion for the response state variable here will throw some errors if it does end up being null, fix maybe.
 //! ISSUES:
@@ -92,9 +93,9 @@ export default function Home() {
         <h2 className='p-2 text-3xl'>Completed{sortMethod ? <span onClick={() => {setResponse(response1); setSortMethod('')}} className='cursor-pointer'> ↻</span> : null}</h2>
         <div className='flex items-center gap-2'>
           <form>
-            <input type='search' placeholder='🔍︎ Search (non-functional)' className='input-text my-2 p-1 w-96 text-lg'></input>
+            <input onChange={searchTable} type='search' placeholder='🔍︎ Search Titles' className='input-text my-2 p-1 w-96 text-lg'></input>
           </form>
-          <button onClick={addRecord} className='input-submit h-3/5 p-1 px-2 text-lg rounded-md'>➕ Add New</button>
+          <button onClick={addRecord} title='Add new record to table' className='input-submit h-3/5 p-1 px-2 text-lg rounded-md'><AddIcon className='-translate-y-[2px]' /> Add New</button>
         </div>
         <table>
           <tbody>
@@ -130,6 +131,16 @@ export default function Home() {
       </main>
     </>
   )
+
+  function searchTable(e: BaseSyntheticEvent) {
+    if (e.target.value == '') {
+      setResponse(response1);
+      setSortMethod('');
+    } 
+    if (!response || !response1) return;
+
+    setResponse(response1.slice().filter(item => item.title?.toLowerCase().includes(e.target.value.toLowerCase())));
+  }
 
   //TODO: Detect pressing tab so it jumps to the next field to be edited 
   function editForm(field: 'title' | 'type' | 'episode' | 'rating1' | 'rating2' | 'start' | 'end', id: number, ogvalue: string): React.ReactNode {
