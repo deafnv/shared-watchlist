@@ -8,6 +8,7 @@ import { loadingGlimmer } from '../components/LoadingGlimmer';
 import { CircularProgress } from '@mui/material';
 import { useLoading } from '../components/LoadingContext';
 import AddIcon from '@mui/icons-material/Add';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
 
 //! Non-null assertion for the response state variable here will throw some errors if it does end up being null, fix maybe.
 //! ISSUES:
@@ -21,6 +22,8 @@ export default function Home() {
   const [isLoadingClient, setIsLoadingClient] = useState(true);
   const [isLoadingEditForm, setIsLoadingEditForm] = useState(false);
   const { setLoading } = useLoading();
+  const contextMenuRef = useRef<HTMLDivElement>(null);
+  const [position, setPosition] = useState<{top: any, left: any, display: any, currentItem: Database['public']['Tables']['Completed']['Row'] | null}>({top: 0, left: 0, display: 'none', currentItem: null})
 
   useEffect(() => {
     //FIXME: Don't expose API key to client side
@@ -41,8 +44,10 @@ export default function Home() {
     const refresh = setInterval(() => axios.get('https://update.ilovesabrina.org:3005/refresh'), 3500000);
 
     document.addEventListener('click', (e: any) => {
-      if (e.target?.tagName === 'INPUT') return;
-      setIsEdited('');
+      if (e.target?.tagName !== 'INPUT') setIsEdited('');
+      if (e.target.tagName !== 'MENU' && e.target.tagName !== 'svg' && !contextMenuRef.current?.contains(e.target)) {
+        setPosition({...position, display: 'none'});
+      }
     })
     window.addEventListener('focusout', () => {
       setIsEdited('');
@@ -110,13 +115,16 @@ export default function Home() {
             </tr>
             {isLoadingClient ? loadingGlimmer(7) :
             response?.slice().reverse().map(item => {
-              return <tr key={item.id}>
+              return <tr key={item.id} className='relative group'>
                 <td onDoubleClick={() => {setIsEdited(`title${item.id}`)}}>
                   {
                     isEdited == `title${item.id}` 
                     ? editForm('title', item.id, item.title!) : 
                     item.title ? item.title : <span className='italic text-gray-400'>Untitled</span>
                   }
+                  <div onClick={(e) => {handleMenuClick(e, item)}} className='absolute top-2 z-10 h-7 w-7 invisible group-hover:visible cursor-pointer rounded-full hover:bg-gray-500'>
+                    <MoreVertIcon/>
+                  </div>
                 </td>
                 <td onDoubleClick={() => {setIsEdited(`type${item.id}`)}}>{isEdited == `type${item.id}` ? editForm('type', item.id, item.type ?? '') : item.type}</td>
                 <td onDoubleClick={() => {setIsEdited(`episode${item.id}`)}}>{isEdited == `episode${item.id}` ? editForm('episode', item.id, item.episode ?? '') : item.episode}</td>
@@ -128,9 +136,42 @@ export default function Home() {
             })}
           </tbody>
         </table>
+        <ContextMenu />
       </main>
     </>
   )
+
+  function ContextMenu() {
+    return (
+      <menu 
+        ref={contextMenuRef} 
+        style={{
+          top: position.top,
+          left: position.left,
+          display: position.display
+        }}
+        className='absolute z-20 p-2 shadow-md shadow-gray-600 bg-slate-200 text-black rounded-sm border-black border-solid border-2 context-menu'
+      >
+        <li className='flex justify-center h-8 rounded-sm hover:bg-slate-500'><button className='w-full'>Edit</button></li>
+        <li className='flex justify-center h-8 rounded-sm hover:bg-slate-500'><button onClick={handleVisit} className='w-full'>Visit on MAL</button></li>
+      </menu>
+    )
+
+    function handleVisit() {
+      console.log(position.currentItem)
+    }
+  }
+
+  function handleMenuClick(e: BaseSyntheticEvent, item: Database['public']['Tables']['Completed']['Row']) {
+    const { x, y } = e.target.getBoundingClientRect();
+    
+    setPosition({
+      top: y,
+      left: x + 20,
+      display: 'block',
+      currentItem: item
+    })
+  }
 
   function searchTable(e: BaseSyntheticEvent) {
     if (e.target.value == '') {
