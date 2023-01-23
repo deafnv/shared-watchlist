@@ -14,6 +14,7 @@ export default async function RefreshSeasonal(req: NextApiRequest, res: NextApiR
 	    .select()
 	    .order('id', { ascending: true });
 
+		let genreRelationshipsCount = 1;
 		let genres: any[] = [];
 		let genreRelationships: { id: number; anime_id: number; genre_id: number; }[] = [];
 	  const malResponse = await Promise.all(dataDB.data!.map(async (item, index) => {
@@ -38,12 +39,13 @@ export default async function RefreshSeasonal(req: NextApiRequest, res: NextApiR
 
 			genres = genres.concat(data?.data[0].node.genres);
 
-			data?.data[0].node.genres.map((item1: {id: number, name: string}) => {
+			data?.data[0].node.genres.forEach((item1: {id: number, name: string}) => {
 				genreRelationships.push({
-					id: item.id,
+					id: genreRelationshipsCount,
 					anime_id: item.id,
 					genre_id: item1.id
 				})
+				genreRelationshipsCount++;
 			})
 
 			return {
