@@ -25,6 +25,8 @@ export default function Home() {
   const contextMenuRef = useRef<HTMLDivElement>(null);
   const [position, setPosition] = useState<{top: any, left: any, display: any, currentItem: Database['public']['Tables']['Completed']['Row'] | null}>({top: 0, left: 0, display: 'none', currentItem: null})
 
+  const supabase = createClient<Database>('https://esjopxdrlewtpffznsxh.supabase.co', process.env.NEXT_PUBLIC_SUPABASE_API_KEY!);
+
   useEffect(() => {
     //FIXME: Don't expose API key to client side
     const supabase = createClient<Database>('https://esjopxdrlewtpffznsxh.supabase.co', process.env.NEXT_PUBLIC_SUPABASE_API_KEY!);
@@ -94,7 +96,7 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <main className='flex flex-col items-center justify-center'>
+      <main className='flex flex-col items-center justify-center mb-24'>
         <h2 className='p-2 text-3xl'>Completed{sortMethod ? <span onClick={() => {setResponse(response1); setSortMethod('')}} className='cursor-pointer'> ↻</span> : null}</h2>
         <div className='flex items-center gap-2'>
           <form>
@@ -152,22 +154,25 @@ export default function Home() {
         }}
         className='absolute z-20 p-2 shadow-md shadow-gray-600 bg-slate-200 text-black rounded-sm border-black border-solid border-2 context-menu'
       >
+        <li className='flex justify-center'><span className='text-center font-semibold line-clamp-2'>{position.currentItem?.title}</span></li>
+        <hr className='my-2 border-gray-500 border-t-[1px]' />
         <li className='flex justify-center h-8 rounded-sm hover:bg-slate-500'><button className='w-full'>Edit</button></li>
         <li className='flex justify-center h-8 rounded-sm hover:bg-slate-500'><button onClick={handleVisit} className='w-full'>Visit on MAL</button></li>
       </menu>
     )
 
-    function handleVisit() {
-      console.log(position.currentItem)
+    async function handleVisit() {
+      const malURL = await supabase.from('CompletedDetails').select('mal_id').eq('id', position.currentItem?.id);
+      window.open(`https://myanimelist.net/anime/${malURL.data?.[0].mal_id}`, '_blank',)
     }
   }
 
   function handleMenuClick(e: BaseSyntheticEvent, item: Database['public']['Tables']['Completed']['Row']) {
-    const { x, y } = e.target.getBoundingClientRect();
+    const { top, left } = e.target.getBoundingClientRect();
     
     setPosition({
-      top: y,
-      left: x + 20,
+      top: top + window.scrollY,
+      left: left + window.scrollX + 25,
       display: 'block',
       currentItem: item
     })
