@@ -265,7 +265,7 @@ export default function PTW() {
       }
 
       async function addRolledAPI(range: string, updatePayload: Array<string | null>, addCell: string) {
-        await axios.post('/api/addrolled', {
+        await axios.post('/api/ptw/addrolled', {
           deleteStep: {
             range: range,
             content: updatePayload
@@ -431,7 +431,7 @@ export default function PTW() {
   async function saveReorder() {
     let endRowIndex = responseRolled!.length + 1;
     try {
-      await axios.post('/api/reorder', {
+      await axios.post('/api/ptw/reorder', {
         content: responseRolled,
         cells: `N2:N${endRowIndex}`
       })

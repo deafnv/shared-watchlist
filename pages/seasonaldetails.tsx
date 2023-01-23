@@ -87,8 +87,8 @@ export default function SeasonalDetails({ res }: { res: Database['public']['Tabl
   async function refresh() {
     try {
       setLoading(true);
-      await axios.get('/api/loadtracker');
-      await axios.get('/api/revalidate');
+      await axios.get('/api/seasonaldetails/loadtracker');
+      await axios.get('/api/seasonaldetails/revalidate');
       router.reload();
     } catch (error) {
       setLoading(false);
@@ -99,8 +99,8 @@ export default function SeasonalDetails({ res }: { res: Database['public']['Tabl
   async function reload() {
     try {
       setLoading(true);
-      await axios.get('/api/refreshseasonal');
-      await axios.get('/api/revalidate');
+      await axios.get('/api/seasonaldetails/refreshseasonal');
+      await axios.get('/api/seasonaldetails/revalidate');
       router.reload();
     } catch (error) {
       setLoading(false);
@@ -175,11 +175,11 @@ export default function SeasonalDetails({ res }: { res: Database['public']['Tabl
       }
 
       try {
-        await axios.post('/api/changevalidated', {
+        await axios.post('/api/seasonaldetails/changevalidated', {
           id: item1.id,
           mal_id: idInput
         })
-        await axios.get('/api/revalidate')
+        await axios.get('/api/seasonaldetails/revalidate')
         router.reload()
       } 
       catch (error) {
@@ -196,7 +196,7 @@ export default function SeasonalDetails({ res }: { res: Database['public']['Tabl
           .update({message: ''})
           .eq('mal_id', item1.mal_id)
 
-        await axios.get('/api/revalidate');
+        await axios.get('/api/seasonaldetails/revalidate');
         
         const changed = response.slice();
         changed.find(item => item.id === item1.id)!['message'] = ''; 

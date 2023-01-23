@@ -167,7 +167,7 @@ export default function Seasonal({ res }: {res: Database['public']['Tables']['PT
 
       let row = id + 2;
       try {
-        await axios.post('/api/updatestatus', {
+        await axios.post('/api/seasonal/updatestatus', {
           content: event.target.childNodes[0].value,
           cells: `P${row}:P${row}`
         })
