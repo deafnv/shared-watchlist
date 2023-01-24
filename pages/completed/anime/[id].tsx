@@ -58,7 +58,7 @@ export default function CompletedPage({ id }:{ id: number }) {
     <>
       <Head>
         <title>Cytube Watchlist</title>
-        <meta name="description" content='' />
+        <meta name="description" content={response?.[0].title} />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>

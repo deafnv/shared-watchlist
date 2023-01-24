@@ -7,6 +7,7 @@ import DoneIcon from '@mui/icons-material/Done';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { useRouter } from "next/router";
 
+//TODO: Sort the genres vertically in alphabetical order
 export default function CompletedDetails() {
   const [response, setResponse] = useState<Database['public']['Tables']['Genres']['Row'][]>();
   const [advancedSearch, setAdvancedSearch] = useState('none');

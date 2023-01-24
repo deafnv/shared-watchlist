@@ -3,6 +3,7 @@ import { GetStaticPropsContext } from "next";
 import { Database } from "../../../lib/database.types";
 import { useEffect, useState } from "react";
 import Head from "next/head";
+import Link from "next/link";
 
 export async function getStaticPaths() {
   const supabase = createClient<Database>('https://esjopxdrlewtpffznsxh.supabase.co', process.env.NEXT_PUBLIC_SUPABASE_API_KEY!);
@@ -61,13 +62,17 @@ export default function GenrePage({ id }:{ id: number }) {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <main className='flex flex-col items-center justify-center gap-3'>
+      <main className='flex flex-col items-center justify-center gap-3 mx-auto md:w-3/5 sm:w-full'>
         <h2 className='p-2 text-3xl'>{(response?.[0].Genres as {name: string | null}[])![0].name}</h2>
-        {response?.map((item, index) => {
-          return <span key={index}>
-            {item.title}
-          </span>
-        })}
+        <ul className='flex flex-col gap-2 h-[80dvh] overflow-auto border-[1px] border-white'>
+          {response?.map((item, index) => {
+            return (
+              <li className='p-0 text-center rounded-md transition-colors duration-75 hover:bg-slate-500'>
+                <Link href={`${location.origin}/completed/anime/${item.id}`} className='inline-block px-5 py-3 h-full w-full'>{item.title}</Link>
+              </li>
+            )
+          })}
+        </ul>
       </main> 
     </>
   )
