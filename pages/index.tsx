@@ -9,6 +9,8 @@ import { CircularProgress } from '@mui/material';
 import { useLoading } from '../components/LoadingContext';
 import AddIcon from '@mui/icons-material/Add';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
+import Image from 'next/image';
+import Link from 'next/link';
 
 //! Non-null assertion for the response state variable here will throw some errors if it does end up being null, fix maybe.
 //! ISSUES:
@@ -23,7 +25,8 @@ export default function Home() {
   const [isLoadingEditForm, setIsLoadingEditForm] = useState(false);
   const { setLoading } = useLoading();
   const contextMenuRef = useRef<HTMLDivElement>(null);
-  const [position, setPosition] = useState<{top: any, left: any, display: any, currentItem: Database['public']['Tables']['Completed']['Row'] | null}>({top: 0, left: 0, display: 'none', currentItem: null})
+  const [contextMenu, setContextMenu] = useState<{top: any, left: any, display: any, currentItem: Database['public']['Tables']['Completed']['Row'] | null}>({top: 0, left: 0, display: 'none', currentItem: null});
+  const [detailsModal, setDetailsModal] = useState<{display: string, currentItem: Database['public']['Tables']['Completed']['Row'] | null}>({display: 'none', currentItem: null})
 
   const supabase = createClient<Database>('https://esjopxdrlewtpffznsxh.supabase.co', process.env.NEXT_PUBLIC_SUPABASE_API_KEY!);
 
@@ -46,9 +49,11 @@ export default function Home() {
     const refresh = setInterval(() => axios.get('https://update.ilovesabrina.org:3005/refresh'), 3500000);
 
     document.addEventListener('click', (e: any) => {
-      if (e.target?.tagName !== 'INPUT') setIsEdited('');
-      if (e.target.tagName !== 'MENU' && e.target.tagName !== 'svg' && !contextMenuRef.current?.contains(e.target)) {
-        setPosition({...position, display: 'none'});
+      if (e.target?.tagName !== 'INPUT' && isEdited) {
+        setIsEdited('');
+      }
+      if (e.target.tagName !== 'svg' && !contextMenuRef.current?.contains(e.target) && contextMenuRef.current?.style.display == 'block') {
+        setContextMenu({top: 0, left: 0, display: 'none', currentItem: null});
       }
     })
     window.addEventListener('focusout', () => {
@@ -138,39 +143,85 @@ export default function Home() {
             })}
           </tbody>
         </table>
-        <ContextMenu />
+        {contextMenu.currentItem && <ContextMenu />}
+        {detailsModal.currentItem && <DetailsModal />}
       </main>
     </>
   )
+
+  function DetailsModal() {
+    const [details, setDetails] = useState<Database['public']['Tables']['CompletedDetails']['Row'] | null>();
+    useEffect(() => {
+      const getDetails = async () => {
+        const { data } = await supabase.from('CompletedDetails').select().eq('id', detailsModal.currentItem?.id)
+        setDetails(data?.[0])
+      }
+      getDetails();
+    },[])
+    
+
+    return (
+      <div style={{display: detailsModal.display}} className='z-40'>
+        <div onClick={() => setDetailsModal({display: 'none', currentItem: null})} className='fixed top-0 left-0 h-[100dvh] w-[100dvw] opacity-30 bg-black'></div>
+        <article className='fixed flex flex-col items-center h-[50rem] w-[60rem] px-10 py-6 bg-gray-700 rounded-md shadow-md shadow-black drop-shadow-md top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2'>
+          <h3 className='font-bold text-2xl'>{detailsModal.currentItem?.title}</h3>
+          <span>{details?.mal_alternative_title}</span>
+          <Image src={details?.image_url!} alt='Art' height={380} width={220} className='my-5' />
+          <p title={details?.mal_synopsis!} className='mb-6 text-center line-clamp-[8]'>{details?.mal_synopsis}</p>
+          <div className='flex mb-6 gap-16'>
+            <div className='flex flex-col'>
+              <h5 className='mb-2 font-semibold text-lg'>Start Date</h5>
+              <span>{details?.start_date}</span>
+            </div>
+            <div className='flex flex-col items-center justify-center'>
+              <h5 className='mb-2 font-semibold text-lg'>End Date</h5>
+              <span>{details?.end_date}</span>
+            </div>
+          </div>
+          <Link href={`https://myanimelist.net/anime/${details?.mal_id}` ?? 'https://via.placeholder.com/400x566'} className='text-lg link'>MyAnimeList</Link>
+        </article>
+      </div>
+    )
+  }
 
   function ContextMenu() {
     return (
       <menu 
         ref={contextMenuRef} 
         style={{
-          top: position.top,
-          left: position.left,
-          display: position.display
+          top: contextMenu.top,
+          left: contextMenu.left,
+          display: contextMenu.display
         }}
         className='absolute z-20 p-2 shadow-md shadow-gray-600 bg-slate-200 text-black rounded-sm border-black border-solid border-2 context-menu'
       >
-        <li className='flex justify-center'><span className='text-center font-semibold line-clamp-2'>{position.currentItem?.title}</span></li>
+        <li className='flex justify-center'><span className='text-center font-semibold line-clamp-2'>{contextMenu.currentItem?.title}</span></li>
         <hr className='my-2 border-gray-500 border-t-[1px]' />
-        <li className='flex justify-center h-8 rounded-sm hover:bg-slate-500'><button className='w-full'>Edit</button></li>
+        <li className='flex justify-center h-8 rounded-sm hover:bg-slate-500'><button onClick={handleDetails} className='w-full'>Details</button></li>
         <li className='flex justify-center h-8 rounded-sm hover:bg-slate-500'><button onClick={handleVisit} className='w-full'>Visit on MAL</button></li>
       </menu>
     )
 
+    function handleDetails() {
+      setDetailsModal({
+        display: 'block',
+        currentItem: contextMenu.currentItem
+      })
+      console.log(contextMenu)
+    }
+
     async function handleVisit() {
-      const malURL = await supabase.from('CompletedDetails').select('mal_id').eq('id', position.currentItem?.id);
+      const malURL = await supabase.from('CompletedDetails').select('mal_id').eq('id', contextMenu.currentItem?.id);
       window.open(`https://myanimelist.net/anime/${malURL.data?.[0].mal_id}`, '_blank',)
+      console.log(contextMenu)
     }
   }
 
   function handleMenuClick(e: BaseSyntheticEvent, item: Database['public']['Tables']['Completed']['Row']) {
     const { top, left } = e.target.getBoundingClientRect();
     
-    setPosition({
+    setContextMenu({
+      ...contextMenu,
       top: top + window.scrollY,
       left: left + window.scrollX + 25,
       display: 'block',

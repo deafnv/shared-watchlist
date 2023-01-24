@@ -26,6 +26,7 @@ export default async function RefreshSeasonal(req: NextApiRequest, res: NextApiR
 					mal_alternative_title: '',
 					mal_id: -1,
 					mal_title: '',
+					mal_synopsis: '',
 					start_date: '',
 				}
 			}
@@ -33,7 +34,7 @@ export default async function RefreshSeasonal(req: NextApiRequest, res: NextApiR
 				headers: { "X-MAL-CLIENT-ID": process.env.MAL_CLIENT_ID },
 				params: {
 					limit: 5,
-					fields: 'alternative_titles,start_date,end_date,genres'
+					fields: 'alternative_titles,start_date,end_date,genres,synopsis'
 				}
 			})
 
@@ -55,6 +56,7 @@ export default async function RefreshSeasonal(req: NextApiRequest, res: NextApiR
 				mal_alternative_title: data?.data[0].node.alternative_titles.en ?? '',
 				mal_id: parseInt(data?.data[0].node.id),
 				mal_title: data?.data[0].node.title,
+				mal_synopsis: data?.data[0].node.synopsis ?? '',
 				start_date: data?.data[0].node.start_date ?? '',
 			}
 	  }))
