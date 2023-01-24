@@ -151,7 +151,7 @@ export default function Home() {
 
   function DetailsModal() {
     const [details, setDetails] = useState<Database['public']['Tables']['CompletedDetails']['Row'] | null>();
-    const [genres, setGenres] = useState<Array<string | null>>();
+    const [genres, setGenres] = useState<Array<{ id: number, name: string | null }>>();
     useEffect(() => {
       const getDetails = async () => {
         const { data } = await supabase
@@ -164,7 +164,10 @@ export default function Home() {
           .eq('Completed.id', detailsModal.currentItem?.id)
 
         const titleGenres = dataGenre.data?.map((item) => {
-          return item.name;
+          return {
+            id: item.id,
+            name: item.name
+          }
         })
         setGenres(titleGenres)
         setDetails(data?.[0])
@@ -192,7 +195,13 @@ export default function Home() {
             </div>
           </div>
           <h5 className='font-semibold text-lg'>Genres</h5>
-          <span className='mb-2'>{genres?.join(', ')}</span>
+          <span className='mb-2'>
+            {genres?.map((item, index) => {
+              return (
+                <Link href={`${location.origin}/completed/genres/${item.id}`} key={index} className='link'>{item.name}<span className='text-white'>{index < genres.length - 1 ? ', ' : null}</span></Link>
+              )
+            })}
+          </span>
           <Link href={`https://myanimelist.net/anime/${details?.mal_id}` ?? 'https://via.placeholder.com/400x566'} target='_blank' className='text-lg link'>MyAnimeList</Link>
         </article>
       </div>
