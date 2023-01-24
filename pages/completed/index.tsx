@@ -11,6 +11,7 @@ import AddIcon from '@mui/icons-material/Add';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import Image from 'next/image';
 import Link from 'next/link';
+import Skeleton from '@mui/material/Skeleton';
 
 //! Non-null assertion for the response state variable here will throw some errors if it does end up being null, fix maybe.
 //! ISSUES:
@@ -152,6 +153,8 @@ export default function Home() {
   function DetailsModal() {
     const [details, setDetails] = useState<Database['public']['Tables']['CompletedDetails']['Row'] | null>();
     const [genres, setGenres] = useState<Array<{ id: number, name: string | null }>>();
+    const [loadingDetails, setLoadingDetails] = useState(true);
+
     useEffect(() => {
       const getDetails = async () => {
         const { data } = await supabase
@@ -171,6 +174,7 @@ export default function Home() {
         })
         setGenres(titleGenres)
         setDetails(data?.[0])
+        setLoadingDetails(false)
       }
       getDetails();
     },[])
@@ -181,9 +185,20 @@ export default function Home() {
         <div onClick={() => setDetailsModal({display: 'none', currentItem: null})} className='fixed top-0 left-0 h-[100dvh] w-[100dvw] opacity-30 bg-black'></div>
         <article className='fixed flex flex-col items-center h-[50rem] w-[60rem] px-10 py-6 bg-gray-700 rounded-md shadow-md shadow-black drop-shadow-md top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2'>
           <h3 className='font-bold text-2xl'>{detailsModal.currentItem?.title}</h3>
-          <span>{details?.mal_alternative_title}</span>
-          <Image src={details?.image_url!} alt='Art' height={380} width={220} className='my-5' />
-          <p title={details?.mal_synopsis!} className='mb-6 text-center line-clamp-[8]'>{details?.mal_synopsis}</p>
+          {
+            loadingDetails ?
+            <>
+              <Skeleton animation='wave' variant="rounded" width={350} height={25} className='bg-gray-500' />
+              <Skeleton animation='wave' variant="rounded" width={220} height={310} className='my-5 bg-gray-500' />
+              <Skeleton animation='wave' variant="rounded" width={880} height={170} className='mb-6 bg-gray-500' />
+            </>
+            :
+            <>
+              <span>{details?.mal_alternative_title}</span>
+              <Image src={details?.image_url!} alt='Art' height={380} width={220} className='my-5' />
+              <p title={details?.mal_synopsis!} className='mb-6 text-center line-clamp-[8]'>{details?.mal_synopsis}</p>
+            </>
+          }
           <div className='flex mb-6 gap-16'>
             <div className='flex flex-col'>
               <h5 className='mb-2 font-semibold text-lg'>Start Date</h5>
