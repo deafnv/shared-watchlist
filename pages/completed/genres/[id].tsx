@@ -67,7 +67,7 @@ export default function GenrePage({ id }:{ id: number }) {
         <ul className='flex flex-col gap-2 h-[80dvh] overflow-auto border-[1px] border-white'>
           {response?.map((item, index) => {
             return (
-              <li className='p-0 text-center rounded-md transition-colors duration-75 hover:bg-slate-500'>
+              <li key={index} className='p-0 text-center rounded-md transition-colors duration-75 hover:bg-slate-500'>
                 <Link href={`${location.origin}/completed/anime/${item.id}`} className='inline-block px-5 py-3 h-full w-full'>{item.title}</Link>
               </li>
             )

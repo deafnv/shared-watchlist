@@ -90,9 +90,9 @@ export default function CompletedDetails() {
           </div>
           <h3 className='font-semibold text-2xl'>Result</h3>
           <ul className='flex flex-col gap-2 h-[80dvh] overflow-auto'>
-            {advancedSearchResult.map((item: any) => {
+            {advancedSearchResult.map((item: any, index: number) => {
               return (
-                <li className='p-0 text-center rounded-md transition-colors duration-75 hover:bg-slate-500'>
+                <li key={index} className='p-0 text-center rounded-md transition-colors duration-75 hover:bg-slate-500'>
                   <Link href={`${location.origin}/completed/anime/${item.id}`} className='inline-block py-3 h-full w-full'>{item.title}</Link>
                 </li>
               )
@@ -107,7 +107,7 @@ export default function CompletedDetails() {
           <form id='advanced-search' onSubmit={handleSubmit} className='grid grid-cols-3 gap-x-20 gap-y-3 overflow-auto'>
             {response?.map((item, index) => {
               return (
-                <label className='relative flex gap-1 items-center checkbox-container'>
+                <label key={index} className='relative flex gap-1 items-center checkbox-container'>
                   <div className='custom-checkbox' />
                   <DoneIcon fontSize='inherit' className='absolute checkmark' />
                   <input type='checkbox' value={item.id!} />
