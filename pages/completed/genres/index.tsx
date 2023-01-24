@@ -5,11 +5,13 @@ import { Database } from "../../../lib/database.types";
 import Link from "next/link";
 import DoneIcon from '@mui/icons-material/Done';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { useRouter } from "next/router";
 
 export default function CompletedDetails() {
   const [response, setResponse] = useState<Database['public']['Tables']['Genres']['Row'][]>();
   const [advancedSearch, setAdvancedSearch] = useState('none');
   const [advancedSearchResult, setAdvancedSearchResult] = useState<any>(null);
+  const router = useRouter();
 
   const supabase = createClient<Database>('https://esjopxdrlewtpffznsxh.supabase.co', process.env.NEXT_PUBLIC_SUPABASE_API_KEY!);
   
@@ -89,8 +91,8 @@ export default function CompletedDetails() {
           <ul className='flex flex-col gap-2 h-[80dvh] overflow-auto'>
             {advancedSearchResult.map((item: any) => {
               return (
-                <li className='px-2 py-3 text-center rounded-md transition-colors duration-75 hover:bg-slate-500'>
-                  <span>{item.title}</span>
+                <li className='p-0 text-center rounded-md transition-colors duration-75 hover:bg-slate-500'>
+                  <Link href={`${location.origin}/completed/anime/${item.id}`} className='inline-block py-3 h-full w-full'>{item.title}</Link>
                 </li>
               )
             })}
