@@ -17,7 +17,7 @@ import Skeleton from '@mui/material/Skeleton';
 //! ISSUES:
 //!   - Fix sort symbol
 
-export default function Home() {
+export default function Completed() {
   const [response, setResponse] = useState<Database['public']['Tables']['Completed']['Row'][]>();
   const [response1, setResponse1] = useState<Database['public']['Tables']['Completed']['Row'][]>();
   const [sortMethod, setSortMethod] = useState<string>('');
