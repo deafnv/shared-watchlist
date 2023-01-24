@@ -11,8 +11,12 @@ export default function Navbar({children}: React.PropsWithChildren) {
   const [timer, setTimer] = useState<string>("1970-01-01T11:18:58.453Z") 
   const navLinks = [
     {
-      name: 'Watched',
+      name: 'Completed',
       route: '/'
+    },
+    {
+      name: 'Genres',
+      route: '/completed/genres'
     },
     {
       name: 'PTW',
