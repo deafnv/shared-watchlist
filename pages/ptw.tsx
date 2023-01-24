@@ -199,6 +199,10 @@ export default function PTW() {
 
     async function addGachaRoll() {
       if (!responseCasual || !responseNonCasual || !responseMovies || !responseRolled) return;
+      if (responseRolled.length >= 20) {
+        alert('Unable to add roll to record, insufficient space.');
+        return;
+      }
       setLoading(true);
       const isInMovies = responseMovies.find(item => item.title == gachaValue.value);
 
