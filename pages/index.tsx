@@ -151,9 +151,22 @@ export default function Home() {
 
   function DetailsModal() {
     const [details, setDetails] = useState<Database['public']['Tables']['CompletedDetails']['Row'] | null>();
+    const [genres, setGenres] = useState<Array<string | null>>();
     useEffect(() => {
       const getDetails = async () => {
-        const { data } = await supabase.from('CompletedDetails').select().eq('id', detailsModal.currentItem?.id)
+        const { data } = await supabase
+          .from('CompletedDetails')
+          .select()
+          .eq('id', detailsModal.currentItem?.id)
+        const dataGenre = await supabase
+          .from('Genres')
+          .select('*, Completed!inner( id )')
+          .eq('Completed.id', detailsModal.currentItem?.id)
+
+        const titleGenres = dataGenre.data?.map((item) => {
+          return item.name;
+        })
+        setGenres(titleGenres)
         setDetails(data?.[0])
       }
       getDetails();
@@ -178,6 +191,8 @@ export default function Home() {
               <span>{details?.end_date}</span>
             </div>
           </div>
+          <h5 className='font-semibold text-lg'>Genres</h5>
+          <span className='mb-2'>{genres?.join(', ')}</span>
           <Link href={`https://myanimelist.net/anime/${details?.mal_id}` ?? 'https://via.placeholder.com/400x566'} className='text-lg link'>MyAnimeList</Link>
         </article>
       </div>
