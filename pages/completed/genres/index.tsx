@@ -4,11 +4,12 @@ import { BaseSyntheticEvent, useEffect, useState } from "react";
 import { Database } from "../../../lib/database.types";
 import Link from "next/link";
 import DoneIcon from '@mui/icons-material/Done';
-import isEqual from 'lodash/isEqual'
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
 export default function CompletedDetails() {
   const [response, setResponse] = useState<Database['public']['Tables']['Genres']['Row'][]>();
-  const [advancedSearch, setAdvancedSearch] = useState();
+  const [advancedSearch, setAdvancedSearch] = useState('none');
+  const [advancedSearchResult, setAdvancedSearchResult] = useState<any>(null);
 
   const supabase = createClient<Database>('https://esjopxdrlewtpffznsxh.supabase.co', process.env.NEXT_PUBLIC_SUPABASE_API_KEY!);
   
@@ -36,7 +37,7 @@ export default function CompletedDetails() {
 
       <main className='flex flex-col items-center justify-center p-2'>
         <h2 className='text-3xl'>Genres</h2>
-        <span className='mb-2 cursor-pointer link'>Advanced Search</span>
+        <span onClick={() => setAdvancedSearch('block')} className='mb-2 cursor-pointer link'>Advanced Search</span>
         <div className='grid grid-cols-3 gap-x-24 gap-y-3'>
           {response?.map((item, index) => {
             return <Link key={index} href={`${location.href}/${item.id}`} className='text-center text-white link'>
@@ -44,7 +45,7 @@ export default function CompletedDetails() {
             </Link>
           })}
         </div>
-        {<AdvancedSearchModal />}
+        {advancedSearch == 'block' ? <AdvancedSearchModal /> : null}
       </main>
     </>
   )
@@ -62,8 +63,7 @@ export default function CompletedDetails() {
       const { data } = await supabase
         .from('Completed')
         .select(`
-          id,
-          title,
+          *,
           Genres!inner (
             id
           )
@@ -73,13 +73,30 @@ export default function CompletedDetails() {
       const matched = data?.filter((item) => {
         return (item.Genres as {id: number;}[]).length == arrIncluded.length;
       })
-            
-      console.log(matched)
+
+      setAdvancedSearchResult(matched!)
     }
 
     return (
-      <div style={{display: 'block'}} className='z-10'>
-        <div className='fixed top-0 left-0 h-[100dvh] w-[100dvw] opacity-30 bg-black'></div>
+      <div style={{display: advancedSearch}} className='z-10'>
+        <div onClick={() => setAdvancedSearch('none')} className='fixed top-0 left-0 h-[100dvh] w-[100dvw] opacity-30 bg-black'></div>
+        {advancedSearchResult ?
+        <div className='fixed flex flex-col items-center gap-4 w-[45rem] px-10 py-6 bg-gray-700 rounded-md shadow-md shadow-black drop-shadow-md top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2'>
+          <div onClick={() => setAdvancedSearchResult(null)} className='absolute left-6 flex items-center justify-center h-11 w-11 rounded-full cursor-pointer transition-colors duration-150 hover:bg-slate-500'>
+            <ArrowBackIcon fontSize='large' />
+          </div>
+          <h3 className='font-semibold text-2xl'>Result</h3>
+          <ul className='flex flex-col gap-2 h-[80dvh] overflow-auto'>
+            {advancedSearchResult.map((item: any) => {
+              return (
+                <li className='px-2 py-3 text-center rounded-md transition-colors duration-75 hover:bg-slate-500'>
+                  <span>{item.title}</span>
+                </li>
+              )
+            })}
+          </ul>
+        </div>
+        :
         <div className='fixed flex flex-col items-center gap-4 h-[95dvh] w-[45rem] px-10 py-6 bg-gray-700 rounded-md shadow-md shadow-black drop-shadow-md top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2'>
           <h3 className='font-semibold text-2xl'>Advanced Search</h3>
           <span>Includes: </span>
@@ -97,7 +114,7 @@ export default function CompletedDetails() {
             })}
           </form>
           <input form='advanced-search' type='submit' value='Search' className='input-submit px-2 p-1' />
-        </div>
+        </div>}
       </div>
     )
   }
