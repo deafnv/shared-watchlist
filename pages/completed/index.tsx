@@ -400,7 +400,7 @@ export default function Completed() {
       }
     }
 
-    /* if (!loadingDetails && (!details || details.mal_id == -1 || !details.mal_title)) {
+    if (!loadingDetails && (!details || details.mal_id == -1 || !details.mal_title)) {
       return (
         <div className='z-40'>
           <div onClick={() => setDetailsModal({currentItem: null})} className='fixed top-0 left-0 h-[100dvh] w-[100dvw] opacity-30 bg-black modal-background'></div>
@@ -410,7 +410,7 @@ export default function Completed() {
           </article>
         </div>
       )
-    } */
+    }
 
     return (
       <div>
