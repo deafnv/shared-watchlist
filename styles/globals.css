@@ -228,6 +228,33 @@ ul > li {
   animation: openMenu 150ms ease-out;
 }
 
+/** Modal styling */
+.modal-background {
+  animation: fadeIn 150ms ease-in-out;
+}
+
+.modal {
+  animation: openModal 150ms ease-in-out;
+}
+
+@keyframes openModal {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 0.3;
+  }
+}
+
 @keyframes openMenu {
   0% {
     height: 0;

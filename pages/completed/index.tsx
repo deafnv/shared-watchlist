@@ -28,7 +28,7 @@ export default function Completed() {
   const { setLoading } = useLoading();
   const contextMenuRef = useRef<HTMLDivElement>(null);
   const [contextMenu, setContextMenu] = useState<{top: any, left: any, display: any, currentItem: Database['public']['Tables']['Completed']['Row'] | null}>({top: 0, left: 0, display: 'none', currentItem: null});
-  const [detailsModal, setDetailsModal] = useState<{display: string, currentItem: Database['public']['Tables']['Completed']['Row'] | null}>({display: 'none', currentItem: null})
+  const [detailsModal, setDetailsModal] = useState<{currentItem: Database['public']['Tables']['Completed']['Row'] | null}>({currentItem: null})
   const router = useRouter();
 
   const supabase = createClient<Database>('https://esjopxdrlewtpffznsxh.supabase.co', process.env.NEXT_PUBLIC_SUPABASE_API_KEY!);
@@ -192,22 +192,22 @@ export default function Completed() {
       }
     }
     
-    if (!loadingDetails && (!details || details.mal_id == -1 || !details.mal_title)) {
+    /* if (!loadingDetails && (!details || details.mal_id == -1 || !details.mal_title)) {
       return (
-        <div style={{display: detailsModal.display}} className='z-40'>
-          <div onClick={() => setDetailsModal({display: 'none', currentItem: null})} className='fixed top-0 left-0 h-[100dvh] w-[100dvw] opacity-30 bg-black'></div>
-          <article className='fixed flex flex-col items-center justify-center h-[50rem] w-[60rem] px-10 py-6 bg-gray-700 rounded-md shadow-md shadow-black drop-shadow-md top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2'>
+        <div className='z-40'>
+          <div onClick={() => setDetailsModal({currentItem: null})} className='fixed top-0 left-0 h-[100dvh] w-[100dvw] opacity-30 bg-black modal-background'></div>
+          <article className='fixed flex flex-col items-center justify-center h-[50rem] w-[60rem] px-10 py-6 bg-gray-700 rounded-md shadow-md shadow-black drop-shadow-md top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 modal'>
             <h3 className='mb-6 font-bold text-2xl'>Details for this title have not been loaded yet.</h3>
             <span onClick={handleReload} className='cursor-pointer link'>Click here to reload database and view details</span>
           </article>
         </div>
       )
-    }
+    } */
 
     return (
-      <div style={{display: detailsModal.display}} className='z-40'>
-        <div onClick={() => setDetailsModal({display: 'none', currentItem: null})} className='fixed top-0 left-0 h-[100dvh] w-[100dvw] opacity-30 bg-black'></div>
-        <article className='fixed flex flex-col items-center h-[50rem] w-[60rem] px-10 py-6 bg-gray-700 rounded-md shadow-md shadow-black drop-shadow-md top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2'>
+      <div>
+        <div onClick={() => setDetailsModal({currentItem: null})} className='fixed top-0 left-0 h-[100dvh] w-[100dvw] bg-black opacity-30 modal-background' />
+        <article className='fixed flex flex-col items-center h-[50rem] w-[60rem] px-10 py-6 bg-gray-700 rounded-md shadow-md shadow-black drop-shadow-md top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 modal'>
           <h3 className='font-bold text-2xl'>{detailsModal.currentItem?.title}</h3>
           {
             loadingDetails ?
@@ -267,7 +267,6 @@ export default function Completed() {
 
     function handleDetails() {
       setDetailsModal({
-        display: 'block',
         currentItem: contextMenu.currentItem
       })
     }

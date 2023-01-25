@@ -5,14 +5,12 @@ import { Database } from "../../../lib/database.types";
 import Link from "next/link";
 import DoneIcon from '@mui/icons-material/Done';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import { useRouter } from "next/router";
 
 //TODO: Sort the genres vertically in alphabetical order
 export default function CompletedDetails() {
   const [response, setResponse] = useState<Database['public']['Tables']['Genres']['Row'][]>();
   const [advancedSearch, setAdvancedSearch] = useState('none');
   const [advancedSearchResult, setAdvancedSearchResult] = useState<any>(null);
-  const router = useRouter();
 
   const supabase = createClient<Database>('https://esjopxdrlewtpffznsxh.supabase.co', process.env.NEXT_PUBLIC_SUPABASE_API_KEY!);
   
@@ -82,9 +80,9 @@ export default function CompletedDetails() {
 
     return (
       <div style={{display: advancedSearch}} className='z-10'>
-        <div onClick={() => setAdvancedSearch('none')} className='fixed top-0 left-0 h-[100dvh] w-[100dvw] opacity-30 bg-black'></div>
+        <div onClick={() => setAdvancedSearch('none')} className='fixed top-0 left-0 h-[100dvh] w-[100dvw] opacity-30 bg-black modal-background' />
         {advancedSearchResult ?
-        <div className='fixed flex flex-col items-center gap-4 w-[45rem] px-10 py-6 bg-gray-700 rounded-md shadow-md shadow-black drop-shadow-md top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2'>
+        <div className='fixed flex flex-col items-center gap-4 w-[45rem] px-10 py-6 bg-gray-700 rounded-md shadow-md shadow-black drop-shadow-md top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 modal'>
           <div onClick={() => setAdvancedSearchResult(null)} className='absolute left-6 flex items-center justify-center h-11 w-11 rounded-full cursor-pointer transition-colors duration-150 hover:bg-slate-500'>
             <ArrowBackIcon fontSize='large' />
           </div>
@@ -100,7 +98,7 @@ export default function CompletedDetails() {
           </ul>
         </div>
         :
-        <div className='fixed flex flex-col items-center gap-4 h-[95dvh] w-[45rem] px-10 py-6 bg-gray-700 rounded-md shadow-md shadow-black drop-shadow-md top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2'>
+        <div className='fixed flex flex-col items-center gap-4 h-[95dvh] w-[45rem] px-10 py-6 bg-gray-700 rounded-md shadow-md shadow-black drop-shadow-md top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 modal'>
           <h3 className='font-semibold text-2xl'>Advanced Search</h3>
           <span>Includes: </span>
           <hr className='w-full border-white border-t-[1px]' />
