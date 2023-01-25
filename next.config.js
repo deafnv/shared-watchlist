@@ -7,8 +7,8 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'api-cdn.myanimelist.net',
       },
-    ]
-  }
+    ],
+  },
 }
 
 module.exports = nextConfig

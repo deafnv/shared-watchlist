@@ -1,4 +1,4 @@
-import { CircularProgress } from "@mui/material";
+import { CircularProgress } from '@mui/material'
 
 export default function Loading() {
   return (
@@ -11,11 +11,11 @@ export default function Loading() {
         width: '100dvw',
         background: 'black',
         opacity: 0.6,
-        zIndex: 1
+        zIndex: 1,
       }}
-      className='flex items-center justify-center'
+      className="flex items-center justify-center"
     >
-      <CircularProgress  size={50} color="primary" />
+      <CircularProgress size={50} color="primary" />
     </div>
   )
 }
