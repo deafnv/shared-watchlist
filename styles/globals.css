@@ -235,7 +235,12 @@ input[type='checkbox'] {
 }
 
 /** Modal styling */
-.modal-background {
+.glass-modal {
+	background: rgba(0, 0, 0, 0.3);
+	border-radius: 16px;
+	box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+	backdrop-filter: blur(4px);
+	-webkit-backdrop-filter: blur(4px);
 	animation: fadeIn 150ms ease-in-out;
 }
 

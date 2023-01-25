@@ -19,6 +19,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import Skeleton from '@mui/material/Skeleton';
 import { useRouter } from 'next/router';
+import EditIcon from '@mui/icons-material/Edit';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
 //! Non-null assertion for the response state variable here will throw some errors if it does end up being null, fix maybe.
 //! ISSUES:
@@ -41,9 +43,8 @@ export default function Completed() {
 		display: any;
 		currentItem: Database['public']['Tables']['Completed']['Row'] | null;
 	}>({ top: 0, left: 0, display: 'none', currentItem: null });
-	const [detailsModal, setDetailsModal] = useState<{
-		currentItem: Database['public']['Tables']['Completed']['Row'] | null;
-	}>({ currentItem: null });
+	const [detailsModal, setDetailsModal] = useState<Database['public']['Tables']['Completed']['Row'] | null>(null);
+  const [editModal, setEditModal] = useState<Database['public']['Tables']['Completed']['Row'] | null>(null)
 	const router = useRouter();
 
 	const supabase = createClient<Database>(
@@ -352,10 +353,78 @@ export default function Completed() {
 					</tbody>
 				</table>
 				{contextMenu.currentItem && <ContextMenu />}
-				{detailsModal.currentItem && <DetailsModal />}
+				{detailsModal && <DetailsModal />}
+        {editModal && <EditModal />}
 			</main>
 		</>
 	);
+
+  function EditModal() {
+    async function handleChange(e: BaseSyntheticEvent) {
+      e.preventDefault();
+      if (!editModal) return;
+			setLoading(true);
+
+      const linkInput = e.target[0].value;
+			if (
+				!linkInput.match(
+					/https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/gi
+				)
+			) {
+				setLoading(false);
+				return alert('Enter a valid link');
+			}
+
+      const url = new URL(linkInput);
+			if (url.hostname != 'myanimelist.net') {
+				setLoading(false);
+				return alert('Enter a link from myanimelist.net');
+			}
+
+      const idInput = parseInt(url.pathname.split('/')[2]);
+			if (!idInput) {
+				setLoading(false);
+				return alert('ID not found. Enter a valid link');
+			}
+
+      try {
+				await axios.post('/api/completed/changedetails', {
+					id: editModal.id,
+					mal_id: idInput
+				});
+				router.reload();
+			} catch (error) {
+				setLoading(false);
+				alert(error);
+			}
+    }
+
+    return (
+      <div>
+				<div
+					className="fixed top-0 left-0 h-[100dvh] w-[100dvw]"
+				/>
+				<div className="fixed flex flex-col items-center h-[30rem] w-[50rem] px-10 py-6 bg-gray-700 rounded-md shadow-md shadow-black drop-shadow-md border-4 border-black top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 modal">
+          <div
+            onClick={() => setEditModal(null)}
+            className="absolute left-6 flex items-center justify-center h-11 w-11 rounded-full cursor-pointer transition-colors duration-150 hover:bg-slate-500"
+          >
+            <ArrowBackIcon fontSize="large" />
+          </div>
+          <h3 className="font-bold text-2xl">
+						Edit Details
+					</h3>
+          <form onSubmit={handleChange} className='flex flex-col items-center absolute top-[40%] w-3/5'>
+            <label className='flex flex-col gap-4 items-center mb-6 text-lg'>
+              Enter MyAnimeList link:
+              <input type='text' className='input-text' />
+            </label>
+            <Link href={`https://myanimelist.net/anime.php?q=${editModal?.title?.substring(0, 64)}`} target='_blank' className='text-lg link'>Search for anime title</Link>
+          </form>
+        </div>
+      </div>
+    )
+  }
 
 	function DetailsModal() {
 		const [details, setDetails] = useState<
@@ -370,11 +439,11 @@ export default function Completed() {
 				const { data } = await supabase
 					.from('CompletedDetails')
 					.select()
-					.eq('id', detailsModal.currentItem?.id);
+					.eq('id', detailsModal?.id);
 				const dataGenre = await supabase
 					.from('Genres')
 					.select('*, Completed!inner( id )')
-					.eq('Completed.id', detailsModal.currentItem?.id);
+					.eq('Completed.id', detailsModal?.id);
 
 				const titleGenres = dataGenre.data?.map((item) => {
 					return {
@@ -407,8 +476,8 @@ export default function Completed() {
 			return (
 				<div className="z-40">
 					<div
-						onClick={() => setDetailsModal({ currentItem: null })}
-						className="fixed top-0 left-0 h-[100dvh] w-[100dvw] opacity-30 bg-black modal-background"
+						onClick={() => setDetailsModal(null)}
+						className="fixed top-0 left-0 h-[100dvh] w-[100dvw] glass-modal"
 					></div>
 					<article className="fixed flex flex-col items-center justify-center h-[50rem] w-[60rem] px-10 py-6 bg-gray-700 rounded-md shadow-md shadow-black drop-shadow-md top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 modal">
 						<h3 className="mb-6 font-bold text-2xl">
@@ -425,13 +494,19 @@ export default function Completed() {
 		return (
 			<div>
 				<div
-					onClick={() => setDetailsModal({ currentItem: null })}
-					className="fixed top-0 left-0 h-[100dvh] w-[100dvw] bg-black opacity-30 modal-background"
+					onClick={() => setDetailsModal(null)}
+					className="fixed top-0 left-0 h-[100dvh] w-[100dvw] glass-modal"
 				/>
 				<article className="fixed flex flex-col items-center h-[50rem] w-[60rem] px-10 py-6 bg-gray-700 rounded-md shadow-md shadow-black drop-shadow-md top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 modal">
 					<h3 className="font-bold text-2xl">
-						{detailsModal.currentItem?.title}
+						{detailsModal?.title}
 					</h3>
+          <div
+            onClick={() => setEditModal(detailsModal)}
+            className='absolute top-8 right-12 flex items-center justify-center h-11 w-11 rounded-full cursor-pointer transition-colors duration-150 hover:bg-slate-500'
+          >
+            <EditIcon fontSize='large' />
+          </div>
 					{loadingDetails ? (
 						<>
 							<Skeleton
@@ -547,9 +622,7 @@ export default function Completed() {
 		);
 
 		function handleDetails() {
-			setDetailsModal({
-				currentItem: contextMenu.currentItem
-			});
+			setDetailsModal(contextMenu.currentItem);
 		}
 
 		async function handleVisit() {
