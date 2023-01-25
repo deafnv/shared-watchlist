@@ -400,13 +400,23 @@ export default function Completed() {
       }
     }
 
-    if (!loadingDetails && (!details || details.mal_id == -1 || !details.mal_title)) {
+    if (
+      !loadingDetails &&
+      (!details || details.mal_id == -1 || !details.mal_title)
+    ) {
       return (
-        <div className='z-40'>
-          <div onClick={() => setDetailsModal({currentItem: null})} className='fixed top-0 left-0 h-[100dvh] w-[100dvw] opacity-30 bg-black modal-background'></div>
-          <article className='fixed flex flex-col items-center justify-center h-[50rem] w-[60rem] px-10 py-6 bg-gray-700 rounded-md shadow-md shadow-black drop-shadow-md top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 modal'>
-            <h3 className='mb-6 font-bold text-2xl'>Details for this title have not been loaded yet.</h3>
-            <span onClick={handleReload} className='cursor-pointer link'>Click here to reload database and view details</span>
+        <div className="z-40">
+          <div
+            onClick={() => setDetailsModal({ currentItem: null })}
+            className="fixed top-0 left-0 h-[100dvh] w-[100dvw] opacity-30 bg-black modal-background"
+          ></div>
+          <article className="fixed flex flex-col items-center justify-center h-[50rem] w-[60rem] px-10 py-6 bg-gray-700 rounded-md shadow-md shadow-black drop-shadow-md top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 modal">
+            <h3 className="mb-6 font-bold text-2xl">
+              Details for this title have not been loaded yet.
+            </h3>
+            <span onClick={handleReload} className="cursor-pointer link">
+              Click here to reload database and view details
+            </span>
           </article>
         </div>
       )
