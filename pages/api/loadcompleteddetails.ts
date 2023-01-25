@@ -6,18 +6,28 @@ import uniqBy from "lodash/uniqBy";
 
 export default async function RefreshSeasonal(req: NextApiRequest, res: NextApiResponse) {
   try {
-    //! Filter out data which already has MAL id
 		//* Through testing, these API routes with restricted queries like UPDATE, DELETE, or INSERT fails silently if the public API key is provided instead of the service key
 	  const supabase = createClient<Database>('https://esjopxdrlewtpffznsxh.supabase.co', process.env.SUPABASE_SERVICE_API_KEY!);
-	  const dataDB = await supabase 
+	  const dataDBCompleted = await supabase 
 	    .from('Completed')
-	    .select()
+	    .select(`
+				*,
+				CompletedDetails (
+					mal_id
+				)
+			`)
 	    .order('id', { ascending: true });
+
+		if (!dataDBCompleted.data) return res.status(500).send('Something went wrong when retreiving data from database')
+		const dataDBUnprocessed = dataDBCompleted.data.filter((item) => {
+			return ((item?.CompletedDetails as { mal_id: number | null; })?.mal_id == -1 || !item.CompletedDetails)
+		})
+		if (dataDBCompleted.data.length == 0) return res.status(200).send('No more to update')
 
 		let genreRelationshipsCount = 1;
 		let genres: any[] = [];
 		let genreRelationships: { id: number; anime_id: number; genre_id: number; }[] = [];
-	  const malResponse = await Promise.all(dataDB.data!.map(async (item, index) => {
+	  const malResponse = await Promise.all(dataDBUnprocessed.map(async (item, index) => {
 			if (!item.title) {
 				return {
 					end_date: '',

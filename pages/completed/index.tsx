@@ -12,6 +12,7 @@ import MoreVertIcon from '@mui/icons-material/MoreVert';
 import Image from 'next/image';
 import Link from 'next/link';
 import Skeleton from '@mui/material/Skeleton';
+import { useRouter } from 'next/router';
 
 //! Non-null assertion for the response state variable here will throw some errors if it does end up being null, fix maybe.
 //! ISSUES:
@@ -28,6 +29,7 @@ export default function Completed() {
   const contextMenuRef = useRef<HTMLDivElement>(null);
   const [contextMenu, setContextMenu] = useState<{top: any, left: any, display: any, currentItem: Database['public']['Tables']['Completed']['Row'] | null}>({top: 0, left: 0, display: 'none', currentItem: null});
   const [detailsModal, setDetailsModal] = useState<{display: string, currentItem: Database['public']['Tables']['Completed']['Row'] | null}>({display: 'none', currentItem: null})
+  const router = useRouter();
 
   const supabase = createClient<Database>('https://esjopxdrlewtpffznsxh.supabase.co', process.env.NEXT_PUBLIC_SUPABASE_API_KEY!);
 
@@ -178,7 +180,29 @@ export default function Completed() {
       }
       getDetails();
     },[])
+
+    async function handleReload() {
+      try {
+        setLoading(true);
+        await axios.get('/api/loadcompleteddetails');
+        router.reload();
+      } catch (error) {
+        setLoading(false);
+        alert(error);
+      }
+    }
     
+    if (!loadingDetails && (!details || details.mal_id == -1 || !details.mal_title)) {
+      return (
+        <div style={{display: detailsModal.display}} className='z-40'>
+          <div onClick={() => setDetailsModal({display: 'none', currentItem: null})} className='fixed top-0 left-0 h-[100dvh] w-[100dvw] opacity-30 bg-black'></div>
+          <article className='fixed flex flex-col items-center justify-center h-[50rem] w-[60rem] px-10 py-6 bg-gray-700 rounded-md shadow-md shadow-black drop-shadow-md top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2'>
+            <h3 className='mb-6 font-bold text-2xl'>Details for this title have not been loaded yet.</h3>
+            <span onClick={handleReload} className='cursor-pointer link'>Click here to reload database and view details</span>
+          </article>
+        </div>
+      )
+    }
 
     return (
       <div style={{display: detailsModal.display}} className='z-40'>
@@ -246,13 +270,11 @@ export default function Completed() {
         display: 'block',
         currentItem: contextMenu.currentItem
       })
-      console.log(contextMenu)
     }
 
     async function handleVisit() {
       const malURL = await supabase.from('CompletedDetails').select('mal_id').eq('id', contextMenu.currentItem?.id);
-      window.open(`https://myanimelist.net/anime/${malURL.data?.[0].mal_id}`, '_blank',)
-      console.log(contextMenu)
+      window.open(`https://myanimelist.net/anime/${malURL.data?.[0]?.mal_id}`, '_blank',)
     }
   }
 
