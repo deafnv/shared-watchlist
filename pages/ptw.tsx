@@ -32,10 +32,10 @@ export default function PTW() {
 	const [isLoadingClient, setIsLoadingClient] = useState(true);
 	const [isLoadingEditForm, setIsLoadingEditForm] = useState(false);
 	const [gachaValue, setGachaValue] = useState<{
-		value: string;
+		value: string | null;
 		categoryCasual: boolean;
 		movies: boolean;
-	}>({ value: '???', categoryCasual: true, movies: false });
+	}>({ value: null, categoryCasual: true, movies: false });
 	const { setLoading } = useLoading();
 
 	useEffect(() => {
@@ -351,7 +351,7 @@ export default function PTW() {
 				try {
 					await addRolledAPI(range, updatePayload, addCell);
 					setLoading(false);
-					setGachaValue({ ...gachaValue, value: '???' });
+					setGachaValue({ ...gachaValue, value: null });
 					return;
 				} catch (error) {
 					setLoading(false);
@@ -376,7 +376,7 @@ export default function PTW() {
 				try {
 					await addRolledAPI(range, updatePayload, addCell);
 					setLoading(false);
-					setGachaValue({ ...gachaValue, value: '???' });
+					setGachaValue({ ...gachaValue, value: null });
 					return;
 				} catch (error) {
 					setLoading(false);
@@ -399,7 +399,7 @@ export default function PTW() {
 				try {
 					await addRolledAPI(range, updatePayload, addCell);
 					setLoading(false);
-					setGachaValue({ ...gachaValue, value: '???' });
+					setGachaValue({ ...gachaValue, value: null });
 					return;
 				} catch (error) {
 					setLoading(false);
@@ -432,17 +432,17 @@ export default function PTW() {
 				<div className="absolute top-20 flex items-center justify-center h-52 max-h-52 w-80">
 					<div className="max-h-full bg-slate-100 border-black border-solid border-[1px] overflow-auto">
 						<h3 className="p-2 text-black text-2xl text-center">
-							{gachaValue.value}
+							{gachaValue.value ?? '???'}
 						</h3>
 					</div>
 				</div>
-				{gachaValue.value !== '???' ? (
+				{gachaValue.value ? (
 					<div className="absolute bottom-36">
 						<button onClick={addGachaRoll} className=" px-2 p-1 input-submit">
 							Add to List
 						</button>
 						<CancelIcon
-							onClick={() => setGachaValue({ ...gachaValue, value: '???' })}
+							onClick={() => setGachaValue({ ...gachaValue, value: null })}
 							className="absolute top-2 right-[-32px] cursor-pointer transition-colors duration-100 hover:text-red-500"
 						/>
 					</div>
