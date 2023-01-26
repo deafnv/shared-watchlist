@@ -6,5 +6,6 @@ export default function Home() {
 
 	useEffect(() => {
 		router.replace('/completed');
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 }

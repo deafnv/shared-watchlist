@@ -57,6 +57,7 @@ export default function CompletedPage({ id }: { id: number }) {
 			console.log(data);
 		};
 		getData();
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
 	return (

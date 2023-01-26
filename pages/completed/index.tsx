@@ -128,6 +128,7 @@ export default function Completed() {
 			supabase.removeAllChannels();
 			clearInterval(refresh);
 		};
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
 	return (

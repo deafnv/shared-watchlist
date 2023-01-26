@@ -145,6 +145,7 @@ export default function PTW() {
 			supabase.removeAllChannels();
 			clearInterval(refresh);
 		};
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
 	return (

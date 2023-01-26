@@ -61,6 +61,7 @@ export default function GenrePage({ id }: { id: number }) {
 			setResponse(data!);
 		};
 		getData();
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
 	if (!response?.[0]) {
