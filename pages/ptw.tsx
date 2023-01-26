@@ -1,5 +1,5 @@
 import Head from 'next/head';
-import { BaseSyntheticEvent, useEffect, useState } from 'react';
+import { BaseSyntheticEvent, useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 import { Reorder } from 'framer-motion';
 import {
@@ -16,6 +16,8 @@ import { useLoading } from '../components/LoadingContext';
 import CancelIcon from '@mui/icons-material/Cancel';
 
 export default function PTW() {
+	const rolledTitleRef = useRef<HTMLHeadingElement>(null);
+
 	const [responseRolled, setResponseRolled] =
 		useState<Database['public']['Tables']['PTW-Rolled']['Row'][]>();
 	const [responseRolled1, setResponseRolled1] =
@@ -31,18 +33,19 @@ export default function PTW() {
 	const [reordered, setReordered] = useState(false);
 	const [isLoadingClient, setIsLoadingClient] = useState(true);
 	const [isLoadingEditForm, setIsLoadingEditForm] = useState(false);
-	const [gachaValue, setGachaValue] = useState<{
-		value: string | null;
-		categoryCasual: boolean;
-		movies: boolean;
-	}>({ value: null, categoryCasual: true, movies: false });
 	const { setLoading } = useLoading();
 
+	const setRolledTitle = (value: string) => {
+    rolledTitleRef.current!.innerHTML = value
+  }
+
+	const supabase = createClient<Database>(
+		'https://esjopxdrlewtpffznsxh.supabase.co',
+		process.env.NEXT_PUBLIC_SUPABASE_API_KEY!
+	);
+	
+	const channel = supabase.channel('room1')
 	useEffect(() => {
-		const supabase = createClient<Database>(
-			'https://esjopxdrlewtpffznsxh.supabase.co',
-			process.env.NEXT_PUBLIC_SUPABASE_API_KEY!
-		);
 		const getData = async () => {
 			const dataRolled = await supabase
 				.from('PTW-Rolled')
@@ -99,7 +102,6 @@ export default function PTW() {
 					payload.table == 'PTW-NonCasual' ||
 					payload.table == 'PTW-Movies'
 				) {
-					console.log(payload);
 					const { data } = await supabase
 						.from(payload.table)
 						.select()
@@ -130,6 +132,15 @@ export default function PTW() {
 			})
 			.subscribe();
 
+    channel
+			.on('broadcast', { event: 'ROLL' }, (payload) => {
+				setRolledTitle(payload.message)
+				if (payload.isLoading) {
+					setLoading(true);
+				} else setLoading(false);
+			})
+			.subscribe();
+			
 		return () => {
 			supabase.removeAllChannels();
 			clearInterval(refresh);
@@ -303,43 +314,68 @@ export default function PTW() {
 				concatArr = categoryCasual ? responseCasual : responseNonCasual;
 			}
 
+			if (supabase.getChannels()[0].state != 'joined') channel.subscribe() 
 			if (categoryCasual) {
-				setGachaValue({
-					value: concatArr?.[getRandomInt(responseCasual.length)].title!,
-					categoryCasual: categoryCasual,
-					movies: movies
-				});
+				const randomTitle = concatArr?.[getRandomInt(responseCasual.length)].title!;
+				channel.send({
+					type: 'broadcast',
+					event: 'ROLL',
+					message: randomTitle
+				})
+				setRolledTitle(randomTitle);
 			} else {
-				setGachaValue({
-					value: concatArr?.[getRandomInt(responseNonCasual.length)].title!,
-					categoryCasual: categoryCasual,
-					movies: movies
-				});
+				const randomTitle = concatArr?.[getRandomInt(responseNonCasual.length)].title!;
+				channel.send({
+					type: 'broadcast',
+					event: 'ROLL',
+					message: randomTitle
+				})
+				setRolledTitle(randomTitle);
 			}
 		}
 
+		function handleCancel() {
+			if (supabase.getChannels()[0].state != 'joined') channel.subscribe() 
+			channel.send({
+				type: 'broadcast',
+				event: 'ROLL',
+				message: '???'
+			})
+			setRolledTitle('???');
+		}
+
 		async function addGachaRoll() {
+			const rolledTitle = rolledTitleRef.current?.innerText;
 			if (
 				!responseCasual ||
 				!responseNonCasual ||
 				!responseMovies ||
-				!responseRolled
+				!responseRolled ||
+				rolledTitle == '???'
 			)
 				return;
 			if (responseRolled.length >= 20) {
 				alert('Unable to add roll to record, insufficient space.');
 				return;
 			}
+
+			if (supabase.getChannels()[0].state != 'joined') channel.subscribe() 
+			channel.send({
+				type: 'broadcast',
+				event: 'ROLL',
+				message: rolledTitle,
+				isLoading: true
+			})
 			setLoading(true);
 			const isInMovies = responseMovies.find(
-				(item) => item.title == gachaValue.value
+				(item) => item.title == rolledTitle
 			);
 
-			if (gachaValue.movies && isInMovies) {
+			if (isInMovies) {
 				//? If rolled title is a movie
 				const changed = responseMovies
 					.slice()
-					.filter((item) => item.title != gachaValue.value);
+					.filter((item) => item.title != rolledTitle);
 
 				const range = `L22:L${22 + responseMovies.length - 1}`;
 				const updatePayload = changed.map((item) => item.title);
@@ -351,20 +387,38 @@ export default function PTW() {
 				try {
 					await addRolledAPI(range, updatePayload, addCell);
 					setLoading(false);
-					setGachaValue({ ...gachaValue, value: null });
+					if (supabase.getChannels()[0].state != 'joined') channel.subscribe() 
+					channel.send({
+						type: 'broadcast',
+						event: 'ROLL',
+						message: '???',
+						isLoading: false
+					})
+					setRolledTitle('???');
 					return;
 				} catch (error) {
+					if (supabase.getChannels()[0].state != 'joined') channel.subscribe() 
+					channel.send({
+						type: 'broadcast',
+						event: 'ROLL',
+						message: rolledTitle,
+						isLoading: false
+					})
 					setLoading(false);
 					alert(error);
 					return;
 				}
 			}
 
-			if (gachaValue.categoryCasual) {
+			const isInCasual = responseMovies.find(
+				(item) => item.title == rolledTitle
+			);
+
+			if (isInCasual) {
 				//? If rolled title is in category casual
 				const changed = responseCasual
 					.slice()
-					.filter((item) => item.title != gachaValue.value);
+					.filter((item) => item.title != rolledTitle);
 
 				const range = `L2:L${responseCasual.length + 1}`;
 				const updatePayload = changed.map((item) => item.title);
@@ -375,10 +429,24 @@ export default function PTW() {
 				}`;
 				try {
 					await addRolledAPI(range, updatePayload, addCell);
+					if (supabase.getChannels()[0].state != 'joined') channel.subscribe() 
+					channel.send({
+						type: 'broadcast',
+						event: 'ROLL',
+						message: '???',
+						isLoading: false
+					})
 					setLoading(false);
-					setGachaValue({ ...gachaValue, value: null });
+					setRolledTitle('???')
 					return;
 				} catch (error) {
+					if (supabase.getChannels()[0].state != 'joined') channel.subscribe() 
+					channel.send({
+						type: 'broadcast',
+						event: 'ROLL',
+						message: rolledTitle,
+						isLoading: false
+					})
 					setLoading(false);
 					alert(error);
 					return;
@@ -387,7 +455,7 @@ export default function PTW() {
 				//? If rolled title is in category non-casual
 				const changed = responseNonCasual
 					.slice()
-					.filter((item) => item.title != gachaValue.value);
+					.filter((item) => item.title != rolledTitle);
 
 				const range = `M2:M${responseNonCasual.length + 1}`;
 				const updatePayload = changed.map((item) => item.title);
@@ -398,10 +466,24 @@ export default function PTW() {
 				}`;
 				try {
 					await addRolledAPI(range, updatePayload, addCell);
+					if (supabase.getChannels()[0].state != 'joined') channel.subscribe() 
+					channel.send({
+						type: 'broadcast',
+						event: 'ROLL',
+						message: '???',
+						isLoading: false
+					})
 					setLoading(false);
-					setGachaValue({ ...gachaValue, value: null });
+					setRolledTitle('???');
 					return;
 				} catch (error) {
+					if (supabase.getChannels()[0].state != 'joined') channel.subscribe() 
+					channel.send({
+						type: 'broadcast',
+						event: 'ROLL',
+						message: rolledTitle,
+						isLoading: false
+					})
 					setLoading(false);
 					alert(error);
 					return;
@@ -420,7 +502,7 @@ export default function PTW() {
 					},
 					addStep: {
 						cell: addCell,
-						content: gachaValue.value
+						content: rolledTitle
 					}
 				});
 			}
@@ -431,22 +513,18 @@ export default function PTW() {
 				<h2 className="absolute top-5 p-2 text-3xl">Gacha</h2>
 				<div className="absolute top-20 flex items-center justify-center h-52 max-h-52 w-80">
 					<div className="max-h-full bg-slate-100 border-black border-solid border-[1px] overflow-auto">
-						<h3 className="p-2 text-black text-2xl text-center">
-							{gachaValue.value ?? '???'}
-						</h3>
+						<h3 ref={rolledTitleRef} className="p-2 text-black text-2xl text-center">???</h3>
 					</div>
 				</div>
-				{gachaValue.value ? (
-					<div className="absolute bottom-36">
-						<button onClick={addGachaRoll} className=" px-2 p-1 input-submit">
-							Add to List
-						</button>
-						<CancelIcon
-							onClick={() => setGachaValue({ ...gachaValue, value: null })}
-							className="absolute top-2 right-[-32px] cursor-pointer transition-colors duration-100 hover:text-red-500"
-						/>
-					</div>
-				) : null}
+				<div className="absolute bottom-36">
+					<button onClick={addGachaRoll} className=" px-2 p-1 input-submit">
+						Add to List
+					</button>
+					<CancelIcon
+						onClick={handleCancel}
+						className="absolute top-2 right-[-32px] cursor-pointer transition-colors duration-100 hover:text-red-500"
+					/>
+				</div>
 				<form
 					onSubmit={handleSubmit}
 					className="absolute flex flex-col items-center gap-2 bottom-6"
@@ -458,7 +536,7 @@ export default function PTW() {
 								type="radio"
 								name="table_to_roll"
 								value="Casual"
-								defaultChecked={gachaValue.categoryCasual}
+								defaultChecked
 							/>
 							Casual
 						</label>
@@ -468,7 +546,6 @@ export default function PTW() {
 								type="radio"
 								name="table_to_roll"
 								value="NonCasual"
-								defaultChecked={!gachaValue.categoryCasual}
 							/>
 							Non-Casual
 						</label>
@@ -480,7 +557,6 @@ export default function PTW() {
 							<input
 								type="checkbox"
 								value="IncludeMovies"
-								defaultChecked={gachaValue.movies}
 							/>
 							Include movies?
 						</label>
