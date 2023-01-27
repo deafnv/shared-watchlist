@@ -1,10 +1,13 @@
 import { createClient } from '@supabase/supabase-js';
 import { GetStaticPropsContext } from 'next';
 import { Database } from '../../../lib/database.types';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import Head from 'next/head';
 import Image from 'next/image';
 import Link from 'next/link';
+import EditIcon from '@mui/icons-material/Edit';
+import EditModal from '../../../components/EditModal';
+import { useLoading } from '../../../components/LoadingContext';
 
 export async function getStaticPaths() {
 	const supabase = createClient<Database>(
@@ -33,7 +36,10 @@ export function getStaticProps(context: GetStaticPropsContext) {
 }
 
 export default function CompletedPage({ id }: { id: number }) {
+	const editModalRef = useRef<HTMLDivElement>(null);
+
 	const [response, setResponse] = useState<any>();
+	const { setLoading } = useLoading();
 
 	useEffect(() => {
 		const supabase = createClient<Database>(
@@ -73,6 +79,12 @@ export default function CompletedPage({ id }: { id: number }) {
 				<h3 className="p-2 text-2xl font-semibold text-center">
 					{response?.[0].title}
 				</h3>
+				<div
+					onClick={() => editModalRef.current!.style.display = 'block'}
+					className='absolute top-24 right-96 flex items-center justify-center h-11 w-11 rounded-full cursor-pointer transition-colors duration-150 hover:bg-slate-500'
+				>
+					<EditIcon fontSize='large' />
+				</div>
 				<h5 className="text-lg text-center">
 					{response?.[0].CompletedDetails.mal_alternative_title}
 				</h5>
@@ -151,6 +163,7 @@ export default function CompletedPage({ id }: { id: number }) {
 						</div>
 					</div>
 				</div>
+				<EditModal editModalRef={editModalRef} detailsModal={response?.[0]} setLoading={setLoading} />
 			</main>
 		</>
 	);
