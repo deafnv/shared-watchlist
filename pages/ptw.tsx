@@ -21,6 +21,7 @@ export default function PTW() {
 	const onlineUsersRef = useRef<any>(null);
 	const onlineUsersElementRef = useRef<HTMLSpanElement>(null);
 	const latencyRef = useRef<HTMLSpanElement>(null);
+	const addGachaRollRef = useRef<HTMLDivElement>(null);
 
 	const [responseRolled, setResponseRolled] =
 		useState<Database['public']['Tables']['PTW-Rolled']['Row'][]>();
@@ -40,6 +41,11 @@ export default function PTW() {
 	const { setLoading } = useLoading();
 
 	const setRolledTitle = (value: string) => {
+		if (value == '???') {
+			addGachaRollRef.current!.style.visibility = 'hidden';
+		} else {
+			addGachaRollRef.current!.style.visibility = 'visible';
+		}
     rolledTitleElementRef.current!.innerHTML = value;
 		rolledTitleRef.current = value;
   }
@@ -601,7 +607,7 @@ export default function PTW() {
 						<h3 ref={rolledTitleElementRef} className="p-2 text-black text-2xl text-center">???</h3>
 					</div>
 				</div>
-				<div className="absolute bottom-36">
+				<div ref={addGachaRollRef} className="absolute bottom-36">
 					<button onClick={addGachaRoll} className=" px-2 p-1 input-submit">
 						Add to List
 					</button>
