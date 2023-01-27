@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import axios from 'axios';
 import { NextApiRequest, NextApiResponse } from 'next';
-import { Database } from '../../../lib/database.types';
+import { Database } from '../../lib/database.types';
 
 export default async function BatchUpdateSheet(
 	req: NextApiRequest,

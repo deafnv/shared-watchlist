@@ -163,7 +163,7 @@ export default function CompletedPage({ id }: { id: number }) {
 						</div>
 					</div>
 				</div>
-				<EditModal editModalRef={editModalRef} detailsModal={response?.[0]} setLoading={setLoading} />
+				<EditModal editModalRef={editModalRef} detailsModal={response?.[0]} setLoading={setLoading} isInMainPage />
 			</main>
 		</>
 	);

@@ -3,17 +3,20 @@ import { useRouter } from "next/router";
 import { Dispatch, SetStateAction, BaseSyntheticEvent, RefObject } from 'react';
 import axios from "axios";
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import CloseIcon from '@mui/icons-material/Close';
 import { Database } from "../lib/database.types";
 
 export default function EditModal({
   editModalRef,
   detailsModal,
   setLoading,
+  isInMainPage
 }:
 {
   editModalRef: RefObject<HTMLDivElement>
   detailsModal: Database['public']['Tables']['Completed']['Row'] | null,
-  setLoading: Dispatch<SetStateAction<boolean>>
+  setLoading: Dispatch<SetStateAction<boolean>>,
+  isInMainPage?: boolean
 }) {
   const router = useRouter();
 
@@ -45,7 +48,7 @@ export default function EditModal({
     }
 
     try {
-      await axios.post('/api/completed/changedetails', {
+      await axios.post('/api/changedetails', {
         id: detailsModal.id,
         mal_id: idInput
       });
@@ -59,15 +62,27 @@ export default function EditModal({
   return (
     <div ref={editModalRef} className='hidden'>
       <div
+        style={{
+          opacity: isInMainPage ? 0.3 : 'initial',
+          backgroundColor: isInMainPage ? 'black' : 'initial'
+        }}
         className="fixed top-0 left-0 h-[100dvh] w-[100dvw]"
       />
       <div className="fixed flex flex-col items-center h-[30rem] w-[50rem] px-10 py-6 bg-gray-700 rounded-md shadow-md shadow-black drop-shadow-md border-4 border-black top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 modal">
+        {isInMainPage ? 
+        <div
+          onClick={() => editModalRef.current!.style.display = 'none'}
+          className="absolute right-6 flex items-center justify-center h-11 w-11 rounded-full cursor-pointer transition-colors duration-150 hover:bg-slate-500"
+        >
+          <CloseIcon fontSize="large" />
+        </div>
+        :
         <div
           onClick={() => editModalRef.current!.style.display = 'none'}
           className="absolute left-6 flex items-center justify-center h-11 w-11 rounded-full cursor-pointer transition-colors duration-150 hover:bg-slate-500"
         >
           <ArrowBackIcon fontSize="large" />
-        </div>
+        </div>}
         <h3 className="font-bold text-2xl">
           Edit Details
         </h3>
