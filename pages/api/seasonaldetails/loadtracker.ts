@@ -35,7 +35,7 @@ export default async function EpisodeTracker(
 			'https://esjopxdrlewtpffznsxh.supabase.co',
 			process.env.SUPABASE_SERVICE_API_KEY!
 		);
-		const dataDB = await supabase.from('SeasonalDetails').select();
+		const dataDB = await supabase.from('SeasonalDetails').select().not('message', 'ilike', '%Exempt%');
 
 		const relevantAnimes = animes.filter((item) =>
 			dataDB.data?.find((item1) => item1.mal_id == item.mal_id)

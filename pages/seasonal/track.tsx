@@ -7,7 +7,9 @@ import Link from 'next/link';
 import axios from 'axios';
 import { useRouter } from 'next/router';
 import { useLoading } from '../../components/LoadingContext';
-import { BaseSyntheticEvent, useState } from 'react';
+import { BaseSyntheticEvent, useEffect, useState, useRef } from 'react';
+import EditIcon from '@mui/icons-material/Edit';
+import CloseIcon from '@mui/icons-material/Close';
 
 export const getStaticProps = async (context: GetStaticPropsContext) => {
 	const supabase = createClient<Database>(
@@ -31,15 +33,26 @@ export default function SeasonalDetails({
 }: {
 	res: Database['public']['Tables']['SeasonalDetails']['Row'][];
 }) {
+	const editEpisodesCurrentRef = useRef<HTMLDivElement>(null);
+
 	const [response, setResponse] = useState(res);
 	const [validateArea, setValidateArea] = useState('');
-	const router = useRouter();
+	const [editEpisodesCurrent, setEditEpisodesCurrent] = useState<Database['public']['Tables']['SeasonalDetails']['Row'] | null>(null)
+	const router = useRouter(); 
 	const { setLoading } = useLoading();
 
 	const supabase = createClient<Database>(
 		'https://esjopxdrlewtpffznsxh.supabase.co',
 		process.env.NEXT_PUBLIC_SUPABASE_API_KEY!
-	);
+	); 
+
+	useEffect(() => {
+		const closeEditModal = (e: KeyboardEvent) => {
+			if (e.key == 'Escape' && editEpisodesCurrentRef.current) setEditEpisodesCurrent(null);
+		}
+
+		document.addEventListener('keydown', closeEditModal);
+	}, [])
 
 	return (
 		<>
@@ -113,8 +126,15 @@ export default function SeasonalDetails({
 									</div>
 								</div>
 								<div>
-									<div className="w-full m-2 flex items-center justify-center">
+									<div className="relative w-full m-2 flex items-center justify-center">
 										<span className="text-lg font-semibold">Episodes</span>
+										{item.message?.includes('Exempt') && <span className='ml-2 text-lg font-semibold'>(Edited)</span>}
+										<div
+											onClick={() => setEditEpisodesCurrent(item)}
+											className='absolute right-4 flex items-center justify-center h-6 w-6 rounded-full cursor-pointer transition-colors duration-150 hover:bg-slate-500'
+										>
+											<EditIcon fontSize='small' className='text-slate-500 hover:text-white' />
+										</div>
 									</div>
 									<EpisodeTable item={item} />
 								</div>
@@ -122,9 +142,77 @@ export default function SeasonalDetails({
 						);
 					})}
 				</div>
+				{editEpisodesCurrent && <EditEpisodes />}
 			</main>
 		</>
 	);
+
+	function EditEpisodes() {
+		async function handleEditSubmit(e: BaseSyntheticEvent) {
+			e.preventDefault();
+			setLoading(true);
+			const editLatestEpisode = parseInt(e.target[0].value);
+			try {
+				await axios.post('/api/updatedb', {
+					content: { latest_episode: editLatestEpisode, message: 'Exempt:Manual Edit' },
+					table: 'SeasonalDetails',
+					id: editEpisodesCurrent?.mal_id,
+					compare: 'mal_id'
+				});
+				await axios.get('/api/seasonaldetails/revalidate')
+				router.reload();
+			} 
+			catch (error) {
+				setLoading(false);
+				alert(error);
+			}
+		}
+
+		let counter = 1;
+		return (
+			<div ref={editEpisodesCurrentRef}>
+				<div className="fixed top-0 left-0 h-[100dvh] w-[100dvw] bg-black opacity-30 modal-background" />
+				<div className="fixed flex flex-col items-center gap-6 h-[30rem] w-[50rem] px-10 py-6 bg-gray-700 rounded-md shadow-md shadow-black drop-shadow-md border-4 border-black top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 modal">
+					<h3 className="font-bold text-2xl">
+						Manual Edit Episodes
+					</h3>
+					<div
+						onClick={() => setEditEpisodesCurrent(null)}
+						className="absolute right-6 flex items-center justify-center h-11 w-11 rounded-full cursor-pointer transition-colors duration-150 hover:bg-slate-500"
+					>
+						<CloseIcon fontSize="large" />
+					</div>
+					<span>{editEpisodesCurrent?.title}</span>
+					<form onSubmit={handleEditSubmit}>
+						<label className='flex flex-col items-center gap-2'>
+							Enter latest episode:
+							<input type='number' min={-1} max={9999} className='text-center input-text' />
+						</label>
+					</form>
+					<div className="relative grid grid-cols-2 gap-4">
+						{Array(4).fill('').map(() => {
+							return (
+								<table>
+									<tbody>
+										<tr>
+											<th className='w-11'>{editEpisodesCurrent?.latest_episode! > 12 ? counter++ + 12 : counter++}</th>
+											<th className='w-11'>{editEpisodesCurrent?.latest_episode! > 12 ? counter++ + 12 : counter++}</th>
+											<th className='w-11'>{editEpisodesCurrent?.latest_episode! > 12 ? counter++ + 12 : counter++}</th>
+										</tr>
+										<tr>
+											<td style={{ background: determineEpisode(editEpisodesCurrent?.latest_episode!, (counter - 3)) }} className="p-6" />
+											<td style={{ background: determineEpisode(editEpisodesCurrent?.latest_episode!, (counter - 2)) }} className="p-6" />
+											<td style={{ background: determineEpisode(editEpisodesCurrent?.latest_episode!, (counter - 1)) }} className="p-6" />
+										</tr>
+									</tbody>
+								</table>
+							)
+					})}
+					</div>
+				</div>
+			</div>
+		)
+	}
 
 	function showTitle(e: BaseSyntheticEvent) {
 		const target = e.target as HTMLSpanElement;
@@ -161,67 +249,37 @@ export default function SeasonalDetails({
 	}: {
 		item: Database['public']['Tables']['SeasonalDetails']['Row'];
 	}) {
-		let cutoff = 0;
-		let cutoff1 = -3;
+		let counter = 1;
 		return (
 			<div className="relative grid grid-cols-2 gap-4">
-				{Array(4)
-					.fill('')
-					.map((item1, index) => {
-						cutoff = cutoff + 3;
-						cutoff1 = cutoff1 + 3;
-						return (
-							<table key={index}>
-								<tbody>
-									<tr>
-										{Array(12)
-											.fill('')
-											.map((item1, index1) => {
-												if (index1 < cutoff && index1 >= cutoff1)
-													return (
-														<th className="w-11" key={index1}>
-															{item.latest_episode! > 12
-																? index1 + 13
-																: index1 + 1}
-														</th>
-													);
-											})}
-									</tr>
-									<tr>
-										{Array(12)
-											.fill('')
-											.map((item1, index1) => {
-												if (index1 < cutoff && index1 >= cutoff1)
-													return (
-														<td
-															style={{
-																background: determineEpisode(
-																	item.latest_episode!,
-																	index1
-																)
-															}}
-															className="p-6"
-															key={index1}
-														></td>
-													);
-											})}
-									</tr>
-								</tbody>
-							</table>
-						);
-					})}
+				{Array(4).fill('').map(() => {
+					return (
+						<table>
+							<tbody>
+								<tr>
+									<th className='w-11'>{item.latest_episode! > 12 ? counter++ + 12 : counter++}</th>
+									<th className='w-11'>{item.latest_episode! > 12 ? counter++ + 12 : counter++}</th>
+									<th className='w-11'>{item.latest_episode! > 12 ? counter++ + 12 : counter++}</th>
+								</tr>
+								<tr>
+									<td style={{ background: determineEpisode(item.latest_episode!, (counter - 3)) }} className="p-6" />
+									<td style={{ background: determineEpisode(item.latest_episode!, (counter - 2)) }} className="p-6" />
+									<td style={{ background: determineEpisode(item.latest_episode!, (counter - 1)) }} className="p-6" />
+								</tr>
+							</tbody>
+						</table>
+					)
+				})}
 				<Validate item1={item} />
 			</div>
 		);
+	}
 
-		function determineEpisode(latestEpisode: number, index: number) {
-			const accountFor2Cour =
-				latestEpisode > 12 ? latestEpisode - 12 : latestEpisode;
-			if (accountFor2Cour > index) {
-				//* Not sure why this isn't index + 1
-				return 'red';
-			} else return 'black';
-		}
+	function determineEpisode(latestEpisode: number, index: number) {
+		const accountFor2Cour = latestEpisode > 12 ? latestEpisode - 12 : latestEpisode;
+		if (accountFor2Cour >= index) {
+			return 'red';
+		} else return 'black';
 	}
 
 	function Validate({
@@ -271,10 +329,12 @@ export default function SeasonalDetails({
 		async function handleIgnore() {
 			try {
 				setLoading(true);
-				await supabase
-					.from('SeasonalDetails')
-					.update({ message: '' })
-					.eq('mal_id', item1.mal_id);
+				await axios.post('/api/updatedb', {
+					content: { message: '' },
+					table: 'SeasonalDetails',
+					id: item1.mal_id,
+					compare: 'mal_id'
+				});
 
 				await axios.get('/api/seasonaldetails/revalidate');
 

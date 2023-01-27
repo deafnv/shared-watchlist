@@ -39,7 +39,7 @@ export default async function RefreshSeasonal(
 						headers: { 'X-MAL-CLIENT-ID': process.env.MAL_CLIENT_ID },
 						params: {
 							q: item.title!.substring(0, 64),
-							fields: 'start_season,start_date,num_episodes,broadcast',
+							fields: 'start_season,start_date,num_episodes,broadcast', //! ADD STATUS, 
 							limit: 5
 						}
 					}
