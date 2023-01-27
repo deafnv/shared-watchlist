@@ -157,7 +157,7 @@ export default function PTW() {
 					setInterval(async () => {
 						const begin = performance.now();
 
-						const response = await channel.send({
+						const response = await latencyChannel.send({
 							type: 'broadcast',
 							event: 'latency',
 							payload: {},
