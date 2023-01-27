@@ -136,7 +136,15 @@ export default function SeasonalDetails({
 										height={200}
 										width={150}
 									/>
-									<div className="flex flex-col items-center justify-center w-full">
+									<div className="flex flex-col items-center gap-1 justify-center w-full">
+										<span>
+											<span className="font-semibold">Episodes: </span>
+											{item.num_episodes ? item.num_episodes : 'Unknown'}
+										</span>
+										<span style={{ textTransform: 'capitalize' }}>
+											<span className="font-semibold">Status: </span>
+											{item.status?.split('_').join(' ')}
+										</span>
 										<span>
 											<span className="font-semibold">Start Date: </span>
 											{item.start_date ? item.start_date : 'Unknown'}
@@ -144,10 +152,6 @@ export default function SeasonalDetails({
 										<span style={{ textTransform: 'capitalize' }}>
 											<span className="font-semibold">Broadcast: </span>
 											{item.broadcast ?? 'Unknown'}
-										</span>
-										<span>
-											<span className="font-semibold">Episodes: </span>
-											{item.num_episodes ? item.num_episodes : 'Unknown'}
 										</span>
 										<Link
 											href={`https://myanimelist.net/anime/${item.mal_id}`}
@@ -332,9 +336,9 @@ export default function SeasonalDetails({
 		let counter = 1;
 		return (
 			<div className="relative grid grid-cols-2 gap-4">
-				{Array(4).fill('').map(() => {
+				{Array(4).fill('').map((i, index) => {
 					return (
-						<table>
+						<table key={index}>
 							<tbody>
 								<tr>
 									<th className='w-11'>{item.latest_episode! > 12 ? counter++ + 12 : counter++}</th>

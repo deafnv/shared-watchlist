@@ -39,7 +39,7 @@ export default async function RefreshSeasonal(
 						headers: { 'X-MAL-CLIENT-ID': process.env.MAL_CLIENT_ID },
 						params: {
 							q: item.title!.substring(0, 64),
-							fields: 'start_season,start_date,num_episodes,broadcast', //! ADD STATUS, 
+							fields: 'start_season,start_date,num_episodes,broadcast,status',
 							limit: 5
 						}
 					}
@@ -50,8 +50,9 @@ export default async function RefreshSeasonal(
 					  }`
 					: null;
 				if (
-					!isEqual(data?.data[0].node.start_season, compare) &&
-					!isEqual(data?.data[0].node.start_season, compare2cour)
+					(!isEqual(data?.data[0].node.start_season, compare) &&
+					!isEqual(data?.data[0].node.start_season, compare2cour)) ||
+					data?.data[0].node.status == 'finished_airing'
 				) {
 					return {
 						id: item.id,
@@ -61,6 +62,7 @@ export default async function RefreshSeasonal(
 						start_date: data?.data[0].node.start_date ?? '',
 						broadcast: broadcast,
 						num_episodes: data?.data[0].node.num_episodes,
+						status: data?.data[0].node.status,
 						message: `Validate:https://myanimelist.net/anime.php?q=${encodeURIComponent(
 							item.title!.substring(0, 64)
 						)}`
@@ -74,6 +76,7 @@ export default async function RefreshSeasonal(
 					start_date: data?.data[0].node.start_date ?? '',
 					broadcast: broadcast,
 					num_episodes: data?.data[0].node.num_episodes,
+					status: data?.data[0].node.status,
 					message: ''
 				};
 			})
