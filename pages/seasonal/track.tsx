@@ -1,12 +1,12 @@
 import { createClient } from '@supabase/supabase-js';
 import { GetStaticPropsContext } from 'next';
-import { Database } from '../lib/database.types';
+import { Database } from '../../lib/database.types';
 import Head from 'next/head';
 import Image from 'next/image';
 import Link from 'next/link';
 import axios from 'axios';
 import { useRouter } from 'next/router';
-import { useLoading } from '../components/LoadingContext';
+import { useLoading } from '../../components/LoadingContext';
 import { BaseSyntheticEvent, useState } from 'react';
 
 export const getStaticProps = async (context: GetStaticPropsContext) => {

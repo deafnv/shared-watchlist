@@ -1,9 +1,9 @@
 import { createClient } from '@supabase/supabase-js';
-import { Database } from '../lib/database.types';
+import { Database } from '../../lib/database.types';
 import { BaseSyntheticEvent, useEffect, useState } from 'react';
 import Head from 'next/head';
 import axios from 'axios';
-import { loadingGlimmer } from '../components/LoadingGlimmer';
+import { loadingGlimmer } from '../../components/LoadingGlimmer';
 import { CircularProgress } from '@mui/material';
 
 export default function Seasonal({

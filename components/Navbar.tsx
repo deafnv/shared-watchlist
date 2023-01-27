@@ -12,7 +12,7 @@ export default function Navbar({ children }: React.PropsWithChildren) {
 	const navLinks = [
 		{
 			name: 'Completed',
-			route: '/'
+			route: '/completed'
 		},
 		{
 			name: 'Genres',
@@ -28,7 +28,7 @@ export default function Navbar({ children }: React.PropsWithChildren) {
 		},
 		{
 			name: 'Seasonal Details',
-			route: '/seasonaldetails'
+			route: '/seasonal/track'
 		}
 	];
 
