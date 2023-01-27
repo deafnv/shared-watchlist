@@ -15,8 +15,6 @@ import DoneIcon from '@mui/icons-material/Done';
 import { useLoading } from '../components/LoadingContext';
 import CancelIcon from '@mui/icons-material/Cancel';
 
-
-//! ADD PRESENCE WITH USER ICONS?, AND LATENCY
 export default function PTW() {
 	const rolledTitleRef = useRef<HTMLHeadingElement>(null);
 	const latencyRef = useRef<HTMLSpanElement>(null);
