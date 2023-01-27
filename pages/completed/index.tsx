@@ -28,6 +28,7 @@ import EditModal from '../../components/EditModal';
 
 export default function Completed() {
 	const editModalRef = useRef<HTMLDivElement>(null);
+	const contextMenuRef = useRef<HTMLDivElement>(null);
 
 	const [response, setResponse] =
 		useState<Database['public']['Tables']['Completed']['Row'][]>();
@@ -38,7 +39,6 @@ export default function Completed() {
 	const [isLoadingClient, setIsLoadingClient] = useState(true);
 	const [isLoadingEditForm, setIsLoadingEditForm] = useState(false);
 	const { setLoading } = useLoading();
-	const contextMenuRef = useRef<HTMLDivElement>(null);
 	const [contextMenu, setContextMenu] = useState<{
 		top: any;
 		left: any;
@@ -46,6 +46,7 @@ export default function Completed() {
 		currentItem: Database['public']['Tables']['Completed']['Row'] | null;
 	}>({ top: 0, left: 0, display: 'none', currentItem: null });
 	const [detailsModal, setDetailsModal] = useState<Database['public']['Tables']['Completed']['Row'] | null>(null);
+	
 	const router = useRouter();
 
 	const supabase = createClient<Database>(

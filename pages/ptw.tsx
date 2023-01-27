@@ -607,7 +607,7 @@ export default function PTW() {
 						<h3 ref={rolledTitleElementRef} className="p-2 text-black text-2xl text-center">???</h3>
 					</div>
 				</div>
-				<div ref={addGachaRollRef} className="absolute bottom-36">
+				<div ref={addGachaRollRef} className="absolute bottom-36 invisible">
 					<button onClick={addGachaRoll} className=" px-2 p-1 input-submit">
 						Add to List
 					</button>
