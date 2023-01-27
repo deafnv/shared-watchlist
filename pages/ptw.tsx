@@ -195,7 +195,7 @@ export default function PTW() {
 							setLatency(newLatency);
 						}
 
-					}, 2000)
+					}, 5000)
 				}
 			})
 
