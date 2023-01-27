@@ -89,29 +89,29 @@ export default function SeasonalDetails({
 			</Head>
 
 			<main className="flex flex-col items-center justify-center p-6">
-				<div className="absolute top-20 left-8 flex gap-2">
+				<div className=" flex gap-2">
 					<button
 						onClick={refresh}
 						title="Refresh episode tracking"
-						className="input-submit px-2 p-1"
+						className="absolute top-20 left-8 input-submit px-2 p-1"
 					>
 						Refresh
 					</button>
 					<button
 						onClick={reload}
 						title="Reload current season data from sheet"
-						className="input-submit px-2 p-1"
+						className="input-submit absolute right-8 md:right-auto md:left-32 md:top-20 px-2 p-1"
 					>
 						Reload
 					</button>
 				</div>
 				<h2 className="mb-6 text-3xl">Seasonal Details</h2>
-				<div className="grid grid-cols-4 gap-6">
+				<div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
 					{response.map((item) => {
 						return (
 							<article
 								key={item.mal_id}
-								className="relative flex flex-col gap-2 p-3 bg-slate-700 shadow-md shadow-gray-700 rounded-md group"
+								className="relative flex flex-col gap-2 p-3 bg-slate-700 shadow-md shadow-black rounded-md group"
 							>
 								<span
 									onClick={showTitle}
@@ -274,9 +274,9 @@ export default function SeasonalDetails({
 						</label>
 					</form>
 					<div className="relative grid grid-cols-2 gap-4">
-						{Array(4).fill('').map(() => {
+						{Array(4).fill('').map((i, index) => {
 							return (
-								<table>
+								<table key={index}>
 									<tbody>
 										<tr>
 											<th className='w-11'>{editEpisodesCurrent?.latest_episode! > 12 ? counter++ + 12 : counter++}</th>
@@ -436,7 +436,7 @@ export default function SeasonalDetails({
 			switch (validateArea) {
 				case `${item1.mal_id}_change`:
 					return (
-						<div className="absolute top-[-35px] left-[-10px] h-[125%] w-[105%] flex flex-col justify-center items-center gap-2 glass">
+						<div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[55%] h-[125%] w-[105%] flex flex-col justify-center items-center gap-2 glass">
 							<span className="text-center text-lg">Enter correct link: </span>
 							<Link
 								href={item1.message?.split('Validate:')[1] ?? ''}
@@ -472,7 +472,7 @@ export default function SeasonalDetails({
 					);
 				case `${item1.mal_id}_ignore`:
 					return (
-						<div className="absolute top-[-35px] left-[-10px] h-[125%] w-[105%] flex flex-col justify-center items-center gap-2 glass">
+						<div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[55%] h-[125%] w-[105%] flex flex-col justify-center items-center gap-2 glass">
 							<span className="text-red-500 text-lg">⚠ Are you sure?</span>
 							<div className="flex gap-4">
 								<button
@@ -492,7 +492,7 @@ export default function SeasonalDetails({
 					);
 				default:
 					return (
-						<div className="absolute top-[-35px] left-[-10px] h-[125%] w-[105%] flex flex-col justify-center items-center gap-2 glass">
+						<div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[55%] h-[125%] w-[105%] flex flex-col justify-center items-center gap-2 glass">
 							<span className="text-red-500 text-lg">
 								⚠ This entry appears to be wrong
 							</span>
