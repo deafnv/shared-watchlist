@@ -27,6 +27,8 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 //!   - Fix sort symbol
 
 export default function Completed() {
+	const editModalRef = useRef<HTMLDivElement>(null);
+
 	const [response, setResponse] =
 		useState<Database['public']['Tables']['Completed']['Row'][]>();
 	const [response1, setResponse1] =
@@ -44,7 +46,6 @@ export default function Completed() {
 		currentItem: Database['public']['Tables']['Completed']['Row'] | null;
 	}>({ top: 0, left: 0, display: 'none', currentItem: null });
 	const [detailsModal, setDetailsModal] = useState<Database['public']['Tables']['Completed']['Row'] | null>(null);
-  const [editModal, setEditModal] = useState<Database['public']['Tables']['Completed']['Row'] | null>(null)
 	const router = useRouter();
 
 	const supabase = createClient<Database>(
@@ -355,7 +356,7 @@ export default function Completed() {
 				</table>
 				{contextMenu.currentItem && <ContextMenu />}
 				{detailsModal && <DetailsModal />}
-        {editModal && <EditModal />}
+        <EditModal />
 			</main>
 		</>
 	);
@@ -363,7 +364,7 @@ export default function Completed() {
   function EditModal() {
     async function handleChange(e: BaseSyntheticEvent) {
       e.preventDefault();
-      if (!editModal) return;
+      if (!detailsModal) return;
 			setLoading(true);
 
       const linkInput = e.target[0].value;
@@ -390,7 +391,7 @@ export default function Completed() {
 
       try {
 				await axios.post('/api/completed/changedetails', {
-					id: editModal.id,
+					id: detailsModal.id,
 					mal_id: idInput
 				});
 				router.reload();
@@ -401,13 +402,13 @@ export default function Completed() {
     }
 
     return (
-      <div>
+      <div ref={editModalRef} className='hidden'>
 				<div
 					className="fixed top-0 left-0 h-[100dvh] w-[100dvw]"
 				/>
 				<div className="fixed flex flex-col items-center h-[30rem] w-[50rem] px-10 py-6 bg-gray-700 rounded-md shadow-md shadow-black drop-shadow-md border-4 border-black top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 modal">
           <div
-            onClick={() => setEditModal(null)}
+            onClick={() => editModalRef.current!.style.display = 'none'}
             className="absolute left-6 flex items-center justify-center h-11 w-11 rounded-full cursor-pointer transition-colors duration-150 hover:bg-slate-500"
           >
             <ArrowBackIcon fontSize="large" />
@@ -420,7 +421,7 @@ export default function Completed() {
               Enter MyAnimeList link:
               <input type='text' className='input-text' />
             </label>
-            <Link href={`https://myanimelist.net/anime.php?q=${editModal?.title?.substring(0, 64)}`} target='_blank' className='text-lg link'>Search for anime title</Link>
+            <Link href={`https://myanimelist.net/anime.php?q=${detailsModal?.title?.substring(0, 64)}`} target='_blank' className='text-lg link'>Search for anime title</Link>
           </form>
         </div>
       </div>
@@ -499,11 +500,11 @@ export default function Completed() {
 					className="fixed top-0 left-0 h-[100dvh] w-[100dvw] glass-modal"
 				/>
 				<article className="fixed flex flex-col items-center h-[50rem] w-[60rem] px-10 py-6 bg-gray-700 rounded-md shadow-md shadow-black drop-shadow-md top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 modal">
-					<h3 className="font-bold text-2xl">
+					<Link href={`${location.origin}/completed/anime/${details?.id}`} className="px-12 font-bold text-2xl text-center link">
 						{details?.mal_title}
-					</h3>
+					</Link>
           <div
-            onClick={() => setEditModal(detailsModal)}
+            onClick={() => editModalRef.current!.style.display = 'block'}
             className='absolute top-8 right-12 flex items-center justify-center h-11 w-11 rounded-full cursor-pointer transition-colors duration-150 hover:bg-slate-500'
           >
             <EditIcon fontSize='large' />
