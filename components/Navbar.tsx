@@ -12,7 +12,17 @@ export default function Navbar({ children }: React.PropsWithChildren) {
 	const navLinks = [
 		{
 			name: 'Completed',
-			route: '/completed'
+			posLeft: '-1rem',
+			dropdown: [
+				{
+					name: 'List',
+					route: '/completed'
+				},
+				{
+					name: 'Genres',
+					route: '/completed/genres'
+				}
+			]
 		},
 		{
 			name: 'Genres',
@@ -24,11 +34,18 @@ export default function Navbar({ children }: React.PropsWithChildren) {
 		},
 		{
 			name: 'Current Season',
-			route: '/seasonal'
-		},
-		{
-			name: 'Seasonal Details',
-			route: '/seasonal/track'
+			posLeft: '-0.1rem',
+			dropdown: [
+				{
+					name: 'List',
+					route: '/seasonal'
+				},
+				{
+					name: 'Details',
+					route: '/seasonal/track',
+					posLeft: ''
+				}
+			]
 		}
 	];
 
@@ -54,7 +71,7 @@ export default function Navbar({ children }: React.PropsWithChildren) {
 				}}
 			>
 				<div className="flex items-center">
-					<span className="absolute left-8">
+					<span className="absolute left-8 text-center 2xl:w-max xl:w-40 lg:w-40 lg:visible invisible">
 						{timer == 'Error'
 							? 'Error'
 							: new Intl.DateTimeFormat('en-GB', {
@@ -64,21 +81,36 @@ export default function Navbar({ children }: React.PropsWithChildren) {
 					</span>
 					<ul>
 						{navLinks.map((link, index) => {
-							return (
-								<li className="inline mx-2" key={index}>
+							if (link.dropdown) return (
+								<li key={index} className='relative inline px-4 py-4 mx-2 rounded-lg hover:bg-pink-400 transition-colors duration-150 cursor-default group'>
+									<div style={{ left: link.posLeft }} className='absolute top-[3.4rem] z-50 h-max w-36 bg-black border-pink-400 border-[1px] rounded-md hidden group-hover:block'>
+										<ul className='py-1'>
+											{link.dropdown.map((item, index) => {
+												return <li key={index} className='flex py-0'>
+													<Link href={item.route} className='h-full w-full px-3 py-3 rounded-md text-center hover:bg-pink-400 transition-colors duration-150'>{item.name}</Link>
+												</li>
+											})}
+										</ul>
+									</div>
+									{link.name}
+								</li>
+							);
+							else return (
+								<li key={index} className="inline mx-2">
 									<Link
 										href={link.route}
 										style={{
 											background:
 												link.route == router.pathname ? 'rgb(244 114 182)' : ''
 										}}
-										className="p-4 rounded-lg hover:bg-pink-400 focus:bg-pink-400 transition-colors duration-200"
+										className="p-4 rounded-lg hover:bg-pink-400 focus:bg-pink-400 transition-colors duration-150"
 									>
 										{link.name}
 									</Link>
 								</li>
-							);
+							)
 						})}
+						
 					</ul>
 				</div>
 			</nav>
@@ -87,3 +119,16 @@ export default function Navbar({ children }: React.PropsWithChildren) {
 		</>
 	);
 }
+
+{/* <li className="inline mx-2" key={index}>
+			<Link
+				href={link.route}
+				style={{
+					background:
+						link.route == router.pathname ? 'rgb(244 114 182)' : ''
+				}}
+				className="p-4 rounded-lg hover:bg-pink-400 focus:bg-pink-400 transition-colors duration-150"
+			>
+				{link.name}
+			</Link>
+		</li> */}
