@@ -16,7 +16,10 @@ import { useLoading } from '../components/LoadingContext';
 import CancelIcon from '@mui/icons-material/Cancel';
 
 export default function PTW() {
-	const rolledTitleRef = useRef<HTMLHeadingElement>(null);
+	const rolledTitleRef = useRef('???');
+	const rolledTitleElementRef = useRef<HTMLHeadingElement>(null);
+	const onlineUsersRef = useRef<any>(null);
+	const onlineUsersElementRef = useRef<HTMLSpanElement>(null);
 	const latencyRef = useRef<HTMLSpanElement>(null);
 
 	const [responseRolled, setResponseRolled] =
@@ -37,8 +40,21 @@ export default function PTW() {
 	const { setLoading } = useLoading();
 
 	const setRolledTitle = (value: string) => {
-    rolledTitleRef.current!.innerHTML = value
+    rolledTitleElementRef.current!.innerHTML = value;
+		rolledTitleRef.current = value;
   }
+
+	const setOnlineUsers = (value: any) => {
+		if (!value) return;
+		const valueArr = Object.keys(value).map((key, index) => value[key])
+    onlineUsersRef.current = value;
+		onlineUsersElementRef.current!.innerHTML = `${valueArr.length} user(s) online`;
+  }
+
+	useEffect(() => {
+		setOnlineUsers(onlineUsersRef.current)
+		setRolledTitle(rolledTitleRef.current);
+	})
 
 	const setLatency = (value: number) => {
 		latencyRef.current!.innerHTML = `Latency: ${value.toFixed(1)}ms`;
@@ -146,6 +162,7 @@ export default function PTW() {
 			})
 			.subscribe();
 			
+		let pingInterval: ReturnType<typeof setInterval> | undefined;
 		const latencyChannel = supabase
 			.channel(`ping:${getRandomInt(1000000000)}`, {
 				config: {
@@ -153,8 +170,8 @@ export default function PTW() {
 				},	
 			})
 			.subscribe((status) => {
-				if (status = 'SUBSCRIBED') {
-					setInterval(async () => {
+				if (status == 'SUBSCRIBED') {
+					pingInterval = setInterval(async () => {
 						const begin = performance.now();
 
 						const response = await latencyChannel.send({
@@ -172,13 +189,25 @@ export default function PTW() {
 							setLatency(newLatency);
 						}
 
-					}, 1000)
+					}, 2000)
+				}
+			})
+
+		const onlineChannel = supabase.channel('online-users')
+			.on('presence', { event: 'sync' }, () => {
+				setOnlineUsers(onlineChannel.presenceState());
+			})
+			.subscribe(async (status) => {
+				if (status === 'SUBSCRIBED') {
+					const status = await onlineChannel.track({ online_at: new Date().toISOString() })
+					console.log(status)
 				}
 			})
 
 		return () => {
 			supabase.removeAllChannels();
 			clearInterval(refresh);
+			clearInterval(pingInterval);
 		};
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
@@ -329,12 +358,29 @@ export default function PTW() {
 						tableId="movies"
 					/>
 				</div>
-				<div className='fixed bottom-6 left-6 z-50 p-2 rounded-full bg-black border-pink-500 border-[1px]'>
-					<span ref={latencyRef} className='text-gray-300'></span>
-				</div>
+				<LatencyBadge />
 			</main>
 		</>
 	);
+
+	function LatencyBadge() {
+		function handleOpen(e: BaseSyntheticEvent) {
+			const target = e.target as HTMLDivElement;
+			if (target.style.width != '18rem') {
+				target.style.width = '18rem';
+			} else {
+				target.style.width = '8.4rem'
+			}
+		}
+
+		return (
+			<div onClick={handleOpen} className='fixed bottom-6 left-6 flex items-center justify-between z-50 p-2 max-h-[2.5rem] w-[8.4rem] rounded-full bg-black border-pink-500 border-[1px] whitespace-nowrap overflow-hidden cursor-pointer ease-out transition-[width]'>
+				<span ref={latencyRef} className='text-gray-300 mr-4 pointer-events-none'>Latency: -1.0ms</span>
+				<span className='text-gray-300 mx-auto pointer-events-none'> · </span>
+				<span ref={onlineUsersElementRef} className='text-gray-300 ml-4 pointer-events-none'></span>
+			</div>
+		)
+	}
 
 	function Gacha() {
 		function handleSubmit(e: BaseSyntheticEvent) {
@@ -384,7 +430,7 @@ export default function PTW() {
 		}
 
 		async function addGachaRoll() {
-			const rolledTitle = rolledTitleRef.current?.innerText;
+			const rolledTitle = rolledTitleElementRef.current?.innerText;
 			if (
 				!responseCasual ||
 				!responseNonCasual ||
@@ -552,7 +598,7 @@ export default function PTW() {
 				<h2 className="absolute top-5 p-2 text-3xl">Gacha</h2>
 				<div className="absolute top-20 flex items-center justify-center h-52 max-h-52 w-80">
 					<div className="max-h-full bg-slate-100 border-black border-solid border-[1px] overflow-auto">
-						<h3 ref={rolledTitleRef} className="p-2 text-black text-2xl text-center">???</h3>
+						<h3 ref={rolledTitleElementRef} className="p-2 text-black text-2xl text-center">???</h3>
 					</div>
 				</div>
 				<div className="absolute bottom-36">
