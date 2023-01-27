@@ -25,10 +25,6 @@ export default function Navbar({ children }: React.PropsWithChildren) {
 			]
 		},
 		{
-			name: 'Genres',
-			route: '/completed/genres'
-		},
-		{
 			name: 'PTW',
 			route: '/ptw'
 		},
