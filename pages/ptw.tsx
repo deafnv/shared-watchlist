@@ -15,8 +15,11 @@ import DoneIcon from '@mui/icons-material/Done';
 import { useLoading } from '../components/LoadingContext';
 import CancelIcon from '@mui/icons-material/Cancel';
 
+
+//! ADD PRESENCE WITH USER ICONS?, AND LATENCY
 export default function PTW() {
 	const rolledTitleRef = useRef<HTMLHeadingElement>(null);
+	const latencyRef = useRef<HTMLSpanElement>(null);
 
 	const [responseRolled, setResponseRolled] =
 		useState<Database['public']['Tables']['PTW-Rolled']['Row'][]>();
@@ -38,6 +41,10 @@ export default function PTW() {
 	const setRolledTitle = (value: string) => {
     rolledTitleRef.current!.innerHTML = value
   }
+
+	const setLatency = (value: number) => {
+		latencyRef.current!.innerHTML = `Latency: ${value.toFixed(1)}ms`;
+	}
 
 	const supabase = createClient<Database>(
 		'https://esjopxdrlewtpffznsxh.supabase.co',
@@ -141,6 +148,36 @@ export default function PTW() {
 			})
 			.subscribe();
 			
+		const latencyChannel = supabase
+			.channel(`ping:${getRandomInt(1000000000)}`, {
+				config: {
+					broadcast: { ack: true },
+				},	
+			})
+			.subscribe((status) => {
+				if (status = 'SUBSCRIBED') {
+					setInterval(async () => {
+						const begin = performance.now();
+
+						const response = await channel.send({
+							type: 'broadcast',
+							event: 'latency',
+							payload: {},
+						});
+
+						if (response !== 'ok') {
+							console.log('Ping error');
+							setLatency(-1);
+						} else {
+							const end = performance.now();
+							const newLatency = end - begin;
+							setLatency(newLatency);
+						}
+
+					}, 1000)
+				}
+			})
+
 		return () => {
 			supabase.removeAllChannels();
 			clearInterval(refresh);
@@ -293,6 +330,9 @@ export default function PTW() {
 						tableName="Movies"
 						tableId="movies"
 					/>
+				</div>
+				<div className='fixed bottom-6 left-6 z-50 p-2 rounded-full bg-black border-pink-500 border-[1px]'>
+					<span ref={latencyRef} className='text-gray-300'></span>
 				</div>
 			</main>
 		</>
