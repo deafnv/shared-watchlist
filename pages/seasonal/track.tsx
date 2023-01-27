@@ -10,6 +10,7 @@ import { useLoading } from '../../components/LoadingContext';
 import { BaseSyntheticEvent, useEffect, useState, useRef } from 'react';
 import EditIcon from '@mui/icons-material/Edit';
 import CloseIcon from '@mui/icons-material/Close';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
 
 export const getStaticProps = async (context: GetStaticPropsContext) => {
 	const supabase = createClient<Database>(
@@ -34,10 +35,18 @@ export default function SeasonalDetails({
 	res: Database['public']['Tables']['SeasonalDetails']['Row'][];
 }) {
 	const editEpisodesCurrentRef = useRef<HTMLDivElement>(null);
+	const contextMenuRef = useRef<HTMLDivElement>(null);
 
 	const [response, setResponse] = useState(res);
 	const [validateArea, setValidateArea] = useState('');
-	const [editEpisodesCurrent, setEditEpisodesCurrent] = useState<Database['public']['Tables']['SeasonalDetails']['Row'] | null>(null)
+	const [editEpisodesCurrent, setEditEpisodesCurrent] = useState<Database['public']['Tables']['SeasonalDetails']['Row'] | null>(null);
+	const [contextMenu, setContextMenu] = useState<{
+		top: any;
+		left: any;
+		display: any;
+		currentItem: Database['public']['Tables']['SeasonalDetails']['Row'] | null;
+	}>({ top: 0, left: 0, display: 'none', currentItem: null });
+
 	const router = useRouter(); 
 	const { setLoading } = useLoading();
 
@@ -50,8 +59,24 @@ export default function SeasonalDetails({
 		const closeEditModal = (e: KeyboardEvent) => {
 			if (e.key == 'Escape' && editEpisodesCurrentRef.current) setEditEpisodesCurrent(null);
 		}
+		
+		const closeContextMenu = (e: any) => {
+			if (
+				e.target.tagName !== 'svg' &&
+				!contextMenuRef.current?.contains(e.target) &&
+				contextMenuRef.current?.style.display == 'block'
+			) {
+				setContextMenu({ top: 0, left: 0, display: 'none', currentItem: null });
+			}
+		}
 
 		document.addEventListener('keydown', closeEditModal);
+		document.addEventListener('click', closeContextMenu);
+
+		return () => {
+			document.removeEventListener('keydown', closeEditModal);
+			document.removeEventListener('click', closeContextMenu);
+		}
 	}, [])
 
 	return (
@@ -86,14 +111,22 @@ export default function SeasonalDetails({
 						return (
 							<article
 								key={item.mal_id}
-								className="flex flex-col gap-2 p-3 bg-slate-700 shadow-md shadow-gray-700 rounded-md"
+								className="relative flex flex-col gap-2 p-3 bg-slate-700 shadow-md shadow-gray-700 rounded-md group"
 							>
 								<span
 									onClick={showTitle}
-									className="h-[3rem] font-bold self-center text-center line-clamp-2"
+									className="h-[3rem] px-7 font-bold self-center text-center line-clamp-2"
 								>
 									{item.title}
 								</span>
+								<div
+									onClick={(e) => {
+										handleMenuClick(e, item);
+									}}
+									className="absolute top-3 right-3 z-10 flex items-center justify-center h-7 w-7 invisible group-hover:visible cursor-pointer rounded-full hover:bg-gray-500"
+								>
+									<MoreVertIcon />
+								</div>
 								<div className="flex">
 									<Image
 										src={
@@ -131,7 +164,7 @@ export default function SeasonalDetails({
 										{item.message?.includes('Exempt') && <span className='ml-2 text-lg font-semibold'>(Edited)</span>}
 										<div
 											onClick={() => setEditEpisodesCurrent(item)}
-											className='absolute right-4 flex items-center justify-center h-6 w-6 rounded-full cursor-pointer transition-colors duration-150 hover:bg-slate-500'
+											className='absolute right-4 flex items-center justify-center h-6 w-6 rounded-full cursor-pointer transition-colors duration-150 invisible group-hover:visible hover:bg-slate-500'
 										>
 											<EditIcon fontSize='small' className='text-slate-500 hover:text-white' />
 										</div>
@@ -143,9 +176,56 @@ export default function SeasonalDetails({
 					})}
 				</div>
 				{editEpisodesCurrent && <EditEpisodes />}
+				{contextMenu.currentItem && <ContextMenu />}
 			</main>
 		</>
 	);
+
+	function ContextMenu() {
+		return (
+			<menu
+				ref={contextMenuRef}
+				style={{
+					top: contextMenu.top,
+					left: contextMenu.left,
+					display: contextMenu.display
+				}}
+				className="absolute z-20 p-2 shadow-md shadow-gray-600 bg-slate-200 text-black rounded-sm border-black border-solid border-2 context-menu"
+			>
+				<li className="flex justify-center">
+					<span className="text-center font-semibold line-clamp-2">
+						{contextMenu.currentItem?.title}
+					</span>
+				</li>
+				<hr className="my-2 border-gray-500 border-t-[1px]" />
+				<li className="flex justify-center h-8 rounded-sm hover:bg-slate-500">
+					<button  className="w-full">
+						Details
+					</button>
+				</li>
+				<li className="flex justify-center h-8 rounded-sm hover:bg-slate-500">
+					<button  className="w-full">
+						Visit on MAL
+					</button>
+				</li>
+			</menu>
+		);
+	}
+
+	function handleMenuClick(
+		e: BaseSyntheticEvent,
+		item: Database['public']['Tables']['SeasonalDetails']['Row']
+	) {
+		const { top, left } = e.target.getBoundingClientRect();
+
+		setContextMenu({
+			...contextMenu,
+			top: top + window.scrollY,
+			left: left + window.scrollX - 240,
+			display: 'block',
+			currentItem: item
+		});
+	}
 
 	function EditEpisodes() {
 		async function handleEditSubmit(e: BaseSyntheticEvent) {
@@ -431,6 +511,6 @@ export default function SeasonalDetails({
 			}
 		}
 
-		return item1.message?.includes('Validate') ? validateForm() : null;
+		return item1.message?.includes('Validate:') ? validateForm() : null;
 	}
 }
