@@ -80,13 +80,6 @@ export default function Navbar({ children }: React.PropsWithChildren) {
 							);
 						})}
 					</ul>
-					<Link
-						href={`https://docs.google.com/spreadsheets/d/${process.env.SHEET_ID}`}
-						target="_blank"
-						className="link absolute right-8"
-					>
-						Go to Google Sheets ↗
-					</Link>
 				</div>
 			</nav>
 
