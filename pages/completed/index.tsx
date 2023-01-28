@@ -38,7 +38,7 @@ export default function Completed() {
 	const [sortMethod, setSortMethod] = useState<string>('');
 	const [isEdited, setIsEdited] = useState<string>('');
 	const [isLoadingClient, setIsLoadingClient] = useState(true);
-	const [isLoadingEditForm, setIsLoadingEditForm] = useState(false);
+	const [isLoadingEditForm, setIsLoadingEditForm] = useState<Array<string>>([]);
 	const [contextMenu, setContextMenu] = useState<{
 		top: number;
 		left: number;
@@ -285,85 +285,130 @@ export default function Completed() {
 										return (
 											<tr key={item.id} className="relative group">
 												<td
+													style={{
+														opacity: isLoadingEditForm.includes(`title_${item.id}`) ? 0.5 : 1
+													}}
 													onDoubleClick={() => {
 														setIsEdited(`title${item.id}`);
 													}}
+													className='relative'
 												>
-													{isEdited == `title${item.id}` ? (
-														editForm('title', item.id, item.title!)
-													) : item.title ? (
-														item.title
-													) : (
-														<span className="italic text-gray-400">
-															Untitled
-														</span>
-													)}
-													<div
-														onClick={(e) => {
-															handleMenuClick(e, item);
-														}}
-														className="absolute top-2 z-10 h-7 w-7 invisible group-hover:visible cursor-pointer rounded-full hover:bg-gray-500"
-													>
-														<MoreVertIcon />
-													</div>
+													<span>
+														{isEdited == `title${item.id}` ? (
+															editForm('title', item.id, item.title!)
+														) : item.title ? (
+															item.title
+														) : (
+															<span className="italic text-gray-400">
+																Untitled
+															</span>
+														)}
+														<div
+															onClick={(e) => {
+																handleMenuClick(e, item);
+															}}
+															className="absolute top-2 z-10 h-7 w-7 invisible group-hover:visible cursor-pointer rounded-full hover:bg-gray-500"
+														>
+															<MoreVertIcon />
+														</div>
+													</span>
+													{isLoadingEditForm.includes(`title_${item.id}`) && <CircularProgress size={30} className="absolute top-[20%] left-[48%]" />}
 												</td>
 												<td
+													style={{
+														opacity: isLoadingEditForm.includes(`type_${item.id}`) ? 0.5 : 1
+													}}
 													onDoubleClick={() => {
 														setIsEdited(`type${item.id}`);
 													}}
-													className='hidden md:table-cell'
+													className='relative hidden md:table-cell'
 												>
-													{isEdited == `type${item.id}`
-														? editForm('type', item.id, item.type ?? '')
-														: item.type}
+													<span>
+														{isEdited == `type${item.id}`
+															? editForm('type', item.id, item.type ?? '')
+															: item.type}
+													</span>
+													{isLoadingEditForm.includes(`type_${item.id}`) && <CircularProgress size={30} className="absolute top-[20%] left-[40%]" />}
 												</td>
 												<td
+													style={{
+														opacity: isLoadingEditForm.includes(`episode_${item.id}`) ? 0.5 : 1
+													}}
 													onDoubleClick={() => {
 														setIsEdited(`episode${item.id}`);
 													}}
-													className='hidden md:table-cell'
+													className='relative hidden md:table-cell'
 												>
-													{isEdited == `episode${item.id}`
-														? editForm('episode', item.id, item.episode ?? '')
-														: item.episode}
+													<span>
+														{isEdited == `episode${item.id}`
+															? editForm('episode', item.id, item.episode ?? '')
+															: item.episode}
+													</span>
+													{isLoadingEditForm.includes(`episode_${item.id}`) && <CircularProgress size={30} className="absolute top-[20%] left-[40%]" />}
 												</td>
 												<td
+													style={{
+														opacity: isLoadingEditForm.includes(`rating1_${item.id}`) ? 0.5 : 1
+													}}
 													onDoubleClick={() => {
 														setIsEdited(`rating1${item.id}`);
 													}}
+													className='relative'
 												>
-													{isEdited == `rating1${item.id}`
-														? editForm('rating1', item.id, item.rating1 ?? '')
-														: item.rating1}
+													<span>
+														{isEdited == `rating1${item.id}`
+															? editForm('rating1', item.id, item.rating1 ?? '')
+															: item.rating1}
+													</span>
+													{isLoadingEditForm.includes(`rating1_${item.id}`) && <CircularProgress size={30} className="absolute top-[20%] left-[40%]" />}
 												</td>
 												<td
+													style={{
+														opacity: isLoadingEditForm.includes(`rating2_${item.id}`) ? 0.5 : 1
+													}}
 													onDoubleClick={() => {
 														setIsEdited(`rating2${item.id}`);
 													}}
+													className='relative'
 												>
-													{isEdited == `rating2${item.id}`
-														? editForm('rating2', item.id, item.rating2 ?? '')
-														: item.rating2}
+													<span>
+														{isEdited == `rating2${item.id}`
+															? editForm('rating2', item.id, item.rating2 ?? '')
+															: item.rating2}
+													</span>
+													{isLoadingEditForm.includes(`rating2_${item.id}`) && <CircularProgress size={30} className="absolute top-[20%] left-[40%]" />}
 												</td>
 												<td
+													style={{
+														opacity: isLoadingEditForm.includes(`start_${item.id}`) ? 0.5 : 1
+													}}
 													onDoubleClick={() => {
 														setIsEdited(`start${item.id}`);
 													}}
-													className='hidden md:table-cell'
+													className='relative hidden md:table-cell'
 												>
-													{isEdited == `start${item.id}`
-														? editForm('start', item.id, item.start ?? '')
-														: item.start}
+													<span>
+														{isEdited == `start${item.id}`
+															? editForm('start', item.id, item.start ?? '')
+															: item.start}
+													</span>
+													{isLoadingEditForm.includes(`start_${item.id}`) && <CircularProgress size={30} className="absolute top-[20%] left-[40%]" />}
 												</td>
 												<td
+													style={{
+														opacity: isLoadingEditForm.includes(`end_${item.id}`) ? 0.5 : 1
+													}}
 													onDoubleClick={() => {
 														setIsEdited(`end${item.id}`);
 													}}
-													className='hidden md:table-cell'
+													className='relative hidden md:table-cell'
 												>
-													{isEdited == `end${item.id}`
-														? editForm('end', item.id, item.end ?? '')
-														: item.end}
+													<span>
+														{isEdited == `end${item.id}`
+															? editForm('end', item.id, item.end ?? '')
+															: item.end}
+													</span>
+													{isLoadingEditForm.includes(`end_${item.id}`) && <CircularProgress size={30} className="absolute top-[20%] left-[40%]" />}
 												</td>
 											</tr>
 										);
@@ -661,7 +706,7 @@ export default function Completed() {
 
 		async function handleSubmit(event: BaseSyntheticEvent): Promise<void> {
 			event.preventDefault();
-			setIsLoadingEditForm(true);
+			setIsLoadingEditForm(isLoadingEditForm.concat(`${field}_${id}`));
 
 			try {
 				await axios.post('/api/update', {
@@ -674,9 +719,9 @@ export default function Completed() {
 				changed.find((item) => item.id === id)![field] = event.target[0].value;
 				setResponse(changed);
 				setIsEdited('');
-				setIsLoadingEditForm(false);
+				setIsLoadingEditForm(isLoadingEditForm.filter(item => item == `${field}_${id}`));
 			} catch (error) {
-				setIsLoadingEditForm(false);
+				setIsLoadingEditForm(isLoadingEditForm.filter(item => item == `${field}_${id}`));
 				alert(error);
 				return;
 			}
@@ -684,13 +729,10 @@ export default function Completed() {
 
 		return (
 			<div className="flex items-center justify-center relative w-full">
-				{isLoadingEditForm ? (
-					<CircularProgress size={30} className="absolute" />
-				) : null}
 				<div
 					style={{
-						opacity: isLoadingEditForm ? 0.5 : 1,
-						pointerEvents: isLoadingEditForm ? 'none' : 'unset'
+						opacity: isLoadingEditForm.includes(`${field}_${id}`) ? 0.5 : 1,
+						pointerEvents: isLoadingEditForm.includes(`${field}_${id}`) ? 'none' : 'unset'
 					}}
 					className="w-full"
 				>
