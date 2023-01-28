@@ -21,6 +21,7 @@ import Skeleton from '@mui/material/Skeleton';
 import { useRouter } from 'next/router';
 import EditIcon from '@mui/icons-material/Edit';
 import EditModal from '../../components/EditModal';
+import SearchIcon from '@mui/icons-material/Search';
 
 //! Non-null assertion for the response state variable here will throw some errors if it does end up being null, fix maybe.
 //! ISSUES:
@@ -38,7 +39,6 @@ export default function Completed() {
 	const [isEdited, setIsEdited] = useState<string>('');
 	const [isLoadingClient, setIsLoadingClient] = useState(true);
 	const [isLoadingEditForm, setIsLoadingEditForm] = useState(false);
-	const { setLoading } = useLoading();
 	const [contextMenu, setContextMenu] = useState<{
 		top: any;
 		left: any;
@@ -46,7 +46,9 @@ export default function Completed() {
 		currentItem: Database['public']['Tables']['Completed']['Row'] | null;
 	}>({ top: 0, left: 0, display: 'none', currentItem: null });
 	const [detailsModal, setDetailsModal] = useState<Database['public']['Tables']['Completed']['Row'] | null>(null);
-	
+	const [width, setWidth] = useState<number>(0);
+	const { setLoading } = useLoading();
+
 	const router = useRouter();
 
 	const supabase = createClient<Database>(
@@ -80,7 +82,7 @@ export default function Completed() {
 			3500000
 		);
 
-		document.addEventListener('click', (e: any) => {
+		const resetEditContextMenu = (e: any) => {
 			if (e.target?.tagName !== 'INPUT' && isEdited) {
 				setIsEdited('');
 			}
@@ -91,10 +93,17 @@ export default function Completed() {
 			) {
 				setContextMenu({ top: 0, left: 0, display: 'none', currentItem: null });
 			}
-		});
-		window.addEventListener('focusout', () => {
+		}
+
+		const resetEditNoFocus = () => {
 			setIsEdited('');
-		});
+		}
+
+		const handleWindowResize = () => setWidth(window.innerWidth)
+		
+		document.addEventListener('click', resetEditContextMenu);	
+		window.addEventListener('focusout', resetEditNoFocus);
+    window.addEventListener("resize", handleWindowResize);
 
 		supabase
 			.channel('public:Completed')
@@ -129,6 +138,8 @@ export default function Completed() {
 		return () => {
 			supabase.removeAllChannels();
 			clearInterval(refresh);
+			document.removeEventListener('click', resetEditContextMenu);
+			window.removeEventListener('focusout', resetEditNoFocus);
 		};
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
@@ -142,7 +153,7 @@ export default function Completed() {
 				<link rel="icon" href="/favicon.ico" />
 			</Head>
 
-			<main className="flex flex-col items-center justify-center mb-24">
+			<main className="flex flex-col items-center justify-center mb-24 px-1 md:px-0">
 				<h2 className="p-2 text-3xl">
 					Completed
 					{sortMethod ? (
@@ -159,20 +170,21 @@ export default function Completed() {
 					) : null}
 				</h2>
 				<div className="flex items-center gap-2">
-					<form>
+					<form className='px-3 mb-1 bg-neutral-700 shadow-md shadow-black rounded-md'>
+						<SearchIcon />
 						<input
 							onChange={searchTable}
 							type="search"
-							placeholder="🔍︎ Search Titles"
-							className="input-text my-2 p-1 w-96 text-lg"
+							placeholder=" Search Titles"
+							className="input-text my-2 p-1 w-64 md:w-96 text-lg"
 						></input>
 					</form>
 					<button
 						onClick={addRecord}
 						title="Add new record to table"
-						className="input-submit h-3/5 p-1 px-2 text-lg rounded-md"
+						className="input-submit h-3/5 px-2 py-2 mb-1 text-lg rounded-md"
 					>
-						<AddIcon className="-translate-y-[2px]" /> Add New
+						<AddIcon fontSize='large' className="-translate-y-[2px]" /> {width > 768 ? 'Add New' : null}
 					</button>
 				</div>
 				<table>
@@ -194,8 +206,8 @@ export default function Completed() {
 									{sortSymbol('title', sortMethod)}
 								</span>
 							</th>
-							<th className="w-32">Type</th>
-							<th className="w-36">Episode(s)</th>
+							<th className="w-32 hidden md:table-cell">Type</th>
+							<th className="w-36 hidden md:table-cell">Episode(s)</th>
 							<th
 								onClick={() =>
 									sortListByRatingSupabase(
@@ -240,7 +252,7 @@ export default function Completed() {
 										setResponse
 									)
 								}
-								className="w-40 cursor-pointer"
+								className="w-40 cursor-pointer hidden md:table-cell"
 							>
 								<span>Start Date</span>
 								<span className="absolute">
@@ -257,7 +269,7 @@ export default function Completed() {
 										setResponse
 									)
 								}
-								className="w-40  cursor-pointer"
+								className="w-40 cursor-pointer hidden md:table-cell"
 							>
 								<span>End Date</span>
 								<span className="absolute">
@@ -300,6 +312,7 @@ export default function Completed() {
 													onDoubleClick={() => {
 														setIsEdited(`type${item.id}`);
 													}}
+													className='hidden md:table-cell'
 												>
 													{isEdited == `type${item.id}`
 														? editForm('type', item.id, item.type ?? '')
@@ -309,6 +322,7 @@ export default function Completed() {
 													onDoubleClick={() => {
 														setIsEdited(`episode${item.id}`);
 													}}
+													className='hidden md:table-cell'
 												>
 													{isEdited == `episode${item.id}`
 														? editForm('episode', item.id, item.episode ?? '')
@@ -336,6 +350,7 @@ export default function Completed() {
 													onDoubleClick={() => {
 														setIsEdited(`start${item.id}`);
 													}}
+													className='hidden md:table-cell'
 												>
 													{isEdited == `start${item.id}`
 														? editForm('start', item.id, item.start ?? '')
@@ -345,6 +360,7 @@ export default function Completed() {
 													onDoubleClick={() => {
 														setIsEdited(`end${item.id}`);
 													}}
+													className='hidden md:table-cell'
 												>
 													{isEdited == `end${item.id}`
 														? editForm('end', item.id, item.end ?? '')
