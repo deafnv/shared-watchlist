@@ -40,11 +40,10 @@ export default function Completed() {
 	const [isLoadingClient, setIsLoadingClient] = useState(true);
 	const [isLoadingEditForm, setIsLoadingEditForm] = useState(false);
 	const [contextMenu, setContextMenu] = useState<{
-		top: any;
-		left: any;
-		display: any;
+		top: number;
+		left: number;
 		currentItem: Database['public']['Tables']['Completed']['Row'] | null;
-	}>({ top: 0, left: 0, display: 'none', currentItem: null });
+	}>({ top: 0, left: 0, currentItem: null });
 	const [detailsModal, setDetailsModal] = useState<Database['public']['Tables']['Completed']['Row'] | null>(null);
 	const [width, setWidth] = useState<number>(0);
 	const { setLoading } = useLoading();
@@ -89,9 +88,9 @@ export default function Completed() {
 			if (
 				e.target.tagName !== 'svg' &&
 				!contextMenuRef.current?.contains(e.target) &&
-				contextMenuRef.current?.style.display == 'block'
+				contextMenuRef.current
 			) {
-				setContextMenu({ top: 0, left: 0, display: 'none', currentItem: null });
+				setContextMenu({ top: 0, left: 0, currentItem: null });
 			}
 		}
 
@@ -549,10 +548,9 @@ export default function Completed() {
 				ref={contextMenuRef}
 				style={{
 					top: contextMenu.top,
-					left: contextMenu.left,
-					display: contextMenu.display
+					left: contextMenu.left
 				}}
-				className="absolute z-20 p-2 shadow-md shadow-gray-600 bg-slate-200 text-black rounded-sm border-black border-solid border-2 context-menu"
+				className="absolute z-10 p-2 shadow-md shadow-gray-600 bg-slate-200 text-black rounded-sm border-black border-solid border-2 context-menu"
 			>
 				<li className="flex justify-center">
 					<span className="text-center font-semibold line-clamp-2">
@@ -575,6 +573,7 @@ export default function Completed() {
 
 		function handleDetails() {
 			setDetailsModal(contextMenu.currentItem);
+			setContextMenu({...contextMenu, currentItem: null});
 		}
 
 		async function handleVisit() {
@@ -596,10 +595,8 @@ export default function Completed() {
 		const { top, left } = e.target.getBoundingClientRect();
 
 		setContextMenu({
-			...contextMenu,
 			top: top + window.scrollY,
 			left: left + window.scrollX + 25,
-			display: 'block',
 			currentItem: item
 		});
 	}
