@@ -40,7 +40,7 @@ export default function CompletedDetails() {
 				<link rel="icon" href="/favicon.ico" />
 			</Head>
 
-			<main className="flex flex-col items-center justify-center p-2">
+			<main className="flex flex-col items-center justify-center px-2 py-4 md:p-2">
 				<h2 className="text-3xl">Genres</h2>
 				<span
 					onClick={() => setAdvancedSearch('block')}
@@ -48,7 +48,7 @@ export default function CompletedDetails() {
 				>
 					Advanced Search
 				</span>
-				<div className="grid grid-cols-3 gap-x-24 gap-y-3">
+				<div className="grid grid-cols-3 gap-x-12 md:gap-x-24 gap-y-3">
 					{response?.map((item, index) => {
 						return (
 							<Link
