@@ -47,6 +47,7 @@ export default async function BatchUpdateSheet(
 
 			await supabase.from('SeasonalDetails').upsert(anime);
 
+			await res.revalidate('/seasonal/track');
 			return res.status(200).send(anime);
 		} catch (error) {
 			console.log(error);

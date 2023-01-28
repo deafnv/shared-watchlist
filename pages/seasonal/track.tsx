@@ -288,7 +288,6 @@ export default function SeasonalDetails({
 					id: editEpisodesCurrent?.mal_id,
 					compare: 'mal_id'
 				});
-				await axios.get('/api/seasonaldetails/revalidate')
 				router.reload();
 			} 
 			catch (error) {
@@ -353,7 +352,6 @@ export default function SeasonalDetails({
 		try {
 			setLoading(true);
 			await axios.get('/api/seasonaldetails/loadtracker');
-			await axios.get('/api/seasonaldetails/revalidate');
 			router.reload();
 		} catch (error) {
 			setLoading(false);
@@ -365,7 +363,6 @@ export default function SeasonalDetails({
 		try {
 			setLoading(true);
 			await axios.get('/api/seasonaldetails/refreshseasonal');
-			await axios.get('/api/seasonaldetails/revalidate');
 			router.reload();
 		} catch (error) {
 			setLoading(false);
@@ -447,7 +444,6 @@ export default function SeasonalDetails({
 					id: item1.id,
 					mal_id: idInput
 				});
-				await axios.get('/api/seasonaldetails/revalidate');
 				router.reload();
 			} catch (error) {
 				setLoading(false);
@@ -464,8 +460,6 @@ export default function SeasonalDetails({
 					id: item1.mal_id,
 					compare: 'mal_id'
 				});
-
-				await axios.get('/api/seasonaldetails/revalidate');
 
 				const changed = response.slice();
 				changed.find((item) => item.id === item1.id)!['message'] = '';

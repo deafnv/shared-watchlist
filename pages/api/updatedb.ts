@@ -20,6 +20,8 @@ export default async function UpdateDatabase(
         .update(content)
         .eq(compare, id);
 			
+			//* This part might be unnecessary for some calls to this endpoint, but saves space
+			await res.revalidate('/seasonal/track');
 			return res.status(200).send('OK');
 		} catch (error) {
 			console.log(error);

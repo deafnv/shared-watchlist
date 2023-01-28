@@ -43,6 +43,7 @@ export default async function EpisodeTracker(
 
 		await supabase.from('SeasonalDetails').upsert(relevantAnimes);
 
+		await res.revalidate('/seasonal/track');
 		return res.status(200).send(relevantAnimes);
 	} catch (error) {
 		console.log(error);

@@ -86,6 +86,7 @@ export default async function RefreshSeasonal(
 
 		await supabase.from('SeasonalDetails').upsert(malResponse);
 
+		await res.revalidate('/seasonal/track');
 		return res.status(200).send(malResponse);
 	} catch (error) {
 		console.log(error);
