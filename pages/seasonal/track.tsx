@@ -36,16 +36,22 @@ export default function SeasonalDetails({
 }) {
 	const editEpisodesCurrentRef = useRef<HTMLDivElement>(null);
 	const contextMenuRef = useRef<HTMLDivElement>(null);
+	const refreshReloadMenuRef = useRef<HTMLDivElement>(null);
+	const refreshReloadMenuButtonRef = useRef<HTMLDivElement>(null);
 
 	const [response, setResponse] = useState(res);
 	const [validateArea, setValidateArea] = useState('');
 	const [editEpisodesCurrent, setEditEpisodesCurrent] = useState<Database['public']['Tables']['SeasonalDetails']['Row'] | null>(null);
 	const [contextMenu, setContextMenu] = useState<{
-		top: any;
-		left: any;
-		display: any;
+		top: number;
+		left: number;
 		currentItem: Database['public']['Tables']['SeasonalDetails']['Row'] | null;
-	}>({ top: 0, left: 0, display: 'none', currentItem: null });
+	}>({ top: 0, left: 0, currentItem: null });
+	const [refreshReloadMenu, setRefreshReloadMenu] = useState<{
+		top: number;
+		left: number;
+		display: string;
+	}>({ top: 0, left: 0, display: 'none' });
 
 	const router = useRouter(); 
 	const { setLoading } = useLoading();
@@ -60,22 +66,29 @@ export default function SeasonalDetails({
 			if (e.key == 'Escape' && editEpisodesCurrentRef.current) setEditEpisodesCurrent(null);
 		}
 		
-		const closeContextMenu = (e: any) => {
+		const closeMenus = (e: any) => {
 			if (
 				e.target.tagName !== 'svg' &&
 				!contextMenuRef.current?.contains(e.target) &&
-				contextMenuRef.current?.style.display == 'block'
+				contextMenuRef.current
 			) {
-				setContextMenu({ top: 0, left: 0, display: 'none', currentItem: null });
+				setContextMenu({ top: 0, left: 0, currentItem: null });
+			}
+			if (
+				e.target.parentNode !== refreshReloadMenuButtonRef.current &&
+				!refreshReloadMenuRef.current?.contains(e.target) &&
+				refreshReloadMenuRef.current
+			) {
+				setRefreshReloadMenu({ top: 0, left: 0, display: 'none' });
 			}
 		}
 
 		document.addEventListener('keydown', closeEditModal);
-		document.addEventListener('click', closeContextMenu);
+		document.addEventListener('click', closeMenus);
 
 		return () => {
 			document.removeEventListener('keydown', closeEditModal);
-			document.removeEventListener('click', closeContextMenu);
+			document.removeEventListener('click', closeMenus);
 		}
 	}, [])
 
@@ -89,23 +102,16 @@ export default function SeasonalDetails({
 			</Head>
 
 			<main className="flex flex-col items-center justify-center p-6">
-				<div className=" flex gap-2">
-					<button
-						onClick={refresh}
-						title="Refresh episode tracking"
-						className="absolute top-20 left-8 input-submit px-2 p-1"
+				<div className='relative'>
+					<h2 className="mb-6 text-3xl">Seasonal Details</h2>
+					<div
+						ref={refreshReloadMenuButtonRef}
+						onClick={handleRefreshReloadMenu}
+						className="absolute top-[0.3rem] -right-10 z-10 flex items-center justify-center h-7 w-7 cursor-pointer rounded-full hover:bg-gray-500"
 					>
-						Refresh
-					</button>
-					<button
-						onClick={reload}
-						title="Reload current season data from sheet"
-						className="input-submit absolute right-8 md:right-auto md:left-32 md:top-20 px-2 p-1"
-					>
-						Reload
-					</button>
+						<MoreVertIcon sx={{ fontSize: 28 }} />
+					</div>
 				</div>
-				<h2 className="mb-6 text-3xl">Seasonal Details</h2>
 				<div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
 					{response.map((item) => {
 						return (
@@ -137,19 +143,19 @@ export default function SeasonalDetails({
 										width={150}
 									/>
 									<div className="flex flex-col items-center gap-1 justify-center w-full">
-										<span>
+										<span className='text-center'>
 											<span className="font-semibold">Episodes: </span>
 											{item.num_episodes ? item.num_episodes : 'Unknown'}
 										</span>
-										<span style={{ textTransform: 'capitalize' }}>
+										<span style={{ textTransform: 'capitalize' }} className='text-center'>
 											<span className="font-semibold">Status: </span>
 											{item.status?.split('_').join(' ')}
 										</span>
-										<span>
+										<span className='text-center'>
 											<span className="font-semibold">Start Date: </span>
 											{item.start_date ? item.start_date : 'Unknown'}
 										</span>
-										<span style={{ textTransform: 'capitalize' }}>
+										<span style={{ textTransform: 'capitalize' }} className='text-center'>
 											<span className="font-semibold">Broadcast: </span>
 											{item.broadcast ?? 'Unknown'}
 										</span>
@@ -181,9 +187,50 @@ export default function SeasonalDetails({
 				</div>
 				{editEpisodesCurrent && <EditEpisodes />}
 				{contextMenu.currentItem && <ContextMenu />}
+				{refreshReloadMenu.display == 'block' && <RefreshReloadMenu />}
 			</main>
 		</>
 	);
+
+	function RefreshReloadMenu() {
+		return (
+			<menu
+				ref={refreshReloadMenuRef}
+				style={{
+					top: refreshReloadMenu.top,
+					left: refreshReloadMenu.left
+				}}
+				className="absolute z-20 p-2 shadow-md shadow-black bg-black border-pink-400 border-[1px] rounded-md refresh-reload-menu"
+			>
+				<li className="flex justify-center py-2 h-fit rounded-md hover:bg-pink-400">
+					<button 
+						onClick={refresh} 
+						className="w-full"
+					>
+						Refresh episode tracking
+					</button>
+				</li>
+				<li className="flex justify-center py-2 h-fit rounded-md hover:bg-pink-400">
+					<button 
+						onClick={reload} 
+						className="w-full"
+					>
+						Reload current season data from sheet
+					</button>
+				</li>
+			</menu>
+		);
+	}
+
+	function handleRefreshReloadMenu(e: BaseSyntheticEvent) {
+		const { top, left } = e.target.getBoundingClientRect();
+
+		setRefreshReloadMenu({
+			top: top + window.scrollY,
+			left: left + window.scrollX - 240,
+			display: 'block',
+		});
+	}
 
 	function ContextMenu() {
 		return (
@@ -191,8 +238,7 @@ export default function SeasonalDetails({
 				ref={contextMenuRef}
 				style={{
 					top: contextMenu.top,
-					left: contextMenu.left,
-					display: contextMenu.display
+					left: contextMenu.left
 				}}
 				className="absolute z-20 p-2 shadow-md shadow-gray-600 bg-slate-200 text-black rounded-sm border-black border-solid border-2 context-menu"
 			>
@@ -226,7 +272,6 @@ export default function SeasonalDetails({
 			...contextMenu,
 			top: top + window.scrollY,
 			left: left + window.scrollX - 240,
-			display: 'block',
 			currentItem: item
 		});
 	}
