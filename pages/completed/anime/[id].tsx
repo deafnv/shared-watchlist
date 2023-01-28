@@ -60,7 +60,6 @@ export default function CompletedPage({ id }: { id: number }) {
 				.eq('id', id);
 
 			setResponse(data!);
-			console.log(data);
 		};
 		getData();
 		// eslint-disable-next-line react-hooks/exhaustive-deps
@@ -76,14 +75,16 @@ export default function CompletedPage({ id }: { id: number }) {
 			</Head>
 
 			<main className="flex flex-col items-center justify-center mx-auto mb-16 px-12 py-6 md:w-3/5 sm:w-full">
-				<h3 className="p-2 text-2xl font-semibold text-center">
-					{response?.[0].title}
-				</h3>
-				<div
-					onClick={() => editModalRef.current!.style.display = 'block'}
-					className='absolute top-24 right-96 flex items-center justify-center h-11 w-11 rounded-full cursor-pointer transition-colors duration-150 hover:bg-slate-500'
-				>
-					<EditIcon fontSize='large' />
+				<div className='relative h-full'>
+					<h3 className="p-2 text-2xl font-semibold text-center">
+						{response?.[0].title}
+					</h3>
+					<div
+						onClick={() => editModalRef.current!.style.display = 'block'}
+						className='absolute -top-2 -right-12 sm:-right-20 md:top-0 md:-right-52 lg:-right-60 xl:-right-72 flex items-center justify-center h-11 w-11 rounded-full cursor-pointer transition-colors duration-150 hover:bg-slate-500'
+					>
+						<EditIcon fontSize='large' />
+					</div>
 				</div>
 				<h5 className="text-lg text-center">
 					{response?.[0].CompletedDetails.mal_alternative_title}
@@ -98,8 +99,8 @@ export default function CompletedPage({ id }: { id: number }) {
 				<p className="mb-8 text-center">
 					{response?.[0].CompletedDetails.mal_synopsis}
 				</p>
-				<div className="flex gap-16">
-					<div className="flex flex-col px-8 py-4 border-[1px] border-white">
+				<div className="flex flex-col items-center md:items-stretch md:flex-row gap-16">
+					<div className="flex flex-col items-center px-8 py-4 max-w-[95%] border-[1px] border-white">
 						<h5 className="self-center mb-4 text-xl font-semibold">Ratings</h5>
 						<table className="mb-8">
 							<tbody>
@@ -118,15 +119,15 @@ export default function CompletedPage({ id }: { id: number }) {
 						<div className="flex mb-6 gap-16">
 							<div className="flex flex-col items-center">
 								<h6 className="mb-2 font-semibold text-lg">Start</h6>
-								<span>{response?.[0].start}</span>
+								<span className='text-center'>{response?.[0].start}</span>
 							</div>
 							<div className="flex flex-col items-center">
 								<h6 className="mb-2 font-semibold text-lg">End</h6>
-								<span>{response?.[0].end}</span>
+								<span className='text-center'>{response?.[0].end}</span>
 							</div>
 						</div>
 					</div>
-					<div className="flex flex-col px-8 py-4 border-[1px] border-white">
+					<div className="flex flex-col items-center px-8 py-4 max-w-[95%] border-[1px] border-white">
 						<h5 className="self-center mb-4 text-xl font-semibold link">
 							<Link
 								href={`https://myanimelist.net/anime/${response?.[0].CompletedDetails.mal_id}`}
@@ -138,7 +139,7 @@ export default function CompletedPage({ id }: { id: number }) {
 						<div className="flex flex-grow items-center mb-6 gap-16">
 							<div className="flex flex-col items-center whitespace-nowrap">
 								<h6 className="mb-2 font-semibold text-lg">Start</h6>
-								<span>
+								<span className='text-center'>
 									{new Date(
 										response?.[0].CompletedDetails.start_date
 									).toLocaleDateString('en-US', {
@@ -150,7 +151,7 @@ export default function CompletedPage({ id }: { id: number }) {
 							</div>
 							<div className="flex flex-col items-center whitespace-nowrap">
 								<h6 className="mb-2 font-semibold text-lg">End</h6>
-								<span>
+								<span className='text-center'>
 									{new Date(
 										response?.[0].CompletedDetails.end_date
 									).toLocaleDateString('en-US', {
