@@ -5,6 +5,7 @@ import { Database } from '../../../lib/database.types';
 import Link from 'next/link';
 import DoneIcon from '@mui/icons-material/Done';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import CloseIcon from '@mui/icons-material/Close';
 
 //TODO: Sort the genres vertically in alphabetical order
 export default function CompletedDetails() {
@@ -133,8 +134,14 @@ export default function CompletedDetails() {
 						</ul>
 					</div>
 				) : (
-					<div className="fixed flex flex-col items-center gap-4 h-[95dvh] w-[45rem] px-10 py-6 bg-gray-700 rounded-md shadow-md shadow-black drop-shadow-md top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 modal">
+					<div className="fixed flex flex-col items-center gap-4 h-[95dvh] w-[45rem] max-w-[95%] px-10 py-6 bg-gray-700 rounded-md shadow-md shadow-black drop-shadow-md top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 modal">
 						<h3 className="font-semibold text-2xl">Advanced Search</h3>
+						<div
+							onClick={() => setAdvancedSearch('none')}
+							className="absolute top-5 right-6 flex items-center justify-center h-11 w-11 rounded-full cursor-pointer transition-colors duration-150 hover:bg-slate-500"
+						>
+							<CloseIcon fontSize="large" />
+						</div>
 						<span>Includes: </span>
 						<hr className="w-full border-white border-t-[1px]" />
 						<form
