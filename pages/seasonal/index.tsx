@@ -84,7 +84,7 @@ export default function Seasonal({
 				<link rel="icon" href="/favicon.ico" />
 			</Head>
 
-			<main className="flex flex-col items-center justify-center">
+			<main className="flex flex-col items-center justify-center mb-24 px-1">
 				<h2 className="p-2 text-3xl">Current Season</h2>
 				<table>
 					<tbody>
