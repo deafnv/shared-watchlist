@@ -68,6 +68,9 @@ a {
 
 * {
 	box-sizing: border-box;
+	/*? Fix for major horizontal overflow issue first noticed in /ptw on mobile */
+	max-width: 100dvw;
+	/* outline: 1px solid #f00 !important; */
 }
 
 /* @media (prefers-color-scheme: dark) {

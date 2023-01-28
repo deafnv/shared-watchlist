@@ -218,6 +218,7 @@ export default function PTW() {
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
+	//TODO: Button to add to completed
 	return (
 		<>
 			<Head>
@@ -227,9 +228,9 @@ export default function PTW() {
 				<link rel="icon" href="/favicon.ico" />
 			</Head>
 
-			<main className="flex flex-col items-center justify-center gap-4 p-6">
-				<div className="flex items-center justify-center gap-12">
-					<div className="flex flex-col items-center">
+			<main className="flex flex-col items-center justify-center gap-4 px-4 mb-24">
+				<div className="flex flex-col lg:flex-row items-center justify-center w-full gap-12">
+					<div className="flex flex-col items-center w-[30rem] lg:w-auto">
 						<h2 className="p-2 text-3xl">
 							Plan to Watch (Rolled)
 							{sortMethod ? (
@@ -256,63 +257,64 @@ export default function PTW() {
 								);
 								setReordered(false);
 							}}
-							className="flex items-center justify-center h-10 w-[30rem] bg-sky-600 cursor-pointer border-white border-solid border-[1px]"
+							className="flex items-center justify-center h-10 w-[90dvw] sm:w-[30rem] bg-sky-600 cursor-pointer border-white border-solid border-[1px]"
 						>
 							<span className="font-bold">Title</span>
 						</div>
-						{isLoadingClient ? (
-							<div className="flex flex-col items-center justify-around h-[448px] w-[30.1rem] border-white border-solid border-[1px] border-t-0">
-								{Array(8)
-									.fill('')
-									.map((item, index) => (
-										<Skeleton
-											key={index}
-											sx={{ backgroundColor: 'grey.700' }}
-											animation="wave"
-											variant="rounded"
-											width={460}
-											height={40}
-										/>
-									))}
-							</div>
-						) : (
-							<Reorder.Group
-								values={responseRolled ?? []}
-								dragConstraints={{ top: 500 }}
-								draggable={sortMethod ? true : false}
-								onReorder={(newOrder) => {
-									setResponseRolled(newOrder);
-									setReordered(true);
-								}}
-								className="w-[30rem] border-white border-solid border-[1px] border-t-0"
-							>
-								{responseRolled?.map((item, i) => {
-									return (
-										!isLoadingClient && (
-											<Reorder.Item
-												value={item}
-												key={item.id}
-												className="p-0 hover:bg-neutral-700"
+						{isLoadingClient ? 
+						<div className="flex flex-col items-center justify-around h-[448px] w-[90dvw] sm:w-[30rem] border-white border-solid border-[1px] border-t-0">
+							{Array(8)
+								.fill('')
+								.map((item, index) => (
+									<Skeleton
+										key={index}
+										sx={{ backgroundColor: 'grey.700' }}
+										animation="wave"
+										variant="rounded"
+										
+										width={460}
+										height={40}
+									/>
+								))}
+						</div>
+						 : 
+						<Reorder.Group
+							values={responseRolled ?? []}
+							dragConstraints={{ top: 500 }}
+							draggable={sortMethod ? true : false}
+							onReorder={(newOrder) => {
+								setResponseRolled(newOrder);
+								setReordered(true);
+							}}
+							className="w-[90dvw] sm:w-[30rem] border-white border-solid border-[1px] border-t-0"
+						>
+							{responseRolled?.map((item, i) => {
+								return (
+									!isLoadingClient && (
+										<Reorder.Item
+											value={item}
+											key={item.id}
+											className="p-0 hover:bg-neutral-700"
+										>
+											<div
+												style={sortMethod ? undefined : { cursor: 'move' }}
+												onDoubleClick={() => {
+													setIsEdited(`rolled_${item.title}_${item.id}`);
+												}}
+												className="p-2 text-center"
 											>
-												<div
-													style={sortMethod ? undefined : { cursor: 'move' }}
-													onDoubleClick={() => {
-														setIsEdited(`rolled_${item.title}_${item.id}`);
-													}}
-													className="p-2 text-center"
-												>
-													<span className="cursor-text">
-														{isEdited == `rolled_${item.title}_${item.id}`
-															? editForm('rolled_title', item.id, item.title!)
-															: item.title}
-													</span>
-												</div>
-											</Reorder.Item>
-										)
-									);
-								})}
-							</Reorder.Group>
-						)}
+												<span className="cursor-text">
+													{isEdited == `rolled_${item.title}_${item.id}`
+														? editForm('rolled_title', item.id, item.title!)
+														: item.title}
+												</span>
+											</div>
+										</Reorder.Item>
+									)
+								);
+							})}
+						</Reorder.Group>
+						}
 						<div
 							style={{
 								visibility: !sortMethod && reordered ? 'visible' : 'hidden'
@@ -347,7 +349,7 @@ export default function PTW() {
 					</div>
 					<Gacha />
 				</div>
-				<div className="flex gap-4">
+				<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 					<PTWTable
 						response={responseCasual}
 						tableName="Casual"
@@ -600,15 +602,15 @@ export default function PTW() {
 		}
 
 		return (
-			<div className="relative flex flex-col items-center justify-center gap-4 h-[30rem] w-[25rem] bg-slate-700 rounded-lg -translate-y-8">
+			<div className="relative flex flex-col items-center justify-center gap-4 h-[30rem] w-[80dvw] md:w-[25rem] bg-slate-700 rounded-lg -translate-y-8">
 				<h2 className="absolute top-5 p-2 text-3xl">Gacha</h2>
 				<div className="absolute top-20 flex items-center justify-center h-52 max-h-52 w-80">
-					<div className="max-h-full bg-slate-100 border-black border-solid border-[1px] overflow-auto">
+					<div className="max-h-full max-w-[90%] bg-slate-100 border-black border-solid border-[1px] overflow-auto">
 						<h3 ref={rolledTitleElementRef} className="p-2 text-black text-2xl text-center">???</h3>
 					</div>
 				</div>
 				<div ref={addGachaRollRef} className="absolute bottom-36 invisible">
-					<button onClick={addGachaRoll} className=" px-2 p-1 input-submit">
+					<button onClick={addGachaRoll} className="px-2 p-1 input-submit">
 						Add to List
 					</button>
 					<CancelIcon
@@ -673,7 +675,7 @@ export default function PTW() {
 				<table>
 					<tbody>
 						<tr>
-							<th className="w-[30rem]">
+							<th className="w-[100dvw] sm:w-[30rem]">
 								<span>Title</span>
 							</th>
 						</tr>
