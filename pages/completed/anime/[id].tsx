@@ -39,6 +39,7 @@ export default function CompletedPage({ id }: { id: number }) {
 	const editModalRef = useRef<HTMLDivElement>(null);
 
 	const [response, setResponse] = useState<any>();
+	const [genres, setGenres] = useState<Array<{ id: number; name: string | null }>>();
 	const { setLoading } = useLoading();
 
 	useEffect(() => {
@@ -59,9 +60,16 @@ export default function CompletedPage({ id }: { id: number }) {
 				)
 				.eq('id', id);
 
+			const dataGenre = await supabase
+				.from('Genres')
+				.select('*, Completed!inner( id )')
+				.eq('Completed.id', id);
+
 			setResponse(data!);
+			setGenres(dataGenre.data!);
 		};
 		getData();
+		console.log(response);	
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
@@ -128,7 +136,7 @@ export default function CompletedPage({ id }: { id: number }) {
 						</div>
 					</div>
 					<div className="flex flex-col items-center px-8 py-4 max-w-[95%] border-[1px] border-white">
-						<h5 className="self-center mb-4 text-xl font-semibold link">
+						<h5 className="self-center mb-6 text-xl font-semibold link">
 							<Link
 								href={`https://myanimelist.net/anime/${response?.[0].CompletedDetails.mal_id}`}
 								target="_blank"
@@ -136,6 +144,23 @@ export default function CompletedPage({ id }: { id: number }) {
 								MyAnimeList
 							</Link>
 						</h5>
+						<h6 className="mb-2 font-semibold text-lg">Genres</h6>
+						<span className="mb-2 text-center">
+							{genres?.map((item, index) => {
+								return (
+									<Link
+										href={`${location.origin}/completed/genres/${item.id}`}
+										key={index}
+										className="link"
+									>
+										{item.name}
+										<span className="text-white">
+											{index < genres.length - 1 ? ', ' : null}
+										</span>
+									</Link>
+								);
+							})}
+						</span>
 						<div className="flex flex-grow items-center mb-6 gap-16">
 							<div className="flex flex-col items-center whitespace-nowrap">
 								<h6 className="mb-2 font-semibold text-lg">Start</h6>
