@@ -30,6 +30,8 @@ import SearchIcon from '@mui/icons-material/Search';
 export default function Completed() {
 	const editModalRef = useRef<HTMLDivElement>(null);
 	const contextMenuRef = useRef<HTMLDivElement>(null);
+	const settingsMenuRef = useRef<HTMLDivElement>(null);
+	const settingsMenuButtonRef = useRef<HTMLDivElement>(null);
 
 	const [response, setResponse] =
 		useState<Database['public']['Tables']['Completed']['Row'][]>();
@@ -44,6 +46,11 @@ export default function Completed() {
 		left: number;
 		currentItem: Database['public']['Tables']['Completed']['Row'] | null;
 	}>({ top: 0, left: 0, currentItem: null });
+	const [settingsMenu, setSettingsMenu] = useState<{
+		top: number;
+		left: number;
+		display: string;
+	}>({ top: 0, left: 0, display: 'none' });
 	const [detailsModal, setDetailsModal] = useState<Database['public']['Tables']['Completed']['Row'] | null>(null);
 	const [width, setWidth] = useState<number>(0);
 	const { setLoading } = useLoading();
@@ -81,7 +88,7 @@ export default function Completed() {
 			3500000
 		);
 
-		const resetEditContextMenu = (e: any) => {
+		const closeMenus = (e: any) => {
 			if (e.target?.tagName !== 'INPUT' && isEdited) {
 				setIsEdited('');
 			}
@@ -92,6 +99,13 @@ export default function Completed() {
 			) {
 				setContextMenu({ top: 0, left: 0, currentItem: null });
 			}
+			if (
+				e.target.parentNode !== settingsMenuButtonRef.current &&
+				!settingsMenuRef.current?.contains(e.target) &&
+				settingsMenuRef.current
+			) {
+				setSettingsMenu({ top: 0, left: 0, display: 'none' });
+			}
 		}
 
 		const resetEditNoFocus = () => {
@@ -100,7 +114,7 @@ export default function Completed() {
 
 		const handleWindowResize = () => setWidth(window.innerWidth)
 		
-		document.addEventListener('click', resetEditContextMenu);	
+		document.addEventListener('click', closeMenus);	
 		window.addEventListener('focusout', resetEditNoFocus);
     window.addEventListener("resize", handleWindowResize);
 
@@ -137,7 +151,7 @@ export default function Completed() {
 		return () => {
 			supabase.removeAllChannels();
 			clearInterval(refresh);
-			document.removeEventListener('click', resetEditContextMenu);
+			document.removeEventListener('click', closeMenus);
 			window.removeEventListener('focusout', resetEditNoFocus);
 		};
 		// eslint-disable-next-line react-hooks/exhaustive-deps
@@ -153,21 +167,31 @@ export default function Completed() {
 			</Head>
 
 			<main className="flex flex-col items-center justify-center mb-24 px-1 md:px-0">
-				<h2 className="p-2 text-3xl">
-					Completed
-					{sortMethod ? (
-						<span
-							onClick={() => {
-								setResponse(response1);
-								setSortMethod('');
-							}}
-							className="cursor-pointer"
-						>
-							{' '}
-							↻
-						</span>
-					) : null}
-				</h2>
+				<div className='relative'>
+					<h2 className="p-2 text-3xl">
+						Completed
+						{sortMethod ? (
+							<span
+								title='Reset sort'
+								onClick={() => {
+									setResponse(response1);
+									setSortMethod('');
+								}}
+								className="cursor-pointer"
+							>
+								{' '}
+								↻
+							</span>
+						) : null}
+					</h2>
+					<div
+						ref={settingsMenuButtonRef}
+						onClick={handleSettingsMenu}
+						className="absolute top-[0.85rem] -right-6 flex items-center justify-center h-7 w-7 cursor-pointer rounded-full hover:bg-gray-500"
+					>
+						<MoreVertIcon sx={{ fontSize: 28 }} />
+					</div>
+				</div>
 				<div className="flex items-center gap-2">
 					<form className='px-3 mb-1 bg-neutral-700 shadow-md shadow-black rounded-md'>
 						<SearchIcon />
@@ -417,10 +441,54 @@ export default function Completed() {
 				</table>
 				{contextMenu.currentItem && <ContextMenu />}
 				{detailsModal && <DetailsModal />}
+				{settingsMenu.display == 'block' && <SettingsMenu />}
         <EditModal editModalRef={editModalRef} detailsModal={detailsModal} setLoading={setLoading} />
 			</main>
 		</>
 	);
+
+	function SettingsMenu() {
+		return (
+			<menu
+				ref={settingsMenuRef}
+				style={{
+					top: settingsMenu.top,
+					left: settingsMenu.left
+				}}
+				className="absolute z-20 p-2 shadow-md shadow-black bg-black border-pink-400 border-[1px] rounded-md completed-settings-menu"
+			>
+				<li className="flex justify-center py-2 h-fit rounded-md hover:bg-pink-400">
+					<button 
+						onClick={handleLoadDetails} 
+						className="w-full"
+					>
+						Load details
+					</button>
+				</li>
+			</menu>
+		);
+
+		async function handleLoadDetails() {
+			setLoading(true);
+			try {
+				await axios.get('/api/completed/loadcompleteddetails');
+				setLoading(false);
+			} catch (error) {
+				setLoading(false);
+				alert(error);
+			}
+		}
+	}
+
+	function handleSettingsMenu(e: BaseSyntheticEvent) {
+		const { top, left } = e.target.getBoundingClientRect();
+
+		setSettingsMenu({
+			top: top + window.scrollY,
+			left: left + window.scrollX - 160,
+			display: 'block',
+		});
+	}
 
 	function DetailsModal() {
 		const [details, setDetails] = useState<

@@ -19,7 +19,7 @@ export default async function UpdateSheet(
 			await sheets.spreadsheets.values.update({
 				spreadsheetId: process.env.SHEET_ID,
 				range: cell,
-				valueInputOption: 'RAW',
+				valueInputOption: 'USER_ENTERED',
 				requestBody: {
 					values: [[content]]
 				}
