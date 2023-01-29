@@ -14,6 +14,7 @@ import { CircularProgress, Skeleton } from '@mui/material';
 import DoneIcon from '@mui/icons-material/Done';
 import { useLoading } from '../components/LoadingContext';
 import CancelIcon from '@mui/icons-material/Cancel';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
 
 export default function PTW() {
 	const rolledTitleRef = useRef('???');
@@ -22,6 +23,7 @@ export default function PTW() {
 	const onlineUsersElementRef = useRef<HTMLSpanElement>(null);
 	const latencyRef = useRef<HTMLSpanElement>(null);
 	const addGachaRollRef = useRef<HTMLDivElement>(null);
+	const contextMenuRef = useRef<HTMLDivElement>(null);
 
 	const [responseRolled, setResponseRolled] =
 		useState<Database['public']['Tables']['PTW-Rolled']['Row'][]>();
@@ -38,6 +40,11 @@ export default function PTW() {
 	const [reordered, setReordered] = useState(false);
 	const [isLoadingClient, setIsLoadingClient] = useState(true);
 	const [isLoadingEditForm, setIsLoadingEditForm] = useState(false);
+	const [contextMenu, setContextMenu] = useState<{
+		top: number;
+		left: number;
+		currentItem: Database['public']['Tables']['PTW-Rolled']['Row'] | null;
+	}>({ top: 0, left: 0, currentItem: null });
 	const { setLoading } = useLoading();
 
 	const setRolledTitle = (value: string) => {
@@ -109,16 +116,31 @@ export default function PTW() {
 			3500000
 		);
 
-		document.addEventListener('click', (e: any) => {
-			if (e.target?.tagName === 'INPUT') return;
+		const resetOnClickOut = (e: any) => {
+			if (e.target?.tagName !== 'INPUT') setIsEdited('');
+			if (e.target?.tagName !== 'INPUT' && isEdited) {
+				setIsEdited('');
+			}
+			if (
+				e.target.tagName !== 'svg' &&
+				!contextMenuRef.current?.contains(e.target) &&
+				contextMenuRef.current
+			) {
+				setContextMenu({ top: 0, left: 0, currentItem: null });
+			}
+		}
+
+		const resetEditedOnFocusOut = () => {
 			setIsEdited('');
-		});
-		window.addEventListener('focusout', () => {
-			setIsEdited('');
-		});
-		window.addEventListener('keydown', (e) => {
+		}
+		
+		const resetEditedOnEscape = (e: KeyboardEvent) => {
 			if (e.key === 'Escape') setIsEdited('');
-		});
+		}
+
+		document.addEventListener('click', resetOnClickOut);
+		window.addEventListener('focusout', resetEditedOnFocusOut);
+		window.addEventListener('keydown', resetEditedOnEscape);
 
 		supabase
 			.channel('*')
@@ -212,13 +234,17 @@ export default function PTW() {
 
 		return () => {
 			supabase.removeAllChannels();
+			//? Not sure why this needs to be unsubscribed even with remove all channels
+			latencyChannel.unsubscribe();
 			clearInterval(refresh);
 			clearInterval(pingInterval);
+			document.removeEventListener('click', resetOnClickOut);
+			window.removeEventListener('focusout', resetEditedOnFocusOut);
+			window.removeEventListener('keydown', resetEditedOnEscape);
 		};
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
-	//TODO: Button to add to completed
 	return (
 		<>
 			<Head>
@@ -230,8 +256,8 @@ export default function PTW() {
 
 			<main className="flex flex-col items-center justify-center gap-4 px-4 mb-24">
 				<div className="flex flex-col lg:flex-row items-center justify-center w-full gap-12">
-					<div className="flex flex-col items-center w-[30rem] lg:w-auto">
-						<h2 className="p-2 text-3xl">
+					<div className="flex flex-col items-center min-h-[40rem] w-[30rem] lg:w-auto">
+						<h2 className="p-2 mt-5 text-3xl">
 							Plan to Watch (Rolled)
 							{sortMethod ? (
 								<span
@@ -301,13 +327,21 @@ export default function PTW() {
 												onDoubleClick={() => {
 													setIsEdited(`rolled_${item.title}_${item.id}`);
 												}}
-												className="p-2 text-center"
+												className="relative p-2 text-center group"
 											>
 												<span className="cursor-text">
 													{isEdited == `rolled_${item.title}_${item.id}`
 														? editForm('rolled_title', item.id, item.title!)
 														: item.title}
 												</span>
+												<div
+													onClick={(e) => {
+														handleMenuClick(e, item);
+													}}
+													className="absolute top-2 z-10 h-7 w-7 invisible group-hover:visible cursor-pointer rounded-full hover:bg-gray-500"
+												>
+													<MoreVertIcon />
+												</div>
 											</div>
 										</Reorder.Item>
 									)
@@ -367,9 +401,60 @@ export default function PTW() {
 					/>
 				</div>
 				<LatencyBadge />
+				{contextMenu.currentItem && <ContextMenu />}
 			</main>
 		</>
 	);
+
+	function ContextMenu() {
+		return (
+			<menu
+				ref={contextMenuRef}
+				style={{
+					top: contextMenu.top,
+					left: contextMenu.left
+				}}
+				className="absolute z-10 p-2 shadow-md shadow-gray-600 bg-slate-200 text-black rounded-sm border-black border-solid border-2 context-menu"
+			>
+				<li className="flex justify-center">
+					<span className="text-center font-semibold line-clamp-2">
+						{contextMenu.currentItem?.title}
+					</span>
+				</li>
+				<hr className="my-2 border-gray-500 border-t-[1px]" />
+				<li className="flex justify-center h-8 rounded-sm hover:bg-slate-500">
+					<button onClick={addToCompleted} className="w-full">
+						Add to Completed
+					</button>
+				</li>
+			</menu>
+		);
+
+		async function addToCompleted() {
+			setLoading(true);
+			try {
+				await axios.post('/api/ptw/addtocompleted', {
+					content: responseRolled,
+					id: contextMenu.currentItem?.id
+				});
+				setLoading(false);
+			} 
+			catch (error) {
+				setLoading(false);
+				alert(error);
+			}
+		}
+	}
+
+	function handleMenuClick(e: BaseSyntheticEvent, item: Database['public']['Tables']['PTW-Rolled']['Row']) {
+		const { top, left } = e.target.getBoundingClientRect();
+
+		setContextMenu({
+			top: top + window.scrollY,
+			left: left + window.scrollX + 25,
+			currentItem: item
+		});
+	}
 
 	function LatencyBadge() {
 		function handleOpen(e: BaseSyntheticEvent) {
