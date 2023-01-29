@@ -129,6 +129,8 @@ export const sortSymbol = (type: string, sortMethod: string) => {
 export const initialTitleItemSupabase = {
 	end: '',
 	episode: '',
+	episode_actual: 0,
+	episode_total: 0,
 	id: 0,
 	notes: '',
 	rating1: '',
@@ -140,6 +142,7 @@ export const initialTitleItemSupabase = {
 	start: '',
 	title: '',
 	type: '',
+	type_conv: [''],
 	startconv: 0,
 	endconv: 0
 };
