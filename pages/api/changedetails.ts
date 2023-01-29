@@ -17,7 +17,7 @@ export default async function BatchUpdateSheet(
 				{
 					headers: { 'X-MAL-CLIENT-ID': process.env.MAL_CLIENT_ID },
 					params: {
-						fields: 'alternative_titles,start_date,end_date,genres,synopsis'
+						fields: 'alternative_titles,start_date,end_date,genres,synopsis,average_episode_duration'
 					}
 				}
 			);
@@ -30,7 +30,8 @@ export default async function BatchUpdateSheet(
         mal_id: parseInt(data?.id),
         mal_title: data?.title,
         mal_synopsis: data?.synopsis ?? '',
-        start_date: data?.start_date ?? ''
+        start_date: data?.start_date ?? '',
+				average_episode_duration: data?.average_episode_duration ?? 0
       }
       
 			//* Through testing, these API routes with restricted queries like UPDATE, DELETE, or INSERT fails silently if the public API key is provided instead of the service key

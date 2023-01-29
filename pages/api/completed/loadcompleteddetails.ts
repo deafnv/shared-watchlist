@@ -57,7 +57,8 @@ export default async function RefreshSeasonal(
 						mal_id: -1,
 						mal_title: '',
 						mal_synopsis: '',
-						start_date: ''
+						start_date: '',
+						average_episode_duration: -1
 					};
 				}
 				const { data } = await axios.get(
@@ -71,7 +72,7 @@ export default async function RefreshSeasonal(
 						headers: { 'X-MAL-CLIENT-ID': process.env.MAL_CLIENT_ID },
 						params: {
 							limit: 5,
-							fields: 'alternative_titles,start_date,end_date,genres,synopsis'
+							fields: 'alternative_titles,start_date,end_date,genres,synopsis,average_episode_duration'
 						}
 					}
 				);
@@ -97,7 +98,8 @@ export default async function RefreshSeasonal(
 					mal_id: parseInt(data?.data[0].node.id),
 					mal_title: data?.data[0].node.title,
 					mal_synopsis: data?.data[0].node.synopsis ?? '',
-					start_date: data?.data[0].node.start_date ?? ''
+					start_date: data?.data[0].node.start_date ?? '',
+					average_episode_duration: data?.data[0].node.average_episode_duration ?? 0
 				};
 			})
 		);
