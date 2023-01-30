@@ -3,7 +3,7 @@ import Head from "next/head";
 import { useEffect, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { Database } from "../../lib/database.types";
-import { Bar } from "react-chartjs-2";
+import { Bar, Pie } from "react-chartjs-2";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -13,8 +13,10 @@ import {
   Title,
   Tooltip,
   Legend,
-  BarElement
+  BarElement,
+  ArcElement
 } from 'chart.js'
+import Link from "next/link";
 
 interface StatisticsProps {
   titleCount: number;
@@ -22,11 +24,15 @@ interface StatisticsProps {
   totalEpisodesWatched: number;
   totalTimeWatched: number;
   typeFreq: { [key: string]: number };
+  genreFreq: { [x: string]: number; id: number; }[];
   rating1FreqArr: Array<{ [key: number]: number }>;
   rating2FreqArr: Array<{ [key: number]: number }>;
   rating1Mean: number;
   rating2Mean: number;
   ratingMalMean: number;
+  rating1Median: number;
+  rating2Median: number;
+  ratingMalMedian: number;
   rating1SD: number;
   rating2SD: number;
   ratingMalSD: number;
@@ -90,6 +96,16 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
   const ratingMalAggregateArr = data?.map((item) => (item.CompletedDetails as Database['public']['Tables']['CompletedDetails']['Row']).mal_rating)
   const ratingMalMean = ratingMalAggregateArr?.reduce((acc, curr) => acc! + curr!)! / ratingMalAggregateArr!.length
 
+  function getMedian(array: (number | null)[]) {
+    const sortedArr = array.sort((a, b) => a! - b!)
+    const midpoint = Math.floor(sortedArr.length / 2)
+    const median = sortedArr.length % 2 === 1 ? sortedArr[midpoint] : (sortedArr[midpoint - 1]! + sortedArr[midpoint]!) / 2
+    return median
+  }
+  const rating1Median = getMedian(rating1AggregateArr!)
+  const rating2Median = getMedian(rating2AggregateArr!)
+  const ratingMalMedian = getMedian(ratingMalAggregateArr!)
+
   function getStandardDeviation (array: (number | null)[], mean: number) {
     const n = array.length
     return Math.sqrt(array.map(x => Math.pow(x! - mean, 2)).reduce((a, b) => a + b) / n)
@@ -98,19 +114,29 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
   const rating2SD = getStandardDeviation(rating2AggregateArr!, rating2Mean)
   const ratingMalSD = getStandardDeviation(ratingMalAggregateArr!, ratingMalMean)
 
+  const dataGenre = await supabase
+    .from('Genres')
+    .select('*, Genre_to_Titles!inner (id)')
+
+  const genreFreq = dataGenre.data?.map((item) => ({ [item.name!]: (item.Genre_to_Titles as Database['public']['Tables']['Genre_to_Titles']['Row'][]).length, id: item.id }))
+  genreFreq?.sort((a, b) => Object.values(b)[0] - Object.values(a)[0])
+
 	return {
 		props: {
-      res: data,
       titleCount: data?.length,
 			totalEpisodes,
       totalEpisodesWatched,
       totalTimeWatched,
       typeFreq,
+      genreFreq,
       rating1FreqArr,
       rating2FreqArr,
       rating1Mean,
       rating2Mean,
       ratingMalMean,
+      rating1Median,
+      rating2Median,
+      ratingMalMedian,
       rating1SD,
       rating2SD,
       ratingMalSD
@@ -119,21 +145,24 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
 };
 // TODO: add revalidate button
 export default function Statistics({
-  res,
   titleCount,
 	totalEpisodes,
   totalEpisodesWatched,
   totalTimeWatched,
   typeFreq,
+  genreFreq,
   rating1FreqArr,
   rating2FreqArr,
   rating1Mean,
   rating2Mean,
   ratingMalMean,
+  rating1Median,
+  rating2Median,
+  ratingMalMedian,
   rating1SD,
   rating2SD,
   ratingMalSD
-}: { res: any } & StatisticsProps) {
+}: { res: any } & { resGenres: any } & StatisticsProps) {
   ChartJS.register(
     CategoryScale,
     LinearScale,
@@ -142,8 +171,22 @@ export default function Statistics({
     Title,
     Tooltip,
     Legend,
-    BarElement
+    BarElement,
+    ArcElement
   )
+
+  const pieOptions = {
+    plugins: {
+      legend: {
+        labels: {
+          color: '#000000',
+          font: {
+            size: 15
+          }
+        }
+      }
+    }
+  }
 
   const barOptions = {
     responsive: true,
@@ -151,16 +194,37 @@ export default function Statistics({
     plugins: {
       legend: {
         position: 'top' as const,
+        labels: {
+          color: '#000000',
+          font: {
+            size: 13
+          }
+        }
       },
       title: {
         display: true,
-        text: 'Rating frequency',
+        text: 'Rating Distribution',
+        color: '#000000',
+        font: {
+          size: 15
+        }
       },
-      
     },
+    scales: {
+      x: {
+        ticks: {
+          color: '#000000'
+        }
+      },
+      y: {
+        ticks: {
+          color: '#000000'
+        }
+      }
+    }
   }
 
-  //TODO: Include stats for genre: rating by genre, genre count, etc.
+  //TODO: Include stats for genre: rating by genre
   return (
     <>
 			<Head>
@@ -190,34 +254,56 @@ export default function Statistics({
             <span className='text-2xl'>{totalEpisodes}</span>
           </section>
           <section className='flex flex-col items-center justify-center p-4 w-[20rem] border-[1px] border-white'>
-            <h3 className='mb-1 text-2xl font-semibold'>
+            <h3 className='mb-4 text-2xl font-semibold'>
               Total time watched
             </h3>
-            <span className='text-xl'>{Math.floor(totalTimeWatched / 60 / 60 / 24)} days</span>
-            <span className='text-xl'>{Math.floor(totalTimeWatched / 60 / 60 % 24)} hours</span>
-            <span className='text-xl'>{Math.floor(totalTimeWatched / 60 % 60)} minutes</span>
-            <span className='text-xl'>{Math.floor(totalTimeWatched % 60)} seconds</span>
+            <span className='mb-1 text-xl'>{Math.floor(totalTimeWatched / 60 / 60 / 24)} days</span>
+            <span className='mb-1 text-xl'>{Math.floor(totalTimeWatched / 60 / 60 % 24)} hours</span>
+            <span className='mb-1 text-xl'>{Math.floor(totalTimeWatched / 60 % 60)} minutes</span>
+            <span className='mb-1 text-xl'>{Math.floor(totalTimeWatched % 60)} seconds</span>
           </section>
-          <section className='flex flex-col items-center justify-center p-4 w-[20rem] border-[1px] border-white'>
+          <section className='flex flex-col items-center p-4 h-[20rem] w-[20rem] border-[1px] border-white overflow-auto'>
             <h3 className='mb-1 text-2xl font-semibold'>
-              Types count
+              Top Genres
             </h3>
-            <div className='flex gap-6'>
-              {Object.keys(typeFreq).map((key) => {
-                return (
-                  <div key={key} className='flex flex-col items-center'>
-                    <span className='text-lg font-semibold'>
-                      {key}
-                    </span>
-                    <span>
-                      {typeFreq[key]}
-                    </span> 
-                  </div>
-                )
-              })}
+            {genreFreq.map((item, index) => (
+              <div key={index} className='flex justify-between w-full p-2 border-[1px] border-white'>
+                <Link href={`/completed/genres/${item.id}`} target='_blank' className='p-2 text-lg font-semibold'>{Object.keys(item)[0]}</Link>
+                <span className='p-2 text-lg'>{Object.values(item)[0]}</span>
+              </div>
+            ))}
+          </section>
+          <section className='flex flex-col items-center justify-center h-[30rem] w-[30rem] col-span-2 p-4 border-[1px] border-white'>
+            <h3 className='mb-2 text-2xl font-semibold'>
+              Types
+            </h3>
+            <div className='p-4 h-full w-full bg-gray-400 rounded-lg'>
+              <Pie 
+                options={pieOptions} 
+                data={{
+                  labels: Object.keys(typeFreq),
+                  datasets: [
+                    {
+                      data: Object.values(typeFreq),
+                      backgroundColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)'
+                      ],
+                      borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)'
+                      ],
+                      borderWidth: 1,
+                    },
+                  ],
+                }}
+                className='mx-auto'
+              />
             </div>
           </section>
-          <section className='col-span-2 flex flex-col items-center justify-center gap-4 p-4 w-[45rem] border-[1px] border-white'>
+          <section className='col-span-2 flex flex-col items-center justify-center gap-4 p-4 w-[52rem] border-[1px] border-white'>
             <h3 className='mb-1 text-2xl font-semibold'>
               Ratings
             </h3> 
@@ -225,35 +311,28 @@ export default function Statistics({
               <tbody>
                 <tr>
                   <th colSpan={3}>Mean</th>
+                  <th colSpan={3}>Median</th>
                   <th colSpan={3}>Std. Dev.</th>
                 </tr>
                 <tr>
-                  <th>Rating1</th>
-                  <th>Rating2</th>
-                  <th>MAL Rating</th>
-                  <th>Rating1</th>
-                  <th>Rating2</th>
-                  <th>MAL Rating</th>
+                  {Array(3).fill('').map((i, index) => (
+                    <>
+                      <th>GoodTaste</th>
+                      <th>TomoLover</th>
+                      <th>MAL Rating</th>
+                    </>
+                  ))}
                 </tr>
                 <tr>
-                  <td>
-                    {rating1Mean.toFixed(2)}
-                  </td>
-                  <td>
-                    {rating2Mean.toFixed(2)}
-                  </td>
-                  <td>
-                    {ratingMalMean.toFixed(2)}
-                  </td>
-                  <td>
-                    {rating1SD.toFixed(4)}
-                  </td>
-                  <td>
-                    {rating2SD.toFixed(4)}
-                  </td>
-                  <td>
-                    {ratingMalSD.toFixed(4)}
-                  </td>
+                  <td>{rating1Mean.toFixed(2)}</td>
+                  <td>{rating2Mean.toFixed(2)}</td>
+                  <td>{ratingMalMean.toFixed(2)}</td>
+                  <td>{rating1Median.toFixed(2)}</td>
+                  <td>{rating2Median.toFixed(2)}</td>
+                  <td>{ratingMalMedian.toFixed(2)}</td>
+                  <td>{rating1SD.toFixed(4)}</td>
+                  <td>{rating2SD.toFixed(4)}</td>
+                  <td>{ratingMalSD.toFixed(4)}</td>
                 </tr>
               </tbody>
             </table>
@@ -264,7 +343,7 @@ export default function Statistics({
                   labels: rating1FreqArr.map(item => parseFloat(Object.keys(item)[0])),
                   datasets: [
                     {
-                      label: 'rating1',
+                      label: 'GoodTaste',
                       data: rating1FreqArr.map(item => Object.values(item)[0]),
                       backgroundColor: '#f55de3'
                     }
@@ -280,7 +359,7 @@ export default function Statistics({
                   labels: rating2FreqArr.map(item => parseFloat(Object.keys(item)[0])),
                   datasets: [
                     {
-                      label: 'rating2',
+                      label: 'TomoLover',
                       data: rating2FreqArr.map(item => Object.values(item)[0]),
                       backgroundColor: '#f55de3'
                     }
