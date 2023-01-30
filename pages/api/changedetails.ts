@@ -3,7 +3,7 @@ import axios from 'axios';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { Database } from '../../lib/database.types';
 
-export default async function BatchUpdateSheet(
+export default async function ChangeDetails(
 	req: NextApiRequest,
 	res: NextApiResponse
 ) {
@@ -17,10 +17,12 @@ export default async function BatchUpdateSheet(
 				{
 					headers: { 'X-MAL-CLIENT-ID': process.env.MAL_CLIENT_ID },
 					params: {
-						fields: 'alternative_titles,start_date,end_date,genres,synopsis,average_episode_duration'
+						fields: 'alternative_titles,start_date,end_date,genres,synopsis,average_episode_duration,mean'
 					}
 				}
 			);
+
+			//TODO: Add function here to add new genres if any are available. Later on, also delete genres with no entries.
 
 			const anime = {
         end_date: data?.end_date ?? '',
@@ -30,6 +32,7 @@ export default async function BatchUpdateSheet(
         mal_id: parseInt(data?.id),
         mal_title: data?.title,
         mal_synopsis: data?.synopsis ?? '',
+				mal_rating: data?.mean ?? 0,
         start_date: data?.start_date ?? '',
 				average_episode_duration: data?.average_episode_duration ?? 0
       }
