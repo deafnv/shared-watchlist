@@ -26,8 +26,10 @@ interface StatisticsProps {
   rating2FreqArr: Array<{ [key: number]: number }>;
   rating1Mean: number;
   rating2Mean: number;
+  ratingMalMean: number;
   rating1SD: number;
   rating2SD: number;
+  ratingMalSD: number;
 }
 
 export const getStaticProps = async (context: GetStaticPropsContext) => {
@@ -85,6 +87,8 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
   const rating2AggregateArr = data?.map((item) => item.rating2average)
   const rating1Mean = rating1AggregateArr?.reduce((acc, curr) => acc! + curr!)! / rating1AggregateArr!.length
   const rating2Mean = rating2AggregateArr?.reduce((acc, curr) => acc! + curr!)! / rating2AggregateArr!.length
+  const ratingMalAggregateArr = data?.map((item) => (item.CompletedDetails as Database['public']['Tables']['CompletedDetails']['Row']).mal_rating)
+  const ratingMalMean = ratingMalAggregateArr?.reduce((acc, curr) => acc! + curr!)! / ratingMalAggregateArr!.length
 
   function getStandardDeviation (array: (number | null)[], mean: number) {
     const n = array.length
@@ -92,6 +96,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
   }
   const rating1SD = getStandardDeviation(rating1AggregateArr!, rating1Mean)
   const rating2SD = getStandardDeviation(rating2AggregateArr!, rating2Mean)
+  const ratingMalSD = getStandardDeviation(ratingMalAggregateArr!, ratingMalMean)
 
 	return {
 		props: {
@@ -105,8 +110,10 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
       rating2FreqArr,
       rating1Mean,
       rating2Mean,
+      ratingMalMean,
       rating1SD,
-      rating2SD
+      rating2SD,
+      ratingMalSD
 		}
 	};
 };
@@ -122,8 +129,10 @@ export default function Statistics({
   rating2FreqArr,
   rating1Mean,
   rating2Mean,
+  ratingMalMean,
   rating1SD,
-  rating2SD
+  rating2SD,
+  ratingMalSD
 }: { res: any } & StatisticsProps) {
   ChartJS.register(
     CategoryScale,
@@ -165,112 +174,122 @@ export default function Statistics({
         <h2 className='p-2 text-3xl'>
           Statistics
         </h2>
-        <div className='flex flex-col items-center justify-center px-6 py-4 border-[1px] border-white'>
-          <h3 className='text-2xl font-semibold'>
-            Title count
-          </h3>
-          <span className='mb-2 text-2xl'>{titleCount}</span>
-          <h3 className='text-2xl font-semibold'>
-            Total episodes watched
-          </h3>
-          <span className='mb-2 text-2xl'>{totalEpisodesWatched}</span>
-          <h3 className='text-2xl font-semibold'>
-            Total episodes (including unwatched)
-          </h3>
-          <span className='text-2xl'>{totalEpisodes}</span>
-        </div>
-        <div className='flex flex-col items-center justify-center p-4 w-[20rem] border-[1px] border-white'>
-          <h3 className='mb-1 text-2xl font-semibold'>
-            Total time watched
-          </h3>
-          <span className='text-xl'>{Math.floor(totalTimeWatched / 60 / 60 / 24)} days</span>
-          <span className='text-xl'>{Math.floor(totalTimeWatched / 60 / 60 % 24)} hours</span>
-          <span className='text-xl'>{Math.floor(totalTimeWatched / 60 % 60)} minutes</span>
-          <span className='text-xl'>{Math.floor(totalTimeWatched % 60)} seconds</span>
-        </div>
-        <div className='flex flex-col items-center justify-center p-4 w-[20rem] border-[1px] border-white'>
-          <h3 className='mb-1 text-2xl font-semibold'>
-            Types count
-          </h3>
-          <div className='flex gap-6'>
-            {Object.keys(typeFreq).map((key) => {
-              return (
-                <div key={key} className='flex flex-col items-center'>
-                  <span className='text-lg font-semibold'>
-                    {key}
-                  </span>
-                  <span>
-                    {typeFreq[key]}
-                  </span> 
-                </div>
-              )
-            })}
-          </div>
-        </div>
-        <div className='flex flex-col items-center justify-center gap-4 p-4 w-[45rem] border-[1px] border-white'>
-          <h3 className='mb-1 text-2xl font-semibold'>
-            Ratings
-          </h3> 
-          <table>
-            <tbody>
-              <tr>
-                <th colSpan={2}>Mean</th>
-                <th colSpan={2}>Std. Dev.</th>
-              </tr>
-              <tr>
-                <th>Rating1</th>
-                <th>Rating2</th>
-                <th>Rating1</th>
-                <th>Rating2</th>
-              </tr>
-              <tr>
-                <td>
-                  {rating1Mean.toFixed(2)}
-                </td>
-                <td>
-                  {rating2Mean.toFixed(2)}
-                </td>
-                <td>
-                  {rating1SD.toFixed(4)}
-                </td>
-                <td>
-                  {rating2SD.toFixed(4)}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-          <div className='relative h-[20rem] w-[40rem]'>
-            <Bar 
-              options={barOptions} 
-              data={{
-                labels: rating1FreqArr.map(item => parseFloat(Object.keys(item)[0])),
-                datasets: [
-                  {
-                    label: 'rating1',
-                    data: rating1FreqArr.map(item => Object.values(item)[0]),
-                    backgroundColor: '#f55de3'
-                  }
-                ]
-              }} 
-              className='bg-gray-300 rounded-lg'
-            />
-          </div>
-          <div className='relative h-[20rem] w-[40rem]'>
-            <Bar 
-              options={barOptions} 
-              data={{
-                labels: rating2FreqArr.map(item => parseFloat(Object.keys(item)[0])),
-                datasets: [
-                  {
-                    label: 'rating2',
-                    data: rating2FreqArr.map(item => Object.values(item)[0]),
-                    backgroundColor: '#f55de3'
-                  }
-                ]
-              }} 
-              className='bg-gray-300 rounded-lg'
-            />
-          </div>
+        <div className='grid grid-cols-2 gap-4 place-items-center'>
+          <section className='col-span-2 flex flex-col items-center justify-center px-6 py-4 border-[1px] border-white'>
+            <h3 className='text-2xl font-semibold'>
+              Title count
+            </h3>
+            <span className='mb-2 text-2xl'>{titleCount}</span>
+            <h3 className='text-2xl font-semibold'>
+              Total episodes watched
+            </h3>
+            <span className='mb-2 text-2xl'>{totalEpisodesWatched}</span>
+            <h3 className='text-2xl font-semibold'>
+              Total episodes (including unwatched)
+            </h3>
+            <span className='text-2xl'>{totalEpisodes}</span>
+          </section>
+          <section className='flex flex-col items-center justify-center p-4 w-[20rem] border-[1px] border-white'>
+            <h3 className='mb-1 text-2xl font-semibold'>
+              Total time watched
+            </h3>
+            <span className='text-xl'>{Math.floor(totalTimeWatched / 60 / 60 / 24)} days</span>
+            <span className='text-xl'>{Math.floor(totalTimeWatched / 60 / 60 % 24)} hours</span>
+            <span className='text-xl'>{Math.floor(totalTimeWatched / 60 % 60)} minutes</span>
+            <span className='text-xl'>{Math.floor(totalTimeWatched % 60)} seconds</span>
+          </section>
+          <section className='flex flex-col items-center justify-center p-4 w-[20rem] border-[1px] border-white'>
+            <h3 className='mb-1 text-2xl font-semibold'>
+              Types count
+            </h3>
+            <div className='flex gap-6'>
+              {Object.keys(typeFreq).map((key) => {
+                return (
+                  <div key={key} className='flex flex-col items-center'>
+                    <span className='text-lg font-semibold'>
+                      {key}
+                    </span>
+                    <span>
+                      {typeFreq[key]}
+                    </span> 
+                  </div>
+                )
+              })}
+            </div>
+          </section>
+          <section className='col-span-2 flex flex-col items-center justify-center gap-4 p-4 w-[45rem] border-[1px] border-white'>
+            <h3 className='mb-1 text-2xl font-semibold'>
+              Ratings
+            </h3> 
+            <table>
+              <tbody>
+                <tr>
+                  <th colSpan={3}>Mean</th>
+                  <th colSpan={3}>Std. Dev.</th>
+                </tr>
+                <tr>
+                  <th>Rating1</th>
+                  <th>Rating2</th>
+                  <th>MAL Rating</th>
+                  <th>Rating1</th>
+                  <th>Rating2</th>
+                  <th>MAL Rating</th>
+                </tr>
+                <tr>
+                  <td>
+                    {rating1Mean.toFixed(2)}
+                  </td>
+                  <td>
+                    {rating2Mean.toFixed(2)}
+                  </td>
+                  <td>
+                    {ratingMalMean.toFixed(2)}
+                  </td>
+                  <td>
+                    {rating1SD.toFixed(4)}
+                  </td>
+                  <td>
+                    {rating2SD.toFixed(4)}
+                  </td>
+                  <td>
+                    {ratingMalSD.toFixed(4)}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <div className='relative h-[20rem] w-[40rem]'>
+              <Bar 
+                options={barOptions} 
+                data={{
+                  labels: rating1FreqArr.map(item => parseFloat(Object.keys(item)[0])),
+                  datasets: [
+                    {
+                      label: 'rating1',
+                      data: rating1FreqArr.map(item => Object.values(item)[0]),
+                      backgroundColor: '#f55de3'
+                    }
+                  ]
+                }} 
+                className='bg-gray-300 rounded-lg'
+              />
+            </div>
+            <div className='relative h-[20rem] w-[40rem]'>
+              <Bar 
+                options={barOptions} 
+                data={{
+                  labels: rating2FreqArr.map(item => parseFloat(Object.keys(item)[0])),
+                  datasets: [
+                    {
+                      label: 'rating2',
+                      data: rating2FreqArr.map(item => Object.values(item)[0]),
+                      backgroundColor: '#f55de3'
+                    }
+                  ]
+                }} 
+                className='bg-gray-300 rounded-lg'
+              />
+            </div>
+          </section>
         </div>
       </main>
     </>
