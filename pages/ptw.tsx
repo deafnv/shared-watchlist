@@ -70,7 +70,7 @@ export default function PTW() {
 	})
 
 	const setLatency = (value: number) => {
-		latencyRef.current!.innerHTML = `Latency: ${value.toFixed(1)}ms`;
+		if(latencyRef.current) latencyRef.current.innerHTML = `Latency: ${value.toFixed(1)}ms`;
 	}
 
 	const supabase = createClient<Database>(
