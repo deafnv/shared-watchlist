@@ -115,29 +115,41 @@ export default function Seasonal({
 									return (
 										<tr key={item.id}>
 											<td
+												style={{
+													opacity: isLoadingEditForm.includes(`seasonal_title_${item.id}`) ? 0.5 : 1
+												}}
 												onDoubleClick={() => {
 													setIsEdited(
 														`seasonal_title_${item.title}_${item.id}`
 													);
 												}}
+												className='relative'
 											>
-												{isEdited == `seasonal_title_${item.title}_${item.id}`
-													? editForm(`seasonal_title`, item.id, item.title!)
-													: item.title}
+												<span>
+													{isEdited == `seasonal_title_${item.title}_${item.id}`
+														? editForm(`seasonal_title`, item.id, item.title!)
+														: item.title}
+												</span>
+												{isLoadingEditForm.includes(`seasonal_title_${item.id}`) && <CircularProgress size={30} className="absolute top-[20%] left-[48%]" />}
 											</td>
 											<td
+												style={{
+													backgroundColor: status,
+													opacity: isLoadingEditForm.includes(`status_${item.id}`) ? 0.5 : 1
+												}}
 												onDoubleClick={() => {
 													setIsEdited(
 														`seasonal_status_${item.title}_${item.id}`
 													);
 												}}
-												style={{
-													backgroundColor: status
-												}}
+												className='relative'
 											>
-												{isEdited == `seasonal_status_${item.title}_${item.id}`
-													? editStatus(item.id)
-													: ''}
+												<span>
+													{isEdited == `seasonal_status_${item.title}_${item.id}`
+														? editStatus(item.id)
+														: ''}
+												</span>
+												{isLoadingEditForm.includes(`status_${item.id}`) && <CircularProgress size={30} className="absolute top-[20%] left-[48%]" />}
 											</td>
 										</tr>
 									);
