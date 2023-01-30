@@ -57,6 +57,7 @@ export default async function RefreshSeasonal(
 						mal_id: -1,
 						mal_title: '',
 						mal_synopsis: '',
+						mal_rating: 0,
 						start_date: '',
 						average_episode_duration: -1
 					};
@@ -72,7 +73,7 @@ export default async function RefreshSeasonal(
 						headers: { 'X-MAL-CLIENT-ID': process.env.MAL_CLIENT_ID },
 						params: {
 							limit: 5,
-							fields: 'alternative_titles,start_date,end_date,genres,synopsis,average_episode_duration'
+							fields: 'alternative_titles,start_date,end_date,genres,synopsis,average_episode_duration,mean'
 						}
 					}
 				);
@@ -98,6 +99,7 @@ export default async function RefreshSeasonal(
 					mal_id: parseInt(data?.data[0].node.id),
 					mal_title: data?.data[0].node.title,
 					mal_synopsis: data?.data[0].node.synopsis ?? '',
+					mal_rating: data?.data[0].node.mean ?? 0,
 					start_date: data?.data[0].node.start_date ?? '',
 					average_episode_duration: data?.data[0].node.average_episode_duration ?? 0
 				};
