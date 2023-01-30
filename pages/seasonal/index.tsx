@@ -15,7 +15,7 @@ export default function Seasonal({
 		useState<Database['public']['Tables']['PTW-CurrentSeason']['Row'][]>();
 	const [isEdited, setIsEdited] = useState<string>('');
 	const [isLoadingClient, setIsLoadingClient] = useState(true);
-	const [isLoadingEditForm, setIsLoadingEditForm] = useState(false);
+	const [isLoadingEditForm, setIsLoadingEditForm] = useState<Array<string>>([]);
 
 	useEffect(() => {
 		const supabase = createClient<Database>(
@@ -163,7 +163,7 @@ export default function Seasonal({
 
 		async function handleSubmit(event: BaseSyntheticEvent): Promise<void> {
 			event.preventDefault();
-			setIsLoadingEditForm(true);
+			setIsLoadingEditForm(isLoadingEditForm.concat(`${field}_${id}`));
 
 			try {
 				await axios.post('/api/update', {
@@ -177,9 +177,9 @@ export default function Seasonal({
 					event.target[0].value;
 				setResponse(changed);
 				setIsEdited('');
-				setIsLoadingEditForm(false);
+				setIsLoadingEditForm(isLoadingEditForm.filter(item => item == `${field}_${id}`));
 			} catch (error) {
-				setIsLoadingEditForm(false);
+				setIsLoadingEditForm(isLoadingEditForm.filter(item => item == `${field}_${id}`));
 				alert(error);
 				return;
 			}
@@ -187,13 +187,10 @@ export default function Seasonal({
 
 		return (
 			<div className="flex items-center justify-center relative w-full">
-				{isLoadingEditForm ? (
-					<CircularProgress size={30} className="absolute" />
-				) : null}
 				<div
 					style={{
-						opacity: isLoadingEditForm ? 0.5 : 1,
-						pointerEvents: isLoadingEditForm ? 'none' : 'unset'
+						opacity: isLoadingEditForm.includes(`seasonal_title_${id}`) ? 0.5 : 1,
+						pointerEvents: isLoadingEditForm.includes(`seasonal_title_${id}`) ? 'none' : 'unset'
 					}}
 					className="w-full"
 				>
@@ -206,6 +203,7 @@ export default function Seasonal({
 						/>
 					</form>
 				</div>
+				{isLoadingEditForm.includes(`seasonal_title_${id}`) && <CircularProgress size={30} className="absolute left-[48%]" />}
 			</div>
 		);
 	}
@@ -213,7 +211,7 @@ export default function Seasonal({
 	function editStatus(id: number) {
 		async function handleSubmit(event: BaseSyntheticEvent) {
 			event.preventDefault();
-			setIsLoadingEditForm(true);
+			setIsLoadingEditForm(isLoadingEditForm.concat(`status_${id}`));
 
 			let row = id + 2;
 			try {
@@ -228,9 +226,9 @@ export default function Seasonal({
 					event.target.childNodes[0].value;
 				setResponse(changed);
 				setIsEdited('');
-				setIsLoadingEditForm(false);
+				setIsLoadingEditForm(isLoadingEditForm.filter(item => item == `status_${id}`));
 			} catch (error) {
-				setIsLoadingEditForm(false);
+				setIsLoadingEditForm(isLoadingEditForm.filter(item => item == `status_${id}`));;
 				alert(error);
 				return;
 			}
@@ -241,13 +239,10 @@ export default function Seasonal({
 				style={{ backgroundColor: isLoadingEditForm ? 'black' : 'unset' }}
 				className="flex items-center justify-center relative w-full"
 			>
-				{isLoadingEditForm ? (
-					<CircularProgress size={30} className="absolute" />
-				) : null}
 				<div
 					style={{
-						opacity: isLoadingEditForm ? 0.5 : 1,
-						pointerEvents: isLoadingEditForm ? 'none' : 'unset'
+						opacity: isLoadingEditForm.includes(`status_${id}`) ? 0.5 : 1,
+						pointerEvents: isLoadingEditForm.includes(`status_${id}`) ? 'none' : 'unset'
 					}}
 					className="w-full"
 				>
@@ -266,6 +261,7 @@ export default function Seasonal({
 						</select>
 					</form>
 				</div>
+				{isLoadingEditForm.includes(`status_${id}`) && <CircularProgress size={30} className="absolute left-[48%]" />}
 			</div>
 		);
 	}
