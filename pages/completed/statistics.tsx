@@ -16,6 +16,20 @@ import {
   BarElement
 } from 'chart.js'
 
+interface StatisticsProps {
+  titleCount: number;
+	totalEpisodes: number;
+  totalEpisodesWatched: number;
+  totalTimeWatched: number;
+  typeFreq: { [key: string]: number };
+  rating1FreqArr: Array<{ [key: number]: number }>;
+  rating2FreqArr: Array<{ [key: number]: number }>;
+  rating1Mean: number;
+  rating2Mean: number;
+  rating1SD: number;
+  rating2SD: number;
+}
+
 export const getStaticProps = async (context: GetStaticPropsContext) => {
 	const supabase = createClient<Database>(
 		'https://esjopxdrlewtpffznsxh.supabase.co',
@@ -56,33 +70,61 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
   })
   const rating2FreqArr = Object.keys(rating2Freq).map((key: any) => ({ [key]: rating2Freq[key] })).sort((a, b) => parseFloat(Object.keys(a)[0]) - parseFloat(Object.keys(b)[0]))
 
+  const typeFreq: { [key: string]: number } = {}
+  data?.forEach((item) => {
+    item.type_conv?.map((type) => {
+      if (typeFreq[type]) {
+        typeFreq[type] += 1
+      } else {
+        typeFreq[type] = 1
+      }
+    })
+  })
+  
+  const rating1AggregateArr = data?.map((item) => item.rating1average)
+  const rating2AggregateArr = data?.map((item) => item.rating2average)
+  const rating1Mean = rating1AggregateArr?.reduce((acc, curr) => acc! + curr!)! / rating1AggregateArr!.length
+  const rating2Mean = rating2AggregateArr?.reduce((acc, curr) => acc! + curr!)! / rating2AggregateArr!.length
+
+  function getStandardDeviation (array: (number | null)[], mean: number) {
+    const n = array.length
+    return Math.sqrt(array.map(x => Math.pow(x! - mean, 2)).reduce((a, b) => a + b) / n)
+  }
+  const rating1SD = getStandardDeviation(rating1AggregateArr!, rating1Mean)
+  const rating2SD = getStandardDeviation(rating2AggregateArr!, rating2Mean)
+
 	return {
 		props: {
+      res: data,
       titleCount: data?.length,
 			totalEpisodes,
       totalEpisodesWatched,
       totalTimeWatched,
+      typeFreq,
       rating1FreqArr,
-      rating2FreqArr
+      rating2FreqArr,
+      rating1Mean,
+      rating2Mean,
+      rating1SD,
+      rating2SD
 		}
 	};
 };
 // TODO: add revalidate button
 export default function Statistics({
+  res,
   titleCount,
 	totalEpisodes,
   totalEpisodesWatched,
   totalTimeWatched,
+  typeFreq,
   rating1FreqArr,
-  rating2FreqArr
-}: {
-  titleCount: number;
-	totalEpisodes: number;
-  totalEpisodesWatched: number;
-  totalTimeWatched: number;
-  rating1FreqArr: Array<{ [key: number]: number }>;
-  rating2FreqArr: Array<{ [key: number]: number }>;
-}) {
+  rating2FreqArr,
+  rating1Mean,
+  rating2Mean,
+  rating1SD,
+  rating2SD
+}: { res: any } & StatisticsProps) {
   ChartJS.register(
     CategoryScale,
     LinearScale,
@@ -109,6 +151,7 @@ export default function Statistics({
     },
   }
 
+  //TODO: Include stats for genre: rating by genre, genre count, etc.
   return (
     <>
 			<Head>
@@ -122,18 +165,20 @@ export default function Statistics({
         <h2 className='p-2 text-3xl'>
           Statistics
         </h2>
-        <h3 className='text-2xl'>
-          Title count
-        </h3>
-        <span className='text-2xl'>{titleCount}</span>
-        <h3 className='text-2xl'>
-          Total episodes watched
-        </h3>
-        <span className='text-2xl'>{totalEpisodesWatched}</span>
-        <h3 className='text-2xl'>
-          Total episodes (including unwatched)
-        </h3>
-        <span className='text-2xl'>{totalEpisodes}</span>
+        <div className='flex flex-col items-center justify-center px-6 py-4 border-[1px] border-white'>
+          <h3 className='text-2xl font-semibold'>
+            Title count
+          </h3>
+          <span className='mb-2 text-2xl'>{titleCount}</span>
+          <h3 className='text-2xl font-semibold'>
+            Total episodes watched
+          </h3>
+          <span className='mb-2 text-2xl'>{totalEpisodesWatched}</span>
+          <h3 className='text-2xl font-semibold'>
+            Total episodes (including unwatched)
+          </h3>
+          <span className='text-2xl'>{totalEpisodes}</span>
+        </div>
         <div className='flex flex-col items-center justify-center p-4 w-[20rem] border-[1px] border-white'>
           <h3 className='mb-1 text-2xl font-semibold'>
             Total time watched
@@ -143,10 +188,57 @@ export default function Statistics({
           <span className='text-xl'>{Math.floor(totalTimeWatched / 60 % 60)} minutes</span>
           <span className='text-xl'>{Math.floor(totalTimeWatched % 60)} seconds</span>
         </div>
+        <div className='flex flex-col items-center justify-center p-4 w-[20rem] border-[1px] border-white'>
+          <h3 className='mb-1 text-2xl font-semibold'>
+            Types count
+          </h3>
+          <div className='flex gap-6'>
+            {Object.keys(typeFreq).map((key) => {
+              return (
+                <div key={key} className='flex flex-col items-center'>
+                  <span className='text-lg font-semibold'>
+                    {key}
+                  </span>
+                  <span>
+                    {typeFreq[key]}
+                  </span> 
+                </div>
+              )
+            })}
+          </div>
+        </div>
         <div className='flex flex-col items-center justify-center gap-4 p-4 w-[45rem] border-[1px] border-white'>
           <h3 className='mb-1 text-2xl font-semibold'>
             Ratings
-          </h3>
+          </h3> 
+          <table>
+            <tbody>
+              <tr>
+                <th colSpan={2}>Mean</th>
+                <th colSpan={2}>Std. Dev.</th>
+              </tr>
+              <tr>
+                <th>Rating1</th>
+                <th>Rating2</th>
+                <th>Rating1</th>
+                <th>Rating2</th>
+              </tr>
+              <tr>
+                <td>
+                  {rating1Mean.toFixed(2)}
+                </td>
+                <td>
+                  {rating2Mean.toFixed(2)}
+                </td>
+                <td>
+                  {rating1SD.toFixed(4)}
+                </td>
+                <td>
+                  {rating2SD.toFixed(4)}
+                </td>
+              </tr>
+            </tbody>
+          </table>
           <div className='relative h-[20rem] w-[40rem]'>
             <Bar 
               options={barOptions} 
