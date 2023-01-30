@@ -24,7 +24,7 @@ interface StatisticsProps {
   totalEpisodesWatched: number;
   totalTimeWatched: number;
   typeFreq: { [key: string]: number };
-  genreFreq: { [x: string]: number; id: number; }[];
+  genreFreq: { id: number; name: string | null; count: number; }[];
   rating1FreqArr: Array<{ [key: number]: number }>;
   rating2FreqArr: Array<{ [key: number]: number }>;
   rating1Mean: number;
@@ -118,8 +118,12 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
     .from('Genres')
     .select('*, Genre_to_Titles!inner (id)')
 
-  const genreFreq = dataGenre.data?.map((item) => ({ [item.name!]: (item.Genre_to_Titles as Database['public']['Tables']['Genre_to_Titles']['Row'][]).length, id: item.id }))
-  genreFreq?.sort((a, b) => Object.values(b)[0] - Object.values(a)[0])
+  const genreFreq = dataGenre.data?.map((item) => ({
+      id: item.id, 
+      name: item.name,
+      count: (item.Genre_to_Titles as Database['public']['Tables']['Genre_to_Titles']['Row'][]).length
+    }))
+  genreFreq?.sort((a, b) => b.count - a.count)
 
 	return {
 		props: {
@@ -268,8 +272,8 @@ export default function Statistics({
             </h3>
             {genreFreq.map((item, index) => (
               <div key={index} className='flex justify-between w-full p-2 border-[1px] border-white'>
-                <Link href={`/completed/genres/${item.id}`} target='_blank' className='p-2 text-lg font-semibold'>{Object.keys(item)[0]}</Link>
-                <span className='p-2 text-lg'>{Object.values(item)[0]}</span>
+                <Link href={`/completed/genres/${item.id}`} target='_blank' className='p-2 text-lg font-semibold'>{item.name}</Link>
+                <span className='p-2 text-lg'>{item.count}</span>
               </div>
             ))}
           </section>
