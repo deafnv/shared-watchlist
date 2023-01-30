@@ -39,7 +39,7 @@ export default function PTW() {
 	const [isEdited, setIsEdited] = useState<string>('');
 	const [reordered, setReordered] = useState(false);
 	const [isLoadingClient, setIsLoadingClient] = useState(true);
-	const [isLoadingEditForm, setIsLoadingEditForm] = useState(false);
+	const [isLoadingEditForm, setIsLoadingEditForm] = useState<Array<string>>([]);
 	const [contextMenu, setContextMenu] = useState<{
 		top: number;
 		left: number;
@@ -323,7 +323,10 @@ export default function PTW() {
 											className="p-0 hover:bg-neutral-700"
 										>
 											<div
-												style={sortMethod ? undefined : { cursor: 'move' }}
+												style={{
+													cursor: sortMethod ? 'unset' : 'move',
+													opacity: isLoadingEditForm.includes(`rolled_title_${item.id}`) ? 0.5 : 1
+												}}
 												onDoubleClick={() => {
 													setIsEdited(`rolled_${item.title}_${item.id}`);
 												}}
@@ -333,15 +336,16 @@ export default function PTW() {
 													{isEdited == `rolled_${item.title}_${item.id}`
 														? editForm('rolled_title', item.id, item.title!)
 														: item.title}
+													<div
+														onClick={(e) => {
+															handleMenuClick(e, item);
+														}}
+														className="absolute top-2 z-10 h-7 w-7 invisible group-hover:visible cursor-pointer rounded-full hover:bg-gray-500"
+													>
+														<MoreVertIcon />
+													</div>
 												</span>
-												<div
-													onClick={(e) => {
-														handleMenuClick(e, item);
-													}}
-													className="absolute top-2 z-10 h-7 w-7 invisible group-hover:visible cursor-pointer rounded-full hover:bg-gray-500"
-												>
-													<MoreVertIcon />
-												</div>
+												{isLoadingEditForm.includes(`rolled_title_${item.id}`) && <CircularProgress size={30} className="absolute top-[20%] left-[48%]" />}
 											</div>
 										</Reorder.Item>
 									)
@@ -770,13 +774,20 @@ export default function PTW() {
 									return (
 										<tr key={item.id}>
 											<td
+												style={{
+													opacity: isLoadingEditForm.includes(`${tableId}_title_${item.id}`) ? 0.5 : 1
+												}}
 												onDoubleClick={() => {
 													setIsEdited(`${tableId}_${item.title}_${item.id}`);
 												}}
+												className='relative'
 											>
-												{isEdited == `${tableId}_${item.title}_${item.id}`
-													? editForm(`${tableId}_title`, item.id, item.title!)
-													: item.title}
+												<span>
+													{isEdited == `${tableId}_${item.title}_${item.id}`
+														? editForm(`${tableId}_title`, item.id, item.title!)
+														: item.title}
+												</span>
+												{isLoadingEditForm.includes(`${tableId}_title_${item.id}`) && <CircularProgress size={30} className="absolute top-[20%] left-[48%]" />}
 											</td>
 										</tr>
 									);
@@ -815,7 +826,7 @@ export default function PTW() {
 
 		async function handleSubmit(event: BaseSyntheticEvent): Promise<void> {
 			event.preventDefault();
-			setIsLoadingEditForm(true);
+			setIsLoadingEditForm(isLoadingEditForm.concat(`${field}_${id}`));
 
 			try {
 				await axios.post('/api/update', {
@@ -831,7 +842,7 @@ export default function PTW() {
 							event.target[0].value;
 						setResponseRolled(changedRolled);
 						setIsEdited('');
-						setIsLoadingEditForm(false);
+						setIsLoadingEditForm(isLoadingEditForm.filter(item => item == `${field}_${id}`));
 						break;
 					case 'casual_title':
 						const changedCasual = responseCasual?.slice();
@@ -840,7 +851,7 @@ export default function PTW() {
 							event.target[0].value;
 						setResponseCasual(changedCasual);
 						setIsEdited('');
-						setIsLoadingEditForm(false);
+						setIsLoadingEditForm(isLoadingEditForm.filter(item => item == `${field}_${id}`));
 						break;
 					case 'noncasual_title':
 						const changedNonCasual = responseNonCasual?.slice();
@@ -849,7 +860,7 @@ export default function PTW() {
 							event.target[0].value;
 						setResponseNonCasual(changedNonCasual);
 						setIsEdited('');
-						setIsLoadingEditForm(false);
+						setIsLoadingEditForm(isLoadingEditForm.filter(item => item == `${field}_${id}`));
 						break;
 					case 'movies_title':
 						const changedMovies = responseMovies?.slice();
@@ -858,7 +869,7 @@ export default function PTW() {
 							event.target[0].value;
 						setResponseMovies(changedMovies);
 						setIsEdited('');
-						setIsLoadingEditForm(false);
+						setIsLoadingEditForm(isLoadingEditForm.filter(item => item == `${field}_${id}`));
 						break;
 				}
 			} catch (error) {
@@ -869,13 +880,11 @@ export default function PTW() {
 
 		return (
 			<div className="flex items-center justify-center relative w-full">
-				{isLoadingEditForm ? (
-					<CircularProgress size={30} className="absolute" />
-				) : null}
+				{isLoadingEditForm.includes(`${field}_${id}`) && <CircularProgress size={30} className="absolute left-[48%]" />}
 				<div
 					style={{
-						opacity: isLoadingEditForm ? 0.5 : 1,
-						pointerEvents: isLoadingEditForm ? 'none' : 'unset'
+						opacity: isLoadingEditForm.includes(`${field}_${id}`) ? 0.5 : 1,
+						pointerEvents: isLoadingEditForm.includes(`${field}_${id}`) ? 'none' : 'unset'
 					}}
 					className="w-full"
 				>
