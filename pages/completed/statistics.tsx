@@ -17,6 +17,7 @@ import {
   ArcElement
 } from 'chart.js'
 import Link from "next/link";
+import { mean, median, standardDeviation, variance, medianAbsoluteDeviation, sampleCorrelation, sampleCovariance } from "simple-statistics";
 
 interface StatTable {
   rating1Mean: number;
@@ -28,6 +29,18 @@ interface StatTable {
   rating1SD: number;
   rating2SD: number;
   ratingMalSD: number;
+  rating1Variance: number;
+  rating2Variance: number;
+  ratingMalVariance: number;
+  rating1MAD: number;
+  rating2MAD: number;
+  ratingMalMAD: number;
+  rating1MalCorrelation: number;
+  rating2MalCorrelation: number;
+  rating1rating2Correlation: number;
+  rating1MalCovariance: number;
+  rating2MalCovariance: number;
+  rating1rating2Covariance: number;
 }
 
 interface StatisticsProps {
@@ -96,28 +109,18 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
   
   const rating1AggregateArr = data?.map((item) => item.rating1average)
   const rating2AggregateArr = data?.map((item) => item.rating2average)
-  const rating1Mean = rating1AggregateArr?.reduce((acc, curr) => acc! + curr!)! / rating1AggregateArr!.length
-  const rating2Mean = rating2AggregateArr?.reduce((acc, curr) => acc! + curr!)! / rating2AggregateArr!.length
+  const rating1Mean = mean(rating1AggregateArr as number[])
+  const rating2Mean = mean(rating2AggregateArr as number[])
   const ratingMalAggregateArr = data?.map((item) => (item.CompletedDetails as Database['public']['Tables']['CompletedDetails']['Row']).mal_rating)
-  const ratingMalMean = ratingMalAggregateArr?.reduce((acc, curr) => acc! + curr!)! / ratingMalAggregateArr!.length
+  const ratingMalMean = mean(ratingMalAggregateArr as number[])
 
-  function getMedian(array: (number | null)[]) {
-    const sortedArr = array.sort((a, b) => a! - b!)
-    const midpoint = Math.floor(sortedArr.length / 2)
-    const median = sortedArr.length % 2 === 1 ? sortedArr[midpoint] : (sortedArr[midpoint - 1]! + sortedArr[midpoint]!) / 2
-    return median
-  }
-  const rating1Median = getMedian(rating1AggregateArr!)
-  const rating2Median = getMedian(rating2AggregateArr!)
-  const ratingMalMedian = getMedian(ratingMalAggregateArr!)
+  const rating1Median = median(rating1AggregateArr as number[])
+  const rating2Median = median(rating2AggregateArr as number[])
+  const ratingMalMedian = median(ratingMalAggregateArr as number[])
 
-  function getStandardDeviation (array: (number | null)[], mean: number) {
-    const n = array.length
-    return Math.sqrt(array.map(x => Math.pow(x! - mean, 2)).reduce((a, b) => a + b) / n)
-  }
-  const rating1SD = getStandardDeviation(rating1AggregateArr!, rating1Mean)
-  const rating2SD = getStandardDeviation(rating2AggregateArr!, rating2Mean)
-  const ratingMalSD = getStandardDeviation(ratingMalAggregateArr!, ratingMalMean)
+  const rating1SD = standardDeviation(rating1AggregateArr as number[])
+  const rating2SD = standardDeviation(rating2AggregateArr as number[])
+  const ratingMalSD = standardDeviation(ratingMalAggregateArr as number[])
 
   const dataGenre = await supabase
     .from('Genres')
@@ -155,10 +158,10 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
     return {
       id: item.id,
       name: item.name,
-      rating1mean: item.rating1agg.reduce((acc, curr) => acc + curr) / item.titlecount,
-      rating2mean: item.rating2agg.reduce((acc, curr) => acc + curr) / item.titlecount,
-      rating1median: getMedian(item.rating1agg),
-      rating2median: getMedian(item.rating2agg),
+      rating1mean: mean(item.rating1agg),
+      rating2mean: mean(item.rating2agg),
+      rating1median: median(item.rating1agg),
+      rating2median: median(item.rating2agg),
       titlecount: item.titlecount
     }
   }).sort((a, b) => b.titlecount - a.titlecount)
@@ -183,7 +186,19 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
         ratingMalMedian,
         rating1SD,
         rating2SD,
-        ratingMalSD
+        ratingMalSD,
+        rating1Variance: variance(rating1AggregateArr as number[]),
+        rating2Variance: variance(rating2AggregateArr as number[]),
+        ratingMalVariance: variance(ratingMalAggregateArr as number[]),
+        rating1MAD: medianAbsoluteDeviation(rating1AggregateArr as number[]),
+        rating2MAD: medianAbsoluteDeviation(rating2AggregateArr as number[]),
+        ratingMalMAD: medianAbsoluteDeviation(ratingMalAggregateArr as number[]),
+        rating1MalCorrelation: sampleCorrelation(rating1AggregateArr as number[], ratingMalAggregateArr as number[]),
+        rating2MalCorrelation: sampleCorrelation(rating2AggregateArr as number[], ratingMalAggregateArr as number[]),
+        rating1rating2Correlation: sampleCorrelation(rating1AggregateArr as number[], rating2AggregateArr as number[]),
+        rating1MalCovariance: sampleCovariance(rating1AggregateArr as number[], ratingMalAggregateArr as number[]),
+        rating2MalCovariance: sampleCovariance(rating2AggregateArr as number[], ratingMalAggregateArr as number[]),        
+        rating1rating2Covariance: sampleCovariance(rating1AggregateArr as number[], rating2AggregateArr as number[])
       }
 		}
 	};
@@ -406,18 +421,17 @@ export default function Statistics({
         <section className='col-span-2 flex flex-col items-center justify-center gap-4 p-4 w-[52rem] border-[1px] border-white'>
           <h3 className='mb-1 text-2xl font-semibold'>
             Ratings
-          </h3> 
+          </h3>
           <table>
+            <caption className='mb-2 text-xl font-semibold'>Central Tendency</caption>
             <tbody>
               <tr>
                 <th colSpan={3}>Mean</th>
                 <th colSpan={3}>Median</th>
-                <th colSpan={3}>Std. Dev.</th>
               </tr>
               <tr>
                 {statTable.map(item => <th key={item+'a'}>{item}</th>)}
                 {statTable.map(item => <th key={item+'b'}>{item}</th>)}
-                {statTable.map(item => <th key={item+'c'}>{item}</th>)}
               </tr>
               <tr>
                 <td>{ratingStatTable.rating1Mean.toFixed(2)}</td>
@@ -426,12 +440,60 @@ export default function Statistics({
                 <td>{ratingStatTable.rating1Median.toFixed(2)}</td>
                 <td>{ratingStatTable.rating2Median.toFixed(2)}</td>
                 <td>{ratingStatTable.ratingMalMedian.toFixed(2)}</td>
-                <td>{ratingStatTable.rating1SD.toFixed(4)}</td>
-                <td>{ratingStatTable.rating2SD.toFixed(4)}</td>
-                <td>{ratingStatTable.ratingMalSD.toFixed(4)}</td>
               </tr>
             </tbody>
           </table>
+          <table>
+            <caption className='mb-2 text-xl font-semibold'>Dispersion</caption>
+            <tbody>
+              <tr>
+                <th colSpan={3}>Standard Deviation</th>
+                <th colSpan={3}>Median Absolute Deviation</th>
+                <th colSpan={3}>Variance</th>
+              </tr>
+              <tr>
+                {statTable.map(item => <th key={item+'a'}>{item}</th>)}
+                {statTable.map(item => <th key={item+'b'}>{item}</th>)}
+                {statTable.map(item => <th key={item+'b'}>{item}</th>)}
+              </tr>
+              <tr>
+                <td>{ratingStatTable.rating1SD.toFixed(4)}</td>
+                <td>{ratingStatTable.rating2SD.toFixed(4)}</td>
+                <td>{ratingStatTable.ratingMalSD.toFixed(4)}</td>
+                <td>{ratingStatTable.rating1MAD.toFixed(4)}</td>
+                <td>{ratingStatTable.rating2MAD.toFixed(4)}</td>
+                <td>{ratingStatTable.ratingMalMAD.toFixed(4)}</td>
+                <td>{ratingStatTable.rating1Variance.toFixed(4)}</td>
+                <td>{ratingStatTable.rating2Variance.toFixed(4)}</td>
+                <td>{ratingStatTable.ratingMalVariance.toFixed(4)}</td>
+              </tr>
+            </tbody>
+          </table>
+          <table>
+            <caption className='mb-2 text-xl font-semibold'>Similarity</caption>
+            <tbody>
+              <tr>
+                <th colSpan={3}>Correlation</th>
+                <th colSpan={3}>Covariance</th>
+              </tr>
+              <tr>
+                <th>GoodTaste & MAL Rating</th>
+                <th>TomoLover & MAL Rating</th>
+                <th>GoodTaste & TomoLover</th>
+                <th>GoodTaste & MAL Rating</th>
+                <th>TomoLover & MAL Rating</th>
+                <th>GoodTaste & TomoLover</th>
+              </tr>
+              <tr>
+                <td>{ratingStatTable.rating1MalCorrelation.toFixed(4)}</td>
+                <td>{ratingStatTable.rating2MalCorrelation.toFixed(4)}</td>
+                <td>{ratingStatTable.rating1rating2Correlation.toFixed(4)}</td>
+                <td>{ratingStatTable.rating1MalCovariance.toFixed(4)}</td>
+                <td>{ratingStatTable.rating2MalCovariance.toFixed(4)}</td>
+                <td>{ratingStatTable.rating1rating2Covariance.toFixed(4)}</td>
+              </tr>
+            </tbody>
+          </table>  
           <div className='relative h-[20rem] w-[40rem]'>
             <Bar 
               options={barOptions} 
