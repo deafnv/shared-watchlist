@@ -222,6 +222,7 @@ export default function Statistics({
   )
 
   const pieOptions = {
+    maintainAspectRatio: false,
     plugins: {
       legend: {
         labels: {
@@ -271,7 +272,6 @@ export default function Statistics({
   }
 
   const statTable = ['GoodTaste', 'TomoLover', 'MAL Rating']
-  //TODO: Include stats for genre: rating by genre
   return (
     <>
 			<Head>
@@ -309,10 +309,12 @@ export default function Statistics({
             <span className='mb-1 text-xl'>{Math.floor(totalTimeWatched / 60 % 60)} minutes</span>
             <span className='mb-1 text-xl'>{Math.floor(totalTimeWatched % 60)} seconds</span>
           </section>
-          <section className='col-span-2 flex flex-col items-center p-4 h-[20rem] w-[20rem] border-[1px] border-white overflow-auto'>
-            <h3 className='mb-1 text-2xl font-semibold'>
-              Top Genres by count
-            </h3>
+          <section className='col-span-2 flex flex-col items-center h-[20rem] w-[20rem] border-[1px] border-white overflow-auto'>
+            <div className='sticky top-0 h-16 w-full p-3 bg-black'>
+              <h3 className='text-2xl font-semibold text-center'>
+                Top Genres by count
+              </h3>
+            </div>
             {genreFreq.map((item, index) => (
               <div key={index} className='flex justify-between w-full p-2 border-[1px] border-white'>
                 <Link href={`/completed/genres/${item.id}`} target='_blank' className='p-2 text-lg font-semibold link'>{item.name}</Link>
@@ -321,20 +323,22 @@ export default function Statistics({
             ))}
           </section>
         </div>
-        <section className='flex'>
-          <div className='flex flex-col items-center p-4 h-[20rem] w-[30rem] border-[1px] border-white overflow-auto'>
-            <h3 className='mb-1 text-2xl font-semibold'>
-              Top Genres by Rating (GoodTaste)
-            </h3>
+        <section className='flex gap-3 my-6'>
+          <div className='flex flex-col items-center h-[20rem] w-[30rem] border-[1px] border-white overflow-auto'>
+            <div className='sticky top-0 h-16 w-full p-3 bg-black z-10'>
+              <h3 className='mb-1 text-2xl font-semibold text-center'>
+                Top Genres by Rating (GoodTaste)
+              </h3>
+            </div>
             <div className="flex items-center justify-center w-full bg-sky-600 border-white border-solid border-[1px] border-b-0">
               <div className="grow p-3 text-lg text-center font-semibold">Title</div>
-              <div onClick={() => handleReorder(rating1ByGenre, 'rating1', setRating1ByGenre, sortMethodRating1Ref, 'mean')} className="relative p-3 w-24 text-lg text-center font-semibold cursor-pointer border-l-[1px] border-white">
+              <div onClick={() => handleSort(rating1ByGenre, 'rating1', setRating1ByGenre, sortMethodRating1Ref, 'mean')} className="relative p-3 w-24 text-lg text-center font-semibold cursor-pointer border-l-[1px] border-white">
                 Mean 
-                <span className='absolute'>{sortMethodRating1Ref.current.includes('rating1_mean') ? sortMethodRating1Ref.current.includes('asc') ? '▲' : '▼' : null}</span>
+                {sortMethodRating1Ref.current.includes('rating1_mean') && <span className='absolute'>{sortMethodRating1Ref.current.includes('asc') ? '▲' : '▼'}</span>}
               </div>
-              <div onClick={() => handleReorder(rating1ByGenre, 'rating1', setRating1ByGenre, sortMethodRating1Ref, 'median')} className="relative p-3 w-24 text-lg text-center font-semibold cursor-pointer border-l-[1px] border-white">
+              <div onClick={() => handleSort(rating1ByGenre, 'rating1', setRating1ByGenre, sortMethodRating1Ref, 'median')} className="relative p-3 w-24 text-lg text-center font-semibold cursor-pointer border-l-[1px] border-white">
                 Median
-                <span className='absolute'>{sortMethodRating1Ref.current.includes('rating1_median') ? sortMethodRating1Ref.current.includes('asc') ? '▲' : '▼' : null}</span>
+                {sortMethodRating1Ref.current.includes('rating1_median') && <span className='absolute'>{sortMethodRating1Ref.current.includes('asc') ? '▲' : '▼'}</span>}
               </div>
             </div>
             {rating1ByGenre.map((item, index) => (
@@ -345,19 +349,21 @@ export default function Statistics({
               </div>
             ))}
           </div>
-          <div className='flex flex-col items-center p-4 h-[20rem] w-[30rem] border-[1px] border-white overflow-auto'>
-            <h3 className='mb-1 text-2xl font-semibold'>
-              Top Genres by Rating (TomoLover)
-            </h3>
+          <div className='flex flex-col items-center h-[20rem] w-[30rem] border-[1px] border-white overflow-auto'>
+            <div className='sticky top-0 h-16 w-full p-3 bg-black z-10'>
+              <h3 className='mb-1 text-2xl font-semibold text-center'>
+                Top Genres by Rating (TomoLover)
+              </h3>
+            </div>
             <div className="flex items-center justify-center w-full bg-sky-600 border-white border-solid border-[1px] border-b-0">
               <div className="grow p-3 text-lg text-center font-semibold">Title</div>
-              <div onClick={() => handleReorder(rating2ByGenre, 'rating2', setRating2ByGenre, sortMethodRating2Ref, 'mean')} className="relative p-3 w-24 text-lg text-center font-semibold cursor-pointer border-l-[1px] border-white">
+              <div onClick={() => handleSort(rating2ByGenre, 'rating2', setRating2ByGenre, sortMethodRating2Ref, 'mean')} className="relative p-3 w-24 text-lg text-center font-semibold cursor-pointer border-l-[1px] border-white">
                 Mean
-                <span className='absolute'>{sortMethodRating2Ref.current.includes('rating2_mean') ? sortMethodRating2Ref.current.includes('asc') ? '▲' : '▼' : null}</span>
+                {sortMethodRating2Ref.current.includes('rating2_mean') && <span className='absolute'>{sortMethodRating2Ref.current.includes('asc') ? '▲' : '▼'}</span>}
               </div>
-              <div onClick={() => handleReorder(rating2ByGenre, 'rating2', setRating2ByGenre, sortMethodRating2Ref, 'median')} className="relative p-3 w-24 text-lg text-center font-semibold cursor-pointer border-l-[1px] border-white">
+              <div onClick={() => handleSort(rating2ByGenre, 'rating2', setRating2ByGenre, sortMethodRating2Ref, 'median')} className="relative p-3 w-24 text-lg text-center font-semibold cursor-pointer border-l-[1px] border-white">
                 Median
-                <span className='absolute'>{sortMethodRating2Ref.current.includes('rating2_median') ? sortMethodRating2Ref.current.includes('asc') ? '▲' : '▼' : null}</span>
+                {sortMethodRating2Ref.current.includes('rating2_median') && <span className='absolute'>{sortMethodRating2Ref.current.includes('asc') ? '▲' : '▼'}</span>}
               </div>
             </div>
             {rating2ByGenre.map((item, index) => (
@@ -369,7 +375,7 @@ export default function Statistics({
             ))}
           </div>
         </section>
-        <section className='flex flex-col items-center justify-center h-[30rem] w-[30rem] col-span-2 p-4 border-[1px] border-white'>
+        <section className='flex flex-col items-center justify-center h-[30rem] w-[30rem] col-span-2 p-4 mb-6 border-[1px] border-white'>
           <h3 className='mb-2 text-2xl font-semibold'>
             Types
           </h3>
@@ -465,7 +471,7 @@ export default function Statistics({
     </>
   )
 
-  function handleReorder(
+  function handleSort(
     toReorderArr: {
       id: number;
       name: string;
