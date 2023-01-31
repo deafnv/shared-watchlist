@@ -18,6 +18,18 @@ import {
 } from 'chart.js'
 import Link from "next/link";
 
+interface StatTable {
+  rating1Mean: number;
+  rating2Mean: number;
+  ratingMalMean: number;
+  rating1Median: number;
+  rating2Median: number;
+  ratingMalMedian: number;
+  rating1SD: number;
+  rating2SD: number;
+  ratingMalSD: number;
+}
+
 interface StatisticsProps {
   titleCount: number;
 	totalEpisodes: number;
@@ -28,15 +40,7 @@ interface StatisticsProps {
   ratingByGenre: { id: number; name: string; rating1mean: number; rating2mean: number; rating1median: number | null; rating2median: number | null; titlecount: number; }[]
   rating1FreqArr: Array<{ [key: number]: number }>;
   rating2FreqArr: Array<{ [key: number]: number }>;
-  rating1Mean: number;
-  rating2Mean: number;
-  ratingMalMean: number;
-  rating1Median: number;
-  rating2Median: number;
-  ratingMalMedian: number;
-  rating1SD: number;
-  rating2SD: number;
-  ratingMalSD: number;
+  ratingStatTable: StatTable;
 }
 
 export const getStaticProps = async (context: GetStaticPropsContext) => {
@@ -170,15 +174,17 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
       ratingByGenre,
       rating1FreqArr,
       rating2FreqArr,
-      rating1Mean,
-      rating2Mean,
-      ratingMalMean,
-      rating1Median,
-      rating2Median,
-      ratingMalMedian,
-      rating1SD,
-      rating2SD,
-      ratingMalSD
+      ratingStatTable: {
+        rating1Mean,
+        rating2Mean,
+        ratingMalMean,
+        rating1Median,
+        rating2Median,
+        ratingMalMedian,
+        rating1SD,
+        rating2SD,
+        ratingMalSD
+      }
 		}
 	};
 };
@@ -193,15 +199,7 @@ export default function Statistics({
   ratingByGenre,
   rating1FreqArr,
   rating2FreqArr,
-  rating1Mean,
-  rating2Mean,
-  ratingMalMean,
-  rating1Median,
-  rating2Median,
-  ratingMalMedian,
-  rating1SD,
-  rating2SD,
-  ratingMalSD
+  ratingStatTable
 }: StatisticsProps) {
   const sortMethodRating1Ref = useRef('');
   const sortMethodRating2Ref = useRef('');
@@ -422,15 +420,15 @@ export default function Statistics({
                 {statTable.map(item => <th key={item+'c'}>{item}</th>)}
               </tr>
               <tr>
-                <td>{rating1Mean.toFixed(2)}</td>
-                <td>{rating2Mean.toFixed(2)}</td>
-                <td>{ratingMalMean.toFixed(2)}</td>
-                <td>{rating1Median.toFixed(2)}</td>
-                <td>{rating2Median.toFixed(2)}</td>
-                <td>{ratingMalMedian.toFixed(2)}</td>
-                <td>{rating1SD.toFixed(4)}</td>
-                <td>{rating2SD.toFixed(4)}</td>
-                <td>{ratingMalSD.toFixed(4)}</td>
+                <td>{ratingStatTable.rating1Mean.toFixed(2)}</td>
+                <td>{ratingStatTable.rating2Mean.toFixed(2)}</td>
+                <td>{ratingStatTable.ratingMalMean.toFixed(2)}</td>
+                <td>{ratingStatTable.rating1Median.toFixed(2)}</td>
+                <td>{ratingStatTable.rating2Median.toFixed(2)}</td>
+                <td>{ratingStatTable.ratingMalMedian.toFixed(2)}</td>
+                <td>{ratingStatTable.rating1SD.toFixed(4)}</td>
+                <td>{ratingStatTable.rating2SD.toFixed(4)}</td>
+                <td>{ratingStatTable.ratingMalSD.toFixed(4)}</td>
               </tr>
             </tbody>
           </table>
