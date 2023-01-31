@@ -1,6 +1,6 @@
 import { GetStaticPropsContext } from "next";
 import Head from "next/head";
-import { useEffect, useState } from "react";
+import { Dispatch, MutableRefObject, SetStateAction, useEffect, useRef, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { Database } from "../../lib/database.types";
 import { Bar, Pie } from "react-chartjs-2";
@@ -25,6 +25,7 @@ interface StatisticsProps {
   totalTimeWatched: number;
   typeFreq: { [key: string]: number };
   genreFreq: { id: number; name: string | null; count: number; }[];
+  ratingByGenre: { id: number; name: string; rating1mean: number; rating2mean: number; rating1median: number | null; rating2median: number | null; titlecount: number; }[]
   rating1FreqArr: Array<{ [key: number]: number }>;
   rating2FreqArr: Array<{ [key: number]: number }>;
   rating1Mean: number;
@@ -125,6 +126,39 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
     }))
   genreFreq?.sort((a, b) => b.count - a.count)
 
+  const dataGenreRating = await supabase
+    .from('Genre_to_Titles')
+    .select('*, Completed!inner (rating1average, rating2average), Genres!inner (*)')
+
+  const ratingByGenreAgg: { id: number, name: string, rating1agg: number[], rating2agg: number[], titlecount: number }[] = [];
+  dataGenreRating.data?.forEach((relationship) => {
+    const indexOfGenre = ratingByGenreAgg.findIndex(item => item.id == relationship.genre_id)
+    if (ratingByGenreAgg[indexOfGenre]) {
+      ratingByGenreAgg[indexOfGenre].rating1agg.push((relationship.Completed as { rating1average: number | null; rating2average: number | null;}).rating1average!)
+      ratingByGenreAgg[indexOfGenre].rating2agg.push((relationship.Completed as { rating1average: number | null; rating2average: number | null;}).rating2average!)
+      ratingByGenreAgg[indexOfGenre].titlecount++
+    } else {
+      ratingByGenreAgg.push({
+        id: relationship.genre_id,
+        name: (relationship.Genres as Database['public']['Tables']['Genres']['Row']).name!,
+        rating1agg: [(relationship.Completed as { rating1average: number | null; rating2average: number | null;}).rating1average!],
+        rating2agg: [(relationship.Completed as { rating1average: number | null; rating2average: number | null;}).rating2average!],
+        titlecount: 1
+      })
+    }
+  })
+  const ratingByGenre = ratingByGenreAgg.map((item) => {
+    return {
+      id: item.id,
+      name: item.name,
+      rating1mean: item.rating1agg.reduce((acc, curr) => acc + curr) / item.titlecount,
+      rating2mean: item.rating2agg.reduce((acc, curr) => acc + curr) / item.titlecount,
+      rating1median: getMedian(item.rating1agg),
+      rating2median: getMedian(item.rating2agg),
+      titlecount: item.titlecount
+    }
+  }).sort((a, b) => b.titlecount - a.titlecount)
+
 	return {
 		props: {
       titleCount: data?.length,
@@ -133,6 +167,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
       totalTimeWatched,
       typeFreq,
       genreFreq,
+      ratingByGenre,
       rating1FreqArr,
       rating2FreqArr,
       rating1Mean,
@@ -155,6 +190,7 @@ export default function Statistics({
   totalTimeWatched,
   typeFreq,
   genreFreq,
+  ratingByGenre,
   rating1FreqArr,
   rating2FreqArr,
   rating1Mean,
@@ -166,7 +202,13 @@ export default function Statistics({
   rating1SD,
   rating2SD,
   ratingMalSD
-}: { res: any } & { resGenres: any } & StatisticsProps) {
+}: StatisticsProps) {
+  const sortMethodRating1Ref = useRef('');
+  const sortMethodRating2Ref = useRef('');
+
+  const [rating1ByGenre, setRating1ByGenre] = useState(ratingByGenre);
+  const [rating2ByGenre, setRating2ByGenre] = useState(ratingByGenre);
+
   ChartJS.register(
     CategoryScale,
     LinearScale,
@@ -228,6 +270,7 @@ export default function Statistics({
     }
   }
 
+  const statTable = ['GoodTaste', 'TomoLover', 'MAL Rating']
   //TODO: Include stats for genre: rating by genre
   return (
     <>
@@ -243,21 +286,21 @@ export default function Statistics({
           Statistics
         </h2>
         <div className='grid grid-cols-2 gap-4 place-items-center'>
-          <section className='col-span-2 flex flex-col items-center justify-center px-6 py-4 border-[1px] border-white'>
-            <h3 className='text-2xl font-semibold'>
+          <section className='flex flex-col items-center justify-center px-6 py-4 w-[25rem] border-[1px] border-white'>
+            <h3 className='text-2xl font-semibold text-center'>
               Title count
             </h3>
             <span className='mb-2 text-2xl'>{titleCount}</span>
-            <h3 className='text-2xl font-semibold'>
+            <h3 className='text-2xl font-semibold text-center'>
               Total episodes watched
             </h3>
-            <span className='mb-2 text-2xl'>{totalEpisodesWatched}</span>
-            <h3 className='text-2xl font-semibold'>
+            <span className='mb-2 text-2xl '>{totalEpisodesWatched}</span>
+            <h3 className='text-2xl font-semibold text-center'>
               Total episodes (including unwatched)
             </h3>
             <span className='text-2xl'>{totalEpisodes}</span>
           </section>
-          <section className='flex flex-col items-center justify-center p-4 w-[20rem] border-[1px] border-white'>
+          <section className=' flex flex-col items-center justify-center p-4 w-[20rem] border-[1px] border-white'>
             <h3 className='mb-4 text-2xl font-semibold'>
               Total time watched
             </h3>
@@ -266,115 +309,206 @@ export default function Statistics({
             <span className='mb-1 text-xl'>{Math.floor(totalTimeWatched / 60 % 60)} minutes</span>
             <span className='mb-1 text-xl'>{Math.floor(totalTimeWatched % 60)} seconds</span>
           </section>
-          <section className='flex flex-col items-center p-4 h-[20rem] w-[20rem] border-[1px] border-white overflow-auto'>
+          <section className='col-span-2 flex flex-col items-center p-4 h-[20rem] w-[20rem] border-[1px] border-white overflow-auto'>
             <h3 className='mb-1 text-2xl font-semibold'>
-              Top Genres
+              Top Genres by count
             </h3>
             {genreFreq.map((item, index) => (
               <div key={index} className='flex justify-between w-full p-2 border-[1px] border-white'>
-                <Link href={`/completed/genres/${item.id}`} target='_blank' className='p-2 text-lg font-semibold'>{item.name}</Link>
+                <Link href={`/completed/genres/${item.id}`} target='_blank' className='p-2 text-lg font-semibold link'>{item.name}</Link>
                 <span className='p-2 text-lg'>{item.count}</span>
               </div>
             ))}
           </section>
-          <section className='flex flex-col items-center justify-center h-[30rem] w-[30rem] col-span-2 p-4 border-[1px] border-white'>
-            <h3 className='mb-2 text-2xl font-semibold'>
-              Types
-            </h3>
-            <div className='p-4 h-full w-full bg-gray-400 rounded-lg'>
-              <Pie 
-                options={pieOptions} 
-                data={{
-                  labels: Object.keys(typeFreq),
-                  datasets: [
-                    {
-                      data: Object.values(typeFreq),
-                      backgroundColor: [
-                        'rgba(255, 99, 132, 1)',
-                        'rgba(54, 162, 235, 1)',
-                        'rgba(255, 206, 86, 1)'
-                      ],
-                      borderColor: [
-                        'rgba(255, 99, 132, 1)',
-                        'rgba(54, 162, 235, 1)',
-                        'rgba(255, 206, 86, 1)'
-                      ],
-                      borderWidth: 1,
-                    },
-                  ],
-                }}
-                className='mx-auto'
-              />
-            </div>
-          </section>
-          <section className='col-span-2 flex flex-col items-center justify-center gap-4 p-4 w-[52rem] border-[1px] border-white'>
-            <h3 className='mb-1 text-2xl font-semibold'>
-              Ratings
-            </h3> 
-            <table>
-              <tbody>
-                <tr>
-                  <th colSpan={3}>Mean</th>
-                  <th colSpan={3}>Median</th>
-                  <th colSpan={3}>Std. Dev.</th>
-                </tr>
-                <tr>
-                  {Array(3).fill('').map((i, index) => (
-                    <>
-                      <th>GoodTaste</th>
-                      <th>TomoLover</th>
-                      <th>MAL Rating</th>
-                    </>
-                  ))}
-                </tr>
-                <tr>
-                  <td>{rating1Mean.toFixed(2)}</td>
-                  <td>{rating2Mean.toFixed(2)}</td>
-                  <td>{ratingMalMean.toFixed(2)}</td>
-                  <td>{rating1Median.toFixed(2)}</td>
-                  <td>{rating2Median.toFixed(2)}</td>
-                  <td>{ratingMalMedian.toFixed(2)}</td>
-                  <td>{rating1SD.toFixed(4)}</td>
-                  <td>{rating2SD.toFixed(4)}</td>
-                  <td>{ratingMalSD.toFixed(4)}</td>
-                </tr>
-              </tbody>
-            </table>
-            <div className='relative h-[20rem] w-[40rem]'>
-              <Bar 
-                options={barOptions} 
-                data={{
-                  labels: rating1FreqArr.map(item => parseFloat(Object.keys(item)[0])),
-                  datasets: [
-                    {
-                      label: 'GoodTaste',
-                      data: rating1FreqArr.map(item => Object.values(item)[0]),
-                      backgroundColor: '#f55de3'
-                    }
-                  ]
-                }} 
-                className='bg-gray-300 rounded-lg'
-              />
-            </div>
-            <div className='relative h-[20rem] w-[40rem]'>
-              <Bar 
-                options={barOptions} 
-                data={{
-                  labels: rating2FreqArr.map(item => parseFloat(Object.keys(item)[0])),
-                  datasets: [
-                    {
-                      label: 'TomoLover',
-                      data: rating2FreqArr.map(item => Object.values(item)[0]),
-                      backgroundColor: '#f55de3'
-                    }
-                  ]
-                }} 
-                className='bg-gray-300 rounded-lg'
-              />
-            </div>
-          </section>
         </div>
+        <section className='flex'>
+          <div className='flex flex-col items-center p-4 h-[20rem] w-[30rem] border-[1px] border-white overflow-auto'>
+            <h3 className='mb-1 text-2xl font-semibold'>
+              Top Genres by Rating (GoodTaste)
+            </h3>
+            <div className="flex items-center justify-center w-full bg-sky-600 border-white border-solid border-[1px] border-b-0">
+              <div className="grow p-3 text-lg text-center font-semibold">Title</div>
+              <div onClick={() => handleReorder(rating1ByGenre, 'rating1', setRating1ByGenre, sortMethodRating1Ref, 'mean')} className="relative p-3 w-24 text-lg text-center font-semibold cursor-pointer border-l-[1px] border-white">
+                Mean 
+                <span className='absolute'>{sortMethodRating1Ref.current.includes('rating1_mean') ? sortMethodRating1Ref.current.includes('asc') ? '▲' : '▼' : null}</span>
+              </div>
+              <div onClick={() => handleReorder(rating1ByGenre, 'rating1', setRating1ByGenre, sortMethodRating1Ref, 'median')} className="relative p-3 w-24 text-lg text-center font-semibold cursor-pointer border-l-[1px] border-white">
+                Median
+                <span className='absolute'>{sortMethodRating1Ref.current.includes('rating1_median') ? sortMethodRating1Ref.current.includes('asc') ? '▲' : '▼' : null}</span>
+              </div>
+            </div>
+            {rating1ByGenre.map((item, index) => (
+              <div key={index} style={{ borderBottomWidth: index >= ratingByGenre.length - 1 ? 1 : 0 }} className='flex justify-between w-full p-2 border-[1px] border-white'>
+                <Link href={`/completed/genres/${item.id}`} target='_blank' className='grow px-3 py-2 text-lg font-semibold link'>{item.name}</Link>
+                <span className="w-24 px-3 py-2 text-lg text-center">{item.rating1mean.toFixed(2)}</span>
+                <span className="w-24 px-3 py-2 text-lg text-center">{item.rating1median}</span>
+              </div>
+            ))}
+          </div>
+          <div className='flex flex-col items-center p-4 h-[20rem] w-[30rem] border-[1px] border-white overflow-auto'>
+            <h3 className='mb-1 text-2xl font-semibold'>
+              Top Genres by Rating (TomoLover)
+            </h3>
+            <div className="flex items-center justify-center w-full bg-sky-600 border-white border-solid border-[1px] border-b-0">
+              <div className="grow p-3 text-lg text-center font-semibold">Title</div>
+              <div onClick={() => handleReorder(rating2ByGenre, 'rating2', setRating2ByGenre, sortMethodRating2Ref, 'mean')} className="relative p-3 w-24 text-lg text-center font-semibold cursor-pointer border-l-[1px] border-white">
+                Mean
+                <span className='absolute'>{sortMethodRating2Ref.current.includes('rating2_mean') ? sortMethodRating2Ref.current.includes('asc') ? '▲' : '▼' : null}</span>
+              </div>
+              <div onClick={() => handleReorder(rating2ByGenre, 'rating2', setRating2ByGenre, sortMethodRating2Ref, 'median')} className="relative p-3 w-24 text-lg text-center font-semibold cursor-pointer border-l-[1px] border-white">
+                Median
+                <span className='absolute'>{sortMethodRating2Ref.current.includes('rating2_median') ? sortMethodRating2Ref.current.includes('asc') ? '▲' : '▼' : null}</span>
+              </div>
+            </div>
+            {rating2ByGenre.map((item, index) => (
+              <div key={index} style={{ borderBottomWidth: index >= ratingByGenre.length - 1 ? 1 : 0 }} className='flex justify-between w-full p-2 border-[1px] border-white'>
+                <Link href={`/completed/genres/${item.id}`} target='_blank' className='grow px-3 py-2 text-lg font-semibold link'>{item.name}</Link>
+                <span className="w-24 px-3 py-2 text-lg text-center">{item.rating2mean.toFixed(2)}</span>
+                <span className="w-24 px-3 py-2 text-lg text-center">{item.rating2median}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+        <section className='flex flex-col items-center justify-center h-[30rem] w-[30rem] col-span-2 p-4 border-[1px] border-white'>
+          <h3 className='mb-2 text-2xl font-semibold'>
+            Types
+          </h3>
+          <div className='p-4 h-full w-full bg-gray-400 rounded-lg'>
+            <Pie 
+              options={pieOptions} 
+              data={{
+                labels: Object.keys(typeFreq),
+                datasets: [
+                  {
+                    data: Object.values(typeFreq),
+                    backgroundColor: [
+                      'rgba(255, 99, 132, 1)',
+                      'rgba(54, 162, 235, 1)',
+                      'rgba(255, 206, 86, 1)'
+                    ],
+                    borderColor: [
+                      'rgba(255, 99, 132, 1)',
+                      'rgba(54, 162, 235, 1)',
+                      'rgba(255, 206, 86, 1)'
+                    ],
+                    borderWidth: 1,
+                  },
+                ],
+              }}
+              className='mx-auto'
+            />
+          </div>
+        </section>
+        <section className='col-span-2 flex flex-col items-center justify-center gap-4 p-4 w-[52rem] border-[1px] border-white'>
+          <h3 className='mb-1 text-2xl font-semibold'>
+            Ratings
+          </h3> 
+          <table>
+            <tbody>
+              <tr>
+                <th colSpan={3}>Mean</th>
+                <th colSpan={3}>Median</th>
+                <th colSpan={3}>Std. Dev.</th>
+              </tr>
+              <tr>
+                {statTable.map(item => <th key={item+'a'}>{item}</th>)}
+                {statTable.map(item => <th key={item+'b'}>{item}</th>)}
+                {statTable.map(item => <th key={item+'c'}>{item}</th>)}
+              </tr>
+              <tr>
+                <td>{rating1Mean.toFixed(2)}</td>
+                <td>{rating2Mean.toFixed(2)}</td>
+                <td>{ratingMalMean.toFixed(2)}</td>
+                <td>{rating1Median.toFixed(2)}</td>
+                <td>{rating2Median.toFixed(2)}</td>
+                <td>{ratingMalMedian.toFixed(2)}</td>
+                <td>{rating1SD.toFixed(4)}</td>
+                <td>{rating2SD.toFixed(4)}</td>
+                <td>{ratingMalSD.toFixed(4)}</td>
+              </tr>
+            </tbody>
+          </table>
+          <div className='relative h-[20rem] w-[40rem]'>
+            <Bar 
+              options={barOptions} 
+              data={{
+                labels: rating1FreqArr.map(item => parseFloat(Object.keys(item)[0])),
+                datasets: [
+                  {
+                    label: 'GoodTaste',
+                    data: rating1FreqArr.map(item => Object.values(item)[0]),
+                    backgroundColor: '#f55de3'
+                  }
+                ]
+              }} 
+              className='bg-gray-300 rounded-lg'
+            />
+          </div>
+          <div className='relative h-[20rem] w-[40rem]'>
+            <Bar 
+              options={barOptions} 
+              data={{
+                labels: rating2FreqArr.map(item => parseFloat(Object.keys(item)[0])),
+                datasets: [
+                  {
+                    label: 'TomoLover',
+                    data: rating2FreqArr.map(item => Object.values(item)[0]),
+                    backgroundColor: '#f55de3'
+                  }
+                ]
+              }} 
+              className='bg-gray-300 rounded-lg'
+            />
+          </div>
+        </section>
       </main>
     </>
   )
+
+  function handleReorder(
+    toReorderArr: {
+      id: number;
+      name: string;
+      rating1mean: number;
+      rating2mean: number;
+      rating1median: number | null;
+      rating2median: number | null;
+      titlecount: number;
+    }[],
+    toReorder: 'rating1' | 'rating2',
+    setReorderFunc: Dispatch<SetStateAction<{
+      id: number;
+      name: string;
+      rating1mean: number;
+      rating2mean: number;
+      rating1median: number | null;
+      rating2median: number | null;
+      titlecount: number;
+    }[]>>,
+    sortMethodRef: MutableRefObject<string>,
+    field: 'mean' | 'median'
+  ) {
+    console.log(sortMethodRef.current)
+    if (field == 'mean') {
+      if (sortMethodRef.current == `${toReorder}_mean_desc`) {
+        const reordered = toReorderArr.slice().sort((a, b) => a[`${toReorder}mean`] - b[`${toReorder}mean`]);
+        sortMethodRef.current = `${toReorder}_mean_asc`;
+        setReorderFunc(reordered);
+      } else {
+        const reordered = toReorderArr.slice().sort((a, b) => b[`${toReorder}mean`] - a[`${toReorder}mean`]);
+        sortMethodRef.current = `${toReorder}_mean_desc`;
+        setReorderFunc(reordered);
+      }
+    } else {
+      if (sortMethodRef.current == `${toReorder}_median_desc`) {
+        const reordered = toReorderArr.slice().sort((a, b) => a[`${toReorder}median`]! - b[`${toReorder}median`]!);
+        sortMethodRef.current = `${toReorder}_median_asc`;
+        setReorderFunc(reordered);
+      } else {
+        const reordered = toReorderArr.slice().sort((a, b) => b[`${toReorder}median`]! - a[`${toReorder}median`]!);
+        sortMethodRef.current = `${toReorder}_median_desc`;
+        setReorderFunc(reordered);
+      }
+    }
+  }
 }
