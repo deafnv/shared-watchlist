@@ -114,6 +114,8 @@ export default async function RefreshSeasonal(
 
 		await supabase.from('Genre_to_Titles').upsert(genreRelationships);
 
+		await res.revalidate('/completed/statistics');
+
 		return res.status(200).send(malResponse);
 	} catch (error) {
 		console.log(error);
