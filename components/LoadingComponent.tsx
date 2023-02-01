@@ -11,7 +11,7 @@ export default function Loading() {
 				width: '100dvw',
 				background: 'black',
 				opacity: 0.6,
-				zIndex: 1
+				zIndex: 1000
 			}}
 			className="flex items-center justify-center"
 		>
