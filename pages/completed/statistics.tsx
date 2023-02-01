@@ -63,6 +63,7 @@ interface StatisticsProps {
     rating2average: number | null;
     malRating: number | null;
     broadcastDate: string | null;
+    endWatchDate: number | null;
   }[];
   ratingStatTable: StatTable;
 }
@@ -207,7 +208,8 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
       rating1average: item.rating1average,
       rating2average: item.rating2average,
       malRating: (item.CompletedDetails as Database['public']['Tables']['CompletedDetails']['Row']).mal_rating,
-      broadcastDate: (item.CompletedDetails as Database['public']['Tables']['CompletedDetails']['Row']).start_date
+      broadcastDate: (item.CompletedDetails as Database['public']['Tables']['CompletedDetails']['Row']).start_date,
+      endWatchDate: item.endconv
     }
   }).sort((a, b) => (new Date(a.broadcastDate!).getTime() - new Date(b.broadcastDate!).getTime()))
 
@@ -298,7 +300,10 @@ export default function Statistics({
     }
   }
   
-  const ScatterChart = dynamic(() => import("../../components/ScatterChart"), {
+  const RatingBroadcastScatter = dynamic(() => import("../../components/RatingBroadcastScatter"), {
+    ssr: false,
+  });
+  const RatingEndScatter = dynamic(() => import("../../components/RatingEndScatter"), {
     ssr: false,
   });
 
@@ -540,7 +545,7 @@ export default function Statistics({
                   x: {
                     title: {
                       display: true,
-                      text: 'Count',
+                      text: 'Rating',
                       color: '#000000'
                     },
                     ticks: {
@@ -552,7 +557,7 @@ export default function Statistics({
                   y: {
                     title: {
                       display: true,
-                      text: 'Rating',
+                      text: 'Count',
                       color: '#000000'
                     },
                     ticks: {
@@ -593,7 +598,12 @@ export default function Statistics({
         </section>
         <section className='flex flex-col items-center justify-center gap-4 p-4 w-[52rem] border-[1px] border-white'>
           <div className='relative h-[27rem] w-[47rem]'>
-            <ScatterChart dateRatingData={dateRatingData} />
+            <RatingBroadcastScatter dateRatingData={dateRatingData} />
+          </div>
+        </section>
+        <section className='flex flex-col items-center justify-center gap-4 p-4 w-[52rem] border-[1px] border-white'>
+          <div className='relative h-[27rem] w-[47rem]'>
+            <RatingEndScatter dateRatingData={dateRatingData} />
           </div>
         </section>
       </main>

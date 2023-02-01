@@ -24,6 +24,7 @@ dateRatingData
     rating2average: number | null;
     malRating: number | null;
     broadcastDate: string | null;
+    endWatchDate: number | null;
   }[]
 }) {
   ChartJS.register(
@@ -38,21 +39,23 @@ dateRatingData
     zoomPlugin
   ) 
 
+  dateRatingData.sort((a, b) => (new Date(a.endWatchDate!).getTime() - new Date(b.endWatchDate!).getTime()))
+
   const lineRegFuncRating1 = linearRegressionLine(linearRegression(dateRatingData.map((item) => {
     return [
-      new Date(item.broadcastDate!).getTime(),
+      new Date(item.endWatchDate!).getTime(),
       item.rating1average!
     ]
   }).filter(item => item[0])))
   const lineRegFuncRating2 = linearRegressionLine(linearRegression(dateRatingData.map((item) => {
     return [
-      new Date(item.broadcastDate!).getTime(),
+      new Date(item.endWatchDate!).getTime(),
       item.rating2average!
     ]
   }).filter(item => item[0])))
   const lineRegFuncRatingMal = linearRegressionLine(linearRegression(dateRatingData.map((item) => {
     return [
-      new Date(item.broadcastDate!).getTime(),
+      new Date(item.endWatchDate!).getTime(),
       item.malRating!
     ]
   }).filter(item => item[0])))
@@ -65,7 +68,7 @@ dateRatingData
         plugins: {
           title: {
             display: true,
-            text: 'Rating vs Broadcast Year',
+            text: 'Rating vs Finished Date',
             color: '#000000',
             font: {
               size: 15
@@ -113,14 +116,15 @@ dateRatingData
           x: {
             title: {
               display: true,
-              text: 'Broadcast Year',
+              text: 'End Date',
               color: '#000000'
             },
             ticks: {
               color: '#000000'
             },
             type: 'time',
-            min: 1_000_000_000_000
+            min: 1_585_000_000_000,
+            max: 1_690_000_000_000
           },
           y: {
             title: {
@@ -139,23 +143,20 @@ dateRatingData
         datasets: [
           {
             label: 'GoodTaste',
-            data: dateRatingData
-              .slice()
-              .sort((a, b) => (new Date(a.broadcastDate!).getTime() - new Date(b.broadcastDate!).getTime()))
-              .map((item) => {
-                const startDate = new Date(item.broadcastDate!).getTime()
-                return {
-                  x: startDate,
-                  y: item.rating1average
-                }
-              }),
+            data: dateRatingData.map((item) => {
+              const startDate = new Date(item.endWatchDate!).getTime()
+              return {
+                x: startDate,
+                y: item.rating1average
+              }
+            }),
             backgroundColor: '#ff4d73'
           },
           {
             label: 'Regression Line (GoodTaste)',
             data: Array(14).fill('').map((i, index) => {
-              const increment = 100_000_000_000 * index
-              return {x: (increment + 500_000_000_000), y: lineRegFuncRating1(increment + 500_000_000_000)}
+              const increment = 20_000_000_000 * index
+              return {x: (increment + 1_500_000_000_000), y: lineRegFuncRating1(increment + 1_500_000_000_000)}
             }),
             showLine: true,
             borderColor: '#8a293e',
@@ -164,23 +165,20 @@ dateRatingData
           },
           {
             label: 'TomoLover',
-            data: dateRatingData
-              .slice()
-              .sort((a, b) => (new Date(a.broadcastDate!).getTime() - new Date(b.broadcastDate!).getTime()))
-              .map((item) => {
-                const startDate = new Date(item.broadcastDate!).getTime()
-                return {
-                  x: startDate,
-                  y: item.rating2average
-                }
-              }),
+            data: dateRatingData.map((item) => {
+              const startDate = new Date(item.endWatchDate!).getTime()
+              return {
+                x: startDate,
+                y: item.rating2average
+              }
+            }),
             backgroundColor: '#4da0ff'
           },
           {
             label: 'Regression Line (TomoLover)',
             data: Array(14).fill('').map((i, index) => {
-              const increment = 100_000_000_000 * index
-              return {x: (increment + 500_000_000_000), y: lineRegFuncRating2(increment + 500_000_000_000)}
+              const increment = 20_000_000_000 * index
+              return {x: (increment + 1_500_000_000_000), y: lineRegFuncRating2(increment + 1_500_000_000_000)}
             }),
             showLine: true,
             borderColor: '#28568a',
@@ -189,26 +187,23 @@ dateRatingData
           },
           {
             label: 'MyAnimeList',
-            data: dateRatingData
-              .slice()
-              .sort((a, b) => (new Date(a.broadcastDate!).getTime() - new Date(b.broadcastDate!).getTime()))
-              .map((item) => {
-                const startDate = new Date(item.broadcastDate!).getTime()
-                return {
-                  x: startDate,
-                  y: item.malRating
-                }
-              }),
+            data: dateRatingData.map((item) => {
+              const startDate = new Date(item.endWatchDate!).getTime()
+              return {
+                x: startDate,
+                y: item.malRating
+              }
+            }),
             backgroundColor: '#ffe74d'
           },
           {
             label: 'Regression Line (MyAnimeList)',
             data: Array(14).fill('').map((i, index) => {
-              const increment = 100_000_000_000 * index
-              return {x: (increment + 500_000_000_000), y: lineRegFuncRatingMal(increment + 500_000_000_000)}
+              const increment = 20_000_000_000 * index
+              return {x: (increment + 1_500_000_000_000), y: lineRegFuncRatingMal(increment + 1_500_000_000_000)}
             }),
             showLine: true,
-            borderColor: '#28568a',
+            borderColor: '#f0d732',
             pointBorderWidth: 0,
             pointBackgroundColor: 'rgba(0,0,0,0.2)'
           }
