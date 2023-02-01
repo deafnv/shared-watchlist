@@ -39,8 +39,6 @@ dateRatingData
     zoomPlugin
   ) 
 
-  dateRatingData.sort((a, b) => (new Date(a.broadcastDate!).getTime() - new Date(b.broadcastDate!).getTime()));
-
   const lineRegFuncRating1 = linearRegressionLine(linearRegression(dateRatingData.map((item) => {
     return [
       new Date(item.broadcastDate!).getTime(),
@@ -85,7 +83,7 @@ dateRatingData
                 }
                 return [
                   tooltipItem.dataset.label ?? '',
-                  'Title: ' + dateRatingData[tooltipItem.dataIndex].title,
+                  'Title: ' + dateRatingData.slice().sort((a, b) => (new Date(a.broadcastDate!).getTime() - new Date(b.broadcastDate!).getTime()))[tooltipItem.dataIndex].title,
                   'Date: ' + new Date(tooltipItem.parsed.x).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' }),
                   'Rating: ' + tooltipItem.parsed.y
                 ]
@@ -142,7 +140,7 @@ dateRatingData
         datasets: [
           {
             label: 'GoodTaste',
-            data: dateRatingData.map((item) => {
+            data: dateRatingData.slice().sort((a, b) => (new Date(a.broadcastDate!).getTime() - new Date(b.broadcastDate!).getTime())).map((item) => {
               const startDate = new Date(item.broadcastDate!).getTime()
               return {
                 x: startDate,
@@ -164,7 +162,7 @@ dateRatingData
           },
           {
             label: 'TomoLover',
-            data: dateRatingData.map((item) => {
+            data: dateRatingData.slice().sort((a, b) => (new Date(a.broadcastDate!).getTime() - new Date(b.broadcastDate!).getTime())).map((item) => {
               const startDate = new Date(item.broadcastDate!).getTime()
               return {
                 x: startDate,
@@ -197,7 +195,7 @@ dateRatingData
           },
           {
             label: 'Regression Line (MyAnimeList)',
-            data: Array(14).fill('').map((i, index) => {
+            data: Array(14).fill('').slice().sort((a, b) => (new Date(a.broadcastDate!).getTime() - new Date(b.broadcastDate!).getTime())).map((i, index) => {
               const increment = 100_000_000_000 * index
               return {x: (increment + 500_000_000_000), y: lineRegFuncRatingMal(increment + 500_000_000_000)}
             }),
