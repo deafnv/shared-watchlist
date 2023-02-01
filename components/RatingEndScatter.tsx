@@ -39,6 +39,8 @@ dateRatingData
     zoomPlugin
   ) 
 
+  const dateRatingDataSorted = dateRatingData.sort((a, b) => (new Date(a.endWatchDate!).getTime() - new Date(b.endWatchDate!).getTime()))
+
   const lineRegFuncRating1 = linearRegressionLine(linearRegression(dateRatingData.map((item) => {
     return [
       new Date(item.endWatchDate!).getTime(),
@@ -83,7 +85,7 @@ dateRatingData
                 }
                 return [
                   tooltipItem.dataset.label ?? '',
-                  'Title: ' + dateRatingData.slice().sort((a, b) => (new Date(a.endWatchDate!).getTime() - new Date(b.endWatchDate!).getTime()))[tooltipItem.dataIndex].title,
+                  'Title: ' + dateRatingDataSorted[tooltipItem.dataIndex].title,
                   'Date: ' + new Date(tooltipItem.parsed.x).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' }),
                   'Rating: ' + tooltipItem.parsed.y
                 ]
@@ -141,7 +143,7 @@ dateRatingData
         datasets: [
           {
             label: 'GoodTaste',
-            data: dateRatingData.slice().sort((a, b) => (new Date(a.endWatchDate!).getTime() - new Date(b.endWatchDate!).getTime())).map((item) => {
+            data: dateRatingDataSorted.map((item) => {
               const startDate = new Date(item.endWatchDate!).getTime()
               return {
                 x: startDate,
@@ -163,7 +165,7 @@ dateRatingData
           },
           {
             label: 'TomoLover',
-            data: dateRatingData.slice().sort((a, b) => (new Date(a.endWatchDate!).getTime() - new Date(b.endWatchDate!).getTime())).map((item) => {
+            data: dateRatingDataSorted.map((item) => {
               const startDate = new Date(item.endWatchDate!).getTime()
               return {
                 x: startDate,
@@ -185,7 +187,7 @@ dateRatingData
           },
           {
             label: 'MyAnimeList',
-            data: dateRatingData.slice().sort((a, b) => (new Date(a.endWatchDate!).getTime() - new Date(b.endWatchDate!).getTime())).map((item) => {
+            data: dateRatingDataSorted.map((item) => {
               const startDate = new Date(item.endWatchDate!).getTime()
               return {
                 x: startDate,
