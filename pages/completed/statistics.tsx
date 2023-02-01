@@ -322,7 +322,7 @@ export default function Statistics({
           Statistics
         </h2>
         <div className='grid grid-cols-2 gap-4 place-items-center'>
-          <section className='flex flex-col items-center justify-center px-6 py-4 w-[25rem] border-[1px] border-white'>
+          <section className='flex flex-col col-span-2 md:col-span-1 items-center justify-center px-6 py-4 w-[25rem] border-[1px] border-white'>
             <h3 className='text-2xl font-semibold text-center'>
               Title count
             </h3>
@@ -336,7 +336,7 @@ export default function Statistics({
             </h3>
             <span className='text-2xl'>{totalEpisodes}</span>
           </section>
-          <section className=' flex flex-col items-center justify-center p-4 w-[20rem] border-[1px] border-white'>
+          <section className='flex flex-col col-span-2 md:col-span-1 items-center justify-center p-4 w-[20rem] border-[1px] border-white'>
             <h3 className='mb-4 text-2xl font-semibold'>
               Total time watched
             </h3>
@@ -359,7 +359,7 @@ export default function Statistics({
             ))}
           </section>
         </div>
-        <section className='flex gap-3 my-6'>
+        <section className='flex flex-col md:flex-row gap-3 my-6'>
           <div className='flex flex-col items-center h-[20rem] w-[30rem] border-[1px] border-white overflow-auto'>
             <div className='sticky top-0 h-16 w-full p-3 bg-black z-10'>
               <h3 className='mb-1 text-2xl font-semibold text-center'>
@@ -445,78 +445,124 @@ export default function Statistics({
           <h3 className='mb-1 text-2xl font-semibold'>
             Ratings
           </h3>
-          <table>
-            <caption className='mb-2 text-xl font-semibold'>Central Tendency</caption>
-            <tbody>
-              <tr>
-                <th colSpan={3}>Mean</th>
-                <th colSpan={3}>Median</th>
-              </tr>
-              <tr>
-                {statTable.map(item => <th key={item+'a'}>{item}</th>)}
-                {statTable.map(item => <th key={item+'b'}>{item}</th>)}
-              </tr>
-              <tr>
-                <td>{ratingStatTable.rating1Mean.toFixed(2)}</td>
-                <td>{ratingStatTable.rating2Mean.toFixed(2)}</td>
-                <td>{ratingStatTable.ratingMalMean.toFixed(2)}</td>
-                <td>{ratingStatTable.rating1Median.toFixed(2)}</td>
-                <td>{ratingStatTable.rating2Median.toFixed(2)}</td>
-                <td>{ratingStatTable.ratingMalMedian.toFixed(2)}</td>
-              </tr>
-            </tbody>
-          </table>
-          <table>
-            <caption className='mb-2 text-xl font-semibold'>Dispersion</caption>
-            <tbody>
-              <tr>
-                <th colSpan={3}>Standard Deviation</th>
-                <th colSpan={3}>Median Absolute Deviation</th>
-                <th colSpan={3}>Variance</th>
-              </tr>
-              <tr>
-                {statTable.map(item => <th key={item+'a'}>{item}</th>)}
-                {statTable.map(item => <th key={item+'b'}>{item}</th>)}
-                {statTable.map(item => <th key={item+'b'}>{item}</th>)}
-              </tr>
-              <tr>
-                <td>{ratingStatTable.rating1SD.toFixed(4)}</td>
-                <td>{ratingStatTable.rating2SD.toFixed(4)}</td>
-                <td>{ratingStatTable.ratingMalSD.toFixed(4)}</td>
-                <td>{ratingStatTable.rating1MAD.toFixed(4)}</td>
-                <td>{ratingStatTable.rating2MAD.toFixed(4)}</td>
-                <td>{ratingStatTable.ratingMalMAD.toFixed(4)}</td>
-                <td>{ratingStatTable.rating1Variance.toFixed(4)}</td>
-                <td>{ratingStatTable.rating2Variance.toFixed(4)}</td>
-                <td>{ratingStatTable.ratingMalVariance.toFixed(4)}</td>
-              </tr>
-            </tbody>
-          </table>
-          <table>
-            <caption className='mb-2 text-xl font-semibold'>Similarity</caption>
-            <tbody>
-              <tr>
-                <th colSpan={3}>Correlation</th>
-                <th colSpan={3}>Covariance</th>
-              </tr>
-              <tr>
-                <th>GoodTaste & MAL Rating</th>
-                <th>TomoLover & MAL Rating</th>
-                <th>GoodTaste & TomoLover</th>
-                <th>GoodTaste & MAL Rating</th>
-                <th>TomoLover & MAL Rating</th>
-                <th>GoodTaste & TomoLover</th>
-              </tr>
-              <tr>
-                <td>{ratingStatTable.rating1MalCorrelation.toFixed(4)}</td>
-                <td>{ratingStatTable.rating2MalCorrelation.toFixed(4)}</td>
-                <td>{ratingStatTable.rating1rating2Correlation.toFixed(4)}</td>
-                <td>{ratingStatTable.rating1MalCovariance.toFixed(4)}</td>
-                <td>{ratingStatTable.rating2MalCovariance.toFixed(4)}</td>
-                <td>{ratingStatTable.rating1rating2Covariance.toFixed(4)}</td>
-              </tr>
-            </tbody>
-          </table>  
+          <h4 className='mt-2 text-xl font-semibold'>Central Tendency</h4>
+          <div className='flex flex-col md:flex-row'>
+            <table>
+              <tbody>
+                <tr>
+                  <th colSpan={3}>Mean</th>
+                </tr>
+                <tr>
+                  {statTable.map(item => <th key={item+'a'}>{item}</th>)}
+                </tr>
+                <tr>
+                  <td>{ratingStatTable.rating1Mean.toFixed(2)}</td>
+                  <td>{ratingStatTable.rating2Mean.toFixed(2)}</td>
+                  <td>{ratingStatTable.ratingMalMean.toFixed(2)}</td>
+                </tr>
+              </tbody>
+            </table>
+            <table>
+              <tbody>
+                <tr>
+                  <th colSpan={3}>Median</th>
+                </tr>
+                <tr>
+                  {statTable.map(item => <th key={item+'b'}>{item}</th>)}
+                </tr>
+                <tr>
+                  <td>{ratingStatTable.rating1Median.toFixed(2)}</td>
+                  <td>{ratingStatTable.rating2Median.toFixed(2)}</td>
+                  <td>{ratingStatTable.ratingMalMedian.toFixed(2)}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <h4 className='mt-2 text-xl font-semibold'>Dispersion</h4>
+          <div className='flex flex-col md:flex-row'>
+            <table>
+              <tbody>
+                <tr>
+                  <th colSpan={3}>Standard Deviation</th>
+                </tr>
+                <tr>
+                  {statTable.map(item => <th key={item+'a'}>{item}</th>)}
+                </tr>
+                <tr>
+                  <td>{ratingStatTable.rating1SD.toFixed(4)}</td>
+                  <td>{ratingStatTable.rating2SD.toFixed(4)}</td>
+                  <td>{ratingStatTable.ratingMalSD.toFixed(4)}</td>
+                </tr>
+              </tbody>
+            </table>
+            <table>
+              <tbody>
+                <tr>
+                  <th colSpan={3}>Median Absolute Deviation</th>
+                </tr>
+                <tr>
+                  {statTable.map(item => <th key={item+'b'}>{item}</th>)}
+                </tr>
+                <tr>
+                  <td>{ratingStatTable.rating1MAD.toFixed(4)}</td>
+                  <td>{ratingStatTable.rating2MAD.toFixed(4)}</td>
+                  <td>{ratingStatTable.ratingMalMAD.toFixed(4)}</td>
+                </tr>
+              </tbody>
+            </table>
+            <table>
+              <tbody>
+                <tr>
+                  <th colSpan={3}>Variance</th>
+                </tr>
+                <tr>
+                  {statTable.map(item => <th key={item+'b'}>{item}</th>)}
+                </tr>
+                <tr>
+                  <td>{ratingStatTable.rating1Variance.toFixed(4)}</td>
+                  <td>{ratingStatTable.rating2Variance.toFixed(4)}</td>
+                  <td>{ratingStatTable.ratingMalVariance.toFixed(4)}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <h4 className='mt-2 text-xl font-semibold'>Similarity</h4>
+          <div>
+            <table>
+              <tbody>
+                <tr>
+                  <th colSpan={3}>Correlation</th>
+                </tr>
+                <tr>
+                  <th>GoodTaste & MAL Rating</th>
+                  <th>TomoLover & MAL Rating</th>
+                  <th>GoodTaste & TomoLover</th>
+                </tr>
+                <tr>
+                  <td>{ratingStatTable.rating1MalCorrelation.toFixed(4)}</td>
+                  <td>{ratingStatTable.rating2MalCorrelation.toFixed(4)}</td>
+                  <td>{ratingStatTable.rating1rating2Correlation.toFixed(4)}</td>
+                </tr>
+              </tbody>
+            </table>
+            <table>
+              <tbody>
+                <tr>
+                  <th colSpan={3}>Covariance</th>
+                </tr>
+                <tr>
+                  <th>GoodTaste & MAL Rating</th>
+                  <th>TomoLover & MAL Rating</th>
+                  <th>GoodTaste & TomoLover</th>
+                </tr>
+                <tr>
+                  <td>{ratingStatTable.rating1MalCovariance.toFixed(4)}</td>
+                  <td>{ratingStatTable.rating2MalCovariance.toFixed(4)}</td>
+                  <td>{ratingStatTable.rating1rating2Covariance.toFixed(4)}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
           <div className='relative h-[20rem] w-[40rem]'>
             <Line  
               options={{
