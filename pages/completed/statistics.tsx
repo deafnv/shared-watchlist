@@ -3,7 +3,7 @@ import Head from "next/head";
 import { Dispatch, MutableRefObject, SetStateAction, useEffect, useRef, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { Database } from "../../lib/database.types";
-import { Bar, Pie } from "react-chartjs-2";
+import { Line, Pie, Scatter } from "react-chartjs-2";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -14,11 +14,13 @@ import {
   Tooltip,
   Legend,
   BarElement,
-  ArcElement
+  ArcElement,
+  TimeScale
 } from 'chart.js'
 import Link from "next/link";
-import { mean, median, standardDeviation, variance, medianAbsoluteDeviation, sampleCorrelation, sampleCovariance } from "simple-statistics";
-
+import { mean, median, standardDeviation, variance, medianAbsoluteDeviation, sampleCorrelation, sampleCovariance, linearRegression, linearRegressionLine } from "simple-statistics";
+import 'chartjs-adapter-date-fns';
+import dynamic from "next/dynamic";
 interface StatTable {
   rating1Mean: number;
   rating2Mean: number;
@@ -53,6 +55,15 @@ interface StatisticsProps {
   ratingByGenre: { id: number; name: string; rating1mean: number; rating2mean: number; rating1median: number | null; rating2median: number | null; titlecount: number; }[]
   rating1FreqArr: Array<{ [key: number]: number }>;
   rating2FreqArr: Array<{ [key: number]: number }>;
+  ratingMalFreqArr: Array<{ [key: number]: number }>;
+  dateRatingData: {
+    id: number;
+    title: string;
+    rating1average: number | null;
+    rating2average: number | null;
+    malRating: number | null;
+    broadcastDate: string | null;
+  }[];
   ratingStatTable: StatTable;
 }
 
@@ -95,6 +106,29 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
     }
   })
   const rating2FreqArr = Object.keys(rating2Freq).map((key: any) => ({ [key]: rating2Freq[key] })).sort((a, b) => parseFloat(Object.keys(a)[0]) - parseFloat(Object.keys(b)[0]))
+
+  const ratingMalFreq: { [key: number]: number } = {}
+  data?.forEach((item) => {
+    const malRating = (item.CompletedDetails as Database['public']['Tables']['CompletedDetails']['Row']).mal_rating!
+    let decimal;
+
+    if (parseFloat((malRating % 1).toPrecision(1)) < 0.125) decimal = 0
+    else if (parseFloat((malRating % 1).toPrecision(1)) < 0.375) decimal = 0.25
+    else if (parseFloat((malRating % 1).toPrecision(1)) < 0.625) decimal = 0.5
+    else if (parseFloat((malRating % 1).toPrecision(1)) < 0.875) decimal = 0.75
+    else decimal = 1
+
+    const roundedScore = Math.trunc(malRating) + decimal
+    if (roundedScore == 0) {
+      return;
+    }
+    else if (ratingMalFreq[roundedScore]) {
+      ratingMalFreq[roundedScore] += 1
+    } else {
+      ratingMalFreq[roundedScore] = 1
+    }
+  })
+  const ratingMalFreqArr = Object.keys(ratingMalFreq).map((key: any) => ({ [key]: ratingMalFreq[key] })).sort((a, b) => parseFloat(Object.keys(a)[0]) - parseFloat(Object.keys(b)[0]))
 
   const typeFreq: { [key: string]: number } = {}
   data?.forEach((item) => {
@@ -166,6 +200,17 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
     }
   }).sort((a, b) => b.titlecount - a.titlecount)
 
+  const dateRatingData = data?.map((item) => {
+    return {
+      id: item.id,
+      title: item.title,
+      rating1average: item.rating1average,
+      rating2average: item.rating2average,
+      malRating: (item.CompletedDetails as Database['public']['Tables']['CompletedDetails']['Row']).mal_rating,
+      broadcastDate: (item.CompletedDetails as Database['public']['Tables']['CompletedDetails']['Row']).start_date
+    }
+  }).sort((a, b) => (new Date(a.broadcastDate!).getTime() - new Date(b.broadcastDate!).getTime()))
+
 	return {
 		props: {
       titleCount: data?.length,
@@ -177,6 +222,8 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
       ratingByGenre,
       rating1FreqArr,
       rating2FreqArr,
+      ratingMalFreqArr,
+      dateRatingData,
       ratingStatTable: {
         rating1Mean,
         rating2Mean,
@@ -214,6 +261,8 @@ export default function Statistics({
   ratingByGenre,
   rating1FreqArr,
   rating2FreqArr,
+  ratingMalFreqArr,
+  dateRatingData,
   ratingStatTable
 }: StatisticsProps) {
   const sortMethodRating1Ref = useRef('');
@@ -231,7 +280,8 @@ export default function Statistics({
     Tooltip,
     Legend,
     BarElement,
-    ArcElement
+    ArcElement,
+    TimeScale
   )
 
   const pieOptions = {
@@ -247,42 +297,10 @@ export default function Statistics({
       }
     }
   }
-
-  const barOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        position: 'top' as const,
-        labels: {
-          color: '#000000',
-          font: {
-            size: 13
-          }
-        }
-      },
-      title: {
-        display: true,
-        text: 'Rating Distribution',
-        color: '#000000',
-        font: {
-          size: 15
-        }
-      },
-    },
-    scales: {
-      x: {
-        ticks: {
-          color: '#000000'
-        }
-      },
-      y: {
-        ticks: {
-          color: '#000000'
-        }
-      }
-    }
-  }
+  
+  const ScatterChart = dynamic(() => import("../../components/ScatterChart"), {
+    ssr: false,
+  });
 
   const statTable = ['GoodTaste', 'TomoLover', 'MAL Rating']
   return (
@@ -418,7 +436,7 @@ export default function Statistics({
             />
           </div>
         </section>
-        <section className='col-span-2 flex flex-col items-center justify-center gap-4 p-4 w-[52rem] border-[1px] border-white'>
+        <section className='flex flex-col items-center justify-center gap-4 p-4 w-[52rem] border-[1px] border-white'>
           <h3 className='mb-1 text-2xl font-semibold'>
             Ratings
           </h3>
@@ -495,36 +513,87 @@ export default function Statistics({
             </tbody>
           </table>  
           <div className='relative h-[20rem] w-[40rem]'>
-            <Bar 
-              options={barOptions} 
+            <Line  
+              options={{
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                  legend: {
+                    position: 'top' as const,
+                    labels: {
+                      color: '#000000',
+                      font: {
+                        size: 13
+                      }
+                    }
+                  },
+                  title: {
+                    display: true,
+                    text: 'Rating Distribution (Rating vs Count)',
+                    color: '#000000',
+                    font: {
+                      size: 15
+                    }
+                  },
+                },
+                scales: {
+                  x: {
+                    title: {
+                      display: true,
+                      text: 'Count',
+                      color: '#000000'
+                    },
+                    ticks: {
+                      color: '#000000'
+                    },
+                    type: 'linear',
+                    min: 0
+                  },
+                  y: {
+                    title: {
+                      display: true,
+                      text: 'Rating',
+                      color: '#000000'
+                    },
+                    ticks: {
+                      color: '#000000'
+                    }
+                  }
+                }
+              }} 
               data={{
-                labels: rating1FreqArr.map(item => parseFloat(Object.keys(item)[0])),
+                labels: rating1FreqArr.map((item) => ({ x: Object.keys(item)[0].toString(), y: Object.values(item)[0] })),
                 datasets: [
                   {
                     label: 'GoodTaste',
-                    data: rating1FreqArr.map(item => Object.values(item)[0]),
-                    backgroundColor: '#f55de3'
+                    data: rating1FreqArr.map((item) => ({ x: Object.keys(item)[0], y: Object.values(item)[0] })),
+                    borderColor: '#ff4d73',
+                    backgroundColor: '#ff4d73',
+                    tension: 0.2
+                  },
+                  {
+                    label: 'TomoLover',
+                    data: rating2FreqArr.map(item => ({ x: Object.keys(item)[0], y: Object.values(item)[0] })),
+                    borderColor: '#4da0ff',
+                    backgroundColor: '#4da0ff',
+                    tension: 0.2
+                  },
+                  {
+                    label: 'MyAnimeList',
+                    data: ratingMalFreqArr.map(item => ({ x: Object.keys(item)[0], y: Object.values(item)[0] })),
+                    borderColor: '#ffe74d',
+                    backgroundColor: '#ffe74d',
+                    tension: 0.2
                   }
                 ]
               }} 
               className='bg-gray-300 rounded-lg'
             />
           </div>
-          <div className='relative h-[20rem] w-[40rem]'>
-            <Bar 
-              options={barOptions} 
-              data={{
-                labels: rating2FreqArr.map(item => parseFloat(Object.keys(item)[0])),
-                datasets: [
-                  {
-                    label: 'TomoLover',
-                    data: rating2FreqArr.map(item => Object.values(item)[0]),
-                    backgroundColor: '#f55de3'
-                  }
-                ]
-              }} 
-              className='bg-gray-300 rounded-lg'
-            />
+        </section>
+        <section className='flex flex-col items-center justify-center gap-4 p-4 w-[52rem] border-[1px] border-white'>
+          <div className='relative h-[27rem] w-[47rem]'>
+            <ScatterChart dateRatingData={dateRatingData} />
           </div>
         </section>
       </main>
@@ -554,7 +623,6 @@ export default function Statistics({
     sortMethodRef: MutableRefObject<string>,
     field: 'mean' | 'median'
   ) {
-    console.log(sortMethodRef.current)
     if (field == 'mean') {
       if (sortMethodRef.current == `${toReorder}_mean_desc`) {
         const reordered = toReorderArr.slice().sort((a, b) => a[`${toReorder}mean`] - b[`${toReorder}mean`]);
