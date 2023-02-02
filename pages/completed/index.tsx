@@ -165,7 +165,7 @@ export default function Completed() {
 				<link rel="icon" href="/favicon.ico" />
 			</Head>
 
-			<main className="flex flex-col items-center justify-center mb-24 pt-[60px] px-1 md:px-0">
+			<main className="flex flex-col items-center justify-center mb-24 px-1 md:px-0 pt-[70px]">
 				<div className="relative">
 					<h2 className="p-2 text-3xl">
 						Completed

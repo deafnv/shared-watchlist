@@ -1,4 +1,5 @@
 import axios from 'axios'
+import throttle from 'lodash/throttle'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
@@ -9,6 +10,7 @@ export default function Navbar({ children }: React.PropsWithChildren) {
 	const router = useRouter()
 	const { loading } = useLoading()
 	const [timer, setTimer] = useState<string>('1970-01-01T11:18:58.453Z')
+	const [navbar, setNavbar] = useState(true)
 	const navLinks = [
 		{
 			name: 'Completed',
@@ -56,16 +58,26 @@ export default function Navbar({ children }: React.PropsWithChildren) {
 				.catch((error) => setTimer('Error'))
 		}
 		getTimer()
+
+		const navbarAnimate = () => {
+			if (window.scrollY == 0) {
+				setNavbar(true)
+			} else setNavbar(false)
+		}
+
+		window.addEventListener('scroll', throttle(navbarAnimate, 100))
 	}, [])
 
 	return (
 		<>
 			{loading && <Loading />}
 			<nav
-				className="h-[60px] flex items-center justify-center gap-[20%] bg-black border-b-[1px]"
+				className="fixed z-50 h-[60px] w-full flex items-center justify-center gap-[20%] bg-black bg-opacity-60 border-b-[1px] backdrop-blur-md backdrop-filter"
 				style={{
 					borderImage: 'linear-gradient(to right, rgb(218, 51, 190), rgb(191, 94, 255))',
-					borderImageSlice: 1
+					borderImageSlice: 1,
+					background: navbar ? 'rgba(0, 0, 0, 1)' : 'rgba(0, 0, 0, 0.6)',
+					transition: 'all 800ms'
 				}}
 			>
 				<div className="flex items-center">

@@ -237,7 +237,7 @@ export default function PTW() {
 				<link rel="icon" href="/favicon.ico" />
 			</Head>
 
-			<main className="flex flex-col items-center justify-center gap-4 px-4 mb-24">
+			<main className="flex flex-col items-center justify-center gap-4 px-4 mb-24 pt-[80px]">
 				<div className="flex flex-col lg:flex-row items-center justify-center w-full gap-12">
 					<div className="flex flex-col items-center min-h-[40rem] w-[30rem] lg:w-auto">
 						<h2 className="p-2 mt-5 text-3xl">

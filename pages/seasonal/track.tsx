@@ -103,7 +103,7 @@ export default function SeasonalDetails({
 				<link rel="icon" href="/favicon.ico" />
 			</Head>
 
-			<main className="flex flex-col items-center justify-center p-6">
+			<main className="flex flex-col items-center justify-center p-6 pt-[80px]">
 				<div className="relative">
 					<h2 className="mb-6 text-3xl">Seasonal Details</h2>
 					<div
