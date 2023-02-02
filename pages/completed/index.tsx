@@ -112,6 +112,7 @@ export default function Completed() {
 			setIsEdited('');
 		}
 
+		setWidth(window.innerWidth)
 		const handleWindowResize = () => setWidth(window.innerWidth)
 		
 		document.addEventListener('click', closeMenus);	
@@ -153,6 +154,7 @@ export default function Completed() {
 			clearInterval(refresh);
 			document.removeEventListener('click', closeMenus);
 			window.removeEventListener('focusout', resetEditNoFocus);
+			window.removeEventListener('resize', handleWindowResize);
 		};
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
