@@ -1,36 +1,35 @@
-import { createClient } from '@supabase/supabase-js';
-import Head from 'next/head';
-import { BaseSyntheticEvent, useEffect, useState } from 'react';
-import { Database } from '../../../lib/database.types';
-import Link from 'next/link';
-import DoneIcon from '@mui/icons-material/Done';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import CloseIcon from '@mui/icons-material/Close';
+import { createClient } from '@supabase/supabase-js'
+import Head from 'next/head'
+import { BaseSyntheticEvent, useEffect, useState } from 'react'
+import { Database } from '../../../lib/database.types'
+import Link from 'next/link'
+import DoneIcon from '@mui/icons-material/Done'
+import ArrowBackIcon from '@mui/icons-material/ArrowBack'
+import CloseIcon from '@mui/icons-material/Close'
 
 //TODO: Sort the genres vertically in alphabetical order
 export default function CompletedDetails() {
-	const [response, setResponse] =
-		useState<Database['public']['Tables']['Genres']['Row'][]>();
-	const [advancedSearch, setAdvancedSearch] = useState('none');
-	const [advancedSearchResult, setAdvancedSearchResult] = useState<any>(null);
+	const [response, setResponse] = useState<Database['public']['Tables']['Genres']['Row'][]>()
+	const [advancedSearch, setAdvancedSearch] = useState('none')
+	const [advancedSearchResult, setAdvancedSearchResult] = useState<any>(null)
 
 	const supabase = createClient<Database>(
 		'https://esjopxdrlewtpffznsxh.supabase.co',
 		process.env.NEXT_PUBLIC_SUPABASE_API_KEY!
-	);
+	)
 
 	useEffect(() => {
 		const supabase = createClient<Database>(
 			'https://esjopxdrlewtpffznsxh.supabase.co',
 			process.env.NEXT_PUBLIC_SUPABASE_API_KEY!
-		);
+		)
 		const getData = async () => {
-			const { data } = await supabase.from('Genres').select().order('name');
+			const { data } = await supabase.from('Genres').select().order('name')
 
-			setResponse(data!);
-		};
-		getData();
-	}, []);
+			setResponse(data!)
+		}
+		getData()
+	}, [])
 
 	return (
 		<>
@@ -43,10 +42,7 @@ export default function CompletedDetails() {
 
 			<main className="flex flex-col items-center justify-center px-2 py-4 md:p-2">
 				<h2 className="text-3xl">Genres</h2>
-				<span
-					onClick={() => setAdvancedSearch('block')}
-					className="mb-2 cursor-pointer link"
-				>
+				<span onClick={() => setAdvancedSearch('block')} className="mb-2 cursor-pointer link">
 					Advanced Search
 				</span>
 				<div className="grid grid-cols-3 gap-x-12 md:gap-x-24 gap-y-3">
@@ -59,27 +55,25 @@ export default function CompletedDetails() {
 							>
 								{item.name}
 							</Link>
-						);
+						)
 					})}
 				</div>
 				{advancedSearch == 'block' ? <AdvancedSearchModal /> : null}
 			</main>
 		</>
-	);
+	)
 
 	function AdvancedSearchModal() {
 		async function handleSubmit(e: BaseSyntheticEvent) {
-			e.preventDefault();
+			e.preventDefault()
 
-			const target = e.target as any;
+			const target = e.target as any
 			const arr: { [k: string]: any } = Object.fromEntries(
 				Object.entries(target).filter((item: any, index: number) => {
-					return item[1].checked;
+					return item[1].checked
 				})
-			);
-			const arrIncluded = Object.keys(arr).map((key) =>
-				parseInt(arr[key].value)
-			);
+			)
+			const arrIncluded = Object.keys(arr).map((key) => parseInt(arr[key].value))
 
 			const { data } = await supabase
 				.from('Completed')
@@ -91,13 +85,13 @@ export default function CompletedDetails() {
           )
         `
 				)
-				.in('Genres.id', arrIncluded); //TODO: Look into if it is possible to query by their relationship
+				.in('Genres.id', arrIncluded) //TODO: Look into if it is possible to query by their relationship
 
 			const matched = data?.filter((item) => {
-				return (item.Genres as { id: number }[]).length == arrIncluded.length;
-			});
+				return (item.Genres as { id: number }[]).length == arrIncluded.length
+			})
 
-			setAdvancedSearchResult(matched!);
+			setAdvancedSearchResult(matched!)
 		}
 
 		return (
@@ -129,7 +123,7 @@ export default function CompletedDetails() {
 											{item.title}
 										</Link>
 									</li>
-								);
+								)
 							})}
 						</ul>
 					</div>
@@ -156,14 +150,11 @@ export default function CompletedDetails() {
 										className="relative flex gap-1 items-center checkbox-container"
 									>
 										<div className="custom-checkbox" />
-										<DoneIcon
-											fontSize="inherit"
-											className="absolute checkmark"
-										/>
+										<DoneIcon fontSize="inherit" className="absolute checkmark" />
 										<input type="checkbox" value={item.id!} />
 										{item.name}
 									</label>
-								);
+								)
 							})}
 						</form>
 						<input
@@ -175,6 +166,6 @@ export default function CompletedDetails() {
 					</div>
 				)}
 			</div>
-		);
+		)
 	}
 }

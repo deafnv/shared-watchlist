@@ -1,4 +1,4 @@
-import { Skeleton } from '@mui/material';
+import { Skeleton } from '@mui/material'
 
 export function loadingGlimmer(columns: number) {
 	return Array(8)
@@ -19,5 +19,5 @@ export function loadingGlimmer(columns: number) {
 						</td>
 					))}
 			</tr>
-		));
+		))
 }

@@ -1,35 +1,35 @@
-import { Dispatch, SetStateAction } from 'react';
-import { Database } from './database.types';
+import { Dispatch, SetStateAction } from 'react'
+import { Database } from './database.types'
 
 export interface Rating {
-	actual: string | undefined;
-	average: number | undefined;
+	actual: string | undefined
+	average: number | undefined
 }
 
 export interface WatchDates {
-	original: string | undefined;
-	converted: number | undefined;
+	original: string | undefined
+	converted: number | undefined
 }
 
 export interface TitleItem {
-	id: number;
-	title: string | undefined;
-	type: string | undefined;
-	episode: string | undefined;
-	rating1: Rating;
-	rating2: Rating;
-	rating3: Rating;
-	start: WatchDates;
-	end: WatchDates;
+	id: number
+	title: string | undefined
+	type: string | undefined
+	episode: string | undefined
+	rating1: Rating
+	rating2: Rating
+	rating3: Rating
+	start: WatchDates
+	end: WatchDates
 }
 
 export interface PTWTItem {
-	id: number;
-	title: string;
+	id: number
+	title: string
 }
 
 export function getRandomInt(max: number) {
-	return Math.floor(Math.random() * max);
+	return Math.floor(Math.random() * max)
 }
 
 //* COMPLETED LIST METHODS
@@ -44,7 +44,7 @@ export const initialTitleItem: TitleItem = {
 	rating3: { actual: undefined, average: undefined },
 	start: { original: undefined, converted: undefined },
 	end: { original: undefined, converted: undefined }
-};
+}
 
 export const sortListByName = (
 	name: string,
@@ -54,13 +54,13 @@ export const sortListByName = (
 	setResponse: Dispatch<SetStateAction<TitleItem[]>>
 ) => {
 	if (sortMethod === `titleasc_${name}`) {
-		setSortMethod(`titledesc_${name}`);
-		setResponse(res.slice().sort((a, b) => b.title!.localeCompare(a.title!)));
+		setSortMethod(`titledesc_${name}`)
+		setResponse(res.slice().sort((a, b) => b.title!.localeCompare(a.title!)))
 	} else {
-		setSortMethod(`titleasc_${name}`);
-		setResponse(res.slice().sort((a, b) => a.title!.localeCompare(b.title!)));
+		setSortMethod(`titleasc_${name}`)
+		setResponse(res.slice().sort((a, b) => a.title!.localeCompare(b.title!)))
 	}
-};
+}
 
 export const sortListByRating = (
 	rating: string,
@@ -70,27 +70,27 @@ export const sortListByRating = (
 	setResponse: Dispatch<SetStateAction<TitleItem[]>>
 ) => {
 	if (sortMethod === `ratingasc_${rating}`) {
-		setSortMethod(`ratingdesc_${rating}`);
+		setSortMethod(`ratingdesc_${rating}`)
 		setResponse(
 			res.slice().sort((a, b) => {
 				if ((b as any)[rating].average! == null) {
-					return -1;
+					return -1
 				}
-				return (b as any)[rating].average! - (a as any)[rating].average!;
+				return (b as any)[rating].average! - (a as any)[rating].average!
 			})
-		);
+		)
 	} else {
-		setSortMethod(`ratingasc_${rating}`);
+		setSortMethod(`ratingasc_${rating}`)
 		setResponse(
 			res.slice().sort((a, b) => {
 				if ((a as any)[rating].average! == null) {
-					return -1;
+					return -1
 				}
-				return (a as any)[rating].average! - (b as any)[rating].average!;
+				return (a as any)[rating].average! - (b as any)[rating].average!
 			})
-		);
+		)
 	}
-};
+}
 
 export const sortListByDate = (
 	date: string,
@@ -100,29 +100,29 @@ export const sortListByDate = (
 	setResponse: Dispatch<SetStateAction<TitleItem[]>>
 ) => {
 	if (sortMethod === `dateasc_${date}`) {
-		setSortMethod(`datedesc_${date}`);
+		setSortMethod(`datedesc_${date}`)
 		setResponse(
 			res.slice().sort((a, b) => {
-				return (b as any)[date].converted! - (a as any)[date].converted!;
+				return (b as any)[date].converted! - (a as any)[date].converted!
 			})
-		);
+		)
 	} else {
-		setSortMethod(`dateasc_${date}`);
+		setSortMethod(`dateasc_${date}`)
 		setResponse(
 			res.slice().sort((a, b) => {
-				return (a as any)[date].converted! - (b as any)[date].converted!;
+				return (a as any)[date].converted! - (b as any)[date].converted!
 			})
-		);
+		)
 	}
-};
+}
 
 export const sortSymbol = (type: string, sortMethod: string) => {
 	if (sortMethod.includes(type)) {
-		return sortMethod.includes(`desc_${type}`) ? '▼' : '▲';
+		return sortMethod.includes(`desc_${type}`) ? '▼' : '▲'
 	} else {
-		return '';
+		return ''
 	}
-};
+}
 
 //* SUPABASE LIST METHODS
 
@@ -145,7 +145,7 @@ export const initialTitleItemSupabase = {
 	type_conv: [''],
 	startconv: 0,
 	endconv: 0
-};
+}
 
 /* export const sortBasedOnSortMethod = (res: Database['public']['Tables']['Completed']['Row'][], sortMethod: string) => {
   if (sortMethod.includes('title')) {
@@ -181,19 +181,17 @@ export const sortListByNameSupabase = (
 	sortMethod: string,
 	setSortMethod: Dispatch<SetStateAction<string>>,
 	setResponse: Dispatch<
-		SetStateAction<
-			Database['public']['Tables']['Completed']['Row'][] | undefined
-		>
+		SetStateAction<Database['public']['Tables']['Completed']['Row'][] | undefined>
 	>
 ) => {
 	if (sortMethod === `titleasc_title`) {
-		setSortMethod(`titledesc_title`);
-		setResponse(res?.slice().sort((a, b) => b.title!.localeCompare(a.title!)));
+		setSortMethod(`titledesc_title`)
+		setResponse(res?.slice().sort((a, b) => b.title!.localeCompare(a.title!)))
 	} else {
-		setSortMethod(`titleasc_title`);
-		setResponse(res?.slice().sort((a, b) => a.title!.localeCompare(b.title!)));
+		setSortMethod(`titleasc_title`)
+		setResponse(res?.slice().sort((a, b) => a.title!.localeCompare(b.title!)))
 	}
-};
+}
 
 export const sortListByRatingSupabase = (
 	rating: 'rating1' | 'rating2',
@@ -201,33 +199,31 @@ export const sortListByRatingSupabase = (
 	sortMethod: string,
 	setSortMethod: Dispatch<SetStateAction<string>>,
 	setResponse: Dispatch<
-		SetStateAction<
-			Database['public']['Tables']['Completed']['Row'][] | undefined
-		>
+		SetStateAction<Database['public']['Tables']['Completed']['Row'][] | undefined>
 	>
 ) => {
 	if (sortMethod === `ratingasc_${rating}`) {
-		setSortMethod(`ratingdesc_${rating}`);
+		setSortMethod(`ratingdesc_${rating}`)
 		setResponse(
 			res?.slice().sort((a, b) => {
 				if (b[`${rating}average`] == null) {
-					return -1;
+					return -1
 				}
-				return a[`${rating}average`]! - b[`${rating}average`]!;
+				return a[`${rating}average`]! - b[`${rating}average`]!
 			})
-		);
+		)
 	} else {
-		setSortMethod(`ratingasc_${rating}`);
+		setSortMethod(`ratingasc_${rating}`)
 		setResponse(
 			res?.slice().sort((a, b) => {
 				if (a[`${rating}average`] == null) {
-					return -1;
+					return -1
 				}
-				return b[`${rating}average`]! - a[`${rating}average`]!;
+				return b[`${rating}average`]! - a[`${rating}average`]!
 			})
-		);
+		)
 	}
-};
+}
 
 export const sortListByDateSupabase = (
 	date: 'startconv' | 'endconv',
@@ -235,27 +231,25 @@ export const sortListByDateSupabase = (
 	sortMethod: string,
 	setSortMethod: Dispatch<SetStateAction<string>>,
 	setResponse: Dispatch<
-		SetStateAction<
-			Database['public']['Tables']['Completed']['Row'][] | undefined
-		>
+		SetStateAction<Database['public']['Tables']['Completed']['Row'][] | undefined>
 	>
 ) => {
 	if (sortMethod === `dateasc_${date}`) {
-		setSortMethod(`datedesc_${date}`);
+		setSortMethod(`datedesc_${date}`)
 		setResponse(
 			res?.slice().sort((a, b) => {
-				return b[date]! - a[date]!;
+				return b[date]! - a[date]!
 			})
-		);
+		)
 	} else {
-		setSortMethod(`dateasc_${date}`);
+		setSortMethod(`dateasc_${date}`)
 		setResponse(
 			res?.slice().sort((a, b) => {
-				return a[date]! - b[date]!;
+				return a[date]! - b[date]!
 			})
-		);
+		)
 	}
-};
+}
 
 //* PLAN TO WATCH LIST METHODS
 
@@ -265,113 +259,113 @@ export const sortListByNamePTW = (
 	sortMethod: string,
 	setSortMethod: Dispatch<SetStateAction<string>>,
 	setResponse: Dispatch<
-		SetStateAction<
-			Database['public']['Tables']['PTW-Rolled']['Row'][] | undefined
-		>
+		SetStateAction<Database['public']['Tables']['PTW-Rolled']['Row'][] | undefined>
 	>
 ) => {
 	if (sortMethod === `titleasc_${name}`) {
-		setSortMethod(`titledesc_${name}`);
-		setResponse(res?.slice().sort((a, b) => b.title!.localeCompare(a.title!)));
+		setSortMethod(`titledesc_${name}`)
+		setResponse(res?.slice().sort((a, b) => b.title!.localeCompare(a.title!)))
 	} else {
-		setSortMethod(`titleasc_${name}`);
-		setResponse(res?.slice().sort((a, b) => a.title!.localeCompare(b.title!)));
+		setSortMethod(`titleasc_${name}`)
+		setResponse(res?.slice().sort((a, b) => a.title!.localeCompare(b.title!)))
 	}
-};
+}
 
 export function levenshtein(s: string, t: string) {
 	if (s === t) {
-			return 0;
+		return 0
 	}
-	var n = s.length, m = t.length;
+	var n = s.length,
+		m = t.length
 	if (n === 0 || m === 0) {
-			return n + m;
+		return n + m
 	}
-	var x = 0, y, a, b, c, d, g, h;
-	var p = new Uint16Array(n);
-	var u = new Uint32Array(n);
-	for (y = 0; y < n;) {
-			u[y] = s.charCodeAt(y);
-			p[y] = ++y;
+	var x = 0,
+		y,
+		a,
+		b,
+		c,
+		d,
+		g,
+		h
+	var p = new Uint16Array(n)
+	var u = new Uint32Array(n)
+	for (y = 0; y < n; ) {
+		u[y] = s.charCodeAt(y)
+		p[y] = ++y
 	}
 
-	for (; (x + 3) < m; x += 4) {
-			var e1 = t.charCodeAt(x);
-			var e2 = t.charCodeAt(x + 1);
-			var e3 = t.charCodeAt(x + 2);
-			var e4 = t.charCodeAt(x + 3);
-			c = x;
-			b = x + 1;
-			d = x + 2;
-			g = x + 3;
-			h = x + 4;
-			for (y = 0; y < n; y++) {
-					a = p[y];
-					if (a < c || b < c) {
-							c = (a > b ? b + 1 : a + 1);
-					}
-					else {
-							if (e1 !== u[y]) {
-									c++;
-							}
-					}
-
-					if (c < b || d < b) {
-							b = (c > d ? d + 1 : c + 1);
-					}
-					else {
-							if (e2 !== u[y]) {
-									b++;
-							}
-					}
-
-					if (b < d || g < d) {
-							d = (b > g ? g + 1 : b + 1);
-					}
-					else {
-							if (e3 !== u[y]) {
-									d++;
-							}
-					}
-
-					if (d < g || h < g) {
-							g = (d > h ? h + 1 : d + 1);
-					}
-					else {
-							if (e4 !== u[y]) {
-									g++;
-							}
-					}
-					p[y] = h = g;
-					g = d;
-					d = b;
-					b = c;
-					c = a;
+	for (; x + 3 < m; x += 4) {
+		var e1 = t.charCodeAt(x)
+		var e2 = t.charCodeAt(x + 1)
+		var e3 = t.charCodeAt(x + 2)
+		var e4 = t.charCodeAt(x + 3)
+		c = x
+		b = x + 1
+		d = x + 2
+		g = x + 3
+		h = x + 4
+		for (y = 0; y < n; y++) {
+			a = p[y]
+			if (a < c || b < c) {
+				c = a > b ? b + 1 : a + 1
+			} else {
+				if (e1 !== u[y]) {
+					c++
+				}
 			}
-	}
 
-	for (; x < m;) {
-			var e = t.charCodeAt(x);
-			c = x;
-			d = ++x;
-			for (y = 0; y < n; y++) {
-					a = p[y];
-					if (a < c || d < c) {
-							d = (a > d ? d + 1 : a + 1);
-					}
-					else {
-							if (e !== u[y]) {
-									d = c + 1;
-							}
-							else {
-									d = c;
-							}
-					}
-					p[y] = d;
-					c = a;
+			if (c < b || d < b) {
+				b = c > d ? d + 1 : c + 1
+			} else {
+				if (e2 !== u[y]) {
+					b++
+				}
 			}
-			h = d;
+
+			if (b < d || g < d) {
+				d = b > g ? g + 1 : b + 1
+			} else {
+				if (e3 !== u[y]) {
+					d++
+				}
+			}
+
+			if (d < g || h < g) {
+				g = d > h ? h + 1 : d + 1
+			} else {
+				if (e4 !== u[y]) {
+					g++
+				}
+			}
+			p[y] = h = g
+			g = d
+			d = b
+			b = c
+			c = a
+		}
 	}
 
-	return h;
+	for (; x < m; ) {
+		var e = t.charCodeAt(x)
+		c = x
+		d = ++x
+		for (y = 0; y < n; y++) {
+			a = p[y]
+			if (a < c || d < c) {
+				d = a > d ? d + 1 : a + 1
+			} else {
+				if (e !== u[y]) {
+					d = c + 1
+				} else {
+					d = c
+				}
+			}
+			p[y] = d
+			c = a
+		}
+		h = d
+	}
+
+	return h
 }

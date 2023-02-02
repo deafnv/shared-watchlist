@@ -1,25 +1,25 @@
-import { createClient } from '@supabase/supabase-js';
-import { GetStaticPropsContext } from 'next';
-import { Database } from '../../../lib/database.types';
-import { useEffect, useState } from 'react';
-import Head from 'next/head';
-import Link from 'next/link';
+import { createClient } from '@supabase/supabase-js'
+import { GetStaticPropsContext } from 'next'
+import { Database } from '../../../lib/database.types'
+import { useEffect, useState } from 'react'
+import Head from 'next/head'
+import Link from 'next/link'
 
 export async function getStaticPaths() {
 	const supabase = createClient<Database>(
 		'https://esjopxdrlewtpffznsxh.supabase.co',
 		process.env.NEXT_PUBLIC_SUPABASE_API_KEY!
-	);
-	const { data } = await supabase.from('Genres').select().order('id');
+	)
+	const { data } = await supabase.from('Genres').select().order('id')
 
 	const paths = data?.map((item) => ({
 		params: { id: item.id.toString() }
-	}));
+	}))
 
 	return {
 		paths,
 		fallback: true
-	};
+	}
 }
 
 export function getStaticProps(context: GetStaticPropsContext) {
@@ -28,22 +28,22 @@ export function getStaticProps(context: GetStaticPropsContext) {
 			id: context.params?.id
 		},
 		revalidate: 360
-	};
+	}
 }
 
 export default function GenrePage({ id }: { id: number }) {
 	const [response, setResponse] = useState<
 		| ({ id: number } & { title: string | null } & {
-				Genres: { name: string | null } | { name: string | null }[] | null;
+				Genres: { name: string | null } | { name: string | null }[] | null
 		  })[]
 		| null
-	>();
+	>()
 
 	useEffect(() => {
 		const supabase = createClient<Database>(
 			'https://esjopxdrlewtpffznsxh.supabase.co',
 			process.env.NEXT_PUBLIC_SUPABASE_API_KEY!
-		);
+		)
 		const getData = async () => {
 			const { data } = await supabase
 				.from('Completed')
@@ -56,13 +56,13 @@ export default function GenrePage({ id }: { id: number }) {
           )
         `
 				)
-				.eq('Genres.id', id);
+				.eq('Genres.id', id)
 
-			setResponse(data!);
-		};
-		getData();
+			setResponse(data!)
+		}
+		getData()
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, []);
+	}, [])
 
 	if (!response?.[0]) {
 		return (
@@ -83,7 +83,7 @@ export default function GenrePage({ id }: { id: number }) {
 					<h2 className="p-2 text-3xl">No results found</h2>
 				</main>
 			</>
-		);
+		)
 	}
 
 	return (
@@ -118,10 +118,10 @@ export default function GenrePage({ id }: { id: number }) {
 									{item.title}
 								</Link>
 							</li>
-						);
+						)
 					})}
 				</ul>
 			</main>
 		</>
-	);
+	)
 }

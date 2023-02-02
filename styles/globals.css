@@ -55,8 +55,8 @@ html,
 body {
 	padding: 0;
 	margin: 0;
-	font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
-		Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+	font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen, Ubuntu, Cantarell,
+		Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
 	color: white;
 	background: #2e2e2e;
 }
@@ -202,7 +202,7 @@ input[type='checkbox'] {
 
 .checkbox-container .custom-checkbox {
 	position: relative;
-	min-height: 1rem;	
+	min-height: 1rem;
 	min-width: 1rem;
 	background-color: rgb(230, 230, 230);
 	border-radius: 15%;
@@ -214,8 +214,7 @@ input[type='checkbox'] {
 	background-color: rgb(201, 201, 201);
 }
 
-.checkbox-container:has(input[type='checkbox']:focus-visible)
-	> .custom-checkbox {
+.checkbox-container:has(input[type='checkbox']:focus-visible) > .custom-checkbox {
 	border-width: 2px;
 	border-color: black;
 }

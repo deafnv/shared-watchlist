@@ -1,58 +1,57 @@
-import { createClient } from '@supabase/supabase-js';
-import { Database } from '../../lib/database.types';
-import { BaseSyntheticEvent, useEffect, useState } from 'react';
-import Head from 'next/head';
-import axios from 'axios';
-import { loadingGlimmer } from '../../components/LoadingGlimmer';
-import { CircularProgress } from '@mui/material';
+import { createClient } from '@supabase/supabase-js'
+import { Database } from '../../lib/database.types'
+import { BaseSyntheticEvent, useEffect, useState } from 'react'
+import Head from 'next/head'
+import axios from 'axios'
+import { loadingGlimmer } from '../../components/LoadingGlimmer'
+import { CircularProgress } from '@mui/material'
 
 export default function Seasonal({
 	res
 }: {
-	res: Database['public']['Tables']['PTW-CurrentSeason']['Row'][];
+	res: Database['public']['Tables']['PTW-CurrentSeason']['Row'][]
 }) {
 	const [response, setResponse] =
-		useState<Database['public']['Tables']['PTW-CurrentSeason']['Row'][]>();
-	const [isEdited, setIsEdited] = useState<string>('');
-	const [isLoadingClient, setIsLoadingClient] = useState(true);
-	const [isLoadingEditForm, setIsLoadingEditForm] = useState<Array<string>>([]);
+		useState<Database['public']['Tables']['PTW-CurrentSeason']['Row'][]>()
+	const [isEdited, setIsEdited] = useState<string>('')
+	const [isLoadingClient, setIsLoadingClient] = useState(true)
+	const [isLoadingEditForm, setIsLoadingEditForm] = useState<Array<string>>([])
 
 	useEffect(() => {
 		const supabase = createClient<Database>(
 			'https://esjopxdrlewtpffznsxh.supabase.co',
 			process.env.NEXT_PUBLIC_SUPABASE_API_KEY!
-		);
+		)
 		const getData = async () => {
 			const { data } = await supabase
 				.from('PTW-CurrentSeason')
 				.select()
-				.order('id', { ascending: true });
+				.order('id', { ascending: true })
 
-			setResponse(data!);
-			setIsLoadingClient(false);
+			setResponse(data!)
+			setIsLoadingClient(false)
 
 			await axios
 				.get('https://update.ilovesabrina.org:3005/refresh')
-				.catch((error) => console.log(error));
-		};
-		getData();
+				.catch((error) => console.log(error))
+		}
+		getData()
 
 		const refresh = setInterval(
 			() => axios.get('https://update.ilovesabrina.org:3005/refresh'),
 			3500000
-		);
+		)
 
 		document.addEventListener('click', (e: any) => {
-			if (e.target?.tagName === 'INPUT' || e.target?.tagName === 'SELECT')
-				return;
-			setIsEdited('');
-		});
+			if (e.target?.tagName === 'INPUT' || e.target?.tagName === 'SELECT') return
+			setIsEdited('')
+		})
 		window.addEventListener('focusout', () => {
-			setIsEdited('');
-		});
+			setIsEdited('')
+		})
 		window.addEventListener('keydown', (e) => {
-			if (e.key === 'Escape') setIsEdited('');
-		});
+			if (e.key === 'Escape') setIsEdited('')
+		})
 
 		supabase
 			.channel('public:PTW-CurrentSeason')
@@ -63,17 +62,17 @@ export default function Seasonal({
 					const { data } = await supabase
 						.from('PTW-CurrentSeason')
 						.select()
-						.order('id', { ascending: true });
-					setResponse(data!);
+						.order('id', { ascending: true })
+					setResponse(data!)
 				}
 			)
-			.subscribe();
+			.subscribe()
 
 		return () => {
-			supabase.removeAllChannels();
-			clearInterval(refresh);
-		};
-	}, []);
+			supabase.removeAllChannels()
+			clearInterval(refresh)
+		}
+	}, [])
 
 	return (
 		<>
@@ -95,22 +94,22 @@ export default function Seasonal({
 						{isLoadingClient
 							? loadingGlimmer(2)
 							: response?.map((item) => {
-									let status;
+									let status
 									switch (item.status) {
 										case 'Not loaded':
-											status = 'crimson';
-											break;
+											status = 'crimson'
+											break
 										case 'Loaded':
-											status = 'orange';
-											break;
+											status = 'orange'
+											break
 										case 'Watched':
-											status = 'green';
-											break;
+											status = 'green'
+											break
 										case 'Not aired':
-											status = 'black';
-											break;
+											status = 'black'
+											break
 										default:
-											status = '';
+											status = ''
 									}
 									return (
 										<tr key={item.id}>
@@ -119,18 +118,18 @@ export default function Seasonal({
 													opacity: isLoadingEditForm.includes(`seasonal_title_${item.id}`) ? 0.5 : 1
 												}}
 												onDoubleClick={() => {
-													setIsEdited(
-														`seasonal_title_${item.title}_${item.id}`
-													);
+													setIsEdited(`seasonal_title_${item.title}_${item.id}`)
 												}}
-												className='relative'
+												className="relative"
 											>
 												<span>
 													{isEdited == `seasonal_title_${item.title}_${item.id}`
 														? editForm(`seasonal_title`, item.id, item.title!)
 														: item.title}
 												</span>
-												{isLoadingEditForm.includes(`seasonal_title_${item.id}`) && <CircularProgress size={30} className="absolute top-[20%] left-[48%]" />}
+												{isLoadingEditForm.includes(`seasonal_title_${item.id}`) && (
+													<CircularProgress size={30} className="absolute top-[20%] left-[48%]" />
+												)}
 											</td>
 											<td
 												style={{
@@ -138,62 +137,57 @@ export default function Seasonal({
 													opacity: isLoadingEditForm.includes(`status_${item.id}`) ? 0.5 : 1
 												}}
 												onDoubleClick={() => {
-													setIsEdited(
-														`seasonal_status_${item.title}_${item.id}`
-													);
+													setIsEdited(`seasonal_status_${item.title}_${item.id}`)
 												}}
-												className='relative'
+												className="relative"
 											>
 												<span>
 													{isEdited == `seasonal_status_${item.title}_${item.id}`
 														? editStatus(item.id)
 														: ''}
 												</span>
-												{isLoadingEditForm.includes(`status_${item.id}`) && <CircularProgress size={30} className="absolute top-[20%] left-[48%]" />}
+												{isLoadingEditForm.includes(`status_${item.id}`) && (
+													<CircularProgress size={30} className="absolute top-[20%] left-[48%]" />
+												)}
 											</td>
 										</tr>
-									);
+									)
 							  })}
 					</tbody>
 				</table>
 			</main>
 		</>
-	);
+	)
 
-	function editForm(
-		field: 'seasonal_title',
-		id: number,
-		ogvalue: string
-	): React.ReactNode {
-		let column: string;
-		let row = (id + 2).toString();
+	function editForm(field: 'seasonal_title', id: number, ogvalue: string): React.ReactNode {
+		let column: string
+		let row = (id + 2).toString()
 		switch (field) {
 			case 'seasonal_title':
-				column = 'O';
-				break;
+				column = 'O'
+				break
 		}
 
 		async function handleSubmit(event: BaseSyntheticEvent): Promise<void> {
-			event.preventDefault();
-			setIsLoadingEditForm(isLoadingEditForm.concat(`${field}_${id}`));
+			event.preventDefault()
+			setIsLoadingEditForm(isLoadingEditForm.concat(`${field}_${id}`))
 
 			try {
 				await axios.post('/api/update', {
 					content: event.target[0].value,
 					cell: column + row
-				});
+				})
 
-				const changed = response?.slice();
-				if (!changed) return;
-				changed.find((item) => item.id === id)!['title'] =
-					event.target[0].value;
-				setResponse(changed);
-				setIsEdited('');
-				setIsLoadingEditForm(isLoadingEditForm.filter(item => item == `${field}_${id}`));
+				const changed = response?.slice()
+				if (!changed) return
+				changed.find((item) => item.id === id)!['title'] = event.target[0].value
+				setResponse(changed)
+				setIsEdited('')
+				setIsLoadingEditForm(isLoadingEditForm.filter((item) => item == `${field}_${id}`))
 			} catch (error) {
-				setIsLoadingEditForm(isLoadingEditForm.filter(item => item == `${field}_${id}`));
-				alert(error);
-				return;
+				setIsLoadingEditForm(isLoadingEditForm.filter((item) => item == `${field}_${id}`))
+				alert(error)
+				return
 			}
 		}
 
@@ -215,34 +209,35 @@ export default function Seasonal({
 						/>
 					</form>
 				</div>
-				{isLoadingEditForm.includes(`seasonal_title_${id}`) && <CircularProgress size={30} className="absolute left-[48%]" />}
+				{isLoadingEditForm.includes(`seasonal_title_${id}`) && (
+					<CircularProgress size={30} className="absolute left-[48%]" />
+				)}
 			</div>
-		);
+		)
 	}
 
 	function editStatus(id: number) {
 		async function handleSubmit(event: BaseSyntheticEvent) {
-			event.preventDefault();
-			setIsLoadingEditForm(isLoadingEditForm.concat(`status_${id}`));
+			event.preventDefault()
+			setIsLoadingEditForm(isLoadingEditForm.concat(`status_${id}`))
 
-			let row = id + 2;
+			let row = id + 2
 			try {
 				await axios.post('/api/seasonal/updatestatus', {
 					content: event.target.childNodes[0].value,
 					cells: `P${row}:P${row}`
-				});
+				})
 
-				const changed = response?.slice();
-				if (!changed) return;
-				changed.find((item) => item.id === id)!['status'] =
-					event.target.childNodes[0].value;
-				setResponse(changed);
-				setIsEdited('');
-				setIsLoadingEditForm(isLoadingEditForm.filter(item => item == `status_${id}`));
+				const changed = response?.slice()
+				if (!changed) return
+				changed.find((item) => item.id === id)!['status'] = event.target.childNodes[0].value
+				setResponse(changed)
+				setIsEdited('')
+				setIsLoadingEditForm(isLoadingEditForm.filter((item) => item == `status_${id}`))
 			} catch (error) {
-				setIsLoadingEditForm(isLoadingEditForm.filter(item => item == `status_${id}`));;
-				alert(error);
-				return;
+				setIsLoadingEditForm(isLoadingEditForm.filter((item) => item == `status_${id}`))
+				alert(error)
+				return
 			}
 		}
 
@@ -261,7 +256,7 @@ export default function Seasonal({
 					<form onSubmit={handleSubmit} className="text-gray-800">
 						<select
 							onChange={(e) => {
-								(e.target.parentNode as HTMLFormElement)!.requestSubmit();
+								;(e.target.parentNode as HTMLFormElement)!.requestSubmit()
 							}}
 							className="h-full w-full"
 						>
@@ -273,8 +268,10 @@ export default function Seasonal({
 						</select>
 					</form>
 				</div>
-				{isLoadingEditForm.includes(`status_${id}`) && <CircularProgress size={30} className="absolute left-[48%]" />}
+				{isLoadingEditForm.includes(`status_${id}`) && (
+					<CircularProgress size={30} className="absolute left-[48%]" />
+				)}
 			</div>
-		);
+		)
 	}
 }

@@ -1,34 +1,34 @@
-import { useEffect } from 'react';
-import Navbar from '../components/Navbar';
-import '../styles/globals.css';
-import type { AppProps } from 'next/app';
-import '../styles/nprogress.css';
-import NProgress from 'nprogress';
-import { useRouter } from 'next/router';
-import { LoadingProvider } from '../components/LoadingContext';
-import { ThemeProvider, createTheme } from '@mui/material';
-import { orange } from '@mui/material/colors';
-import Loading from '../components/LoadingComponent';
+import { useEffect } from 'react'
+import Navbar from '../components/Navbar'
+import '../styles/globals.css'
+import type { AppProps } from 'next/app'
+import '../styles/nprogress.css'
+import NProgress from 'nprogress'
+import { useRouter } from 'next/router'
+import { LoadingProvider } from '../components/LoadingContext'
+import { ThemeProvider, createTheme } from '@mui/material'
+import { orange } from '@mui/material/colors'
+import Loading from '../components/LoadingComponent'
 
 declare module '@mui/material/styles' {
 	interface Theme {
 		status: {
-			danger: string;
-		};
+			danger: string
+		}
 	}
 	// allow configuration using `createTheme`
 	interface ThemeOptions {
 		status?: {
-			danger?: string;
-		};
+			danger?: string
+		}
 	}
 }
 
 export default function App({ Component, pageProps }: AppProps) {
-	const router = useRouter();
+	const router = useRouter()
 	NProgress.configure({
 		showSpinner: false
-	});
+	})
 
 	const theme = createTheme({
 		status: {
@@ -39,24 +39,24 @@ export default function App({ Component, pageProps }: AppProps) {
 				main: '#14a1ff'
 			}
 		}
-	});
+	})
 
 	useEffect(() => {
-		const handleRouteStart = () => NProgress.start();
-		const handleRouteDone = () => NProgress.done();
+		const handleRouteStart = () => NProgress.start()
+		const handleRouteDone = () => NProgress.done()
 
-		router.events.on('routeChangeStart', handleRouteStart);
-		router.events.on('routeChangeComplete', handleRouteDone);
-		router.events.on('routeChangeError', handleRouteDone);
+		router.events.on('routeChangeStart', handleRouteStart)
+		router.events.on('routeChangeComplete', handleRouteDone)
+		router.events.on('routeChangeError', handleRouteDone)
 
 		return () => {
 			// Make sure to remove the event handler on unmount!
-			router.events.off('routeChangeStart', handleRouteStart);
-			router.events.off('routeChangeComplete', handleRouteDone);
-			router.events.off('routeChangeError', handleRouteDone);
-		};
+			router.events.off('routeChangeStart', handleRouteStart)
+			router.events.off('routeChangeComplete', handleRouteDone)
+			router.events.off('routeChangeError', handleRouteDone)
+		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, []);
+	}, [])
 
 	return (
 		<ThemeProvider theme={theme}>
@@ -66,5 +66,5 @@ export default function App({ Component, pageProps }: AppProps) {
 				</Navbar>
 			</LoadingProvider>
 		</ThemeProvider>
-	);
+	)
 }

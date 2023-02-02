@@ -1,146 +1,133 @@
-import Head from 'next/head';
-import { BaseSyntheticEvent, useEffect, useState, useRef } from 'react';
-import axios from 'axios';
-import { Reorder } from 'framer-motion';
-import {
-	getRandomInt,
-	sortListByNamePTW,
-	sortSymbol
-} from '../lib/list_methods';
-import { createClient } from '@supabase/supabase-js';
-import { Database } from '../lib/database.types';
-import { loadingGlimmer } from '../components/LoadingGlimmer';
-import { CircularProgress, Skeleton } from '@mui/material';
-import DoneIcon from '@mui/icons-material/Done';
-import { useLoading } from '../components/LoadingContext';
-import CancelIcon from '@mui/icons-material/Cancel';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
+import Head from 'next/head'
+import { BaseSyntheticEvent, useEffect, useState, useRef } from 'react'
+import axios from 'axios'
+import { Reorder } from 'framer-motion'
+import { getRandomInt, sortListByNamePTW, sortSymbol } from '../lib/list_methods'
+import { createClient } from '@supabase/supabase-js'
+import { Database } from '../lib/database.types'
+import { loadingGlimmer } from '../components/LoadingGlimmer'
+import { CircularProgress, Skeleton } from '@mui/material'
+import DoneIcon from '@mui/icons-material/Done'
+import { useLoading } from '../components/LoadingContext'
+import CancelIcon from '@mui/icons-material/Cancel'
+import MoreVertIcon from '@mui/icons-material/MoreVert'
 
 export default function PTW() {
-	const rolledTitleRef = useRef('???');
-	const rolledTitleElementRef = useRef<HTMLHeadingElement>(null);
-	const onlineUsersRef = useRef<any>(null);
-	const onlineUsersElementRef = useRef<HTMLSpanElement>(null);
-	const latencyRef = useRef<HTMLSpanElement>(null);
-	const addGachaRollRef = useRef<HTMLDivElement>(null);
-	const contextMenuRef = useRef<HTMLDivElement>(null);
+	const rolledTitleRef = useRef('???')
+	const rolledTitleElementRef = useRef<HTMLHeadingElement>(null)
+	const onlineUsersRef = useRef<any>(null)
+	const onlineUsersElementRef = useRef<HTMLSpanElement>(null)
+	const latencyRef = useRef<HTMLSpanElement>(null)
+	const addGachaRollRef = useRef<HTMLDivElement>(null)
+	const contextMenuRef = useRef<HTMLDivElement>(null)
 
 	const [responseRolled, setResponseRolled] =
-		useState<Database['public']['Tables']['PTW-Rolled']['Row'][]>();
+		useState<Database['public']['Tables']['PTW-Rolled']['Row'][]>()
 	const [responseRolled1, setResponseRolled1] =
-		useState<Database['public']['Tables']['PTW-Rolled']['Row'][]>();
+		useState<Database['public']['Tables']['PTW-Rolled']['Row'][]>()
 	const [responseCasual, setResponseCasual] =
-		useState<Database['public']['Tables']['PTW-Casual']['Row'][]>();
+		useState<Database['public']['Tables']['PTW-Casual']['Row'][]>()
 	const [responseNonCasual, setResponseNonCasual] =
-		useState<Database['public']['Tables']['PTW-NonCasual']['Row'][]>();
+		useState<Database['public']['Tables']['PTW-NonCasual']['Row'][]>()
 	const [responseMovies, setResponseMovies] =
-		useState<Database['public']['Tables']['PTW-Movies']['Row'][]>();
-	const [sortMethod, setSortMethod] = useState<string>('');
-	const [isEdited, setIsEdited] = useState<string>('');
-	const [reordered, setReordered] = useState(false);
-	const [isLoadingClient, setIsLoadingClient] = useState(true);
-	const [isLoadingEditForm, setIsLoadingEditForm] = useState<Array<string>>([]);
+		useState<Database['public']['Tables']['PTW-Movies']['Row'][]>()
+	const [sortMethod, setSortMethod] = useState<string>('')
+	const [isEdited, setIsEdited] = useState<string>('')
+	const [reordered, setReordered] = useState(false)
+	const [isLoadingClient, setIsLoadingClient] = useState(true)
+	const [isLoadingEditForm, setIsLoadingEditForm] = useState<Array<string>>([])
 	const [contextMenu, setContextMenu] = useState<{
-		top: number;
-		left: number;
-		currentItem: Database['public']['Tables']['PTW-Rolled']['Row'] | null;
-	}>({ top: 0, left: 0, currentItem: null });
-	const { setLoading } = useLoading();
+		top: number
+		left: number
+		currentItem: Database['public']['Tables']['PTW-Rolled']['Row'] | null
+	}>({ top: 0, left: 0, currentItem: null })
+	const { setLoading } = useLoading()
 
 	const setRolledTitle = (value: string) => {
 		if (value == '???') {
-			addGachaRollRef.current!.style.visibility = 'hidden';
+			addGachaRollRef.current!.style.visibility = 'hidden'
 		} else {
-			addGachaRollRef.current!.style.visibility = 'visible';
+			addGachaRollRef.current!.style.visibility = 'visible'
 		}
-    rolledTitleElementRef.current!.innerHTML = value;
-		rolledTitleRef.current = value;
-  }
+		rolledTitleElementRef.current!.innerHTML = value
+		rolledTitleRef.current = value
+	}
 
 	const setOnlineUsers = (value: any) => {
-		if (!value) return;
+		if (!value) return
 		const valueArr = Object.keys(value).map((key, index) => value[key])
-    onlineUsersRef.current = value;
-		onlineUsersElementRef.current!.innerHTML = `${valueArr.length} user(s) online`;
-  }
+		onlineUsersRef.current = value
+		onlineUsersElementRef.current!.innerHTML = `${valueArr.length} user(s) online`
+	}
 
 	useEffect(() => {
 		setOnlineUsers(onlineUsersRef.current)
-		setRolledTitle(rolledTitleRef.current);
+		setRolledTitle(rolledTitleRef.current)
 	})
 
 	const setLatency = (value: number) => {
-		if(latencyRef.current) latencyRef.current.innerHTML = `Latency: ${value.toFixed(1)}ms`;
+		if (latencyRef.current) latencyRef.current.innerHTML = `Latency: ${value.toFixed(1)}ms`
 	}
 
 	const supabase = createClient<Database>(
 		'https://esjopxdrlewtpffznsxh.supabase.co',
 		process.env.NEXT_PUBLIC_SUPABASE_API_KEY!
-	);
-	
+	)
+
 	const channel = supabase.channel('room1')
 	useEffect(() => {
 		const getData = async () => {
-			const dataRolled = await supabase
-				.from('PTW-Rolled')
-				.select()
-				.order('id', { ascending: true });
-			const dataCasual = await supabase
-				.from('PTW-Casual')
-				.select()
-				.order('id', { ascending: true });
+			const dataRolled = await supabase.from('PTW-Rolled').select().order('id', { ascending: true })
+			const dataCasual = await supabase.from('PTW-Casual').select().order('id', { ascending: true })
 			const dataNonCasual = await supabase
 				.from('PTW-NonCasual')
 				.select()
-				.order('id', { ascending: true });
-			const dataMovies = await supabase
-				.from('PTW-Movies')
-				.select()
-				.order('id', { ascending: true });
+				.order('id', { ascending: true })
+			const dataMovies = await supabase.from('PTW-Movies').select().order('id', { ascending: true })
 
-			setResponseRolled(dataRolled.data!);
-			setResponseRolled1(dataRolled.data!);
-			setResponseCasual(dataCasual.data!);
-			setResponseNonCasual(dataNonCasual.data!);
-			setResponseMovies(dataMovies.data!);
-			setIsLoadingClient(false);
+			setResponseRolled(dataRolled.data!)
+			setResponseRolled1(dataRolled.data!)
+			setResponseCasual(dataCasual.data!)
+			setResponseNonCasual(dataNonCasual.data!)
+			setResponseMovies(dataMovies.data!)
+			setIsLoadingClient(false)
 
 			await axios
 				.get('https://update.ilovesabrina.org:3005/refresh')
-				.catch((error) => console.log(error));
-		};
-		getData();
+				.catch((error) => console.log(error))
+		}
+		getData()
 
 		const refresh = setInterval(
 			() => axios.get('https://update.ilovesabrina.org:3005/refresh'),
 			3500000
-		);
+		)
 
 		const resetOnClickOut = (e: any) => {
-			if (e.target?.tagName !== 'INPUT') setIsEdited('');
+			if (e.target?.tagName !== 'INPUT') setIsEdited('')
 			if (e.target?.tagName !== 'INPUT' && isEdited) {
-				setIsEdited('');
+				setIsEdited('')
 			}
 			if (
 				e.target.tagName !== 'svg' &&
 				!contextMenuRef.current?.contains(e.target) &&
 				contextMenuRef.current
 			) {
-				setContextMenu({ top: 0, left: 0, currentItem: null });
+				setContextMenu({ top: 0, left: 0, currentItem: null })
 			}
 		}
 
 		const resetEditedOnFocusOut = () => {
-			setIsEdited('');
-		}
-		
-		const resetEditedOnEscape = (e: KeyboardEvent) => {
-			if (e.key === 'Escape') setIsEdited('');
+			setIsEdited('')
 		}
 
-		document.addEventListener('click', resetOnClickOut);
-		window.addEventListener('focusout', resetEditedOnFocusOut);
-		window.addEventListener('keydown', resetEditedOnEscape);
+		const resetEditedOnEscape = (e: KeyboardEvent) => {
+			if (e.key === 'Escape') setIsEdited('')
+		}
+
+		document.addEventListener('click', resetOnClickOut)
+		window.addEventListener('focusout', resetEditedOnFocusOut)
+		window.addEventListener('keydown', resetEditedOnEscape)
 
 		supabase
 			.channel('*')
@@ -154,76 +141,72 @@ export default function PTW() {
 					const { data } = await supabase
 						.from(payload.table)
 						.select()
-						.order('id', { ascending: true });
+						.order('id', { ascending: true })
 
 					switch (payload.table) {
 						case 'PTW-Rolled':
-							setResponseRolled(
-								data as Database['public']['Tables']['PTW-Rolled']['Row'][]
-							);
-							setResponseRolled1(
-								data as Database['public']['Tables']['PTW-Rolled']['Row'][]
-							);
-							setReordered(false);
-							setSortMethod('');
-							break;
+							setResponseRolled(data as Database['public']['Tables']['PTW-Rolled']['Row'][])
+							setResponseRolled1(data as Database['public']['Tables']['PTW-Rolled']['Row'][])
+							setReordered(false)
+							setSortMethod('')
+							break
 						case 'PTW-Casual':
-							setResponseCasual(data!);
-							break;
+							setResponseCasual(data!)
+							break
 						case 'PTW-NonCasual':
-							setResponseNonCasual(data!);
-							break;
+							setResponseNonCasual(data!)
+							break
 						case 'PTW-Movies':
-							setResponseMovies(data!);
-							break;
+							setResponseMovies(data!)
+							break
 					}
 				}
 			})
-			.subscribe();
+			.subscribe()
 
-    channel
+		channel
 			.on('broadcast', { event: 'ROLL' }, (payload) => {
 				setRolledTitle(payload.message)
 				if (payload.isLoading) {
-					setLoading(true);
-				} else setLoading(false);
+					setLoading(true)
+				} else setLoading(false)
 			})
-			.subscribe();
-			
-		let pingInterval: ReturnType<typeof setInterval> | undefined;
+			.subscribe()
+
+		let pingInterval: ReturnType<typeof setInterval> | undefined
 		const latencyChannel = supabase
 			.channel(`ping:${getRandomInt(1000000000)}`, {
 				config: {
-					broadcast: { ack: true },
-				},	
+					broadcast: { ack: true }
+				}
 			})
 			.subscribe((status) => {
 				if (status == 'SUBSCRIBED') {
 					pingInterval = setInterval(async () => {
-						const begin = performance.now();
+						const begin = performance.now()
 
 						const response = await latencyChannel.send({
 							type: 'broadcast',
 							event: 'latency',
-							payload: {},
-						});
+							payload: {}
+						})
 
 						if (response !== 'ok') {
-							console.log('Ping error');
-							setLatency(-1);
+							console.log('Ping error')
+							setLatency(-1)
 						} else {
-							const end = performance.now();
-							const newLatency = end - begin;
-							setLatency(newLatency);
+							const end = performance.now()
+							const newLatency = end - begin
+							setLatency(newLatency)
 						}
-
 					}, 5000)
 				}
 			})
 
-		const onlineChannel = supabase.channel('online-users')
+		const onlineChannel = supabase
+			.channel('online-users')
 			.on('presence', { event: 'sync' }, () => {
-				setOnlineUsers(onlineChannel.presenceState());
+				setOnlineUsers(onlineChannel.presenceState())
 			})
 			.subscribe(async (status) => {
 				if (status === 'SUBSCRIBED') {
@@ -233,17 +216,17 @@ export default function PTW() {
 			})
 
 		return () => {
-			supabase.removeAllChannels();
+			supabase.removeAllChannels()
 			//? Not sure why this needs to be unsubscribed even with remove all channels
-			latencyChannel.unsubscribe();
-			clearInterval(refresh);
-			clearInterval(pingInterval);
-			document.removeEventListener('click', resetOnClickOut);
-			window.removeEventListener('focusout', resetEditedOnFocusOut);
-			window.removeEventListener('keydown', resetEditedOnEscape);
-		};
+			latencyChannel.unsubscribe()
+			clearInterval(refresh)
+			clearInterval(pingInterval)
+			document.removeEventListener('click', resetOnClickOut)
+			window.removeEventListener('focusout', resetEditedOnFocusOut)
+			window.removeEventListener('keydown', resetEditedOnEscape)
+		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, []);
+	}, [])
 
 	return (
 		<>
@@ -262,8 +245,8 @@ export default function PTW() {
 							{sortMethod ? (
 								<span
 									onClick={() => {
-										setResponseRolled(responseRolled1);
-										setSortMethod('');
+										setResponseRolled(responseRolled1)
+										setSortMethod('')
 									}}
 									className="cursor-pointer"
 								>
@@ -280,79 +263,76 @@ export default function PTW() {
 									sortMethod,
 									setSortMethod,
 									setResponseRolled
-								);
-								setReordered(false);
+								)
+								setReordered(false)
 							}}
 							className="flex items-center justify-center h-10 w-[90dvw] sm:w-[30rem] bg-sky-600 cursor-pointer border-white border-solid border-[1px]"
 						>
 							<span className="font-bold">Title</span>
 						</div>
-						{isLoadingClient ? 
-						<div className="flex flex-col items-center justify-around h-[448px] w-[90dvw] sm:w-[30rem] border-white border-solid border-[1px] border-t-0">
-							{Array(8)
-								.fill('')
-								.map((item, index) => (
-									<Skeleton
-										key={index}
-										sx={{ backgroundColor: 'grey.700' }}
-										animation="wave"
-										variant="rounded"
-										
-										width={460}
-										height={40}
-									/>
-								))}
-						</div>
-						 : 
-						<Reorder.Group
-							values={responseRolled ?? []}
-							dragConstraints={{ top: 500 }}
-							draggable={sortMethod ? true : false}
-							onReorder={(newOrder) => {
-								setResponseRolled(newOrder);
-								setReordered(true);
-							}}
-							className="w-[90dvw] sm:w-[30rem] border-white border-solid border-[1px] border-t-0"
-						>
-							{responseRolled?.map((item, i) => {
-								return (
-									!isLoadingClient && (
-										<Reorder.Item
-											value={item}
-											key={item.id}
-											className="p-0 hover:bg-neutral-700"
-										>
-											<div
-												style={{
-													cursor: sortMethod ? 'unset' : 'move',
-													opacity: isLoadingEditForm.includes(`rolled_title_${item.id}`) ? 0.5 : 1
-												}}
-												onDoubleClick={() => {
-													setIsEdited(`rolled_${item.title}_${item.id}`);
-												}}
-												className="relative p-2 text-center group"
-											>
-												<span className="cursor-text">
-													{isEdited == `rolled_${item.title}_${item.id}`
-														? editForm('rolled_title', item.id, item.title!)
-														: item.title}
-													<div
-														onClick={(e) => {
-															handleMenuClick(e, item);
-														}}
-														className="absolute top-2 z-10 h-7 w-7 invisible group-hover:visible cursor-pointer rounded-full hover:bg-gray-500"
-													>
-														<MoreVertIcon />
-													</div>
-												</span>
-												{isLoadingEditForm.includes(`rolled_title_${item.id}`) && <CircularProgress size={30} className="absolute top-[20%] left-[48%]" />}
-											</div>
-										</Reorder.Item>
+						{isLoadingClient ? (
+							<div className="flex flex-col items-center justify-around h-[448px] w-[90dvw] sm:w-[30rem] border-white border-solid border-[1px] border-t-0">
+								{Array(8)
+									.fill('')
+									.map((item, index) => (
+										<Skeleton
+											key={index}
+											sx={{ backgroundColor: 'grey.700' }}
+											animation="wave"
+											variant="rounded"
+											width={460}
+											height={40}
+										/>
+									))}
+							</div>
+						) : (
+							<Reorder.Group
+								values={responseRolled ?? []}
+								dragConstraints={{ top: 500 }}
+								draggable={sortMethod ? true : false}
+								onReorder={(newOrder) => {
+									setResponseRolled(newOrder)
+									setReordered(true)
+								}}
+								className="w-[90dvw] sm:w-[30rem] border-white border-solid border-[1px] border-t-0"
+							>
+								{responseRolled?.map((item, i) => {
+									return (
+										!isLoadingClient && (
+											<Reorder.Item value={item} key={item.id} className="p-0 hover:bg-neutral-700">
+												<div
+													style={{
+														cursor: sortMethod ? 'unset' : 'move',
+														opacity: isLoadingEditForm.includes(`rolled_title_${item.id}`) ? 0.5 : 1
+													}}
+													onDoubleClick={() => {
+														setIsEdited(`rolled_${item.title}_${item.id}`)
+													}}
+													className="relative p-2 text-center group"
+												>
+													<span className="cursor-text">
+														{isEdited == `rolled_${item.title}_${item.id}`
+															? editForm('rolled_title', item.id, item.title!)
+															: item.title}
+														<div
+															onClick={(e) => {
+																handleMenuClick(e, item)
+															}}
+															className="absolute top-2 z-10 h-7 w-7 invisible group-hover:visible cursor-pointer rounded-full hover:bg-gray-500"
+														>
+															<MoreVertIcon />
+														</div>
+													</span>
+													{isLoadingEditForm.includes(`rolled_title_${item.id}`) && (
+														<CircularProgress size={30} className="absolute top-[20%] left-[48%]" />
+													)}
+												</div>
+											</Reorder.Item>
+										)
 									)
-								);
-							})}
-						</Reorder.Group>
-						}
+								})}
+							</Reorder.Group>
+						)}
 						<div
 							style={{
 								visibility: !sortMethod && reordered ? 'visible' : 'hidden'
@@ -360,15 +340,15 @@ export default function PTW() {
 							className="flex flex-col items-center w-[30rem] px-2"
 						>
 							<span className="mt-2 text-red-500 text-center">
-								⚠ Live updates will be paused while changes are being made to
-								this table (Not really)
+								⚠ Live updates will be paused while changes are being made to this table (Not
+								really)
 							</span>
 							<div className="flex gap-2 my-2">
 								<button
 									className="input-submit p-2 rounded-md"
 									onClick={() => {
-										saveReorder();
-										setReordered(false);
+										saveReorder()
+										setReordered(false)
 									}}
 								>
 									Save Changes
@@ -376,8 +356,8 @@ export default function PTW() {
 								<button
 									className="input-submit p-2 rounded-md"
 									onClick={() => {
-										setResponseRolled(responseRolled1);
-										setReordered(false);
+										setResponseRolled(responseRolled1)
+										setReordered(false)
 									}}
 								>
 									Cancel
@@ -388,27 +368,15 @@ export default function PTW() {
 					<Gacha />
 				</div>
 				<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-					<PTWTable
-						response={responseCasual}
-						tableName="Casual"
-						tableId="casual"
-					/>
-					<PTWTable
-						response={responseNonCasual}
-						tableName="Non-Casual"
-						tableId="noncasual"
-					/>
-					<PTWTable
-						response={responseMovies}
-						tableName="Movies"
-						tableId="movies"
-					/>
+					<PTWTable response={responseCasual} tableName="Casual" tableId="casual" />
+					<PTWTable response={responseNonCasual} tableName="Non-Casual" tableId="noncasual" />
+					<PTWTable response={responseMovies} tableName="Movies" tableId="movies" />
 				</div>
 				<LatencyBadge />
 				{contextMenu.currentItem && <ContextMenu />}
 			</main>
 		</>
-	);
+	)
 
 	function ContextMenu() {
 		return (
@@ -432,102 +400,107 @@ export default function PTW() {
 					</button>
 				</li>
 			</menu>
-		);
+		)
 
 		async function addToCompleted() {
-			setLoading(true);
+			setLoading(true)
 			try {
 				await axios.post('/api/ptw/addtocompleted', {
 					content: responseRolled,
 					id: contextMenu.currentItem?.id
-				});
-				setLoading(false);
-			} 
-			catch (error) {
-				setLoading(false);
-				alert(error);
+				})
+				setLoading(false)
+			} catch (error) {
+				setLoading(false)
+				alert(error)
 			}
 		}
 	}
 
-	function handleMenuClick(e: BaseSyntheticEvent, item: Database['public']['Tables']['PTW-Rolled']['Row']) {
-		const { top, left } = e.target.getBoundingClientRect();
+	function handleMenuClick(
+		e: BaseSyntheticEvent,
+		item: Database['public']['Tables']['PTW-Rolled']['Row']
+	) {
+		const { top, left } = e.target.getBoundingClientRect()
 
 		setContextMenu({
 			top: top + window.scrollY,
 			left: left + window.scrollX + 25,
 			currentItem: item
-		});
+		})
 	}
 
 	function LatencyBadge() {
 		function handleOpen(e: BaseSyntheticEvent) {
-			const target = e.target as HTMLDivElement;
+			const target = e.target as HTMLDivElement
 			if (target.style.width != '18rem') {
-				target.style.width = '18rem';
+				target.style.width = '18rem'
 			} else {
 				target.style.width = '8.4rem'
 			}
 		}
 
 		return (
-			<div onClick={handleOpen} className='fixed bottom-6 left-6 flex items-center justify-between z-50 p-2 max-h-[2.5rem] w-[8.4rem] rounded-full bg-black border-pink-500 border-[1px] whitespace-nowrap overflow-hidden cursor-pointer ease-out transition-[width]'>
-				<span ref={latencyRef} className='text-gray-300 mr-4 pointer-events-none'>Latency: -1.0ms</span>
-				<span className='text-gray-300 mx-auto pointer-events-none'> · </span>
-				<span ref={onlineUsersElementRef} className='text-gray-300 ml-4 pointer-events-none'></span>
+			<div
+				onClick={handleOpen}
+				className="fixed bottom-6 left-6 flex items-center justify-between z-50 p-2 max-h-[2.5rem] w-[8.4rem] rounded-full bg-black border-pink-500 border-[1px] whitespace-nowrap overflow-hidden cursor-pointer ease-out transition-[width]"
+			>
+				<span ref={latencyRef} className="text-gray-300 mr-4 pointer-events-none">
+					Latency: -1.0ms
+				</span>
+				<span className="text-gray-300 mx-auto pointer-events-none"> · </span>
+				<span ref={onlineUsersElementRef} className="text-gray-300 ml-4 pointer-events-none"></span>
 			</div>
 		)
 	}
 
 	function Gacha() {
 		function handleSubmit(e: BaseSyntheticEvent) {
-			e.preventDefault();
-			if (!responseCasual || !responseNonCasual || !responseMovies) return;
+			e.preventDefault()
+			if (!responseCasual || !responseNonCasual || !responseMovies) return
 
-			const target = e.target as any;
-			const categoryCasual = target[0].checked;
-			const movies = target[2].checked;
-			let concatArr;
+			const target = e.target as any
+			const categoryCasual = target[0].checked
+			const movies = target[2].checked
+			let concatArr
 			if (movies) {
-				concatArr = responseMovies?.concat(
-					categoryCasual ? responseCasual : responseNonCasual
-				);
+				concatArr = responseMovies?.concat(categoryCasual ? responseCasual : responseNonCasual)
 			} else {
-				concatArr = categoryCasual ? responseCasual : responseNonCasual;
+				concatArr = categoryCasual ? responseCasual : responseNonCasual
 			}
 
-			if (supabase.getChannels()[0].state != 'joined') channel.subscribe() 
+			if (supabase.getChannels()[0].state != 'joined') channel.subscribe()
 			if (categoryCasual) {
-				const randomTitle = concatArr?.[getRandomInt(responseCasual.length)].title!;
+				const randomTitle = concatArr?.[getRandomInt(responseCasual.length)].title!
 				channel.send({
 					type: 'broadcast',
 					event: 'ROLL',
 					message: randomTitle
 				})
-				setRolledTitle(randomTitle);
+				setRolledTitle(randomTitle)
 			} else {
-				const randomTitle = concatArr?.[getRandomInt(responseNonCasual.length)].title!;
+				const randomTitle = concatArr?.[getRandomInt(responseNonCasual.length)].title!
 				channel.send({
 					type: 'broadcast',
 					event: 'ROLL',
 					message: randomTitle
 				})
-				setRolledTitle(randomTitle);
+				setRolledTitle(randomTitle)
 			}
 		}
 
 		function handleCancel() {
-			if (supabase.getChannels()[0].state != 'joined') channel.subscribe() 
+			if (supabase.getChannels()[0].state != 'joined') channel.subscribe()
 			channel.send({
 				type: 'broadcast',
 				event: 'ROLL',
 				message: '???'
 			})
-			setRolledTitle('???');
+			setRolledTitle('???')
 		}
 
 		async function addGachaRoll() {
-			const rolledTitle = rolledTitleElementRef.current?.innerText;
+			const rolledTitle = rolledTitleElementRef.current?.innerText
 			if (
 				!responseCasual ||
 				!responseNonCasual ||
@@ -535,140 +508,124 @@ export default function PTW() {
 				!responseRolled ||
 				rolledTitle == '???'
 			)
-				return;
+				return
 			if (responseRolled.length >= 20) {
-				alert('Unable to add roll to record, insufficient space.');
-				return;
+				alert('Unable to add roll to record, insufficient space.')
+				return
 			}
 
-			if (supabase.getChannels()[0].state != 'joined') channel.subscribe() 
+			if (supabase.getChannels()[0].state != 'joined') channel.subscribe()
 			channel.send({
 				type: 'broadcast',
 				event: 'ROLL',
 				message: rolledTitle,
 				isLoading: true
 			})
-			setLoading(true);
-			const isInMovies = responseMovies.find(
-				(item) => item.title == rolledTitle
-			);
+			setLoading(true)
+			const isInMovies = responseMovies.find((item) => item.title == rolledTitle)
 
 			if (isInMovies) {
 				//? If rolled title is a movie
-				const changed = responseMovies
-					.slice()
-					.filter((item) => item.title != rolledTitle);
+				const changed = responseMovies.slice().filter((item) => item.title != rolledTitle)
 
-				const range = `L22:L${22 + responseMovies.length - 1}`;
-				const updatePayload = changed.map((item) => item.title);
-				updatePayload.push('');
+				const range = `L22:L${22 + responseMovies.length - 1}`
+				const updatePayload = changed.map((item) => item.title)
+				updatePayload.push('')
 
-				const addCell = `N${responseRolled.length + 2}:N${
-					responseRolled.length + 2
-				}`;
+				const addCell = `N${responseRolled.length + 2}:N${responseRolled.length + 2}`
 				try {
-					await addRolledAPI(range, updatePayload, addCell);
-					setLoading(false);
-					if (supabase.getChannels()[0].state != 'joined') channel.subscribe() 
+					await addRolledAPI(range, updatePayload, addCell)
+					setLoading(false)
+					if (supabase.getChannels()[0].state != 'joined') channel.subscribe()
 					channel.send({
 						type: 'broadcast',
 						event: 'ROLL',
 						message: '???',
 						isLoading: false
 					})
-					setRolledTitle('???');
-					return;
+					setRolledTitle('???')
+					return
 				} catch (error) {
-					if (supabase.getChannels()[0].state != 'joined') channel.subscribe() 
+					if (supabase.getChannels()[0].state != 'joined') channel.subscribe()
 					channel.send({
 						type: 'broadcast',
 						event: 'ROLL',
 						message: rolledTitle,
 						isLoading: false
 					})
-					setLoading(false);
-					alert(error);
-					return;
+					setLoading(false)
+					alert(error)
+					return
 				}
 			}
 
-			const isInCasual = responseMovies.find(
-				(item) => item.title == rolledTitle
-			);
+			const isInCasual = responseMovies.find((item) => item.title == rolledTitle)
 
 			if (isInCasual) {
 				//? If rolled title is in category casual
-				const changed = responseCasual
-					.slice()
-					.filter((item) => item.title != rolledTitle);
+				const changed = responseCasual.slice().filter((item) => item.title != rolledTitle)
 
-				const range = `L2:L${responseCasual.length + 1}`;
-				const updatePayload = changed.map((item) => item.title);
-				updatePayload.push('');
+				const range = `L2:L${responseCasual.length + 1}`
+				const updatePayload = changed.map((item) => item.title)
+				updatePayload.push('')
 
-				const addCell = `N${responseRolled.length + 2}:N${
-					responseRolled.length + 2
-				}`;
+				const addCell = `N${responseRolled.length + 2}:N${responseRolled.length + 2}`
 				try {
-					await addRolledAPI(range, updatePayload, addCell);
-					if (supabase.getChannels()[0].state != 'joined') channel.subscribe() 
+					await addRolledAPI(range, updatePayload, addCell)
+					if (supabase.getChannels()[0].state != 'joined') channel.subscribe()
 					channel.send({
 						type: 'broadcast',
 						event: 'ROLL',
 						message: '???',
 						isLoading: false
 					})
-					setLoading(false);
+					setLoading(false)
 					setRolledTitle('???')
-					return;
+					return
 				} catch (error) {
-					if (supabase.getChannels()[0].state != 'joined') channel.subscribe() 
+					if (supabase.getChannels()[0].state != 'joined') channel.subscribe()
 					channel.send({
 						type: 'broadcast',
 						event: 'ROLL',
 						message: rolledTitle,
 						isLoading: false
 					})
-					setLoading(false);
-					alert(error);
-					return;
+					setLoading(false)
+					alert(error)
+					return
 				}
 			} else {
 				//? If rolled title is in category non-casual
-				const changed = responseNonCasual
-					.slice()
-					.filter((item) => item.title != rolledTitle);
+				const changed = responseNonCasual.slice().filter((item) => item.title != rolledTitle)
 
-				const range = `M2:M${responseNonCasual.length + 1}`;
-				const updatePayload = changed.map((item) => item.title);
-				updatePayload.push('');
+				const range = `M2:M${responseNonCasual.length + 1}`
+				const updatePayload = changed.map((item) => item.title)
+				updatePayload.push('')
 
-				const addCell = `N${responseRolled.length + 2}:N${
-					responseRolled.length + 2
-				}`;
+				const addCell = `N${responseRolled.length + 2}:N${responseRolled.length + 2}`
 				try {
-					await addRolledAPI(range, updatePayload, addCell);
-					if (supabase.getChannels()[0].state != 'joined') channel.subscribe() 
+					await addRolledAPI(range, updatePayload, addCell)
+					if (supabase.getChannels()[0].state != 'joined') channel.subscribe()
 					channel.send({
 						type: 'broadcast',
 						event: 'ROLL',
 						message: '???',
 						isLoading: false
 					})
-					setLoading(false);
-					setRolledTitle('???');
-					return;
+					setLoading(false)
+					setRolledTitle('???')
+					return
 				} catch (error) {
-					if (supabase.getChannels()[0].state != 'joined') channel.subscribe() 
+					if (supabase.getChannels()[0].state != 'joined') channel.subscribe()
 					channel.send({
 						type: 'broadcast',
 						event: 'ROLL',
 						message: rolledTitle,
 						isLoading: false
 					})
-					setLoading(false);
-					alert(error);
-					return;
+					setLoading(false)
+					alert(error)
+					return
 				}
 			}
 
@@ -686,7 +643,7 @@ export default function PTW() {
 						cell: addCell,
 						content: rolledTitle
 					}
-				});
+				})
 			}
 		}
 
@@ -695,7 +652,9 @@ export default function PTW() {
 				<h2 className="absolute top-5 p-2 text-3xl">Gacha</h2>
 				<div className="absolute top-20 flex items-center justify-center h-52 max-h-52 w-80">
 					<div className="max-h-full max-w-[90%] bg-slate-100 border-black border-solid border-[1px] overflow-auto">
-						<h3 ref={rolledTitleElementRef} className="p-2 text-black text-2xl text-center">???</h3>
+						<h3 ref={rolledTitleElementRef} className="p-2 text-black text-2xl text-center">
+							???
+						</h3>
 					</div>
 				</div>
 				<div ref={addGachaRollRef} className="absolute bottom-36 invisible">
@@ -714,21 +673,12 @@ export default function PTW() {
 					<div className="flex">
 						<label className="relative flex gap-1 items-center mr-3 radio-container">
 							<div className="custom-radio" />
-							<input
-								type="radio"
-								name="table_to_roll"
-								value="Casual"
-								defaultChecked
-							/>
+							<input type="radio" name="table_to_roll" value="Casual" defaultChecked />
 							Casual
 						</label>
 						<label className="relative flex gap-1 items-center radio-container">
 							<div className="custom-radio" />
-							<input
-								type="radio"
-								name="table_to_roll"
-								value="NonCasual"
-							/>
+							<input type="radio" name="table_to_roll" value="NonCasual" />
 							Non-Casual
 						</label>
 					</div>
@@ -736,17 +686,14 @@ export default function PTW() {
 						<label className="relative flex gap-1 items-center checkbox-container">
 							<div className="custom-checkbox" />
 							<DoneIcon fontSize="inherit" className="absolute checkmark" />
-							<input
-								type="checkbox"
-								value="IncludeMovies"
-							/>
+							<input type="checkbox" value="IncludeMovies" />
 							Include movies?
 						</label>
 					</div>
 					<input type="submit" value="Roll" className="input-submit px-2 p-1" />
 				</form>
 			</div>
-		);
+		)
 	}
 
 	function PTWTable({
@@ -754,9 +701,9 @@ export default function PTW() {
 		tableName,
 		tableId
 	}: {
-		response: Database['public']['Tables']['PTW-Casual']['Row'][] | undefined;
-		tableName: string;
-		tableId: 'casual' | 'noncasual' | 'movies';
+		response: Database['public']['Tables']['PTW-Casual']['Row'][] | undefined
+		tableName: string
+		tableId: 'casual' | 'noncasual' | 'movies'
 	}) {
 		return (
 			<div className="flex flex-col items-center">
@@ -775,27 +722,31 @@ export default function PTW() {
 										<tr key={item.id}>
 											<td
 												style={{
-													opacity: isLoadingEditForm.includes(`${tableId}_title_${item.id}`) ? 0.5 : 1
+													opacity: isLoadingEditForm.includes(`${tableId}_title_${item.id}`)
+														? 0.5
+														: 1
 												}}
 												onDoubleClick={() => {
-													setIsEdited(`${tableId}_${item.title}_${item.id}`);
+													setIsEdited(`${tableId}_${item.title}_${item.id}`)
 												}}
-												className='relative'
+												className="relative"
 											>
 												<span>
 													{isEdited == `${tableId}_${item.title}_${item.id}`
 														? editForm(`${tableId}_title`, item.id, item.title!)
 														: item.title}
 												</span>
-												{isLoadingEditForm.includes(`${tableId}_title_${item.id}`) && <CircularProgress size={30} className="absolute top-[20%] left-[48%]" />}
+												{isLoadingEditForm.includes(`${tableId}_title_${item.id}`) && (
+													<CircularProgress size={30} className="absolute top-[20%] left-[48%]" />
+												)}
 											</td>
 										</tr>
-									);
+									)
 							  })}
 					</tbody>
 				</table>
 			</div>
-		);
+		)
 	}
 
 	function editForm(
@@ -803,84 +754,82 @@ export default function PTW() {
 		id: number,
 		ogvalue: string
 	): React.ReactNode {
-		let column: string;
-		let row = (id + 2).toString();
-		if (field == 'movies_title') row = (id + 22).toString();
+		let column: string
+		let row = (id + 2).toString()
+		if (field == 'movies_title') row = (id + 22).toString()
 		switch (field) {
 			case 'rolled_title':
-				column = 'N';
-				break;
+				column = 'N'
+				break
 			case 'casual_title':
-				column = 'L';
-				break;
+				column = 'L'
+				break
 			case 'noncasual_title':
-				column = 'M';
-				break;
+				column = 'M'
+				break
 			case 'movies_title':
-				column = 'L';
-				break;
+				column = 'L'
+				break
 			default:
-				alert('Error: missing field');
-				return;
+				alert('Error: missing field')
+				return
 		}
 
 		async function handleSubmit(event: BaseSyntheticEvent): Promise<void> {
-			event.preventDefault();
-			setIsLoadingEditForm(isLoadingEditForm.concat(`${field}_${id}`));
+			event.preventDefault()
+			setIsLoadingEditForm(isLoadingEditForm.concat(`${field}_${id}`))
 
 			try {
 				await axios.post('/api/update', {
 					content: event.target[0].value,
 					cell: column + row
-				});
+				})
 
 				switch (field) {
 					case 'rolled_title':
-						const changedRolled = responseRolled?.slice();
-						if (!changedRolled) return;
-						changedRolled.find((item) => item.id === id)!['title'] =
-							event.target[0].value;
-						setResponseRolled(changedRolled);
-						setIsEdited('');
-						setIsLoadingEditForm(isLoadingEditForm.filter(item => item == `${field}_${id}`));
-						break;
+						const changedRolled = responseRolled?.slice()
+						if (!changedRolled) return
+						changedRolled.find((item) => item.id === id)!['title'] = event.target[0].value
+						setResponseRolled(changedRolled)
+						setIsEdited('')
+						setIsLoadingEditForm(isLoadingEditForm.filter((item) => item == `${field}_${id}`))
+						break
 					case 'casual_title':
-						const changedCasual = responseCasual?.slice();
-						if (!changedCasual) return;
-						changedCasual.find((item) => item.id === id)!['title'] =
-							event.target[0].value;
-						setResponseCasual(changedCasual);
-						setIsEdited('');
-						setIsLoadingEditForm(isLoadingEditForm.filter(item => item == `${field}_${id}`));
-						break;
+						const changedCasual = responseCasual?.slice()
+						if (!changedCasual) return
+						changedCasual.find((item) => item.id === id)!['title'] = event.target[0].value
+						setResponseCasual(changedCasual)
+						setIsEdited('')
+						setIsLoadingEditForm(isLoadingEditForm.filter((item) => item == `${field}_${id}`))
+						break
 					case 'noncasual_title':
-						const changedNonCasual = responseNonCasual?.slice();
-						if (!changedNonCasual) return;
-						changedNonCasual.find((item) => item.id === id)!['title'] =
-							event.target[0].value;
-						setResponseNonCasual(changedNonCasual);
-						setIsEdited('');
-						setIsLoadingEditForm(isLoadingEditForm.filter(item => item == `${field}_${id}`));
-						break;
+						const changedNonCasual = responseNonCasual?.slice()
+						if (!changedNonCasual) return
+						changedNonCasual.find((item) => item.id === id)!['title'] = event.target[0].value
+						setResponseNonCasual(changedNonCasual)
+						setIsEdited('')
+						setIsLoadingEditForm(isLoadingEditForm.filter((item) => item == `${field}_${id}`))
+						break
 					case 'movies_title':
-						const changedMovies = responseMovies?.slice();
-						if (!changedMovies) return;
-						changedMovies.find((item) => item.id === id)!['title'] =
-							event.target[0].value;
-						setResponseMovies(changedMovies);
-						setIsEdited('');
-						setIsLoadingEditForm(isLoadingEditForm.filter(item => item == `${field}_${id}`));
-						break;
+						const changedMovies = responseMovies?.slice()
+						if (!changedMovies) return
+						changedMovies.find((item) => item.id === id)!['title'] = event.target[0].value
+						setResponseMovies(changedMovies)
+						setIsEdited('')
+						setIsLoadingEditForm(isLoadingEditForm.filter((item) => item == `${field}_${id}`))
+						break
 				}
 			} catch (error) {
-				alert(error);
-				return;
+				alert(error)
+				return
 			}
 		}
 
 		return (
 			<div className="flex items-center justify-center relative w-full">
-				{isLoadingEditForm.includes(`${field}_${id}`) && <CircularProgress size={30} className="absolute left-[48%]" />}
+				{isLoadingEditForm.includes(`${field}_${id}`) && (
+					<CircularProgress size={30} className="absolute left-[48%]" />
+				)}
 				<div
 					style={{
 						opacity: isLoadingEditForm.includes(`${field}_${id}`) ? 0.5 : 1,
@@ -898,22 +847,22 @@ export default function PTW() {
 					</form>
 				</div>
 			</div>
-		);
+		)
 	}
 
 	async function saveReorder() {
-		let endRowIndex = responseRolled!.length + 1;
+		let endRowIndex = responseRolled!.length + 1
 		try {
 			await axios.post('/api/ptw/reorder', {
 				content: responseRolled,
 				cells: `N2:N${endRowIndex}`
-			});
+			})
 
-			setReordered(false);
+			setReordered(false)
 		} catch (error) {
-			alert(error);
-			console.log(error);
-			return;
+			alert(error)
+			console.log(error)
+			return
 		}
 	}
 }
