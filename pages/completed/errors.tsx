@@ -10,6 +10,7 @@ import { useLoading } from '../../components/LoadingContext';
 import { useRouter } from 'next/router';
 
 export default function CompletedErrors() {
+  const [isLoadingClient, setIsLoadingClient] = useState(true)
   const [response, setResponse] = useState<{
     id: number,
     mal_id: number | null,
@@ -59,19 +60,38 @@ export default function CompletedErrors() {
           }
         }
         return null;
-      }).filter(item => item != null).sort((a, b) => b?.distance! - a?.distance!).filter(item => !errorTrackIgnore?.includes(item!.id))
+      }).filter(item => item != null).filter(item => !errorTrackIgnore?.includes(item!.id)).sort((a, b) => b?.distance! - a?.distance!)
 
       //@ts-expect-error
       setResponse(levenDistance)
+      setIsLoadingClient(false)
     }
     getData();
   }, [])
+
+  if (!response?.length && !isLoadingClient) {
+    return (
+      <>
+        <Head>
+          <title>Cytube Watchlist</title>
+          <meta name="description" content="Completed Errors" />
+          <meta name="viewport" content="width=device-width, initial-scale=1" />
+          <link rel="icon" href="/favicon.ico" />
+        </Head>
+
+        <main className='flex flex-col items-center justify-center h-[100dvh] mb-24 px-1 md:px-0'>
+          <h2 className='p-2 text-3xl'>No errors found</h2>
+          <span>Check console for details on omitted entries</span>
+        </main>
+      </>
+    )
+  }
 
   return (
     <>
 			<Head>
 				<title>Cytube Watchlist</title>
-				<meta name="description" content="Watchlist statistics" />
+				<meta name="description" content="Completed Errors" />
 				<meta name="viewport" content="width=device-width, initial-scale=1" />
 				<link rel="icon" href="/favicon.ico" />
 			</Head>
