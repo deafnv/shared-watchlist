@@ -151,6 +151,7 @@ export default function CompletedErrors() {
 									<Link
 										href={`https://myanimelist.net/anime/${item.mal_id}`}
 										target="_blank"
+										rel='noopener noreferrer'
 										className="flex items-center justify-center p-3 h-full text-xs md:text-base border-white border-b-[1px] text-center link"
 									>
 										{item.retrievedTitle}
@@ -251,6 +252,7 @@ export default function CompletedErrors() {
 								64
 							)}`}
 							target="_blank"
+							rel='noopener noreferrer'
 							className="text-lg link"
 						>
 							Search for anime title

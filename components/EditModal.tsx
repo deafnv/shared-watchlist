@@ -95,6 +95,7 @@ export default function EditModal({
 					<Link
 						href={`https://myanimelist.net/anime.php?q=${detailsModal?.title?.substring(0, 64)}`}
 						target="_blank"
+						rel='noopener noreferrer'
 						className="text-lg link"
 					>
 						Search for anime title

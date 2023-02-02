@@ -162,6 +162,7 @@ export default function SeasonalDetails({
 										<Link
 											href={`https://myanimelist.net/anime/${item.mal_id}`}
 											target="_blank"
+											rel='noopener noreferrer'
 											className="link"
 										>
 											MyAnimeList
@@ -514,6 +515,7 @@ export default function SeasonalDetails({
 							<Link
 								href={item1.message?.split('Validate:')[1] ?? ''}
 								target="_blank"
+								rel='noopener noreferrer'
 								className="link mb-4 col-span-2 text-center"
 							>
 								Search on MAL

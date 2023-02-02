@@ -136,6 +136,7 @@ export default function CompletedPage({ id }: { id: number }) {
 							<Link
 								href={`https://myanimelist.net/anime/${response?.[0].CompletedDetails.mal_id}`}
 								target="_blank"
+								rel='noopener noreferrer'
 							>
 								MyAnimeList
 							</Link>
