@@ -109,7 +109,6 @@ export default function Completed() {
 			setIsEdited('')
 		}
 
-		setWidth(window.innerWidth)
 		const handleWindowResize = () => setWidth(window.innerWidth)
 
 		document.addEventListener('click', closeMenus)
