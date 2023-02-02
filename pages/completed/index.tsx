@@ -465,6 +465,9 @@ export default function Completed() {
 						Load details
 					</button>
 				</li>
+				<li className="flex justify-center py-2 h-fit rounded-md hover:bg-pink-400">
+					<Link href={'/completed/errors'} className='px-1 w-full text-center'>See Potential Errors</Link>
+				</li>
 			</menu>
 		);
 
