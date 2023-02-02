@@ -94,6 +94,7 @@ export default function SeasonalDetails({
 		}
 	}, [])
 
+	//TODO: Add last updated episode count
 	return (
 		<>
 			<Head>
@@ -230,6 +231,19 @@ export default function SeasonalDetails({
 	}
 
 	function ContextMenu() {
+		async function handleReloadTrack() {
+			try {
+				setLoading(true)
+				await axios.post('/api/seasonaldetails/trackitem', {
+					id: contextMenu.currentItem?.mal_id
+				})
+				router.reload()
+			} catch (error) {
+				setLoading(false)
+				alert(error)
+			}
+		}
+
 		return (
 			<menu
 				ref={contextMenuRef}
@@ -246,10 +260,7 @@ export default function SeasonalDetails({
 				</li>
 				<hr className="my-2 border-gray-500 border-t-[1px]" />
 				<li className="flex justify-center h-8 rounded-sm hover:bg-slate-500">
-					<button className="w-full">Details</button>
-				</li>
-				<li className="flex justify-center h-8 rounded-sm hover:bg-slate-500">
-					<button className="w-full">Visit on MAL</button>
+					<button onClick={handleReloadTrack} className="w-full">Reload Episode Tracking</button>
 				</li>
 			</menu>
 		)
