@@ -26,6 +26,7 @@ export default function CompletedErrors() {
     distance: number | undefined,
   } | null>(null)
   const { setLoading } = useLoading()
+  const [width, setWidth] = useState<number>(0)
 
   const router = useRouter()
 
@@ -67,6 +68,15 @@ export default function CompletedErrors() {
       setIsLoadingClient(false)
     }
     getData();
+
+    setWidth(window.innerWidth)
+    const handleWindowResize = () => setWidth(window.innerWidth)
+
+    window.addEventListener("resize", handleWindowResize)
+
+    return () => {
+			window.removeEventListener('resize', handleWindowResize)
+		}
   }, [])
 
   if (!response?.length && !isLoadingClient) {
@@ -87,6 +97,7 @@ export default function CompletedErrors() {
     )
   }
 
+  //TODO: Add confirm for ignore 
   return (
     <>
 			<Head>
@@ -96,41 +107,41 @@ export default function CompletedErrors() {
 				<link rel="icon" href="/favicon.ico" />
 			</Head>
 
-			<main className='flex flex-col items-center justify-center mb-24 px-1 md:px-0'>
-        <h2 className='p-2 text-3xl'>
+			<main className='flex flex-col items-center justify-center mb-24 px-0'>
+        <h2 className='p-2 text-3xl text-center'>
           Potential Errors in Completed
         </h2>
         <section>
-          <div className='grid grid-cols-[26rem_26rem_10rem_12rem] w-[90dvw] sm:w-min bg-sky-600 border-white border-solid border-[1px]'>
-            <span className='flex items-center justify-center p-2 h-full border-white border-r-[1px] text-center font-bold'>
+          <div className='grid grid-cols-[5fr_5fr_1fr_1fr] xl:grid-cols-[26rem_26rem_10rem_12rem] min-w-[95dvw] xl:min-w-0 sm:w-min bg-sky-600 border-white border-solid border-[1px]'>
+            <span className='flex items-center justify-center p-2 h-full text-xs md:text-base border-white border-r-[1px] text-center font-bold'>
               Title
             </span>
-            <span className='flex items-center justify-center p-2 h-full border-white border-r-[1px] text-center font-bold'>
+            <span className='flex items-center justify-center p-2 h-full text-xs md:text-base border-white border-r-[1px] text-center font-bold'>
               Retrieved Title
             </span>
-            <span className='flex items-center justify-center p-2 h-full border-white border-r-[1px] text-center font-bold'>
+            <span style={{ writingMode: width > 1280 ? 'initial' : 'vertical-lr' }} className='flex p-2 h-full text-xs md:text-base border-white border-r-[1px] text-center font-bold'>
               Levenshtein Distance
             </span>
-            <span className='flex items-center justify-center p-2 h-full text-center font-bold'>
+            <span className='flex items-center justify-center p-2 h-full text-xs md:text-base text-center font-bold'>
               Options
             </span>
           </div>
-          <div className='grid grid-cols-[26rem_26rem_10rem_12rem] w-[90dvw] sm:w-min border-white border-solid border-[1px] border-t-0'>
+          <div className='grid grid-cols-[5fr_5fr_1fr_1fr] xl:grid-cols-[26rem_26rem_10rem_12rem] text-sm md:text-base min-w-[95dvw] xl:min-w-0 sm:w-min border-white border-solid border-[1px] border-t-0'>
             {response?.map((item, index) => {
               return (
                 <>
-                  <span className='flex items-center justify-center p-3 h-full border-white border-b-[1px] text-center'>
+                  <span className='flex items-center justify-center p-3 h-full text-xs md:text-base border-white border-b-[1px] text-center'>
                     {item.entryTitle}
                   </span>
-                  <Link href={`https://myanimelist.net/anime/${item.mal_id}`} target='_blank' className='flex items-center justify-center p-3 h-full border-white border-b-[1px] text-center link'>
+                  <Link href={`https://myanimelist.net/anime/${item.mal_id}`} target='_blank' className='flex items-center justify-center p-3 h-full text-xs md:text-base border-white border-b-[1px] text-center link'>
                     {item.retrievedTitle}
                   </Link>
-                  <span className='flex items-center justify-center p-2 h-full border-white border-b-[1px] text-center'>
+                  <span className='flex items-center justify-center p-2 h-full text-xs md:text-base border-white border-b-[1px] text-center'>
                     {item.distance}
                   </span>
-                  <span className='flex items-center justify-center gap-2 p-2 h-full border-white border-b-[1px] text-center'>
-                    <button onClick={() => handleOpenChangeMenu(item)} className='px-2 py-1 input-submit'>Change</button>
-                    <button onClick={() => handleIgnore(item)} className='px-2 py-1 input-submit'>Ignore</button>
+                  <span className='flex flex-col xl:flex-row items-center justify-center gap-2 p-1 xl:p-2 h-full text-xs xl:text-base border-white border-b-[1px] text-center'>
+                    <button onClick={() => handleOpenChangeMenu(item)} className='px-1 xl:px-2 py-1 text-xs xl:text-base input-submit'>Change</button>
+                    <button onClick={() => handleIgnore(item)} className='px-1 xl:px-2 py-1 text-xs xl:text-base input-submit'>Ignore</button>
                   </span>
                 </>
               )
