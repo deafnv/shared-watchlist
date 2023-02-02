@@ -23,7 +23,8 @@ export default async function EpisodeTracker(req: NextApiRequest, res: NextApiRe
 			animes.push({
 				mal_id: idInt ? idInt : -1,
 				/* title: $(element).find('h3.main-title > a').text(), */
-				latest_episode: latestEpisodeInt ? latestEpisodeInt : -1
+				latest_episode: latestEpisodeInt ? latestEpisodeInt : -1,
+				last_updated: new Date().getTime()
 			})
 		})
 

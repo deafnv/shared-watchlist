@@ -94,7 +94,6 @@ export default function SeasonalDetails({
 		}
 	}, [])
 
-	//TODO: Add last updated episode count
 	return (
 		<>
 			<Head>
@@ -168,6 +167,10 @@ export default function SeasonalDetails({
 										>
 											MyAnimeList
 										</Link>
+										<span className="absolute bottom-[48%] text-center">
+											<span className="font-semibold">Last updated: </span>
+											{item.last_updated ? new Date(item.last_updated).toLocaleDateString('en-GB', {day: 'numeric', month: 'numeric', year: '2-digit'}) : 'Unknown'}
+										</span>
 									</div>
 								</div>
 								<div>

@@ -21,7 +21,8 @@ export default async function TrackItem(req: NextApiRequest, res: NextApiRespons
      
       const toUpsert = {
         mal_id: id,
-        latest_episode: data.data[data.data.length - 1].mal_id
+        latest_episode: data.data[data.data.length - 1].mal_id,
+        last_updated: new Date().getTime()
       }
   
       await supabase.from('SeasonalDetails').upsert(toUpsert)
