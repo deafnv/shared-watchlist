@@ -79,7 +79,7 @@ export default function GenrePage({ id }: { id: number }) {
 					<link rel="icon" href="/favicon.ico" />
 				</Head>
 
-				<main className="flex flex-col items-center justify-center gap-3 mx-auto h-[90dvh] md:w-3/5 pt-[80px] sm:w-full">
+				<main className="flex flex-col items-center justify-center gap-3 mx-auto h-[90dvh] md:w-3/5 sm:w-full">
 					<h2 className="p-2 text-3xl">No results found</h2>
 				</main>
 			</>
@@ -100,7 +100,7 @@ export default function GenrePage({ id }: { id: number }) {
 				<link rel="icon" href="/favicon.ico" />
 			</Head>
 
-			<main className="flex flex-col items-center justify-center gap-3 mx-auto md:w-3/5 pt-[80px] sm:w-full">
+			<main className="flex flex-col items-center justify-center gap-3 mx-auto md:w-3/5 sm:w-full">
 				<h2 className="p-2 text-3xl">
 					{(response?.[0]?.Genres as { name: string | null }[])?.[0].name}
 				</h2>

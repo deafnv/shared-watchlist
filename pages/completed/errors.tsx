@@ -103,7 +103,7 @@ export default function CompletedErrors() {
 					<link rel="icon" href="/favicon.ico" />
 				</Head>
 
-				<main className="flex flex-col items-center justify-center h-[100dvh] mb-24 px-1 md:px-0 pt-[70px]">
+				<main className="flex flex-col items-center justify-center h-[100dvh] mb-24 px-1 md:px-0">
 					<h2 className="p-2 text-3xl">No errors found</h2>
 					<span>Check console for details on omitted entries</span>
 				</main>
@@ -121,7 +121,7 @@ export default function CompletedErrors() {
 				<link rel="icon" href="/favicon.ico" />
 			</Head>
 
-			<main className="flex flex-col items-center justify-center mb-24 px-0 pt-[70px]">
+			<main className="flex flex-col items-center justify-center mb-24 px-0">
 				<h2 className="p-2 text-3xl text-center">Potential Errors in Completed</h2>
 				<section>
 					<div className="grid grid-cols-[5fr_5fr_1fr_1fr] xl:grid-cols-[26rem_26rem_10rem_12rem] min-w-[95dvw] xl:min-w-0 sm:w-min bg-sky-600 border-white border-solid border-[1px]">

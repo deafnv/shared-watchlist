@@ -72,7 +72,7 @@ export default function Navbar({ children }: React.PropsWithChildren) {
 		<>
 			{loading && <Loading />}
 			<nav
-				className="fixed z-50 h-[60px] w-full flex items-center justify-center gap-[20%] bg-black bg-opacity-60 border-b-[1px] backdrop-blur-md backdrop-filter"
+				className="sticky top-0 z-50 h-[60px] w-full flex items-center justify-center gap-[20%] bg-black bg-opacity-60 border-b-[1px] backdrop-blur-md backdrop-filter"
 				style={{
 					borderImage: 'linear-gradient(to right, rgb(218, 51, 190), rgb(191, 94, 255))',
 					borderImageSlice: 1,

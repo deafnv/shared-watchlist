@@ -40,7 +40,7 @@ export default function CompletedDetails() {
 				<link rel="icon" href="/favicon.ico" />
 			</Head>
 
-			<main className="flex flex-col items-center justify-center px-2 py-4 pt-[70px] md:p-2 md:pt-[70px]">
+			<main className="flex flex-col items-center justify-center px-2 py-4 md:p-2">
 				<h2 className="text-3xl">Genres</h2>
 				<span onClick={() => setAdvancedSearch('block')} className="mb-2 cursor-pointer link">
 					Advanced Search

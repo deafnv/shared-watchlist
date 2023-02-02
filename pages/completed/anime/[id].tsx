@@ -82,7 +82,7 @@ export default function CompletedPage({ id }: { id: number }) {
 				<link rel="icon" href="/favicon.ico" />
 			</Head>
 
-			<main className="flex flex-col items-center justify-center mx-auto mb-16 px-12 py-6 pt-[80px] md:w-3/5 sm:w-full">
+			<main className="flex flex-col items-center justify-center mx-auto mb-16 px-12 py-6 md:w-3/5 sm:w-full">
 				<div className="relative h-full">
 					<h3 className="p-2 text-2xl font-semibold text-center">{response?.[0].title}</h3>
 					<div
