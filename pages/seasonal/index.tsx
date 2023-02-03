@@ -32,13 +32,13 @@ export default function Seasonal({
 			setIsLoadingClient(false)
 
 			await axios
-				.get('https://update.ilovesabrina.org:3005/refresh')
+				.get('https://update.ilovesabrina.org/refresh')
 				.catch((error) => console.log(error))
 		}
 		getData()
 
 		const refresh = setInterval(
-			() => axios.get('https://update.ilovesabrina.org:3005/refresh'),
+			() => axios.get('https://update.ilovesabrina.org/refresh'),
 			3500000
 		)
 
