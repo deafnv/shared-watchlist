@@ -8,7 +8,7 @@ import { useRouter } from 'next/router'
 import { LoadingProvider } from '../components/LoadingContext'
 import { ThemeProvider, createTheme } from '@mui/material'
 import { orange } from '@mui/material/colors'
-import Loading from '../components/LoadingComponent'
+import { Analytics } from '@vercel/analytics/react';
 
 declare module '@mui/material/styles' {
 	interface Theme {
@@ -65,6 +65,7 @@ export default function App({ Component, pageProps }: AppProps) {
 					<Component {...pageProps} />
 				</Navbar>
 			</LoadingProvider>
+			<Analytics />
 		</ThemeProvider>
 	)
 }
