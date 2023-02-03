@@ -8,7 +8,8 @@ import { useRouter } from 'next/router'
 import { LoadingProvider } from '../components/LoadingContext'
 import { ThemeProvider, createTheme } from '@mui/material'
 import { orange } from '@mui/material/colors'
-import { Analytics } from '@vercel/analytics/react';
+import { Analytics } from '@vercel/analytics/react'
+import { Presence} from '../components/Presence'
 
 declare module '@mui/material/styles' {
 	interface Theme {
@@ -58,6 +59,8 @@ export default function App({ Component, pageProps }: AppProps) {
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [])
 
+	const env = process.env.NODE_ENV == 'production'
+
 	return (
 		<ThemeProvider theme={theme}>
 			<LoadingProvider>
@@ -65,7 +68,8 @@ export default function App({ Component, pageProps }: AppProps) {
 					<Component {...pageProps} />
 				</Navbar>
 			</LoadingProvider>
-			<Analytics />
+			{env && <Analytics />}
+			<Presence />
 		</ThemeProvider>
 	)
 }

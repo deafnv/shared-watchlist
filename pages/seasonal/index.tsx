@@ -53,7 +53,7 @@ export default function Seasonal({
 			if (e.key === 'Escape') setIsEdited('')
 		})
 
-		supabase
+		const databaseChannel = supabase
 			.channel('public:PTW-CurrentSeason')
 			.on(
 				'postgres_changes',
@@ -69,7 +69,7 @@ export default function Seasonal({
 			.subscribe()
 
 		return () => {
-			supabase.removeAllChannels()
+			databaseChannel.unsubscribe()
 			clearInterval(refresh)
 		}
 	}, [])

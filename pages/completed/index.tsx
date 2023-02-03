@@ -115,7 +115,7 @@ export default function Completed() {
 		window.addEventListener('focusout', resetEditNoFocus)
 		window.addEventListener('resize', handleWindowResize)
 
-		supabase
+		const databaseChannel = supabase
 			.channel('public:Completed')
 			.on(
 				'postgres_changes',
@@ -146,8 +146,8 @@ export default function Completed() {
 			.subscribe()
 
 		return () => {
-			supabase.removeAllChannels()
 			clearInterval(refresh)
+			databaseChannel.unsubscribe()
 			document.removeEventListener('click', closeMenus)
 			window.removeEventListener('focusout', resetEditNoFocus)
 			window.removeEventListener('resize', handleWindowResize)
