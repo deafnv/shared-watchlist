@@ -17,11 +17,12 @@ export default async function TrackItem(req: NextApiRequest, res: NextApiRespons
       )
       
   
-      const { data } = await axios.get(`https://api.jikan.moe/v4/anime/${id}/episodes`)
-     
+      const { data } = await axios.get(`https://api.jikan.moe/v4/anime/${id}/forum?filter=episode`)
+      const episodesAvailable = data.data.map((item: any) => parseInt(item.title.split('Episode ')[1].split(' Discussion')[0])).sort((a: number, b: number) => a - b)
+      
       const toUpsert = {
         mal_id: id,
-        latest_episode: data.data[data.data.length - 1].mal_id,
+        latest_episode: episodesAvailable[episodesAvailable.length - 1],
         last_updated: new Date().getTime()
       }
   
