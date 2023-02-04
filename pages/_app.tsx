@@ -63,13 +63,14 @@ export default function App({ Component, pageProps }: AppProps) {
 
 	return (
 		<ThemeProvider theme={theme}>
-			<LoadingProvider>
-				<Navbar>
-					<Component {...pageProps} />
-				</Navbar>
-			</LoadingProvider>
-			{env && <Analytics />}
-			<Presence />
+			<Presence>
+				<LoadingProvider>
+					<Navbar>
+						<Component {...pageProps} />
+					</Navbar>
+				</LoadingProvider>
+				{env && <Analytics />}
+			</Presence>
 		</ThemeProvider>
 	)
 }

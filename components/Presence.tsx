@@ -1,17 +1,25 @@
 import { useEffect, useState, useContext, Dispatch, SetStateAction, createContext } from 'react'
 import { createClient } from "@supabase/supabase-js"
 import { Database } from "../lib/database.types"
+import { GetServerSideProps, GetServerSidePropsContext } from 'next'
+
+interface PresenceState {
+  [key: string]: Array<{
+    online_at: string,
+    presence_ref: string
+  }>
+}
 
 interface PresenceType {
-	onlineUser: number
-	setOnlineUsers: Dispatch<SetStateAction<number>>
+	onlineUsers: PresenceState | null
+	setOnlineUsers: Dispatch<SetStateAction<PresenceState>>
 }
 
 const presenceContext = createContext<PresenceType | null>(null)
 
 export function Presence({ children }: React.PropsWithChildren) {
-  const [onlineUser, setOnlineUsers] = useState(0)
-  const value = { onlineUser, setOnlineUsers }
+  const [onlineUsers, setOnlineUsers] = useState({})
+  const value = { onlineUsers, setOnlineUsers }
 
   const supabase = createClient<Database>(
 		'https://esjopxdrlewtpffznsxh.supabase.co',
@@ -24,13 +32,11 @@ export function Presence({ children }: React.PropsWithChildren) {
       .on('presence', { event: 'sync' }, () => {
         //! Send data to api or smth
         const value = onlineChannel.presenceState()
-        const valueArr = Object.keys(value).map((key, index) => value[key])
-        console.log(value)
+        setOnlineUsers(value)
       })
       .subscribe(async (status) => {
         if (status === 'SUBSCRIBED') {
           const status = await onlineChannel.track({ online_at: new Date().toISOString() })
-          console.log(status)
         }
       })
   }, [])
@@ -38,10 +44,10 @@ export function Presence({ children }: React.PropsWithChildren) {
   return <presenceContext.Provider value={value}>{children}</presenceContext.Provider>
 }
 
-export function GetPresence() {
+export function usePresence() {
 	const context = useContext(presenceContext)
 	if (!context) {
-		throw new Error('getPresence must be used within Presence')
+		throw new Error('usePresence must be used within Presence')
 	}
 	return context
 }
