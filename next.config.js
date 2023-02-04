@@ -8,7 +8,16 @@ const nextConfig = {
 				hostname: 'api-cdn.myanimelist.net'
 			}
 		]
-	}
+	},
+	async redirects() {
+    return [
+      {
+        source: '/',
+        destination: '/completed',
+        permanent: true,
+      },
+    ]
+  },
 }
 
 module.exports = nextConfig
