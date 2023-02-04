@@ -27,8 +27,8 @@ export default function Users() {
               <th className='w-80'>Online at</th>
             </tr>
             {Object.keys(onlineUsers ?? {}).map((key) => {
-              return onlineUsers?.[key].map((item) => (
-                <tr>
+              return onlineUsers?.[key].map((item, index) => (
+                <tr key={index}>
                   <td>
                     {item.presence_ref}
                   </td>
