@@ -10,11 +10,10 @@ import { useLoading } from '../../components/LoadingContext'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
 import Link from 'next/link'
 
-export default function Seasonal({
-	res
-}: {
-	res: Database['public']['Tables']['PTW-CurrentSeason']['Row'][]
-}) {
+//TODO: Load individual animes into tracker
+//TODO: Reorder to release order
+
+export default function Seasonal() {
 	const settingsMenuRef = useRef<HTMLDivElement>(null)
 	const settingsMenuButtonRef = useRef<HTMLDivElement>(null)
 
@@ -94,6 +93,7 @@ export default function Seasonal({
 						.select()
 						.order('id', { ascending: true })
 					setResponse(data!)
+					console.log(payload)
 				}
 			)
 			.subscribe()

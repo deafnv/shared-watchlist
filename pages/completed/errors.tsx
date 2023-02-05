@@ -247,7 +247,7 @@ export default function CompletedErrors() {
 							<input type="text" className="input-text" />
 						</label>
 						<Link
-							href={`https://myanimelist.net/anime.php?q=${changed?.retrievedTitle?.substring(
+							href={`https://myanimelist.net/anime.php?q=${changed?.entryTitle?.substring(
 								0,
 								64
 							)}`}
