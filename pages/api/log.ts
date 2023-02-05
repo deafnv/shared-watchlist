@@ -12,20 +12,19 @@ const recordLogs = async (req: NextApiRequest, res: NextApiResponse) => {
     return res.status(400).json('Only POST methods are supported')
   }
 
-  const body = await req.body
+  const { body } = req
+  const { message } = body
 
   try {
-    await axios.post(`https://api.logflare.app/api/logs?source=${LOGFLARE_ID}`, {
-
-    },
-    {
-      headers: {
-        'X-API-KEY': LOGFLARE_KEY
-      },
-      params: {
-        'message': body
-      }
-    })
+    await axios.post(`https://api.logflare.app/api/logs?source=${process.env.NEXT_PUBLIC_LOGFLARE_ID}`, {
+        message: message
+			},
+			{
+				headers: {
+					'X-API-KEY': process.env.NEXT_PUBLIC_LOGFLARE_KEY,
+					'Content-Type': 'application/json'
+				}
+			})
     res.json('ok')
   } catch (e) {
     console.error(JSON.stringify(e))
