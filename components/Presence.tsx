@@ -15,7 +15,7 @@ interface PresenceType {
 	setOnlineUsers: Dispatch<SetStateAction<PresenceState>>
 }
 
-const presenceContext = createContext<PresenceType | null>(null)
+export const presenceContext = createContext<PresenceType | null>(null)
 
 export function Presence({ children }: React.PropsWithChildren) {
   const [onlineUsers, setOnlineUsers] = useState({})
