@@ -3,7 +3,7 @@ import { createClient } from "@supabase/supabase-js"
 import { Database } from "../lib/database.types"
 import { GetServerSideProps, GetServerSidePropsContext } from 'next'
 
-interface PresenceState {
+export interface PresenceState {
   [key: string]: Array<{
     online_at: string,
     presence_ref: string

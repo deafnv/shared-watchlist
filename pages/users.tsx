@@ -1,14 +1,24 @@
 import Head from 'next/head'
+import { useEffect, useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
 import { Database } from '../lib/database.types'
-import { usePresence } from '../components/Presence'
+import { usePresence, PresenceState } from '../components/Presence'
 
 export default function Users() {
+  const [response, setResponse] = useState<PresenceState | null>(null)
 	const supabase = createClient<Database>(
 		'https://esjopxdrlewtpffznsxh.supabase.co',
 		process.env.NEXT_PUBLIC_SUPABASE_API_KEY!
 	)
-  const { onlineUsers } = usePresence()
+
+
+  useEffect(() => {
+    const getPresence = () => {
+      const { onlineUsers } = usePresence()
+      setResponse(onlineUsers)
+    }
+    getPresence()
+  }, [])
 
 	return (
 		<>
@@ -26,8 +36,8 @@ export default function Users() {
               <th className='w-60'>Id</th>
               <th className='w-80'>Online at</th>
             </tr>
-            {Object.keys(onlineUsers ?? {}).map((key) => {
-              return onlineUsers?.[key].map((item, index) => (
+            {Object.keys(response ?? {}).map((key) => {
+              return response?.[key].map((item, index) => (
                 <tr key={index}>
                   <td>
                     {item.presence_ref}
