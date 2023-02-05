@@ -11,6 +11,7 @@ import DoneIcon from '@mui/icons-material/Done'
 import { useLoading } from '../components/LoadingContext'
 import CancelIcon from '@mui/icons-material/Cancel'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
+import AddIcon from '@mui/icons-material/Add'
 
 export default function PTW() {
 	const rolledTitleRef = useRef('???')
@@ -39,6 +40,7 @@ export default function PTW() {
 		left: number
 		currentItem: Database['public']['Tables']['PTW-Rolled']['Row'] | null
 	}>({ top: 0, left: 0, currentItem: null })
+	const [isAdded, setIsAdded] = useState('')
 	const { setLoading } = useLoading()
 
 	const setRolledTitle = (value: string) => {
@@ -94,7 +96,6 @@ export default function PTW() {
 		)
 
 		const resetOnClickOut = (e: any) => {
-			if (e.target?.tagName !== 'INPUT') setIsEdited('')
 			if (e.target?.tagName !== 'INPUT' && isEdited) {
 				setIsEdited('')
 			}
@@ -104,6 +105,9 @@ export default function PTW() {
 				contextMenuRef.current
 			) {
 				setContextMenu({ top: 0, left: 0, currentItem: null })
+			}
+			if (e.target?.tagName !== 'INPUT' && e.target?.tagName !== 'svg' && e.target?.tagName !== 'path') {
+				setIsAdded('')
 			}
 		}
 
@@ -296,7 +300,7 @@ export default function PTW() {
 															onClick={(e) => {
 																handleMenuClick(e, item)
 															}}
-															className="absolute top-2 z-10 h-7 w-7 invisible group-hover:visible cursor-pointer rounded-full hover:bg-gray-500"
+															className="absolute top-2 z-10 h-7 w-7 invisible group-hover:visible cursor-pointer rounded-full hover:bg-gray-500 transition-colors duration-150"
 														>
 															<MoreVertIcon />
 														</div>
@@ -345,7 +349,7 @@ export default function PTW() {
 					</div>
 					<Gacha />
 				</div>
-				<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+				<div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
 					<PTWTable response={responseCasual} tableName="Casual" tableId="casual" />
 					<PTWTable response={responseNonCasual} tableName="Non-Casual" tableId="noncasual" />
 					<PTWTable response={responseMovies} tableName="Movies" tableId="movies" />
@@ -671,9 +675,73 @@ export default function PTW() {
 		tableName: string
 		tableId: 'casual' | 'noncasual' | 'movies'
 	}) {
+		function handleAddMenu() {
+			setIsAdded(tableName)
+			console.log(isAdded)
+		}
+
+		async function handleAddRecord(e: BaseSyntheticEvent) {
+			e.preventDefault()
+			const enteredTitle = e.target[0].value
+			if (!enteredTitle || !response) return
+
+			let cell = 'L';
+			switch (tableId) {
+				case 'casual':
+					cell = 'L'
+					break
+				case 'noncasual':
+					cell = 'M'
+					break
+			}
+	
+			setLoading(true)
+			
+			try {
+				if (tableId == 'movies') {
+					if (response.length >= 5) {
+						setLoading(false)
+						alert('No space left')
+						return
+					}
+					await axios.post('/api/update', {
+						content: enteredTitle,
+						cell: cell + (response.length + 22).toString()
+					})
+				} else {
+					if (response.length >= 15) {
+						setLoading(false)
+						alert('No space left')
+						return
+					}
+					await axios.post('/api/update', {
+						content: enteredTitle,
+						cell: cell + (response.length + 2).toString()
+					})
+				}
+				setIsAdded('')
+				setLoading(false)
+			} catch (error) {
+				setLoading(false)
+				alert(error)
+				return
+			}
+		}
+
 		return (
-			<div className="flex flex-col items-center">
-				<h2 className="p-2 text-3xl">{tableName}</h2>
+			<section className="relative flex flex-col items-center">
+				<header className='flex items-center'>
+					<h2 className="p-2 text-3xl">{tableName}</h2>
+					<div onClick={handleAddMenu} className='flex items-center justify-center h-7 w-7 cursor-pointer rounded-full hover:bg-gray-500 transition-colors duration-150 translate-y-[2px]'>
+						<AddIcon />
+					</div>
+				</header>
+				{isAdded == tableName && 
+				<menu className='absolute top-14 z-10 p-1 rounded-lg bg-black border-[1px] border-pink-400'>
+					<form onSubmit={handleAddRecord}>
+						<input placeholder='Insert title' className='w-60 text-lg rounded-sm bg-gray-800 focus:outline-none' />
+					</form>
+				</menu>}
 				<table>
 					<tbody>
 						<tr>
@@ -711,7 +779,7 @@ export default function PTW() {
 							  })}
 					</tbody>
 				</table>
-			</div>
+			</section>
 		)
 	}
 

@@ -185,7 +185,7 @@ export default function Completed() {
 					<div
 						ref={settingsMenuButtonRef}
 						onClick={handleSettingsMenu}
-						className="absolute top-[0.85rem] -right-6 flex items-center justify-center h-7 w-7 cursor-pointer rounded-full hover:bg-gray-500"
+						className="absolute top-[0.85rem] -right-6 flex items-center justify-center h-7 w-7 cursor-pointer rounded-full hover:bg-gray-500 transition-colors duration-150"
 					>
 						<MoreVertIcon sx={{ fontSize: 28 }} />
 					</div>
@@ -301,7 +301,7 @@ export default function Completed() {
 													}}
 													className="relative"
 												>
-													<span>
+													<span className='px-6'>
 														{isEdited == `title${item.id}` ? (
 															editForm('title', item.id, item.title!)
 														) : item.title ? (
@@ -313,7 +313,7 @@ export default function Completed() {
 															onClick={(e) => {
 																handleMenuClick(e, item)
 															}}
-															className="absolute top-2 z-10 h-7 w-7 invisible group-hover:visible cursor-pointer rounded-full hover:bg-gray-500"
+															className="absolute top-2 z-10 h-7 w-7 invisible group-hover:visible cursor-pointer rounded-full hover:bg-gray-500 transition-colors duration-150"
 														>
 															<MoreVertIcon />
 														</div>
