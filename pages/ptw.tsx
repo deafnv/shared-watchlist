@@ -677,7 +677,6 @@ export default function PTW() {
 	}) {
 		function handleAddMenu() {
 			setIsAdded(tableName)
-			console.log(isAdded)
 		}
 
 		async function handleAddRecord(e: BaseSyntheticEvent) {

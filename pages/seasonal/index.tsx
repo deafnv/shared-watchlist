@@ -5,6 +5,8 @@ import Head from 'next/head'
 import axios from 'axios'
 import { loadingGlimmer } from '../../components/LoadingGlimmer'
 import { CircularProgress } from '@mui/material'
+import AddIcon from '@mui/icons-material/Add'
+import { useLoading } from '../../components/LoadingContext'
 
 export default function Seasonal({
 	res
@@ -16,6 +18,8 @@ export default function Seasonal({
 	const [isEdited, setIsEdited] = useState<string>('')
 	const [isLoadingClient, setIsLoadingClient] = useState(true)
 	const [isLoadingEditForm, setIsLoadingEditForm] = useState<Array<string>>([])
+	const [isAdded, setIsAdded] = useState(false)
+	const { setLoading } = useLoading()
 
 	useEffect(() => {
 		const supabase = createClient<Database>(
@@ -84,80 +88,123 @@ export default function Seasonal({
 			</Head>
 
 			<main className="flex flex-col items-center justify-center mb-24 px-1">
-				<h2 className="p-2 text-3xl">Current Season</h2>
-				<table>
-					<tbody>
-						<tr>
-							<th className="w-[30rem]">Title</th>
-							<th className="w-[10rem]">Status</th>
-						</tr>
-						{isLoadingClient
-							? loadingGlimmer(2)
-							: response?.map((item) => {
-									let status
-									switch (item.status) {
-										case 'Not loaded':
-											status = 'crimson'
-											break
-										case 'Loaded':
-											status = 'orange'
-											break
-										case 'Watched':
-											status = 'green'
-											break
-										case 'Not aired':
-											status = 'black'
-											break
-										default:
-											status = ''
-									}
-									return (
-										<tr key={item.id}>
-											<td
-												style={{
-													opacity: isLoadingEditForm.includes(`seasonal_title_${item.id}`) ? 0.5 : 1
-												}}
-												onDoubleClick={() => {
-													setIsEdited(`seasonal_title_${item.title}_${item.id}`)
-												}}
-												className="relative"
-											>
-												<span>
-													{isEdited == `seasonal_title_${item.title}_${item.id}`
-														? editForm(`seasonal_title`, item.id, item.title!)
-														: item.title}
-												</span>
-												{isLoadingEditForm.includes(`seasonal_title_${item.id}`) && (
-													<CircularProgress size={30} className="absolute top-[20%] left-[48%]" />
-												)}
-											</td>
-											<td
-												style={{
-													backgroundColor: status,
-													opacity: isLoadingEditForm.includes(`status_${item.id}`) ? 0.5 : 1
-												}}
-												onDoubleClick={() => {
-													setIsEdited(`seasonal_status_${item.title}_${item.id}`)
-												}}
-												className="relative"
-											>
-												<span>
-													{isEdited == `seasonal_status_${item.title}_${item.id}`
-														? editStatus(item.id)
-														: ''}
-												</span>
-												{isLoadingEditForm.includes(`status_${item.id}`) && (
-													<CircularProgress size={30} className="absolute top-[20%] left-[48%]" />
-												)}
-											</td>
-										</tr>
-									)
-							  })}
-					</tbody>
-				</table>
+				<section className='relative flex flex-col items-center'>
+					<header className='flex items-center'>
+						<h2 className="p-2 text-3xl">Current Season</h2>
+						<div onClick={handleAddMenu} className='flex items-center justify-center h-7 w-7 cursor-pointer rounded-full hover:bg-gray-500 transition-colors duration-150 translate-y-[2px]'>
+							<AddIcon />
+						</div>
+					</header>
+					{isAdded && 
+					<menu className='absolute top-14 z-10 p-1 rounded-lg bg-black border-[1px] border-pink-400'>
+						<form onSubmit={handleAddRecord}>
+							<input placeholder='Insert title' className='w-60 text-lg rounded-sm bg-gray-800 focus:outline-none' />
+						</form>
+					</menu>}
+					<table>
+						<tbody>
+							<tr>
+								<th className="w-[30rem]">Title</th>
+								<th className="w-[10rem]">Status</th>
+							</tr>
+							{isLoadingClient
+								? loadingGlimmer(2)
+								: response?.map((item) => {
+										let status
+										switch (item.status) {
+											case 'Not loaded':
+												status = 'crimson'
+												break
+											case 'Loaded':
+												status = 'orange'
+												break
+											case 'Watched':
+												status = 'green'
+												break
+											case 'Not aired':
+												status = 'black'
+												break
+											default:
+												status = ''
+										}
+										return (
+											<tr key={item.id}>
+												<td
+													style={{
+														opacity: isLoadingEditForm.includes(`seasonal_title_${item.id}`) ? 0.5 : 1
+													}}
+													onDoubleClick={() => {
+														setIsEdited(`seasonal_title_${item.title}_${item.id}`)
+													}}
+													className="relative"
+												>
+													<span>
+														{isEdited == `seasonal_title_${item.title}_${item.id}`
+															? editForm(`seasonal_title`, item.id, item.title!)
+															: item.title}
+													</span>
+													{isLoadingEditForm.includes(`seasonal_title_${item.id}`) && (
+														<CircularProgress size={30} className="absolute top-[20%] left-[48%]" />
+													)}
+												</td>
+												<td
+													style={{
+														backgroundColor: status,
+														opacity: isLoadingEditForm.includes(`status_${item.id}`) ? 0.5 : 1
+													}}
+													onDoubleClick={() => {
+														setIsEdited(`seasonal_status_${item.title}_${item.id}`)
+													}}
+													className="relative"
+												>
+													<span>
+														{isEdited == `seasonal_status_${item.title}_${item.id}`
+															? editStatus(item.id)
+															: ''}
+													</span>
+													{isLoadingEditForm.includes(`status_${item.id}`) && (
+														<CircularProgress size={30} className="absolute top-[20%] left-[48%]" />
+													)}
+												</td>
+											</tr>
+										)
+									})}
+						</tbody>
+					</table>
+				</section>
 			</main>
 		</>
 	)
+
+	async function handleAddRecord(e: BaseSyntheticEvent) {
+		e.preventDefault()
+		const enteredTitle = e.target[0].value
+		if (!enteredTitle || !response) return
+
+		setLoading(true)
+		
+		try {
+			if (response.length >= 21) {
+				setLoading(false)
+				alert('No space left')
+				return
+			}
+			await axios.post('/api/update', {
+				content: enteredTitle,
+				cell: 'O' + (response.length + 2).toString()
+			})
+			setIsAdded(false)
+			setLoading(false)
+		} catch (error) {
+			setLoading(false)
+			alert(error)
+			return
+		}
+	}
+
+	function handleAddMenu() {
+		setIsAdded(true)
+	}
 
 	function editForm(field: 'seasonal_title', id: number, ogvalue: string): React.ReactNode {
 		let column: string
