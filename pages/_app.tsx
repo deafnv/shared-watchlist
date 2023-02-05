@@ -9,7 +9,7 @@ import { LoadingProvider } from '../components/LoadingContext'
 import { ThemeProvider, createTheme } from '@mui/material'
 import { orange } from '@mui/material/colors'
 import { Analytics } from '@vercel/analytics/react'
-import { Presence} from '../components/Presence'
+import { PresenceProvider } from '../components/PresenceProvider'
 
 declare module '@mui/material/styles' {
 	interface Theme {
@@ -63,14 +63,14 @@ export default function App({ Component, pageProps }: AppProps) {
 
 	return (
 		<ThemeProvider theme={theme}>
-			<Presence>
+			<PresenceProvider>
 				<LoadingProvider>
 					<Navbar>
 						<Component {...pageProps} />
 					</Navbar>
 				</LoadingProvider>
 				{env && <Analytics />}
-			</Presence>
+			</PresenceProvider>
 		</ThemeProvider>
 	)
 }

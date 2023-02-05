@@ -2,7 +2,7 @@ import Head from 'next/head'
 import { useEffect, useState, useContext } from 'react'
 import { createClient } from '@supabase/supabase-js'
 import { Database } from '../lib/database.types'
-import { usePresence } from '../components/Presence'
+import { usePresence } from '../components/PresenceProvider'
 
 export default function Users() {
 	const supabase = createClient<Database>(
