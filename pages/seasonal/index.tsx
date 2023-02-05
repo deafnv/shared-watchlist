@@ -1,24 +1,35 @@
 import { createClient } from '@supabase/supabase-js'
 import { Database } from '../../lib/database.types'
-import { BaseSyntheticEvent, useEffect, useState } from 'react'
+import { BaseSyntheticEvent, useEffect, useState, useRef } from 'react'
 import Head from 'next/head'
 import axios from 'axios'
 import { loadingGlimmer } from '../../components/LoadingGlimmer'
 import { CircularProgress } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
 import { useLoading } from '../../components/LoadingContext'
+import MoreVertIcon from '@mui/icons-material/MoreVert'
+import Link from 'next/link'
 
 export default function Seasonal({
 	res
 }: {
 	res: Database['public']['Tables']['PTW-CurrentSeason']['Row'][]
 }) {
+	const settingsMenuRef = useRef<HTMLDivElement>(null)
+	const settingsMenuButtonRef = useRef<HTMLDivElement>(null)
+
 	const [response, setResponse] =
 		useState<Database['public']['Tables']['PTW-CurrentSeason']['Row'][]>()
 	const [isEdited, setIsEdited] = useState<string>('')
 	const [isLoadingClient, setIsLoadingClient] = useState(true)
 	const [isLoadingEditForm, setIsLoadingEditForm] = useState<Array<string>>([])
 	const [isAdded, setIsAdded] = useState(false)
+	const [settingsMenu, setSettingsMenu] = useState<{
+		top: number
+		left: number
+		display: string
+	}>({ top: 0, left: 0, display: 'none' })
+	const [confirmModal, setConfirmModal] = useState(false)
 	const { setLoading } = useLoading()
 
 	useEffect(() => {
@@ -45,17 +56,32 @@ export default function Seasonal({
 			() => axios.get('https://update.ilovesabrina.org/refresh'),
 			3500000
 		)
+		
+		const closeMenusOnClick = (e: any) => {
+			if (e.target?.tagName !== 'INPUT' && e.target?.tagName !== 'SELECT') setIsEdited('')
+			if (e.target?.tagName !== 'INPUT' && e.target?.tagName !== 'svg' && e.target?.tagName !== 'path') {
+				setIsAdded(false)
+			}
+			if (
+				e.target.parentNode !== settingsMenuButtonRef.current &&
+				!settingsMenuRef.current?.contains(e.target) &&
+				settingsMenuRef.current
+			) {
+				setSettingsMenu({ top: 0, left: 0, display: 'none' })
+			}
+		}
 
-		document.addEventListener('click', (e: any) => {
-			if (e.target?.tagName === 'INPUT' || e.target?.tagName === 'SELECT') return
+		const closeMenusOnFocusout = () => {
 			setIsEdited('')
-		})
-		window.addEventListener('focusout', () => {
-			setIsEdited('')
-		})
-		window.addEventListener('keydown', (e) => {
+		}
+
+		const closeMenusOnEscape = (e: KeyboardEvent) => {
 			if (e.key === 'Escape') setIsEdited('')
-		})
+		}
+
+		document.addEventListener('click', closeMenusOnClick)
+		window.addEventListener('focusout', closeMenusOnFocusout)
+		window.addEventListener('keydown', closeMenusOnEscape)
 
 		const databaseChannel = supabase
 			.channel('public:PTW-CurrentSeason')
@@ -75,6 +101,9 @@ export default function Seasonal({
 		return () => {
 			databaseChannel.unsubscribe()
 			clearInterval(refresh)
+			document.removeEventListener('click', closeMenusOnClick)
+			window.removeEventListener('focusout', closeMenusOnFocusout)
+			window.removeEventListener('keydown', closeMenusOnEscape)
 		}
 	}, [])
 
@@ -91,7 +120,14 @@ export default function Seasonal({
 				<section className='relative flex flex-col items-center'>
 					<header className='flex items-center'>
 						<h2 className="p-2 text-3xl">Current Season</h2>
-						<div onClick={handleAddMenu} className='flex items-center justify-center h-7 w-7 cursor-pointer rounded-full hover:bg-gray-500 transition-colors duration-150 translate-y-[2px]'>
+						<div
+							ref={settingsMenuButtonRef}
+							onClick={handleSettingsMenu}
+							className="flex items-center justify-center h-7 w-7 cursor-pointer rounded-full hover:bg-gray-500 transition-colors duration-150 translate-y-[2px]"
+						>
+							<MoreVertIcon sx={{ fontSize: 28 }} />
+						</div>
+						<div title='Add new entry' onClick={handleAddMenu} className='flex items-center justify-center h-7 w-7 cursor-pointer rounded-full hover:bg-gray-500 transition-colors duration-150 translate-y-[2px]'>
 							<AddIcon />
 						</div>
 					</header>
@@ -138,7 +174,7 @@ export default function Seasonal({
 													}}
 													className="relative"
 												>
-													<span>
+													<span className='px-4'>
 														{isEdited == `seasonal_title_${item.title}_${item.id}`
 															? editForm(`seasonal_title`, item.id, item.title!)
 															: item.title}
@@ -172,9 +208,74 @@ export default function Seasonal({
 						</tbody>
 					</table>
 				</section>
+				{settingsMenu.display == 'block' && <SettingsMenu />}
+				{confirmModal && <ConfirmModal />}
 			</main>
 		</>
 	)
+
+	function ConfirmModal() {
+		async function handleDeleteAll() {
+			setLoading(true)
+		
+			try {
+				await axios.post('/api/update', {
+					content: '',
+					cell: 'O2:O22',
+					type: 'MULTI',
+					length: 21
+				})
+				setConfirmModal(false)
+				setLoading(false)
+			} catch (error) {
+				setLoading(false)
+				alert(error)
+				return
+			}
+		}
+
+		return (
+			<menu>
+				<div className="fixed top-0 left-0 h-[100dvh] w-[100dvw] bg-black opacity-30" />
+				<div className="fixed flex flex-col items-center justify-center gap-4 h-[15rem] w-[30rem] px-10 py-6 bg-gray-700 rounded-md shadow-md shadow-black drop-shadow-md border-4 border-black top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 modal">
+					<h3 className='text-2xl'>Confirm Delete All Entries?</h3>
+					<div className='flex gap-4'>
+						<button onClick={handleDeleteAll} className='px-3 py-1 input-submit'>Yes</button>
+						<button onClick={() => setConfirmModal(false)} className='px-3 py-1 input-submit'>No</button>
+					</div>
+				</div>
+			</menu>
+		)
+	}
+
+	function SettingsMenu() {
+		return (
+			<menu
+				ref={settingsMenuRef}
+				style={{
+					top: settingsMenu.top,
+					left: settingsMenu.left
+				}}
+				className="absolute z-20 p-2 shadow-md shadow-black bg-black border-pink-400 border-[1px] rounded-md seasonal-settings-menu"
+			>
+				<li className="flex justify-center h-fit rounded-md hover:bg-pink-400">
+					<button onClick={() => setConfirmModal(true)} className="py-2 w-full">
+						Delete All
+					</button>
+				</li>
+			</menu>
+		)
+	}
+
+	function handleSettingsMenu(e: BaseSyntheticEvent) {
+		const { top, left } = e.target.getBoundingClientRect()
+
+		setSettingsMenu({
+			top: top + window.scrollY,
+			left: left + window.scrollX - 160,
+			display: 'block'
+		})
+	}
 
 	async function handleAddRecord(e: BaseSyntheticEvent) {
 		e.preventDefault()

@@ -457,13 +457,13 @@ export default function Completed() {
 				}}
 				className="absolute z-20 p-2 shadow-md shadow-black bg-black border-pink-400 border-[1px] rounded-md completed-settings-menu"
 			>
-				<li className="flex justify-center py-2 h-fit rounded-md hover:bg-pink-400">
-					<button onClick={handleLoadDetails} className="w-full">
+				<li className="flex justify-center h-fit rounded-md hover:bg-pink-400">
+					<button onClick={handleLoadDetails} className="py-2 w-full">
 						Load details
 					</button>
 				</li>
-				<li className="flex justify-center py-2 h-fit rounded-md hover:bg-pink-400">
-					<Link href={'/completed/errors'} className="px-1 w-full text-center">
+				<li className="flex justify-center h-fit rounded-md hover:bg-pink-400">
+					<Link href={'/completed/errors'} className="px-1 py-2 w-full text-center">
 						See Potential Errors
 					</Link>
 				</li>

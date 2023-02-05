@@ -731,7 +731,7 @@ export default function PTW() {
 			<section className="relative flex flex-col items-center">
 				<header className='flex items-center'>
 					<h2 className="p-2 text-3xl">{tableName}</h2>
-					<div onClick={handleAddMenu} className='flex items-center justify-center h-7 w-7 cursor-pointer rounded-full hover:bg-gray-500 transition-colors duration-150 translate-y-[2px]'>
+					<div title='Add new entry' onClick={handleAddMenu} className='flex items-center justify-center h-7 w-7 cursor-pointer rounded-full hover:bg-gray-500 transition-colors duration-150 translate-y-[2px]'>
 						<AddIcon />
 					</div>
 				</header>
