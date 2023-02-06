@@ -105,7 +105,7 @@ export default function SeasonalDetails({
 
 			<main className="flex flex-col items-center justify-center p-6">
 				<div className="relative">
-					<h2 className="mb-6 text-3xl">Seasonal Details</h2>
+					<h2 className="mb-6 text-3xl">Episode Tracker</h2>
 					<div
 						ref={refreshReloadMenuButtonRef}
 						onClick={handleRefreshReloadMenu}

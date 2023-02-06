@@ -288,9 +288,7 @@ export default function PTW() {
 														cursor: sortMethod ? 'unset' : 'move',
 														opacity: isLoadingEditForm.includes(`rolled_title_${item.id}`) ? 0.5 : 1
 													}}
-													onDoubleClick={() => {
-														setIsEdited(`rolled_${item.title}_${item.id}`)
-													}}
+													onDoubleClick={() => setIsEdited(`rolled_${item.title}_${item.id}`)}
 													className="relative p-2 text-center group"
 												>
 													<span className="cursor-text">
@@ -861,15 +859,12 @@ export default function PTW() {
 
 		return (
 			<div className="flex items-center justify-center relative w-full">
-				{isLoadingEditForm.includes(`${field}_${id}`) && (
-					<CircularProgress size={30} className="absolute left-[48%]" />
-				)}
 				<div
 					style={{
 						opacity: isLoadingEditForm.includes(`${field}_${id}`) ? 0.5 : 1,
 						pointerEvents: isLoadingEditForm.includes(`${field}_${id}`) ? 'none' : 'unset'
 					}}
-					className="w-full"
+					className="w-[85%]"
 				>
 					<form onSubmit={handleSubmit}>
 						<input

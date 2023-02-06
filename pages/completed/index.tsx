@@ -301,7 +301,7 @@ export default function Completed() {
 													}}
 													className="relative"
 												>
-													<span className='px-6'>
+													<span style={{ margin: isEdited == `title${item.id}` ? 0 : '0 1.6rem' }}>
 														{isEdited == `title${item.id}` ? (
 															editForm('title', item.id, item.title!)
 														) : item.title ? (
@@ -782,9 +782,9 @@ export default function Completed() {
 				<div
 					style={{
 						opacity: isLoadingEditForm.includes(`${field}_${id}`) ? 0.5 : 1,
-						pointerEvents: isLoadingEditForm.includes(`${field}_${id}`) ? 'none' : 'unset'
+						pointerEvents: isLoadingEditForm.includes(`${field}_${id}`) ? 'none' : 'unset',
 					}}
-					className="w-full"
+					className="w-[90%]"
 				>
 					<form onSubmit={handleSubmit}>
 						<input

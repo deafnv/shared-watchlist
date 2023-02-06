@@ -25,7 +25,7 @@
 		border-width: theme('borderWidth.DEFAULT');
 		border-color: theme('colors.gray.400');
 		border-style: solid;
-		border-radius: theme('borderRadius.sm');
+		border-radius: theme('borderRadius.md');
 		cursor: theme('cursor.pointer');
 		transition: theme('transitionDuration.100');
 	}

@@ -23,7 +23,6 @@ export default function Seasonal() {
 	const [response1, setResponse1] =
 		useState<Database['public']['Tables']['PTW-CurrentSeason']['Row'][]>()
 	const [isEdited, setIsEdited] = useState<string>('')
-	const [isLoadingClient, setIsLoadingClient] = useState(true)
 	const [isLoadingEditForm, setIsLoadingEditForm] = useState<Array<string>>([])
 	const [isAdded, setIsAdded] = useState(false)
 	const [settingsMenu, setSettingsMenu] = useState<{
@@ -48,7 +47,6 @@ export default function Seasonal() {
 
 			setResponse(data!)
 			setResponse1(data!)
-			setIsLoadingClient(false)
 
 			await axios
 				.get('https://update.ilovesabrina.org/refresh')
@@ -143,16 +141,14 @@ export default function Seasonal() {
 							<input placeholder='Insert title' className='w-60 text-lg rounded-sm bg-gray-800 focus:outline-none' />
 						</form>
 					</menu>}
-					<div className="grid grid-cols-[5fr_1fr] xl:grid-cols-[30rem_10rem] min-w-[95dvw] xl:min-w-0 sm:w-min bg-sky-600 border-white border-solid border-[1px]">
-						<span className='flex items-center justify-center p-2 h-full text-xs md:text-base border-white border-r-[1px] text-center font-bold'>
+					<div className="grid grid-cols-[5fr_1fr] xl:grid-cols-[30rem_10rem] min-w-[95dvw] xl:min-w-0 w-min bg-sky-600 border-white border-solid border-[1px]">
+						<span className='flex items-center justify-center p-2 h-full border-white border-r-[1px] text-center font-bold'>
 							Title
 						</span>
-						<span className='flex items-center justify-center p-2 h-full text-xs md:text-base text-center font-bold'>
+						<span className='flex items-center justify-center p-2 h-full text-center font-bold'>
 							Status
 						</span>
 					</div>
-					{isLoadingClient ? 
-					loadingGlimmer(2) : (
 					<Reorder.Group
 						values={response ?? []}
 						dragConstraints={{ top: 500 }}
@@ -161,8 +157,7 @@ export default function Seasonal() {
 							setResponse(newOrder)
 							setReordered(true)
 						}}
-						/* TODO: CHANGE THIS MAKE RESPONSIVE */
-						className="flex flex-col xl:w-[40rem] min-w-[95dvw] xl:min-w-full sm:w-min border-white border-[1px] border-t-0"
+						className="flex flex-col xl:w-[40rem] min-w-[95dvw] xl:min-w-full w-min border-white border-[1px] border-t-0"
 					>
 						{response?.map((item) => {
 							const statusColor = determineStatus(item)
@@ -177,7 +172,10 @@ export default function Seasonal() {
 										}}
 										className="relative p-2 text-center"
 									>
-										<span className='px-4'>
+										<span 
+											style={{ margin: isEdited == `seasonal_title_${item.title}_${item.id}` ? 0 : '0 1rem' }}
+											className='cursor-text'
+										>
 											{isEdited == `seasonal_title_${item.title}_${item.id}`
 												? editForm(`seasonal_title`, item.id, item.title!)
 												: item.title}
@@ -198,7 +196,7 @@ export default function Seasonal() {
 									>
 										<span className='flex items-center justify-center'>
 											{isEdited == `seasonal_status_${item.title}_${item.id}`
-												? editStatus(item.id)
+												? editStatus(item.id, item.title!)
 												: ''}
 										</span>
 										{isLoadingEditForm.includes(`status_${item.id}`) && (
@@ -209,7 +207,6 @@ export default function Seasonal() {
 							)
 						})}
 					</Reorder.Group>
-					)}
 					<div
 						style={{
 							visibility: reordered && !isEqual(response, response1) ? 'visible' : 'hidden'
@@ -401,7 +398,7 @@ export default function Seasonal() {
 						opacity: isLoadingEditForm.includes(`seasonal_title_${id}`) ? 0.5 : 1,
 						pointerEvents: isLoadingEditForm.includes(`seasonal_title_${id}`) ? 'none' : 'unset'
 					}}
-					className="w-full"
+					className="w-[85%]"
 				>
 					<form onSubmit={handleSubmit}>
 						<input
@@ -412,14 +409,11 @@ export default function Seasonal() {
 						/>
 					</form>
 				</div>
-				{isLoadingEditForm.includes(`seasonal_title_${id}`) && (
-					<CircularProgress size={30} className="absolute left-[48%]" />
-				)}
 			</div>
 		)
 	}
 
-	function editStatus(id: number) {
+	function editStatus(id: number, title: string) {
 		async function handleSubmit(event: BaseSyntheticEvent) {
 			event.preventDefault()
 			setIsLoadingEditForm(isLoadingEditForm.concat(`status_${id}`))
@@ -471,9 +465,6 @@ export default function Seasonal() {
 						</select>
 					</form>
 				</div>
-				{isLoadingEditForm.includes(`status_${id}`) && (
-					<CircularProgress size={30} className="absolute left-[48%]" />
-				)}
 			</div>
 		)
 	}

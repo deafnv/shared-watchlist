@@ -101,7 +101,7 @@ export default function CompletedDetails() {
 					className="fixed top-0 left-0 h-[100dvh] w-[100dvw] opacity-30 bg-black modal-background"
 				/>
 				{advancedSearchResult ? (
-					<div className="fixed flex flex-col items-center gap-4 w-[45rem] px-10 py-6 bg-gray-700 rounded-md shadow-md shadow-black drop-shadow-md top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 modal">
+					<div className="fixed flex flex-col items-center gap-4 w-[45rem] px-10 py-6 bg-gray-700 rounded-md shadow-md shadow-black drop-shadow-md top-1/2 left-1/2 -translate-x-1/2 -translate-y-[45%] modal">
 						<div
 							onClick={() => setAdvancedSearchResult(null)}
 							className="absolute left-6 flex items-center justify-center h-11 w-11 rounded-full cursor-pointer transition-colors duration-150 hover:bg-slate-500"
@@ -109,8 +109,9 @@ export default function CompletedDetails() {
 							<ArrowBackIcon fontSize="large" />
 						</div>
 						<h3 className="font-semibold text-2xl">Result</h3>
-						<ul className="flex flex-col gap-2 h-[80dvh] overflow-auto">
-							{advancedSearchResult.map((item: any, index: number) => {
+						<ul className="flex flex-col gap-2 h-[70dvh] overflow-auto">
+							{advancedSearchResult.length ?
+							advancedSearchResult.map((item: any, index: number) => {
 								return (
 									<li
 										key={index}
@@ -118,17 +119,21 @@ export default function CompletedDetails() {
 									>
 										<Link
 											href={`${location.origin}/completed/anime/${item.id}`}
-											className="inline-block py-3 h-full w-full"
+											className="inline-block px-3 py-5 h-full w-full"
 										>
 											{item.title}
 										</Link>
 									</li>
 								)
-							})}
+							})
+							:
+							<span className='text-lg my-auto'>
+								No results found.	
+							</span>}
 						</ul>
 					</div>
 				) : (
-					<div className="fixed flex flex-col items-center gap-4 h-[95dvh] w-[45rem] max-w-[95%] px-10 py-6 bg-gray-700 rounded-md shadow-md shadow-black drop-shadow-md top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 modal">
+					<div className="fixed flex flex-col items-center gap-4 h-[85dvh] w-[45rem] max-w-[95%] px-10 py-6 bg-gray-700 rounded-md shadow-md shadow-black drop-shadow-md top-1/2 left-1/2 -translate-x-1/2 -translate-y-[45%] modal">
 						<h3 className="font-semibold text-2xl">Advanced Search</h3>
 						<div
 							onClick={() => setAdvancedSearch('none')}
