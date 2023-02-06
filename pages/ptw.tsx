@@ -12,6 +12,7 @@ import { useLoading } from '../components/LoadingContext'
 import CancelIcon from '@mui/icons-material/Cancel'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
 import AddIcon from '@mui/icons-material/Add'
+import isEqual from 'lodash/isEqual'
 
 export default function PTW() {
 	const rolledTitleRef = useRef('???')
@@ -317,7 +318,7 @@ export default function PTW() {
 						)}
 						<div
 							style={{
-								visibility: !sortMethod && reordered ? 'visible' : 'hidden'
+								visibility: !sortMethod && reordered && !isEqual(responseRolled, responseRolled1) ? 'visible' : 'hidden'
 							}}
 							className="flex flex-col items-center w-[30rem] px-2"
 						>
