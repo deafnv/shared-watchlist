@@ -13,6 +13,7 @@ import CancelIcon from '@mui/icons-material/Cancel'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
 import AddIcon from '@mui/icons-material/Add'
 import isEqual from 'lodash/isEqual'
+import RefreshIcon from '@mui/icons-material/Refresh';
 
 export default function PTW() {
 	const rolledTitleRef = useRef('???')
@@ -21,6 +22,7 @@ export default function PTW() {
 	const addGachaRollRef = useRef<HTMLDivElement>(null)
 	const contextMenuRef = useRef<HTMLDivElement>(null)
 	const contextMenuButtonRef = useRef<any>([])
+	const sortMethodRef = useRef('')
 
 	const [responseRolled, setResponseRolled] =
 		useState<Database['public']['Tables']['PTW-Rolled']['Row'][]>()
@@ -32,7 +34,6 @@ export default function PTW() {
 		useState<Database['public']['Tables']['PTW-NonCasual']['Row'][]>()
 	const [responseMovies, setResponseMovies] =
 		useState<Database['public']['Tables']['PTW-Movies']['Row'][]>()
-	const [sortMethod, setSortMethod] = useState<string>('')
 	const [isEdited, setIsEdited] = useState<string>('')
 	const [reordered, setReordered] = useState(false)
 	const [isLoadingClient, setIsLoadingClient] = useState(true)
@@ -113,10 +114,10 @@ export default function PTW() {
 
 					switch (payload.table) {
 						case 'PTW-Rolled':
+							sortMethodRef.current = ''
 							setResponseRolled(data as Database['public']['Tables']['PTW-Rolled']['Row'][])
 							setResponseRolled1(data as Database['public']['Tables']['PTW-Rolled']['Row'][])
 							setReordered(false)
-							setSortMethod('')
 							break
 						case 'PTW-Casual':
 							setResponseCasual(data!)
@@ -177,7 +178,7 @@ export default function PTW() {
 			}
 			if (
 				!contextMenuButtonRef.current.includes(e.target.parentNode) &&
-				!contextMenuButtonRef.current.includes(e.target.parentNode.parentNode) &&
+				!contextMenuButtonRef.current.includes(e.target.parentNode?.parentNode) &&
 				!contextMenuRef.current?.contains(e.target) &&
 				contextMenuRef.current
 			) {
@@ -225,35 +226,36 @@ export default function PTW() {
 			<main className="flex flex-col items-center justify-center gap-4 px-4 mb-24">
 				<div className="flex flex-col lg:flex-row items-center justify-center w-full gap-12">
 					<div className="flex flex-col items-center min-h-[40rem] w-[30rem] lg:w-auto">
-						<h2 className="p-2 mt-5 text-3xl">
-							Plan to Watch (Rolled)
-							{sortMethod ? (
-								<span
-									onClick={() => {
-										setResponseRolled(responseRolled1)
-										setSortMethod('')
-									}}
-									className="cursor-pointer"
-								>
-									{' '}
-									↻
-								</span>
-							) : null}
-						</h2>
+						<header className='flex items-center mt-5'>
+							<h2 className="p-2 text-3xl">
+								Plan to Watch (Rolled)
+							</h2>
+							{sortMethodRef.current &&
+							<div
+								title="Reset sort"
+								onClick={() => {
+									sortMethodRef.current = ''
+									setResponseRolled(responseRolled1)
+								}}
+								className="flex items-center justify-center h-7 w-7 cursor-pointer rounded-full hover:bg-gray-500 transition-colors duration-150 translate-y-[1px]"
+							>
+								<RefreshIcon sx={{ fontSize: 28 }} />
+							</div>}
+						</header>
 						<div
 							onClick={() => {
 								sortListByNamePTW(
 									'title',
 									responseRolled,
-									sortMethod,
-									setSortMethod,
+									sortMethodRef,
 									setResponseRolled
 								)
 								setReordered(false)
 							}}
-							className="flex items-center justify-center h-10 w-[90dvw] sm:w-[30rem] bg-sky-600 cursor-pointer border-white border-solid border-[1px]"
+							className="relative flex items-center justify-center h-10 w-[90dvw] sm:w-[30rem] bg-sky-600 cursor-pointer border-white border-solid border-[1px]"
 						>
 							<span className="font-bold">Title</span>
+							<span className="absolute left-[54%]">{sortSymbol('title', sortMethodRef)}</span>
 						</div>
 						{isLoadingClient ? (
 							<div className="flex flex-col items-center justify-around h-[448px] w-[90dvw] sm:w-[30rem] border-white border-solid border-[1px] border-t-0">
@@ -274,7 +276,7 @@ export default function PTW() {
 							<Reorder.Group
 								values={responseRolled ?? []}
 								dragConstraints={{ top: 0, bottom: 0 }}
-								draggable={sortMethod ? true : false}
+								draggable={sortMethodRef.current ? true : false}
 								onReorder={(newOrder) => {
 									setContextMenu({ top: 0, left: 0, currentItem: null })
 									setResponseRolled(newOrder)
@@ -288,7 +290,7 @@ export default function PTW() {
 											<Reorder.Item value={item} key={item.id} className="p-0 hover:bg-neutral-700">
 												<div
 													style={{
-														cursor: sortMethod ? 'unset' : 'move',
+														cursor: sortMethodRef.current ? 'unset' : 'move',
 														opacity: isLoadingEditForm.includes(`rolled_title_${item.id}`) ? 0.5 : 1
 													}}
 													onDoubleClick={() => setIsEdited(`rolled_${item.title}_${item.id}`)}
@@ -320,7 +322,7 @@ export default function PTW() {
 						)}
 						<div
 							style={{
-								visibility: !sortMethod && reordered && !isEqual(responseRolled, responseRolled1) ? 'visible' : 'hidden'
+								visibility: !sortMethodRef.current && reordered && !isEqual(responseRolled, responseRolled1) ? 'visible' : 'hidden'
 							}}
 							className="flex flex-col items-center w-[30rem] px-2"
 						>

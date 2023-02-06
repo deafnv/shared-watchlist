@@ -81,7 +81,7 @@ export default function Seasonal() {
 			if (e.target?.tagName !== 'INPUT' && e.target?.tagName !== 'SELECT') setIsEdited('')
 			if (
 				e.target.parentNode !== addRecordButtonRef.current &&
-				e.target.parentNode.parentNode !== addRecordButtonRef.current &&
+				e.target.parentNode?.parentNode !== addRecordButtonRef.current &&
 				!addRecordMenuRef.current?.contains(e.target)
 			) {
 				setIsAdded(false)

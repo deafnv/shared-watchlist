@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction } from 'react'
+import { Dispatch, MutableRefObject, SetStateAction } from 'react'
 import { Database } from './database.types'
 
 export interface Rating {
@@ -116,9 +116,9 @@ export const sortListByDate = (
 	}
 }
 
-export const sortSymbol = (type: string, sortMethod: string) => {
-	if (sortMethod.includes(type)) {
-		return sortMethod.includes(`desc_${type}`) ? '▼' : '▲'
+export const sortSymbol = (type: string, sortMethodRef: MutableRefObject<string>) => {
+	if (sortMethodRef.current.includes(type)) {
+		return sortMethodRef.current.includes(`asc_${type}`) ? '▲' : '▼'
 	} else {
 		return ''
 	}
@@ -178,42 +178,30 @@ export const initialTitleItemSupabase = {
 
 export const sortListByNameSupabase = (
 	res: Database['public']['Tables']['Completed']['Row'][] | undefined,
-	sortMethod: string,
-	setSortMethod: Dispatch<SetStateAction<string>>,
+	sortMethodRef: MutableRefObject<string>,
 	setResponse: Dispatch<
 		SetStateAction<Database['public']['Tables']['Completed']['Row'][] | undefined>
 	>
 ) => {
-	if (sortMethod === `titleasc_title`) {
-		setSortMethod(`titledesc_title`)
-		setResponse(res?.slice().sort((a, b) => b.title!.localeCompare(a.title!)))
-	} else {
-		setSortMethod(`titleasc_title`)
+	if (sortMethodRef.current === `titleasc_title`) {
+		sortMethodRef.current = 'titledesc_title'
 		setResponse(res?.slice().sort((a, b) => a.title!.localeCompare(b.title!)))
+	} else {
+		sortMethodRef.current = 'titleasc_title'
+		setResponse(res?.slice().sort((a, b) => b.title!.localeCompare(a.title!)))
 	}
 }
 
 export const sortListByRatingSupabase = (
 	rating: 'rating1' | 'rating2',
 	res: Database['public']['Tables']['Completed']['Row'][] | undefined,
-	sortMethod: string,
-	setSortMethod: Dispatch<SetStateAction<string>>,
+	sortMethodRef: MutableRefObject<string>,
 	setResponse: Dispatch<
 		SetStateAction<Database['public']['Tables']['Completed']['Row'][] | undefined>
 	>
 ) => {
-	if (sortMethod === `ratingasc_${rating}`) {
-		setSortMethod(`ratingdesc_${rating}`)
-		setResponse(
-			res?.slice().sort((a, b) => {
-				if (b[`${rating}average`] == null) {
-					return -1
-				}
-				return a[`${rating}average`]! - b[`${rating}average`]!
-			})
-		)
-	} else {
-		setSortMethod(`ratingasc_${rating}`)
+	if (sortMethodRef.current === `ratingdesc_${rating}`) {
+		sortMethodRef.current = `ratingasc_${rating}`
 		setResponse(
 			res?.slice().sort((a, b) => {
 				if (a[`${rating}average`] == null) {
@@ -222,27 +210,36 @@ export const sortListByRatingSupabase = (
 				return b[`${rating}average`]! - a[`${rating}average`]!
 			})
 		)
+	} else {
+		sortMethodRef.current = `ratingdesc_${rating}`
+		setResponse(
+			res?.slice().sort((a, b) => {
+				if (b[`${rating}average`] == null) {
+					return -1
+				}
+				return a[`${rating}average`]! - b[`${rating}average`]!
+			})
+		)
 	}
 }
 
 export const sortListByDateSupabase = (
 	date: 'startconv' | 'endconv',
 	res: Database['public']['Tables']['Completed']['Row'][] | undefined,
-	sortMethod: string,
-	setSortMethod: Dispatch<SetStateAction<string>>,
+	sortMethodRef: MutableRefObject<string>,
 	setResponse: Dispatch<
 		SetStateAction<Database['public']['Tables']['Completed']['Row'][] | undefined>
 	>
 ) => {
-	if (sortMethod === `dateasc_${date}`) {
-		setSortMethod(`datedesc_${date}`)
+	if (sortMethodRef.current === `dateasc_${date}`) {
+		sortMethodRef.current = `datedesc_${date}`
 		setResponse(
 			res?.slice().sort((a, b) => {
 				return b[date]! - a[date]!
 			})
 		)
 	} else {
-		setSortMethod(`dateasc_${date}`)
+		sortMethodRef.current = `dateasc_${date}`
 		setResponse(
 			res?.slice().sort((a, b) => {
 				return a[date]! - b[date]!
@@ -256,17 +253,16 @@ export const sortListByDateSupabase = (
 export const sortListByNamePTW = (
 	name: string,
 	res: Database['public']['Tables']['PTW-Rolled']['Row'][] | undefined,
-	sortMethod: string,
-	setSortMethod: Dispatch<SetStateAction<string>>,
+	sortMethodRef: MutableRefObject<string>,
 	setResponse: Dispatch<
 		SetStateAction<Database['public']['Tables']['PTW-Rolled']['Row'][] | undefined>
 	>
 ) => {
-	if (sortMethod === `titleasc_${name}`) {
-		setSortMethod(`titledesc_${name}`)
+	if (sortMethodRef.current === `titleasc_${name}`) {
+		sortMethodRef.current = `titledesc_${name}`
 		setResponse(res?.slice().sort((a, b) => b.title!.localeCompare(a.title!)))
 	} else {
-		setSortMethod(`titleasc_${name}`)
+		sortMethodRef.current = `titleasc_${name}`
 		setResponse(res?.slice().sort((a, b) => a.title!.localeCompare(b.title!)))
 	}
 }

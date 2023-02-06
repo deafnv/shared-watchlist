@@ -22,6 +22,7 @@ import { useRouter } from 'next/router'
 import EditIcon from '@mui/icons-material/Edit'
 import EditModal from '../../components/EditModal'
 import SearchIcon from '@mui/icons-material/Search'
+import RefreshIcon from '@mui/icons-material/Refresh';
 
 //! Non-null assertion for the response state variable here will throw some errors if it does end up being null, fix maybe.
 //! ISSUES:
@@ -33,10 +34,10 @@ export default function Completed() {
 	const contextMenuButtonRef = useRef<any>([])
 	const settingsMenuRef = useRef<HTMLDivElement>(null)
 	const settingsMenuButtonRef = useRef<HTMLDivElement>(null)
+	const sortMethodRef = useRef('')
 
 	const [response, setResponse] = useState<Database['public']['Tables']['Completed']['Row'][]>()
 	const [response1, setResponse1] = useState<Database['public']['Tables']['Completed']['Row'][]>()
-	const [sortMethod, setSortMethod] = useState<string>('')
 	const [isEdited, setIsEdited] = useState<string>('')
 	const [isLoadingClient, setIsLoadingClient] = useState(true)
 	const [isLoadingEditForm, setIsLoadingEditForm] = useState<Array<string>>([])
@@ -104,9 +105,9 @@ export default function Completed() {
 
           }
         } else setResponse(data!); */
+					sortMethodRef.current = ''
 					setResponse(data!)
 					setResponse1(data!)
-					setSortMethod('')
 				}
 			)
 			.subscribe()
@@ -122,7 +123,7 @@ export default function Completed() {
 			}
 			if (
 				!contextMenuButtonRef.current.includes(e.target.parentNode) &&
-				!contextMenuButtonRef.current.includes(e.target.parentNode.parentNode) &&
+				!contextMenuButtonRef.current.includes(e.target.parentNode?.parentNode) &&
 				!contextMenuRef.current?.contains(e.target) &&
 				contextMenuRef.current
 			) {
@@ -130,7 +131,7 @@ export default function Completed() {
 			}
 			if (
 				e.target.parentNode !== settingsMenuButtonRef.current &&
-				e.target.parentNode.parentNode !== settingsMenuButtonRef.current &&
+				e.target.parentNode?.parentNode !== settingsMenuButtonRef.current &&
 				!settingsMenuRef.current?.contains(e.target) &&
 				settingsMenuRef.current
 			) {
@@ -169,29 +170,29 @@ export default function Completed() {
 
 			<main className="flex flex-col items-center justify-center mb-24 px-1 md:px-0">
 				<div className="relative">
-					<h2 className="p-2 text-3xl">
-						Completed
-						{sortMethod ? (
-							<span
-								title="Reset sort"
-								onClick={() => {
-									setResponse(response1)
-									setSortMethod('')
-								}}
-								className="cursor-pointer"
-							>
-								{' '}
-								↻
-							</span>
-						) : null}
-					</h2>
-					<div
-						ref={settingsMenuButtonRef}
-						onClick={handleSettingsMenu}
-						className="absolute top-[0.85rem] -right-6 flex items-center justify-center h-7 w-7 cursor-pointer rounded-full hover:bg-gray-500 transition-colors duration-150"
-					>
-						<MoreVertIcon sx={{ fontSize: 28 }} />
-					</div>
+					<header className='flex items-center'>
+						<h2 className="p-2 text-3xl">
+							Completed
+						</h2>
+						{sortMethodRef.current &&
+						<div
+							title="Reset sort"
+							onClick={() => {
+								sortMethodRef.current = ''
+								setResponse(response1)
+							}}
+							className="flex items-center justify-center h-7 w-7 cursor-pointer rounded-full hover:bg-gray-500 transition-colors duration-150 translate-y-[1px]"
+						>
+							<RefreshIcon sx={{ fontSize: 28 }} />
+						</div>}
+						<div
+							ref={settingsMenuButtonRef}
+							onClick={handleSettingsMenu}
+							className="flex items-center justify-center h-7 w-7 cursor-pointer rounded-full hover:bg-gray-500 transition-colors duration-150 translate-y-[1px]"
+						>
+							<MoreVertIcon sx={{ fontSize: 28 }} />
+						</div>
+					</header>
 				</div>
 				<div className="flex items-center gap-2">
 					<form className="px-3 mb-1 bg-neutral-700 shadow-md shadow-black rounded-md">
@@ -217,12 +218,12 @@ export default function Completed() {
 						<tr>
 							<th
 								onClick={() =>
-									sortListByNameSupabase(response, sortMethod, setSortMethod, setResponse)
+									sortListByNameSupabase(response, sortMethodRef, setResponse)
 								}
 								className="w-[48rem] cursor-pointer"
 							>
 								<span>Title</span>
-								<span className="absolute">{sortSymbol('title', sortMethod)}</span>
+								<span className="absolute">{sortSymbol('title', sortMethodRef)}</span>
 							</th>
 							<th className="w-32 hidden md:table-cell">Type</th>
 							<th className="w-36 hidden md:table-cell">Episode(s)</th>
@@ -231,60 +232,56 @@ export default function Completed() {
 									sortListByRatingSupabase(
 										'rating1',
 										response,
-										sortMethod,
-										setSortMethod,
+										sortMethodRef,
 										setResponse
 									)
 								}
 								className="w-32 cursor-pointer"
 							>
 								<span>GoodTaste</span>
-								<span className="absolute">{sortSymbol('rating1', sortMethod)}</span>
+								<span className="absolute">{sortSymbol('rating1', sortMethodRef)}</span>
 							</th>
 							<th
 								onClick={() =>
 									sortListByRatingSupabase(
 										'rating2',
 										response,
-										sortMethod,
-										setSortMethod,
+										sortMethodRef,
 										setResponse
 									)
 								}
 								className="w-32 cursor-pointer"
 							>
 								<span>TomoLover</span>
-								<span className="absolute">{sortSymbol('rating2', sortMethod)}</span>
+								<span className="absolute">{sortSymbol('rating2', sortMethodRef)}</span>
 							</th>
 							<th
 								onClick={() =>
 									sortListByDateSupabase(
 										'startconv',
 										response,
-										sortMethod,
-										setSortMethod,
+										sortMethodRef,
 										setResponse
 									)
 								}
 								className="w-40 cursor-pointer hidden md:table-cell"
 							>
 								<span>Start Date</span>
-								<span className="absolute">{sortSymbol('start', sortMethod)}</span>
+								<span className="absolute">{sortSymbol('start', sortMethodRef)}</span>
 							</th>
 							<th
 								onClick={() =>
 									sortListByDateSupabase(
 										'endconv',
 										response,
-										sortMethod,
-										setSortMethod,
+										sortMethodRef,
 										setResponse
 									)
 								}
 								className="w-40 cursor-pointer hidden md:table-cell"
 							>
 								<span>End Date</span>
-								<span className="absolute">{sortSymbol('end', sortMethod)}</span>
+								<span className="absolute">{sortSymbol('end', sortMethodRef)}</span>
 							</th>
 						</tr>
 						{isLoadingClient
@@ -711,8 +708,8 @@ export default function Completed() {
 
 	function searchTable(e: BaseSyntheticEvent) {
 		if (e.target.value == '') {
+			sortMethodRef.current = ''
 			setResponse(response1)
-			setSortMethod('')
 		}
 		if (!response || !response1) return
 
