@@ -20,6 +20,7 @@ export default function PTW() {
 	const latencyRef = useRef<HTMLSpanElement>(null)
 	const addGachaRollRef = useRef<HTMLDivElement>(null)
 	const contextMenuRef = useRef<HTMLDivElement>(null)
+	const contextMenuButtonRef = useRef<any>([])
 
 	const [responseRolled, setResponseRolled] =
 		useState<Database['public']['Tables']['PTW-Rolled']['Row'][]>()
@@ -96,34 +97,6 @@ export default function PTW() {
 			3500000
 		)
 
-		const resetOnClickOut = (e: any) => {
-			if (e.target?.tagName !== 'INPUT' && isEdited) {
-				setIsEdited('')
-			}
-			if (
-				e.target.tagName !== 'svg' &&
-				!contextMenuRef.current?.contains(e.target) &&
-				contextMenuRef.current
-			) {
-				setContextMenu({ top: 0, left: 0, currentItem: null })
-			}
-			if (e.target?.tagName !== 'INPUT' && e.target?.tagName !== 'svg' && e.target?.tagName !== 'path') {
-				setIsAdded('')
-			}
-		}
-
-		const resetEditedOnFocusOut = () => {
-			setIsEdited('')
-		}
-
-		const resetEditedOnEscape = (e: KeyboardEvent) => {
-			if (e.key === 'Escape') setIsEdited('')
-		}
-
-		document.addEventListener('click', resetOnClickOut)
-		window.addEventListener('focusout', resetEditedOnFocusOut)
-		window.addEventListener('keydown', resetEditedOnEscape)
-
 		const databaseChannel = supabase
 			.channel('*')
 			.on('postgres_changes', { event: '*', schema: '*' }, async (payload) => {
@@ -198,6 +171,35 @@ export default function PTW() {
 				}
 			})
 
+		const resetOnClickOut = (e: any) => {
+			if (e.target?.tagName !== 'INPUT' && isEdited) {
+				setIsEdited('')
+			}
+			if (
+				!contextMenuButtonRef.current.includes(e.target.parentNode) &&
+				!contextMenuButtonRef.current.includes(e.target.parentNode.parentNode) &&
+				!contextMenuRef.current?.contains(e.target) &&
+				contextMenuRef.current
+			) {
+				setContextMenu({ top: 0, left: 0, currentItem: null })
+			}
+			if (e.target?.tagName !== 'INPUT' && e.target?.tagName !== 'svg' && e.target?.tagName !== 'path') {
+				setIsAdded('')
+			}
+		}
+
+		const resetEditedOnFocusOut = () => {
+			setIsEdited('')
+		}
+
+		const resetEditedOnEscape = (e: KeyboardEvent) => {
+			if (e.key === 'Escape') setIsEdited('')
+		}
+
+		document.addEventListener('click', resetOnClickOut)
+		window.addEventListener('focusout', resetEditedOnFocusOut)
+		window.addEventListener('keydown', resetEditedOnEscape)
+
 		return () => {
 			latencyChannel.unsubscribe()
 			databaseChannel.unsubscribe()
@@ -271,15 +273,16 @@ export default function PTW() {
 						) : (
 							<Reorder.Group
 								values={responseRolled ?? []}
-								dragConstraints={{ top: 500 }}
+								dragConstraints={{ top: 0, bottom: 0 }}
 								draggable={sortMethod ? true : false}
 								onReorder={(newOrder) => {
+									setContextMenu({ top: 0, left: 0, currentItem: null })
 									setResponseRolled(newOrder)
 									setReordered(true)
 								}}
 								className="w-[90dvw] sm:w-[30rem] border-white border-solid border-[1px] border-t-0"
 							>
-								{responseRolled?.map((item, i) => {
+								{responseRolled?.map((item, index) => {
 									return (
 										!isLoadingClient && (
 											<Reorder.Item value={item} key={item.id} className="p-0 hover:bg-neutral-700">
@@ -296,6 +299,7 @@ export default function PTW() {
 															? editForm('rolled_title', item.id, item.title!)
 															: item.title}
 														<div
+															ref={element => (contextMenuButtonRef.current[index] = element)}
 															onClick={(e) => {
 																handleMenuClick(e, item)
 															}}
@@ -730,7 +734,11 @@ export default function PTW() {
 			<section className="relative flex flex-col items-center">
 				<header className='flex items-center'>
 					<h2 className="p-2 text-3xl">{tableName}</h2>
-					<div title='Add new entry' onClick={handleAddMenu} className='flex items-center justify-center h-7 w-7 cursor-pointer rounded-full hover:bg-gray-500 transition-colors duration-150 translate-y-[2px]'>
+					<div
+						title='Add new entry' 
+						onClick={handleAddMenu} 
+						className='flex items-center justify-center h-7 w-7 cursor-pointer rounded-full hover:bg-gray-500 transition-colors duration-150 translate-y-[2px]'
+					>
 						<AddIcon />
 					</div>
 				</header>

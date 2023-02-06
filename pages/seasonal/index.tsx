@@ -17,6 +17,8 @@ import isEqual from 'lodash/isEqual'
 export default function Seasonal() {
 	const settingsMenuRef = useRef<HTMLDivElement>(null)
 	const settingsMenuButtonRef = useRef<HTMLDivElement>(null)
+	const addRecordMenuRef = useRef<HTMLMenuElement>(null)
+	const addRecordButtonRef = useRef<HTMLDivElement>(null)
 
 	const [response, setResponse] =
 		useState<Database['public']['Tables']['PTW-CurrentSeason']['Row'][]>()
@@ -54,6 +56,22 @@ export default function Seasonal() {
 		}
 		getData()
 
+		const databaseChannel = supabase
+			.channel('public:PTW-CurrentSeason')
+			.on(
+				'postgres_changes',
+				{ event: '*', schema: 'public', table: 'PTW-CurrentSeason' },
+				async (payload) => {
+					const { data } = await supabase
+						.from('PTW-CurrentSeason')
+						.select()
+						.order('id', { ascending: true })
+					setResponse(data!)
+					console.log(payload)
+				}
+			)
+			.subscribe()
+
 		const refresh = setInterval(
 			() => axios.get('https://update.ilovesabrina.org/refresh'),
 			3500000
@@ -61,7 +79,11 @@ export default function Seasonal() {
 		
 		const closeMenusOnClick = (e: any) => {
 			if (e.target?.tagName !== 'INPUT' && e.target?.tagName !== 'SELECT') setIsEdited('')
-			if (e.target?.tagName !== 'INPUT' && e.target?.tagName !== 'svg' && e.target?.tagName !== 'path') {
+			if (
+				e.target.parentNode !== addRecordButtonRef.current &&
+				e.target.parentNode.parentNode !== addRecordButtonRef.current &&
+				!addRecordMenuRef.current?.contains(e.target)
+			) {
 				setIsAdded(false)
 			}
 			if (
@@ -84,22 +106,6 @@ export default function Seasonal() {
 		document.addEventListener('click', closeMenusOnClick)
 		window.addEventListener('focusout', closeMenusOnFocusout)
 		window.addEventListener('keydown', closeMenusOnEscape)
-
-		const databaseChannel = supabase
-			.channel('public:PTW-CurrentSeason')
-			.on(
-				'postgres_changes',
-				{ event: '*', schema: 'public', table: 'PTW-CurrentSeason' },
-				async (payload) => {
-					const { data } = await supabase
-						.from('PTW-CurrentSeason')
-						.select()
-						.order('id', { ascending: true })
-					setResponse(data!)
-					console.log(payload)
-				}
-			)
-			.subscribe()
 
 		return () => {
 			databaseChannel.unsubscribe()
@@ -131,12 +137,17 @@ export default function Seasonal() {
 						>
 							<MoreVertIcon sx={{ fontSize: 28 }} />
 						</div>
-						<div title='Add new entry' onClick={handleAddMenu} className='flex items-center justify-center h-7 w-7 cursor-pointer rounded-full hover:bg-gray-500 transition-colors duration-150 translate-y-[2px]'>
+						<div
+							ref={addRecordButtonRef}
+						 	title='Add new entry'
+							onClick={() => setIsAdded(true)} 
+							className='flex items-center justify-center h-7 w-7 cursor-pointer rounded-full hover:bg-gray-500 transition-colors duration-150 translate-y-[2px]'
+						>
 							<AddIcon />
 						</div>
 					</header>
 					{isAdded && 
-					<menu className='absolute top-14 z-10 p-1 rounded-lg bg-black border-[1px] border-pink-400'>
+					<menu ref={addRecordMenuRef} className='absolute top-14 z-10 p-1 rounded-lg bg-black border-[1px] border-pink-400'>
 						<form onSubmit={handleAddRecord}>
 							<input placeholder='Insert title' className='w-60 text-lg rounded-sm bg-gray-800 focus:outline-none' />
 						</form>
@@ -353,10 +364,6 @@ export default function Seasonal() {
 			alert(error)
 			return
 		}
-	}
-
-	function handleAddMenu() {
-		setIsAdded(true)
 	}
 
 	function editForm(field: 'seasonal_title', id: number, ogvalue: string): React.ReactNode {

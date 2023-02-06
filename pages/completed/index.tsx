@@ -30,6 +30,7 @@ import SearchIcon from '@mui/icons-material/Search'
 export default function Completed() {
 	const editModalRef = useRef<HTMLDivElement>(null)
 	const contextMenuRef = useRef<HTMLDivElement>(null)
+	const contextMenuButtonRef = useRef<any>([])
 	const settingsMenuRef = useRef<HTMLDivElement>(null)
 	const settingsMenuButtonRef = useRef<HTMLDivElement>(null)
 
@@ -80,41 +81,6 @@ export default function Completed() {
 		}
 		getData()
 
-		const refresh = setInterval(
-			() => axios.get('https://update.ilovesabrina.org/refresh'),
-			3500000
-		)
-
-		const closeMenus = (e: any) => {
-			if (e.target?.tagName !== 'INPUT' && isEdited) {
-				setIsEdited('')
-			}
-			if (
-				e.target.tagName !== 'svg' &&
-				!contextMenuRef.current?.contains(e.target) &&
-				contextMenuRef.current
-			) {
-				setContextMenu({ top: 0, left: 0, currentItem: null })
-			}
-			if (
-				e.target.parentNode !== settingsMenuButtonRef.current &&
-				!settingsMenuRef.current?.contains(e.target) &&
-				settingsMenuRef.current
-			) {
-				setSettingsMenu({ top: 0, left: 0, display: 'none' })
-			}
-		}
-
-		const resetEditNoFocus = () => {
-			setIsEdited('')
-		}
-
-		const handleWindowResize = () => setWidth(window.innerWidth)
-
-		document.addEventListener('click', closeMenus)
-		window.addEventListener('focusout', resetEditNoFocus)
-		window.addEventListener('resize', handleWindowResize)
-
 		const databaseChannel = supabase
 			.channel('public:Completed')
 			.on(
@@ -144,6 +110,43 @@ export default function Completed() {
 				}
 			)
 			.subscribe()
+
+		const refresh = setInterval(
+			() => axios.get('https://update.ilovesabrina.org/refresh'),
+			3500000
+		)
+
+		const closeMenus = (e: any) => {
+			if (e.target?.tagName !== 'INPUT' && isEdited) {
+				setIsEdited('')
+			}
+			if (
+				!contextMenuButtonRef.current.includes(e.target.parentNode) &&
+				!contextMenuButtonRef.current.includes(e.target.parentNode.parentNode) &&
+				!contextMenuRef.current?.contains(e.target) &&
+				contextMenuRef.current
+			) {
+				setContextMenu({ top: 0, left: 0, currentItem: null })
+			}
+			if (
+				e.target.parentNode !== settingsMenuButtonRef.current &&
+				e.target.parentNode.parentNode !== settingsMenuButtonRef.current &&
+				!settingsMenuRef.current?.contains(e.target) &&
+				settingsMenuRef.current
+			) {
+				setSettingsMenu({ top: 0, left: 0, display: 'none' })
+			}
+		}
+
+		const resetEditNoFocus = () => {
+			setIsEdited('')
+		}
+
+		const handleWindowResize = () => setWidth(window.innerWidth)
+
+		document.addEventListener('click', closeMenus)
+		window.addEventListener('focusout', resetEditNoFocus)
+		window.addEventListener('resize', handleWindowResize)
 
 		return () => {
 			clearInterval(refresh)
@@ -289,7 +292,7 @@ export default function Completed() {
 							: response
 									?.slice()
 									.reverse()
-									.map((item) => {
+									.map((item, index) => {
 										return (
 											<tr key={item.id} className="relative group">
 												<td
@@ -310,6 +313,7 @@ export default function Completed() {
 															<span className="italic text-gray-400">Untitled</span>
 														)}
 														<div
+															ref={element => (contextMenuButtonRef.current[index] = element)}
 															onClick={(e) => {
 																handleMenuClick(e, item)
 															}}
