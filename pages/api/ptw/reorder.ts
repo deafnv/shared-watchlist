@@ -37,6 +37,13 @@ export default async function BatchUpdateSheet(req: NextApiRequest, res: NextApi
 						{
 							userEnteredValue: {
 								stringValue: item.title
+							},
+							userEnteredFormat: {
+								backgroundColor: {
+									red: 0.8,
+									green: 0.8,
+									blue: 0.8
+								}
 							}
 						},
 						{

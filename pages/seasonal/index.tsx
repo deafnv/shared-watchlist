@@ -8,8 +8,8 @@ import { CircularProgress } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
 import { useLoading } from '../../components/LoadingContext'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
-import Link from 'next/link'
 import { Reorder } from 'framer-motion'
+import isEqual from 'lodash/isEqual'
 
 //TODO: Load individual animes into tracker
 //TODO: Reorder to release order
@@ -19,6 +19,8 @@ export default function Seasonal() {
 	const settingsMenuButtonRef = useRef<HTMLDivElement>(null)
 
 	const [response, setResponse] =
+		useState<Database['public']['Tables']['PTW-CurrentSeason']['Row'][]>()
+	const [response1, setResponse1] =
 		useState<Database['public']['Tables']['PTW-CurrentSeason']['Row'][]>()
 	const [isEdited, setIsEdited] = useState<string>('')
 	const [isLoadingClient, setIsLoadingClient] = useState(true)
@@ -30,7 +32,7 @@ export default function Seasonal() {
 		display: string
 	}>({ top: 0, left: 0, display: 'none' })
 	const [confirmModal, setConfirmModal] = useState(false)
-	const [reoredered, setReordered] = useState(false)
+	const [reordered, setReordered] = useState(false)
 	const { setLoading } = useLoading()
 
 	useEffect(() => {
@@ -45,6 +47,7 @@ export default function Seasonal() {
 				.order('id', { ascending: true })
 
 			setResponse(data!)
+			setResponse1(data!)
 			setIsLoadingClient(false)
 
 			await axios
@@ -164,7 +167,7 @@ export default function Seasonal() {
 						{response?.map((item) => {
 							const statusColor = determineStatus(item)
 							return (
-								<Reorder.Item value={item} key={item.id} className="grid grid-cols-[5fr_1fr] xl:grid-cols-[30rem_10rem] p-0 hover:bg-neutral-700">
+								<Reorder.Item value={item} key={item.id} className="grid grid-cols-[5fr_1fr] xl:grid-cols-[30rem_10rem] p-0 cursor-move hover:bg-neutral-700">
 									<div
 										style={{
 											opacity: isLoadingEditForm.includes(`seasonal_title_${item.id}`) ? 0.5 : 1
@@ -191,9 +194,9 @@ export default function Seasonal() {
 										onDoubleClick={() => {
 											setIsEdited(`seasonal_status_${item.title}_${item.id}`)
 										}}
-										className="relative"
+										className="relative flex items-center justify-center"
 									>
-										<span>
+										<span className='flex items-center justify-center'>
 											{isEdited == `seasonal_status_${item.title}_${item.id}`
 												? editStatus(item.id)
 												: ''}
@@ -207,12 +210,64 @@ export default function Seasonal() {
 						})}
 					</Reorder.Group>
 					)}
+					<div
+						style={{
+							visibility: reordered && !isEqual(response, response1) ? 'visible' : 'hidden'
+						}}
+						className="flex flex-col items-center w-[30rem] px-2"
+					>
+						<span className="mt-2 text-red-500 text-center">
+							⚠ Live updates will be paused while changes are being made to this table (Not
+							really)
+						</span>
+						<div className="flex gap-2 my-2">
+							<button
+								className="input-submit p-2 rounded-md"
+								onClick={() => {
+									saveReorder()
+									setReordered(false)
+								}}
+							>
+								Save Changes
+							</button>
+							<button
+								className="input-submit p-2 rounded-md"
+								onClick={() => {
+									setResponse(response1)
+									setReordered(false)
+								}}
+							>
+								Cancel
+							</button>
+						</div>
+					</div>
 				</section>
 				{settingsMenu.display == 'block' && <SettingsMenu />}
 				{confirmModal && <ConfirmModal />}
 			</main>
 		</>
 	)
+
+	async function saveReorder() {
+		if (!response) return
+		setLoading(true)
+		let endRowIndex = response.length + 1
+		try {
+			await axios.post('/api/ptw/reorder', {
+				content: response,
+				cells: `O2:P${endRowIndex}`,
+				type: 'SEASONAL'
+			})
+
+			setLoading(false)
+			setReordered(false)
+		} catch (error) {
+			setLoading(false)
+			alert(error)
+			console.log(error)
+			return
+		}
+	}
 
 	function ConfirmModal() {
 		async function handleDeleteAll() {
