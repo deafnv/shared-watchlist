@@ -9,6 +9,7 @@ import AddIcon from '@mui/icons-material/Add'
 import { useLoading } from '../../components/LoadingContext'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
 import Link from 'next/link'
+import { Reorder } from 'framer-motion'
 
 //TODO: Load individual animes into tracker
 //TODO: Reorder to release order
@@ -29,6 +30,7 @@ export default function Seasonal() {
 		display: string
 	}>({ top: 0, left: 0, display: 'none' })
 	const [confirmModal, setConfirmModal] = useState(false)
+	const [reoredered, setReordered] = useState(false)
 	const { setLoading } = useLoading()
 
 	useEffect(() => {
@@ -107,6 +109,7 @@ export default function Seasonal() {
 		}
 	}, [])
 
+	if (!response) return null
 	return (
 		<>
 			<Head>
@@ -137,76 +140,73 @@ export default function Seasonal() {
 							<input placeholder='Insert title' className='w-60 text-lg rounded-sm bg-gray-800 focus:outline-none' />
 						</form>
 					</menu>}
-					<table>
-						<tbody>
-							<tr>
-								<th className="w-[30rem]">Title</th>
-								<th className="w-[10rem]">Status</th>
-							</tr>
-							{isLoadingClient
-								? loadingGlimmer(2)
-								: response?.map((item) => {
-										let status
-										switch (item.status) {
-											case 'Not loaded':
-												status = 'crimson'
-												break
-											case 'Loaded':
-												status = 'orange'
-												break
-											case 'Watched':
-												status = 'green'
-												break
-											case 'Not aired':
-												status = 'black'
-												break
-											default:
-												status = ''
-										}
-										return (
-											<tr key={item.id}>
-												<td
-													style={{
-														opacity: isLoadingEditForm.includes(`seasonal_title_${item.id}`) ? 0.5 : 1
-													}}
-													onDoubleClick={() => {
-														setIsEdited(`seasonal_title_${item.title}_${item.id}`)
-													}}
-													className="relative"
-												>
-													<span className='px-4'>
-														{isEdited == `seasonal_title_${item.title}_${item.id}`
-															? editForm(`seasonal_title`, item.id, item.title!)
-															: item.title}
-													</span>
-													{isLoadingEditForm.includes(`seasonal_title_${item.id}`) && (
-														<CircularProgress size={30} className="absolute top-[20%] left-[48%]" />
-													)}
-												</td>
-												<td
-													style={{
-														backgroundColor: status,
-														opacity: isLoadingEditForm.includes(`status_${item.id}`) ? 0.5 : 1
-													}}
-													onDoubleClick={() => {
-														setIsEdited(`seasonal_status_${item.title}_${item.id}`)
-													}}
-													className="relative"
-												>
-													<span>
-														{isEdited == `seasonal_status_${item.title}_${item.id}`
-															? editStatus(item.id)
-															: ''}
-													</span>
-													{isLoadingEditForm.includes(`status_${item.id}`) && (
-														<CircularProgress size={30} className="absolute top-[20%] left-[48%]" />
-													)}
-												</td>
-											</tr>
-										)
-									})}
-						</tbody>
-					</table>
+					<div className="grid grid-cols-[5fr_1fr] xl:grid-cols-[30rem_10rem] min-w-[95dvw] xl:min-w-0 sm:w-min bg-sky-600 border-white border-solid border-[1px]">
+						<span className='flex items-center justify-center p-2 h-full text-xs md:text-base border-white border-r-[1px] text-center font-bold'>
+							Title
+						</span>
+						<span className='flex items-center justify-center p-2 h-full text-xs md:text-base text-center font-bold'>
+							Status
+						</span>
+					</div>
+					{isLoadingClient ? 
+					loadingGlimmer(2) : (
+					<Reorder.Group
+						values={response ?? []}
+						dragConstraints={{ top: 500 }}
+						/* draggable={sortMethod ? true : false} */
+						onReorder={(newOrder) => {
+							setResponse(newOrder)
+							setReordered(true)
+						}}
+						/* TODO: CHANGE THIS MAKE RESPONSIVE */
+						className="flex flex-col xl:w-[40rem] min-w-[95dvw] xl:min-w-full sm:w-min border-white border-[1px] border-t-0"
+					>
+						{response?.map((item) => {
+							const statusColor = determineStatus(item)
+							return (
+								<Reorder.Item value={item} key={item.id} className="grid grid-cols-[5fr_1fr] xl:grid-cols-[30rem_10rem] p-0 hover:bg-neutral-700">
+									<div
+										style={{
+											opacity: isLoadingEditForm.includes(`seasonal_title_${item.id}`) ? 0.5 : 1
+										}}
+										onDoubleClick={() => {
+											setIsEdited(`seasonal_title_${item.title}_${item.id}`)
+										}}
+										className="relative p-2 text-center"
+									>
+										<span className='px-4'>
+											{isEdited == `seasonal_title_${item.title}_${item.id}`
+												? editForm(`seasonal_title`, item.id, item.title!)
+												: item.title}
+										</span>
+										{isLoadingEditForm.includes(`seasonal_title_${item.id}`) && (
+											<CircularProgress size={30} className="absolute top-[20%] left-[48%]" />
+										)}
+									</div>
+									<div
+										style={{
+											backgroundColor: statusColor,
+											opacity: isLoadingEditForm.includes(`status_${item.id}`) ? 0.5 : 1
+										}}
+										onDoubleClick={() => {
+											setIsEdited(`seasonal_status_${item.title}_${item.id}`)
+										}}
+										className="relative"
+									>
+										<span>
+											{isEdited == `seasonal_status_${item.title}_${item.id}`
+												? editStatus(item.id)
+												: ''}
+										</span>
+										{isLoadingEditForm.includes(`status_${item.id}`) && (
+											<CircularProgress size={30} className="absolute top-[20%] left-[48%]" />
+										)}
+									</div>
+								</Reorder.Item>
+							)
+						})}
+					</Reorder.Group>
+					)}
 				</section>
 				{settingsMenu.display == 'block' && <SettingsMenu />}
 				{confirmModal && <ConfirmModal />}
@@ -421,5 +421,26 @@ export default function Seasonal() {
 				)}
 			</div>
 		)
+	}
+
+	function determineStatus(item: Database['public']['Tables']['PTW-CurrentSeason']['Row']) {
+		let status
+		switch (item.status) {
+			case 'Not loaded':
+				status = 'crimson'
+				break
+			case 'Loaded':
+				status = 'orange'
+				break
+			case 'Watched':
+				status = 'green'
+				break
+			case 'Not aired':
+				status = 'black'
+				break
+			default:
+				status = ''
+		}
+		return status
 	}
 }
