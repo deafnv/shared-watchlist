@@ -3,52 +3,58 @@ import { NextApiRequest, NextApiResponse } from 'next'
 
 export default async function BatchUpdateSheet(req: NextApiRequest, res: NextApiResponse) {
 	const { body, method } = req
-	const { content, cells } = body
+	const { content, cells, type } = body
 
 	if (!Array.isArray(content)) return res.status(400).send('Invalid content provided')
-	const rowsToInsert = content.map((item) => {
-		let red
-		let green
-		let blue
-		switch (item.status) {
-			case 'Watched':
-				red = 0.20392157
-				green = 0.65882355
-				blue = 0.3254902
-				break
-			case 'Not loaded':
-				red = 0.91764706
-				green = 0.2627451
-				blue = 0.20784314
-				break
-			case 'Loaded':
-				red = 0.9843137
-				green = 0.7372549
-				blue = 0.015686275
-				break
-			default:
-				red = 0
-				green = 0
-				blue = 0
-		}
-
-		return {
-			values: [
-				{
-					userEnteredValue: {
-						stringValue: item.title
-					},
-					userEnteredFormat: {
-						backgroundColor: {
-							red,
-							green,
-							blue
+	let rowsToInsert
+	switch (type) {
+		case 'PTW':
+			rowsToInsert = content.map((item) => {
+				const { red, green, blue } = determineStatus(item)
+				return {
+					values: [
+						{
+							userEnteredValue: {
+								stringValue: item.title
+							},
+							userEnteredFormat: {
+								backgroundColor: {
+									red,
+									green,
+									blue
+								}
+							}
 						}
-					}
+					]
 				}
-			]
-		}
-	})
+			})
+			break
+		case 'SEASONAL':
+			rowsToInsert = content.map((item) => {
+				const { red, green, blue } = determineStatus(item)
+				return {
+					values: [
+						{
+							userEnteredValue: {
+								stringValue: item.title
+							}
+						},
+						{
+							userEnteredFormat: {
+								backgroundColor: {
+									red,
+									green,
+									blue
+								}
+							}
+						}
+					]
+				}
+			})
+			break
+		default:
+			return res.status(400)
+	}
 
 	let range = cells.split(':')
 	if (range.length < 2) return res.status(400).send('Invalid range provided')
@@ -94,4 +100,32 @@ export default async function BatchUpdateSheet(req: NextApiRequest, res: NextApi
 		}
 	}
 	return res.status(405).send('Method not supported')
+}
+
+function determineStatus(item: any) {
+	let red
+	let green
+	let blue
+	switch (item.status) {
+		case 'Watched':
+			red = 0.20392157
+			green = 0.65882355
+			blue = 0.3254902
+			break
+		case 'Not loaded':
+			red = 0.91764706
+			green = 0.2627451
+			blue = 0.20784314
+			break
+		case 'Loaded':
+			red = 0.9843137
+			green = 0.7372549
+			blue = 0.015686275
+			break
+		default:
+			red = 0
+			green = 0
+			blue = 0
+	}
+	return {red, green, blue}
 }

@@ -884,15 +884,19 @@ export default function PTW() {
 	}
 
 	async function saveReorder() {
+		setLoading(true)
 		let endRowIndex = responseRolled!.length + 1
 		try {
 			await axios.post('/api/ptw/reorder', {
 				content: responseRolled,
-				cells: `N2:N${endRowIndex}`
+				cells: `N2:N${endRowIndex}`,
+				type: 'PTW'
 			})
 
+			setLoading(false)
 			setReordered(false)
 		} catch (error) {
+			setLoading(false)
 			alert(error)
 			console.log(error)
 			return
