@@ -6,21 +6,16 @@ import isEqual from 'lodash/isEqual'
 
 export default async function RefreshItem(req: NextApiRequest, res: NextApiResponse) {
   const { body, method } = req
-	const { id } = body
+	const { title } = body
 
   if (method !== 'POST') return res.status(405).send('Method not supported')
-  if (!id || typeof id !== 'number') return res.status(400)
+  if (!title || typeof title !== 'string') return res.status(400)
 	try {
 		//* Through testing, these API routes with restricted queries like UPDATE, DELETE, or INSERT fails silently if the public API key is provided instead of the service key
 		const supabase = createClient<Database>(
 			'https://esjopxdrlewtpffznsxh.supabase.co',
 			process.env.SUPABASE_SERVICE_API_KEY!
 		)
-
-		const dataFromDB = await supabase
-			.from('PTW-CurrentSeason')
-			.select()
-			.eq('id', id)
 
 		//? Really stupid temp thing
 		const season = Math.floor((new Date().getMonth() / 12) * 4) % 4
@@ -37,7 +32,7 @@ export default async function RefreshItem(req: NextApiRequest, res: NextApiRespo
 		const { data } = await axios.get(`https://api.myanimelist.net/v2/anime`, {
       headers: { 'X-MAL-CLIENT-ID': process.env.MAL_CLIENT_ID },
       params: {
-        q: dataFromDB.data?.[0].title?.substring(0, 64),
+        q: title.substring(0, 64),
         fields: 'start_season,start_date,num_episodes,broadcast,status',
         limit: 5
       }
@@ -56,23 +51,21 @@ export default async function RefreshItem(req: NextApiRequest, res: NextApiRespo
         data?.data[0].node.status == 'finished_airing'
     ) {
       toUpsert = {
-        id: dataFromDB.data?.[0].id,
+        title: title,
         mal_id: data?.data[0].node.id,
-        title: data?.data[0].node.title,
+        mal_title: data?.data[0].node?.title,
         image_url: data?.data[0].node.main_picture.large ?? '',
         start_date: data?.data[0].node.start_date ?? '',
         broadcast: broadcast,
         num_episodes: data?.data[0].node.num_episodes,
         status: data?.data[0].node.status,
-        message: `Validate:https://myanimelist.net/anime.php?q=${encodeURIComponent(
-          data?.[0].title?.substring(0, 64)!
-        )}`
+        message: `Validate:https://myanimelist.net/anime.php?q=${encodeURIComponent(title.substring(0, 64)!)}`
       }
     } else {
       toUpsert = {
-        id: dataFromDB.data?.[0].id,
+        title: title,
         mal_id: data?.data[0].node.id,
-        title: data?.data[0].node.title,
+        mal_title: data?.data[0].node?.title,
         image_url: data?.data[0].node.main_picture.large ?? '',
         start_date: data?.data[0].node.start_date ?? '',
         broadcast: broadcast,

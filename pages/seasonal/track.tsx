@@ -29,6 +29,8 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
 	}
 }
 
+//TODO: Context menu refs for path click
+
 export default function SeasonalDetails({
 	res
 }: {
@@ -94,6 +96,34 @@ export default function SeasonalDetails({
 		}
 	}, [])
 
+	if (response.length == 0) {
+		return (
+			<>
+				<Head>
+					<title>Cytube Watchlist</title>
+					<meta name="description" content="Seasonal Details" />
+					<meta name="viewport" content="width=device-width, initial-scale=1" />
+					<link rel="icon" href="/favicon.ico" />
+				</Head>
+
+				<main className="flex flex-col items-center justify-center p-6">
+					<div className="relative">
+						<h2 className="mb-6 text-3xl">Episode Tracker</h2>
+						<div
+							ref={refreshReloadMenuButtonRef}
+							onClick={handleRefreshReloadMenu}
+							className="absolute top-[0.3rem] -right-10 z-10 flex items-center justify-center h-7 w-7 cursor-pointer rounded-full hover:bg-gray-500"
+						>
+							<MoreVertIcon sx={{ fontSize: 28 }} />
+						</div>
+					</div>
+					<span className='absolute font-semibold text-2xl top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2'>No details loaded</span>
+					{refreshReloadMenu.display == 'block' && <RefreshReloadMenu />}
+				</main>
+			</>
+		)
+	}
+
 	return (
 		<>
 			<Head>
@@ -125,7 +155,7 @@ export default function SeasonalDetails({
 									onClick={showTitle}
 									className="h-[3rem] px-7 font-bold self-center text-center line-clamp-2"
 								>
-									{item.title}
+									{item.mal_title}
 								</span>
 								<div
 									onClick={(e) => {
@@ -209,11 +239,11 @@ export default function SeasonalDetails({
 				}}
 				className="absolute z-20 p-2 shadow-md shadow-black bg-black border-pink-400 border-[1px] rounded-md refresh-reload-menu"
 			>
-				<li className="flex justify-center py-2 h-fit rounded-md hover:bg-pink-400">
+				{response.length ? <li className="flex justify-center py-2 h-fit rounded-md hover:bg-pink-400">
 					<button onClick={refresh} className="w-full">
 						Refresh episode tracking
 					</button>
-				</li>
+				</li> : null}
 				<li className="flex justify-center py-2 h-fit rounded-md hover:bg-pink-400">
 					<button onClick={reload} className="w-full">
 						Reload current season data from sheet
@@ -258,7 +288,7 @@ export default function SeasonalDetails({
 			>
 				<li className="flex justify-center">
 					<span className="text-center font-semibold line-clamp-2">
-						{contextMenu.currentItem?.title}
+						{contextMenu.currentItem?.mal_title}
 					</span>
 				</li>
 				<hr className="my-2 border-gray-500 border-t-[1px]" />
@@ -314,7 +344,7 @@ export default function SeasonalDetails({
 					>
 						<CloseIcon fontSize="large" />
 					</div>
-					<span>{editEpisodesCurrent?.title}</span>
+					<span>{editEpisodesCurrent?.mal_title}</span>
 					<form onSubmit={handleEditSubmit}>
 						<label className="flex flex-col items-center gap-2">
 							Enter latest episode:
@@ -490,7 +520,7 @@ export default function SeasonalDetails({
 
 			try {
 				await axios.post('/api/seasonaldetails/changevalidated', {
-					id: item1.id,
+					title: item1.title,
 					mal_id: idInput
 				})
 				router.reload()
@@ -511,7 +541,7 @@ export default function SeasonalDetails({
 				})
 
 				const changed = response.slice()
-				changed.find((item) => item.id === item1.id)!['message'] = ''
+				changed.find((item) => item.title === item1.title)!['message'] = ''
 				setResponse(changed)
 				setLoading(false)
 			} catch (error) {

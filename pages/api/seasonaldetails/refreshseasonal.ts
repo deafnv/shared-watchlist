@@ -14,7 +14,7 @@ export default async function RefreshSeasonal(req: NextApiRequest, res: NextApiR
 		const { data } = await supabase
 			.from('PTW-CurrentSeason')
 			.select()
-			.order('id', { ascending: true })
+			.order('order', { ascending: true })
 
 		//? Really stupid temp thing
 		const season = Math.floor((new Date().getMonth() / 12) * 4) % 4
@@ -49,9 +49,9 @@ export default async function RefreshSeasonal(req: NextApiRequest, res: NextApiR
 					data?.data[0].node.status == 'finished_airing'
 				) {
 					return {
-						id: item.id,
+						title: item.title,
 						mal_id: data?.data[0].node.id,
-						title: data?.data[0].node.title,
+						mal_title: data?.data[0].node.title,
 						image_url: data?.data[0].node.main_picture.large ?? '',
 						start_date: data?.data[0].node.start_date ?? '',
 						broadcast: broadcast,
@@ -63,9 +63,9 @@ export default async function RefreshSeasonal(req: NextApiRequest, res: NextApiR
 					}
 				}
 				return {
-					id: item.id,
+					title: item.title,
 					mal_id: data?.data[0].node.id,
-					title: data?.data[0].node.title,
+					mal_title: data?.data[0].node.title,
 					image_url: data?.data[0].node.main_picture.large ?? '',
 					start_date: data?.data[0].node.start_date ?? '',
 					broadcast: broadcast,

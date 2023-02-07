@@ -12,6 +12,8 @@ import isEqual from 'lodash/isEqual'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 
+//TODO: Allow sort, and show save changes button to save sort
+
 export default function Seasonal() {
 	const settingsMenuRef = useRef<HTMLDivElement>(null)
 	const settingsMenuButtonRef = useRef<HTMLDivElement>(null)
@@ -69,7 +71,7 @@ export default function Seasonal() {
 				async (payload) => {
 					const { data } = await supabase
 						.from('PTW-CurrentSeason')
-						.select()
+						.select('*, SeasonalDetails!left( mal_id, start_date, latest_episode )')
 						.order('order', { ascending: true })
 					setResponse(data!)
 				}
@@ -192,25 +194,25 @@ export default function Seasonal() {
 							const statusColor = determineStatus(item)
 							const startDate = new Date(item?.SeasonalDetails?.[0]?.start_date).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })
 							return (
-								<Reorder.Item value={item} key={item.id} className="grid grid-cols-[5fr_1fr] lg:grid-cols-[30rem_10rem_10rem_8rem] p-0 cursor-move hover:bg-neutral-700">
+								<Reorder.Item value={item} key={item.order} className="grid grid-cols-[5fr_1fr] lg:grid-cols-[30rem_10rem_10rem_8rem] p-0 cursor-move hover:bg-neutral-700">
 									<div
 										style={{
-											opacity: isLoadingEditForm.includes(`seasonal_title_${item.id}`) ? 0.5 : 1
+											opacity: isLoadingEditForm.includes(`seasonal_title_${item.order}`) ? 0.5 : 1
 										}}
 										onDoubleClick={() => {
-											setIsEdited(`seasonal_title_${item.title}_${item.id}`)
+											setIsEdited(`seasonal_title_${item.title}_${item.order}`)
 										}}
 										className="relative p-2 text-center group"
 									>
 										<span 
-											style={{ margin: isEdited == `seasonal_title_${item.title}_${item.id}` ? 0 : '0 1rem' }}
+											style={{ margin: isEdited == `seasonal_title_${item.title}_${item.order}` ? 0 : '0 1rem' }}
 											className='cursor-text'
 										>
-											{isEdited == `seasonal_title_${item.title}_${item.id}`
-												? editForm(`seasonal_title`, item.id, item.title!)
+											{isEdited == `seasonal_title_${item.title}_${item.order}`
+												? editForm(`seasonal_title`, item.order, item.title!)
 												: item.title}
 										</span>
-										{isLoadingEditForm.includes(`seasonal_title_${item.id}`) && (
+										{isLoadingEditForm.includes(`seasonal_title_${item.order}`) && (
 											<CircularProgress size={30} className="absolute top-[20%] left-[48%]" />
 										)}
 										<div
@@ -226,19 +228,19 @@ export default function Seasonal() {
 									<div
 										style={{
 											backgroundColor: statusColor,
-											opacity: isLoadingEditForm.includes(`status_${item.id}`) ? 0.5 : 1
+											opacity: isLoadingEditForm.includes(`status_${item.order}`) ? 0.5 : 1
 										}}
 										onDoubleClick={() => {
-											setIsEdited(`seasonal_status_${item.title}_${item.id}`)
+											setIsEdited(`seasonal_status_${item.title}_${item.order}`)
 										}}
 										className="relative flex items-center justify-center"
 									>
 										<span className='flex items-center justify-center'>
-											{isEdited == `seasonal_status_${item.title}_${item.id}`
-												? editStatus(item.id, item.title!)
+											{isEdited == `seasonal_status_${item.title}_${item.order}`
+												? editStatus(item.order, item.title!)
 												: ''}
 										</span>
-										{isLoadingEditForm.includes(`status_${item.id}`) && (
+										{isLoadingEditForm.includes(`status_${item.order}`) && (
 											<CircularProgress size={30} className="absolute top-[20%] left-[48%]" />
 										)}
 									</div>
@@ -297,7 +299,7 @@ export default function Seasonal() {
 			setLoading(true)
 			try {
 				await axios.post('/api/seasonaldetails/loaditem', {
-					id: contextMenu.currentItem.id
+					title: contextMenu.currentItem.title
 				})
 				router.reload()
 			} catch (error) {
@@ -486,9 +488,9 @@ export default function Seasonal() {
 		}
 	}
 
-	function editForm(field: 'seasonal_title', id: number, ogvalue: string): React.ReactNode {
+	function editForm(field: 'seasonal_title', order: number, ogvalue: string): React.ReactNode {
 		let column: string
-		let row = (id + 2).toString()
+		let row = (order + 2).toString()
 		switch (field) {
 			case 'seasonal_title':
 				column = 'O'
@@ -497,7 +499,7 @@ export default function Seasonal() {
 
 		async function handleSubmit(event: BaseSyntheticEvent): Promise<void> {
 			event.preventDefault()
-			setIsLoadingEditForm(isLoadingEditForm.concat(`${field}_${id}`))
+			setIsLoadingEditForm(isLoadingEditForm.concat(`${field}_${order}`))
 
 			try {
 				await axios.post('/api/update', {
@@ -507,12 +509,12 @@ export default function Seasonal() {
 
 				const changed = response?.slice()
 				if (!changed) return
-				changed.find((item: any) => item.id === id)!['title'] = event.target[0].value
+				changed.find((item: any) => item.order === order)!['title'] = event.target[0].value
 				setResponse(changed)
 				setIsEdited('')
-				setIsLoadingEditForm(isLoadingEditForm.filter((item) => item == `${field}_${id}`))
+				setIsLoadingEditForm(isLoadingEditForm.filter((item) => item == `${field}_${order}`))
 			} catch (error) {
-				setIsLoadingEditForm(isLoadingEditForm.filter((item) => item == `${field}_${id}`))
+				setIsLoadingEditForm(isLoadingEditForm.filter((item) => item == `${field}_${order}`))
 				alert(error)
 				return
 			}
@@ -522,8 +524,8 @@ export default function Seasonal() {
 			<div className="flex items-center justify-center relative w-full">
 				<div
 					style={{
-						opacity: isLoadingEditForm.includes(`seasonal_title_${id}`) ? 0.5 : 1,
-						pointerEvents: isLoadingEditForm.includes(`seasonal_title_${id}`) ? 'none' : 'unset'
+						opacity: isLoadingEditForm.includes(`seasonal_title_${order}`) ? 0.5 : 1,
+						pointerEvents: isLoadingEditForm.includes(`seasonal_title_${order}`) ? 'none' : 'unset'
 					}}
 					className="w-[85%]"
 				>
@@ -540,12 +542,12 @@ export default function Seasonal() {
 		)
 	}
 
-	function editStatus(id: number, title: string) {
+	function editStatus(order: number, title: string) {
 		async function handleSubmit(event: BaseSyntheticEvent) {
 			event.preventDefault()
-			setIsLoadingEditForm(isLoadingEditForm.concat(`status_${id}`))
+			setIsLoadingEditForm(isLoadingEditForm.concat(`status_${order}`))
 
-			let row = id + 2
+			let row = order + 2
 			try {
 				await axios.post('/api/seasonal/updatestatus', {
 					content: event.target.childNodes[0].value,
@@ -554,12 +556,12 @@ export default function Seasonal() {
 
 				const changed = response?.slice()
 				if (!changed) return
-				changed.find((item: any) => item.id === id)!['status'] = event.target.childNodes[0].value
+				changed.find((item: any) => item.order === order)!['status'] = event.target.childNodes[0].value
 				setResponse(changed)
 				setIsEdited('')
-				setIsLoadingEditForm(isLoadingEditForm.filter((item) => item == `status_${id}`))
+				setIsLoadingEditForm(isLoadingEditForm.filter((item) => item == `status_${order}`))
 			} catch (error) {
-				setIsLoadingEditForm(isLoadingEditForm.filter((item) => item == `status_${id}`))
+				setIsLoadingEditForm(isLoadingEditForm.filter((item) => item == `status_${order}`))
 				alert(error)
 				return
 			}
@@ -572,8 +574,8 @@ export default function Seasonal() {
 			>
 				<div
 					style={{
-						opacity: isLoadingEditForm.includes(`status_${id}`) ? 0.5 : 1,
-						pointerEvents: isLoadingEditForm.includes(`status_${id}`) ? 'none' : 'unset'
+						opacity: isLoadingEditForm.includes(`status_${order}`) ? 0.5 : 1,
+						pointerEvents: isLoadingEditForm.includes(`status_${order}`) ? 'none' : 'unset'
 					}}
 					className="w-full"
 				>
