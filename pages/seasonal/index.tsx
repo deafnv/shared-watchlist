@@ -12,8 +12,6 @@ import isEqual from 'lodash/isEqual'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 
-//TODO: Load individual animes into tracker
-
 export default function Seasonal() {
 	const settingsMenuRef = useRef<HTMLDivElement>(null)
 	const settingsMenuButtonRef = useRef<HTMLDivElement>(null)
@@ -22,10 +20,8 @@ export default function Seasonal() {
 	const contextMenuRef = useRef<HTMLDivElement>(null)
 	const contextMenuButtonRef = useRef<any>([])
 
-	const [response, setResponse] =
-		useState<any>()
-	const [response1, setResponse1] =
-		useState<any>()
+	const [response, setResponse] = useState<any>()
+	const [response1, setResponse1] = useState<any>()
 	const [isEdited, setIsEdited] = useState<string>('')
 	const [isLoadingEditForm, setIsLoadingEditForm] = useState<Array<string>>([])
 	const [isAdded, setIsAdded] = useState(false)
@@ -53,7 +49,7 @@ export default function Seasonal() {
 		const getData = async () => {
 			const { data } = await supabase
 				.from('PTW-CurrentSeason')
-				.select('*, SeasonalDetails!inner( mal_id, start_date, latest_episode )')
+				.select('*, SeasonalDetails!left( mal_id, start_date, latest_episode )')
 				.order('id', { ascending: true })
 
 			setResponse(data!)
@@ -194,6 +190,7 @@ export default function Seasonal() {
 					>
 						{response?.map((item: any, index: any) => {
 							const statusColor = determineStatus(item)
+							const startDate = new Date(item?.SeasonalDetails?.[0]?.start_date).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })
 							return (
 								<Reorder.Item value={item} key={item.id} className="grid grid-cols-[5fr_1fr] lg:grid-cols-[30rem_10rem_10rem_8rem] p-0 cursor-move hover:bg-neutral-700">
 									<div
@@ -246,10 +243,10 @@ export default function Seasonal() {
 										)}
 									</div>
 									<div className='hidden lg:flex items-center justify-center'>
-										{new Date(item.SeasonalDetails[0].start_date).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })}
+										{startDate != 'Invalid Date' ? startDate : 'N/A'}
 									</div>
 									<div className='hidden lg:flex items-center justify-center'>
-										{item.SeasonalDetails[0].latest_episode}
+										{item?.SeasonalDetails?.[0]?.latest_episode ?? 'N/A'}
 									</div>
 								</Reorder.Item>
 							)
@@ -311,6 +308,21 @@ export default function Seasonal() {
 			}
 		}
 
+		async function handleAddToCompleted() {
+			setLoading(true)
+			try {
+				await axios.post('/api/addtocompleted', {
+					content: response1,
+					id: contextMenu.currentItem?.id,
+					type: 'SEASONAL'
+				})
+				setLoading(false)
+			} catch (error) {
+				setLoading(false)
+				alert(error)
+			}
+		}
+
 		return (
 			<menu
 				ref={contextMenuRef}
@@ -318,7 +330,7 @@ export default function Seasonal() {
 					top: contextMenu.top,
 					left: contextMenu.left
 				}}
-				className="absolute z-10 p-2 shadow-md shadow-gray-600 bg-slate-200 text-black rounded-sm border-black border-solid border-2 context-menu"
+				className="absolute z-10 p-2 shadow-md shadow-gray-600 bg-slate-200 text-black rounded-sm border-black border-solid border-2 seasonal-context-menu"
 			>
 				<li className="flex justify-center">
 					<span className="text-center font-semibold line-clamp-2">
@@ -339,6 +351,11 @@ export default function Seasonal() {
 				<li className="flex justify-center h-8 rounded-sm hover:bg-slate-500">
 					<button onClick={loadItemDetails} className="w-full">
 						Load details
+					</button>
+				</li>
+				<li className="flex justify-center h-8 rounded-sm hover:bg-slate-500">
+					<button onClick={handleAddToCompleted} className="w-full">
+						Add to Completed
 					</button>
 				</li>
 			</menu>

@@ -392,9 +392,10 @@ export default function PTW() {
 		async function addToCompleted() {
 			setLoading(true)
 			try {
-				await axios.post('/api/ptw/addtocompleted', {
+				await axios.post('/api/addtocompleted', {
 					content: responseRolled,
-					id: contextMenu.currentItem?.id
+					id: contextMenu.currentItem?.id,
+					type: 'PTW'
 				})
 				setLoading(false)
 			} catch (error) {
