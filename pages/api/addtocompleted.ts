@@ -56,15 +56,15 @@ export default async function AddToCompleted(req: NextApiRequest, res: NextApiRe
 	}
 	else if (type === 'SEASONAL') {
 		const completedSeasonal = content.filter(
-			(item: Database['public']['Tables']['PTW-CurrentSeason']['Row']) => item.id != id
+			(item: Database['public']['Tables']['PTW-CurrentSeason']['Row']) => item.title != id //? id here is provided as entry title
 		)
-		completedSeasonal.push({ id: completedSeasonal.length + 1, status: '', title: '' })
+		completedSeasonal.push({ status: '', title: '', order: completedSeasonal.length + 1 })
 		const endRowIndex1 = content.length + 1
 		cells = `O2:P${endRowIndex1}`
 
 		if (!Array.isArray(content)) return res.status(400).send('Invalid content provided')
 		rowsToInsert = completedSeasonal.map(
-			(item: Database['public']['Tables']['PTW-Rolled']['Row']) => {
+			(item: Database['public']['Tables']['PTW-CurrentSeason']['Row']) => {
 				const { red, green, blue } = determineStatus(item)
 				return {
 					values: [
@@ -143,7 +143,7 @@ export default async function AddToCompleted(req: NextApiRequest, res: NextApiRe
 			)
 		} else if (type === 'SEASONAL') {
 			completedTitle = content.filter(
-				(item: Database['public']['Tables']['PTW-CurrentSeason']['Row']) => item.id == id
+				(item: Database['public']['Tables']['PTW-CurrentSeason']['Row']) => item.title == id //? id here is provided as entry title
 			)
 		}
 		if (!completedTitle) return res.status(500)

@@ -50,7 +50,7 @@ export default function Seasonal() {
 			const { data } = await supabase
 				.from('PTW-CurrentSeason')
 				.select('*, SeasonalDetails!left( mal_id, start_date, latest_episode )')
-				.order('id', { ascending: true })
+				.order('order', { ascending: true })
 
 			setResponse(data!)
 			setResponse1(data!)
@@ -70,7 +70,7 @@ export default function Seasonal() {
 					const { data } = await supabase
 						.from('PTW-CurrentSeason')
 						.select()
-						.order('id', { ascending: true })
+						.order('order', { ascending: true })
 					setResponse(data!)
 				}
 			)
@@ -313,7 +313,7 @@ export default function Seasonal() {
 			try {
 				await axios.post('/api/addtocompleted', {
 					content: response1,
-					id: contextMenu.currentItem?.id,
+					id: contextMenu.currentItem?.title,
 					type: 'SEASONAL'
 				})
 				setLoading(false)
@@ -338,6 +338,7 @@ export default function Seasonal() {
 					</span>
 				</li>
 				<hr className="my-2 border-gray-500 border-t-[1px]" />
+				{contextMenu.currentItem.SeasonalDetails?.[0]?.mal_id && 
 				<li className="flex justify-center h-8 rounded-sm hover:bg-slate-500">
 					<Link
 						href={`https://myanimelist.net/anime/${contextMenu.currentItem.SeasonalDetails[0].mal_id}`} 
@@ -347,7 +348,7 @@ export default function Seasonal() {
 					>
 						Visit on MAL
 					</Link>
-				</li>
+				</li>}
 				<li className="flex justify-center h-8 rounded-sm hover:bg-slate-500">
 					<button onClick={loadItemDetails} className="w-full">
 						Load details
