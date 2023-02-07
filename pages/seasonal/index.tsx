@@ -9,6 +9,7 @@ import { useLoading } from '../../components/LoadingContext'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
 import { Reorder } from 'framer-motion'
 import isEqual from 'lodash/isEqual'
+import Link from 'next/link'
 
 //TODO: Load individual animes into tracker
 
@@ -17,6 +18,8 @@ export default function Seasonal() {
 	const settingsMenuButtonRef = useRef<HTMLDivElement>(null)
 	const addRecordMenuRef = useRef<HTMLMenuElement>(null)
 	const addRecordButtonRef = useRef<HTMLDivElement>(null)
+	const contextMenuRef = useRef<HTMLDivElement>(null)
+	const contextMenuButtonRef = useRef<any>([])
 
 	const [response, setResponse] =
 		useState<any>()
@@ -30,6 +33,11 @@ export default function Seasonal() {
 		left: number
 		display: string
 	}>({ top: 0, left: 0, display: 'none' })
+	const [contextMenu, setContextMenu] = useState<{
+		top: number
+		left: number
+		currentItem: any | null
+	}>({ top: 0, left: 0, currentItem: null })
 	const [confirmModal, setConfirmModal] = useState(false)
 	const [reordered, setReordered] = useState(false)
 	const { setLoading } = useLoading()
@@ -89,6 +97,14 @@ export default function Seasonal() {
 				settingsMenuRef.current
 			) {
 				setSettingsMenu({ top: 0, left: 0, display: 'none' })
+			}
+			if (
+				!contextMenuButtonRef.current.includes(e.target.parentNode) &&
+				!contextMenuButtonRef.current.includes(e.target.parentNode?.parentNode) &&
+				!contextMenuRef.current?.contains(e.target) &&
+				contextMenuRef.current
+			) {
+				setContextMenu({ top: 0, left: 0, currentItem: null })
 			}
 		}
 
@@ -173,7 +189,7 @@ export default function Seasonal() {
 						}}
 						className="flex flex-col lg:w-[40rem] min-w-[95dvw] lg:min-w-full w-min border-white border-[1px] border-t-0"
 					>
-						{response?.map((item: any) => {
+						{response?.map((item: any, index: any) => {
 							const statusColor = determineStatus(item)
 							return (
 								<Reorder.Item value={item} key={item.id} className="grid grid-cols-[5fr_1fr] lg:grid-cols-[30rem_10rem_10rem_8rem] p-0 cursor-move hover:bg-neutral-700">
@@ -184,7 +200,7 @@ export default function Seasonal() {
 										onDoubleClick={() => {
 											setIsEdited(`seasonal_title_${item.title}_${item.id}`)
 										}}
-										className="relative p-2 text-center"
+										className="relative p-2 text-center group"
 									>
 										<span 
 											style={{ margin: isEdited == `seasonal_title_${item.title}_${item.id}` ? 0 : '0 1rem' }}
@@ -197,6 +213,15 @@ export default function Seasonal() {
 										{isLoadingEditForm.includes(`seasonal_title_${item.id}`) && (
 											<CircularProgress size={30} className="absolute top-[20%] left-[48%]" />
 										)}
+										<div
+											ref={element => (contextMenuButtonRef.current[index] = element)}
+											onClick={(e) => {
+												handleMenuClick(e, item)
+											}}
+											className="absolute top-2 z-10 h-7 w-7 invisible group-hover:visible cursor-pointer rounded-full hover:bg-gray-500 transition-colors duration-150"
+										>
+											<MoreVertIcon />
+										</div>
 									</div>
 									<div
 										style={{
@@ -259,11 +284,60 @@ export default function Seasonal() {
 						</div>
 					</div>
 				</section>
+				{contextMenu.currentItem && <ContextMenu />}
 				{settingsMenu.display == 'block' && <SettingsMenu />}
 				{confirmModal && <ConfirmModal />}
 			</main>
 		</>
 	)
+
+	function ContextMenu() {
+		return (
+			<menu
+				ref={contextMenuRef}
+				style={{
+					top: contextMenu.top,
+					left: contextMenu.left
+				}}
+				className="absolute z-10 p-2 shadow-md shadow-gray-600 bg-slate-200 text-black rounded-sm border-black border-solid border-2 context-menu"
+			>
+				<li className="flex justify-center">
+					<span className="text-center font-semibold line-clamp-2">
+						{contextMenu.currentItem?.title}
+					</span>
+				</li>
+				<hr className="my-2 border-gray-500 border-t-[1px]" />
+				<li className="flex justify-center h-8 rounded-sm hover:bg-slate-500">
+					<Link
+						href={`https://myanimelist.net/anime/${contextMenu.currentItem.SeasonalDetails[0].mal_id}`} 
+						target='_blank' 
+						rel='noopener noreferrer' 
+						className="p-1 w-full text-center"
+					>
+						Visit on MAL
+					</Link>
+				</li>
+				<li className="flex justify-center h-8 rounded-sm hover:bg-slate-500">
+					<button onClick={() => {}} className="w-full">
+						Load details
+					</button>
+				</li>
+			</menu>
+		)
+	}
+
+	function handleMenuClick(
+		e: BaseSyntheticEvent,
+		item: Database['public']['Tables']['Completed']['Row']
+	) {
+		const { top, left } = e.target.getBoundingClientRect()
+
+		setContextMenu({
+			top: top + window.scrollY,
+			left: left + window.scrollX + 25,
+			currentItem: item
+		})
+	}
 
 	async function saveReorder() {
 		if (!response) return
