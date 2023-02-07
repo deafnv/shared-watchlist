@@ -10,6 +10,7 @@ import MoreVertIcon from '@mui/icons-material/MoreVert'
 import { Reorder } from 'framer-motion'
 import isEqual from 'lodash/isEqual'
 import Link from 'next/link'
+import { useRouter } from 'next/router'
 
 //TODO: Load individual animes into tracker
 
@@ -41,6 +42,8 @@ export default function Seasonal() {
 	const [confirmModal, setConfirmModal] = useState(false)
 	const [reordered, setReordered] = useState(false)
 	const { setLoading } = useLoading()
+
+	const router = useRouter()
 
 	useEffect(() => {
 		const supabase = createClient<Database>(
@@ -292,6 +295,22 @@ export default function Seasonal() {
 	)
 
 	function ContextMenu() {
+		async function loadItemDetails() {
+			if (!contextMenu.currentItem) return
+			setLoading(true)
+			try {
+				await axios.post('/api/seasonaldetails/loaditem', {
+					id: contextMenu.currentItem.id
+				})
+				router.reload()
+			} catch (error) {
+				setLoading(false)
+				alert(error)
+				console.log(error)
+				return
+			}
+		}
+
 		return (
 			<menu
 				ref={contextMenuRef}
@@ -318,7 +337,7 @@ export default function Seasonal() {
 					</Link>
 				</li>
 				<li className="flex justify-center h-8 rounded-sm hover:bg-slate-500">
-					<button onClick={() => {}} className="w-full">
+					<button onClick={loadItemDetails} className="w-full">
 						Load details
 					</button>
 				</li>
