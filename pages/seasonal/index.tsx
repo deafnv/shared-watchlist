@@ -3,7 +3,6 @@ import { Database } from '../../lib/database.types'
 import { BaseSyntheticEvent, useEffect, useState, useRef } from 'react'
 import Head from 'next/head'
 import axios from 'axios'
-import { loadingGlimmer } from '../../components/LoadingGlimmer'
 import { CircularProgress } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
 import { useLoading } from '../../components/LoadingContext'
@@ -12,7 +11,6 @@ import { Reorder } from 'framer-motion'
 import isEqual from 'lodash/isEqual'
 
 //TODO: Load individual animes into tracker
-//TODO: Reorder to release order
 
 export default function Seasonal() {
 	const settingsMenuRef = useRef<HTMLDivElement>(null)
@@ -21,9 +19,9 @@ export default function Seasonal() {
 	const addRecordButtonRef = useRef<HTMLDivElement>(null)
 
 	const [response, setResponse] =
-		useState<Database['public']['Tables']['PTW-CurrentSeason']['Row'][]>()
+		useState<any>()
 	const [response1, setResponse1] =
-		useState<Database['public']['Tables']['PTW-CurrentSeason']['Row'][]>()
+		useState<any>()
 	const [isEdited, setIsEdited] = useState<string>('')
 	const [isLoadingEditForm, setIsLoadingEditForm] = useState<Array<string>>([])
 	const [isAdded, setIsAdded] = useState(false)
@@ -44,7 +42,7 @@ export default function Seasonal() {
 		const getData = async () => {
 			const { data } = await supabase
 				.from('PTW-CurrentSeason')
-				.select()
+				.select('*, SeasonalDetails!inner( mal_id, start_date, latest_episode )')
 				.order('id', { ascending: true })
 
 			setResponse(data!)
@@ -67,7 +65,6 @@ export default function Seasonal() {
 						.select()
 						.order('id', { ascending: true })
 					setResponse(data!)
-					console.log(payload)
 				}
 			)
 			.subscribe()
@@ -152,12 +149,18 @@ export default function Seasonal() {
 							<input placeholder='Insert title' className='w-60 text-lg rounded-sm bg-gray-800 focus:outline-none' />
 						</form>
 					</menu>}
-					<div className="grid grid-cols-[5fr_1fr] xl:grid-cols-[30rem_10rem] min-w-[95dvw] xl:min-w-0 w-min bg-sky-600 border-white border-solid border-[1px]">
+					<div className="grid grid-cols-[5fr_1fr] lg:grid-cols-[30rem_10rem_10rem_8rem] min-w-[95dvw] lg:min-w-0 w-min bg-sky-600 border-white border-solid border-[1px]">
 						<span className='flex items-center justify-center p-2 h-full border-white border-r-[1px] text-center font-bold'>
 							Title
 						</span>
-						<span className='flex items-center justify-center p-2 h-full text-center font-bold'>
+						<span className='flex items-center justify-center p-2 h-full border-white border-r-[1px] text-center font-bold'>
 							Status
+						</span>
+						<span className='hidden lg:flex items-center justify-center p-2 h-full border-white border-r-[1px] text-center font-bold'>
+							Start Date
+						</span>
+						<span className='hidden lg:flex items-center justify-center p-2 h-full text-center font-bold'>
+							Latest Episode
 						</span>
 					</div>
 					<Reorder.Group
@@ -168,12 +171,12 @@ export default function Seasonal() {
 							setResponse(newOrder)
 							setReordered(true)
 						}}
-						className="flex flex-col xl:w-[40rem] min-w-[95dvw] xl:min-w-full w-min border-white border-[1px] border-t-0"
+						className="flex flex-col lg:w-[40rem] min-w-[95dvw] lg:min-w-full w-min border-white border-[1px] border-t-0"
 					>
-						{response?.map((item) => {
+						{response?.map((item: any) => {
 							const statusColor = determineStatus(item)
 							return (
-								<Reorder.Item value={item} key={item.id} className="grid grid-cols-[5fr_1fr] xl:grid-cols-[30rem_10rem] p-0 cursor-move hover:bg-neutral-700">
+								<Reorder.Item value={item} key={item.id} className="grid grid-cols-[5fr_1fr] lg:grid-cols-[30rem_10rem_10rem_8rem] p-0 cursor-move hover:bg-neutral-700">
 									<div
 										style={{
 											opacity: isLoadingEditForm.includes(`seasonal_title_${item.id}`) ? 0.5 : 1
@@ -213,6 +216,12 @@ export default function Seasonal() {
 										{isLoadingEditForm.includes(`status_${item.id}`) && (
 											<CircularProgress size={30} className="absolute top-[20%] left-[48%]" />
 										)}
+									</div>
+									<div className='hidden lg:flex items-center justify-center'>
+										{new Date(item.SeasonalDetails[0].start_date).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })}
+									</div>
+									<div className='hidden lg:flex items-center justify-center'>
+										{item.SeasonalDetails[0].latest_episode}
 									</div>
 								</Reorder.Item>
 							)
@@ -387,7 +396,7 @@ export default function Seasonal() {
 
 				const changed = response?.slice()
 				if (!changed) return
-				changed.find((item) => item.id === id)!['title'] = event.target[0].value
+				changed.find((item: any) => item.id === id)!['title'] = event.target[0].value
 				setResponse(changed)
 				setIsEdited('')
 				setIsLoadingEditForm(isLoadingEditForm.filter((item) => item == `${field}_${id}`))
@@ -434,7 +443,7 @@ export default function Seasonal() {
 
 				const changed = response?.slice()
 				if (!changed) return
-				changed.find((item) => item.id === id)!['status'] = event.target.childNodes[0].value
+				changed.find((item: any) => item.id === id)!['status'] = event.target.childNodes[0].value
 				setResponse(changed)
 				setIsEdited('')
 				setIsLoadingEditForm(isLoadingEditForm.filter((item) => item == `status_${id}`))
