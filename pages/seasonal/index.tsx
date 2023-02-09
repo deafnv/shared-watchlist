@@ -140,9 +140,9 @@ export default function Seasonal() {
 				<link rel="icon" href="/favicon.ico" />
 			</Head>
 
-			<main className="flex flex-col items-center justify-center mb-24 px-1">
+			<main className="flex flex-col items-center justify-center mb-24 px-6 py-2">
 				<section className='relative flex flex-col items-center'>
-					<header className='flex items-center'>
+					<header className='flex items-center mb-2'>
 						<h2 className="p-2 text-3xl">Current Season</h2>
 						<div
 							ref={settingsMenuButtonRef}

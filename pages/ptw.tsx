@@ -223,8 +223,8 @@ export default function PTW() {
 				<link rel="icon" href="/favicon.ico" />
 			</Head>
 
-			<main className="flex flex-col items-center justify-center gap-4 px-4 mb-24">
-				<div className="flex flex-col lg:flex-row items-center justify-center w-full gap-12">
+			<main className="flex flex-col items-center justify-center gap-4 mb-24 px-6 py-2">
+				<section className="flex flex-col lg:flex-row items-center justify-center w-full gap-12">
 					<div className="flex flex-col items-center min-h-[40rem] w-[30rem] lg:w-auto">
 						<header className='flex items-center mt-5'>
 							<h2 className="p-2 text-3xl">
@@ -353,12 +353,12 @@ export default function PTW() {
 						</div>
 					</div>
 					<Gacha />
-				</div>
-				<div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+				</section>
+				<section className="grid grid-cols-1 lg:grid-cols-3 gap-4">
 					<PTWTable response={responseCasual} tableName="Casual" tableId="casual" />
 					<PTWTable response={responseNonCasual} tableName="Non-Casual" tableId="noncasual" />
 					<PTWTable response={responseMovies} tableName="Movies" tableId="movies" />
-				</div>
+				</section>
 				<LatencyBadge />
 				{contextMenu.currentItem && <ContextMenu />}
 			</main>

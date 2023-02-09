@@ -77,7 +77,7 @@ export default function Navbar({ children }: React.PropsWithChildren) {
 					borderImage: 'linear-gradient(to right, rgb(218, 51, 190), rgb(191, 94, 255))',
 					borderImageSlice: 1,
 					background: navbar ? 'rgba(0, 0, 0, 1)' : 'rgba(0, 0, 0, 0.6)',
-					transition: 'all 800ms'
+					transition: 'background-color 800ms'
 				}}
 			>
 				<div className="flex items-center">

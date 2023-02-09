@@ -108,7 +108,7 @@ export default function SeasonalDetails({
 
 				<main className="flex flex-col items-center justify-center p-6">
 					<div className="relative">
-						<h2 className="mb-6 text-3xl">Episode Tracker</h2>
+						<h2 className="mb-6 text-3xl">Episode Trasdacker</h2>
 						<div
 							ref={refreshReloadMenuButtonRef}
 							onClick={handleRefreshReloadMenu}
@@ -133,17 +133,17 @@ export default function SeasonalDetails({
 				<link rel="icon" href="/favicon.ico" />
 			</Head>
 
-			<main className="flex flex-col items-center justify-center p-6">
-				<div className="relative">
-					<h2 className="mb-6 text-3xl">Episode Tracker</h2>
+			<main className="flex flex-col items-center justify-center mb-24 px-6 py-2">
+				<header className='flex items-center mb-2'>
+					<h2 className="p-2 text-3xl">Episode Tracker</h2>
 					<div
 						ref={refreshReloadMenuButtonRef}
 						onClick={handleRefreshReloadMenu}
-						className="absolute top-[0.3rem] -right-10 z-10 flex items-center justify-center h-7 w-7 cursor-pointer rounded-full hover:bg-gray-500"
+						className="flex items-center justify-center h-7 w-7 cursor-pointer rounded-full hover:bg-gray-500 transition-colors duration-150 translate-y-[2px]"
 					>
 						<MoreVertIcon sx={{ fontSize: 28 }} />
 					</div>
-				</div>
+				</header>
 				<div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
 					{response.map((item) => {
 						return (

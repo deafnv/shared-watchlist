@@ -54,7 +54,6 @@ export default function Completed() {
 	const [detailsModal, setDetailsModal] = useState<
 		Database['public']['Tables']['Completed']['Row'] | null
 	>(null)
-	const [width, setWidth] = useState<number>(0)
 	const { setLoading } = useLoading()
 
 	const router = useRouter()
@@ -71,7 +70,7 @@ export default function Completed() {
 			process.env.NEXT_PUBLIC_SUPABASE_API_KEY!
 		)
 		const getData = async () => {
-			const { data } = await supabase.from('Completed').select().order('id', { ascending: true })
+			const { data } = await supabase.from('Completed').select().order('id', { ascending: false })
 			setResponse(data!)
 			setResponse1(data!)
 			setIsLoadingClient(false)
@@ -92,7 +91,7 @@ export default function Completed() {
 					const { data } = await supabase
 						.from('Completed')
 						.select()
-						.order('id', { ascending: true })
+						.order('id', { ascending: false })
 
 					//? Meant to provide updates when user is in sort mode, currently non-functional, repeats the sorting 4 to 21 times.
 					/* if (sortMethod) {
@@ -143,18 +142,15 @@ export default function Completed() {
 			setIsEdited('')
 		}
 
-		const handleWindowResize = () => setWidth(window.innerWidth)
 
 		document.addEventListener('click', closeMenus)
 		window.addEventListener('focusout', resetEditNoFocus)
-		window.addEventListener('resize', handleWindowResize)
 
 		return () => {
 			clearInterval(refresh)
 			databaseChannel.unsubscribe()
 			document.removeEventListener('click', closeMenus)
 			window.removeEventListener('focusout', resetEditNoFocus)
-			window.removeEventListener('resize', handleWindowResize)
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [])
@@ -168,32 +164,30 @@ export default function Completed() {
 				<link rel="icon" href="/favicon.ico" />
 			</Head>
 
-			<main className="flex flex-col items-center justify-center mb-24 px-1 md:px-0">
-				<div className="relative">
-					<header className='flex items-center'>
-						<h2 className="p-2 text-3xl">
-							Completed
-						</h2>
-						{sortMethodRef.current &&
-						<div
-							title="Reset sort"
-							onClick={() => {
-								sortMethodRef.current = ''
-								setResponse(response1)
-							}}
-							className="flex items-center justify-center h-7 w-7 cursor-pointer rounded-full hover:bg-gray-500 transition-colors duration-150 translate-y-[1px]"
-						>
-							<RefreshIcon sx={{ fontSize: 28 }} />
-						</div>}
-						<div
-							ref={settingsMenuButtonRef}
-							onClick={handleSettingsMenu}
-							className="flex items-center justify-center h-7 w-7 cursor-pointer rounded-full hover:bg-gray-500 transition-colors duration-150 translate-y-[1px]"
-						>
-							<MoreVertIcon sx={{ fontSize: 28 }} />
-						</div>
-					</header>
-				</div>
+			<main className="flex flex-col items-center justify-center mb-24 px-6 py-2">
+				<header className='flex items-center'>
+					<h2 className="p-2 text-3xl">
+						Completed
+					</h2>
+					{sortMethodRef.current &&
+					<div
+						title="Reset sort"
+						onClick={() => {
+							sortMethodRef.current = ''
+							setResponse(response1)
+						}}
+						className="flex items-center justify-center h-7 w-7 cursor-pointer rounded-full hover:bg-gray-500 transition-colors duration-150 translate-y-[1px]"
+					>
+						<RefreshIcon sx={{ fontSize: 28 }} />
+					</div>}
+					<div
+						ref={settingsMenuButtonRef}
+						onClick={handleSettingsMenu}
+						className="flex items-center justify-center h-7 w-7 cursor-pointer rounded-full hover:bg-gray-500 transition-colors duration-150 translate-y-[1px]"
+					>
+						<MoreVertIcon sx={{ fontSize: 28 }} />
+					</div>
+				</header>
 				<div className="flex items-center gap-2">
 					<form className="px-3 mb-1 bg-neutral-700 shadow-md shadow-black rounded-md">
 						<SearchIcon />
@@ -202,15 +196,14 @@ export default function Completed() {
 							type="search"
 							placeholder=" Search Titles"
 							className="input-text my-2 p-1 w-64 md:w-96 text-lg"
-						></input>
+						/>
 					</form>
 					<button
 						onClick={addRecord}
 						title="Add new record to table"
-						className="input-submit h-3/5 px-2 py-2 mb-1 text-lg rounded-md"
+						className="input-submit h-3/5 mb-1 p-2 text-lg rounded-md"
 					>
-						<AddIcon fontSize="large" className="-translate-y-[2px]" />{' '}
-						{width > 768 ? 'Add New' : null}
+						<AddIcon fontSize="large" />
 					</button>
 				</div>
 				<table>
@@ -284,156 +277,151 @@ export default function Completed() {
 								<span className="absolute">{sortSymbol('end', sortMethodRef)}</span>
 							</th>
 						</tr>
-						{isLoadingClient
-							? loadingGlimmer(7)
-							: response
-									?.slice()
-									.reverse()
-									.map((item, index) => {
-										return (
-											<tr key={item.id} className="relative group">
-												<td
-													style={{
-														opacity: isLoadingEditForm.includes(`title_${item.id}`) ? 0.5 : 1
-													}}
-													onDoubleClick={() => {
-														setIsEdited(`title${item.id}`)
-													}}
-													className="relative"
-												>
-													<span style={{ margin: isEdited == `title${item.id}` ? 0 : '0 1.6rem' }}>
-														{isEdited == `title${item.id}` ? (
-															editForm('title', item.id, item.title!)
-														) : item.title ? (
-															item.title
-														) : (
-															<span className="italic text-gray-400">Untitled</span>
-														)}
-														<div
-															ref={element => (contextMenuButtonRef.current[index] = element)}
-															onClick={(e) => {
-																handleMenuClick(e, item)
-															}}
-															className="absolute top-2 z-10 h-7 w-7 invisible group-hover:visible cursor-pointer rounded-full hover:bg-gray-500 transition-colors duration-150"
-														>
-															<MoreVertIcon />
-														</div>
-													</span>
-													{isLoadingEditForm.includes(`title_${item.id}`) && (
-														<CircularProgress size={30} className="absolute top-[20%] left-[48%]" />
-													)}
-												</td>
-												<td
-													style={{
-														opacity: isLoadingEditForm.includes(`type_${item.id}`) ? 0.5 : 1
-													}}
-													onDoubleClick={() => {
-														setIsEdited(`type${item.id}`)
-													}}
-													className="relative hidden md:table-cell"
-												>
-													<span>
-														{isEdited == `type${item.id}`
-															? editForm('type', item.id, item.type ?? '')
-															: item.type}
-													</span>
-													{isLoadingEditForm.includes(`type_${item.id}`) && (
-														<CircularProgress size={30} className="absolute top-[20%] left-[40%]" />
-													)}
-												</td>
-												<td
-													style={{
-														opacity: isLoadingEditForm.includes(`episode_${item.id}`) ? 0.5 : 1
-													}}
-													onDoubleClick={() => {
-														setIsEdited(`episode${item.id}`)
-													}}
-													className="relative hidden md:table-cell"
-												>
-													<span>
-														{isEdited == `episode${item.id}`
-															? editForm('episode', item.id, item.episode ?? '')
-															: item.episode}
-													</span>
-													{isLoadingEditForm.includes(`episode_${item.id}`) && (
-														<CircularProgress size={30} className="absolute top-[20%] left-[40%]" />
-													)}
-												</td>
-												<td
-													style={{
-														opacity: isLoadingEditForm.includes(`rating1_${item.id}`) ? 0.5 : 1
-													}}
-													onDoubleClick={() => {
-														setIsEdited(`rating1${item.id}`)
-													}}
-													className="relative"
-												>
-													<span>
-														{isEdited == `rating1${item.id}`
-															? editForm('rating1', item.id, item.rating1 ?? '')
-															: item.rating1}
-													</span>
-													{isLoadingEditForm.includes(`rating1_${item.id}`) && (
-														<CircularProgress size={30} className="absolute top-[20%] left-[40%]" />
-													)}
-												</td>
-												<td
-													style={{
-														opacity: isLoadingEditForm.includes(`rating2_${item.id}`) ? 0.5 : 1
-													}}
-													onDoubleClick={() => {
-														setIsEdited(`rating2${item.id}`)
-													}}
-													className="relative"
-												>
-													<span>
-														{isEdited == `rating2${item.id}`
-															? editForm('rating2', item.id, item.rating2 ?? '')
-															: item.rating2}
-													</span>
-													{isLoadingEditForm.includes(`rating2_${item.id}`) && (
-														<CircularProgress size={30} className="absolute top-[20%] left-[40%]" />
-													)}
-												</td>
-												<td
-													style={{
-														opacity: isLoadingEditForm.includes(`start_${item.id}`) ? 0.5 : 1
-													}}
-													onDoubleClick={() => {
-														setIsEdited(`start${item.id}`)
-													}}
-													className="relative hidden md:table-cell"
-												>
-													<span>
-														{isEdited == `start${item.id}`
-															? editForm('start', item.id, item.start ?? '')
-															: item.start}
-													</span>
-													{isLoadingEditForm.includes(`start_${item.id}`) && (
-														<CircularProgress size={30} className="absolute top-[20%] left-[40%]" />
-													)}
-												</td>
-												<td
-													style={{
-														opacity: isLoadingEditForm.includes(`end_${item.id}`) ? 0.5 : 1
-													}}
-													onDoubleClick={() => {
-														setIsEdited(`end${item.id}`)
-													}}
-													className="relative hidden md:table-cell"
-												>
-													<span>
-														{isEdited == `end${item.id}`
-															? editForm('end', item.id, item.end ?? '')
-															: item.end}
-													</span>
-													{isLoadingEditForm.includes(`end_${item.id}`) && (
-														<CircularProgress size={30} className="absolute top-[20%] left-[40%]" />
-													)}
-												</td>
-											</tr>
-										)
-									})}
+						{isLoadingClient ? 
+						loadingGlimmer(7) : 
+						response?.map((item, index) => (
+							<tr key={item.id} className="relative group">
+								<td
+									style={{
+										opacity: isLoadingEditForm.includes(`title_${item.id}`) ? 0.5 : 1
+									}}
+									onDoubleClick={() => {
+										setIsEdited(`title${item.id}`)
+									}}
+									className="relative"
+								>
+									<span style={{ margin: isEdited == `title${item.id}` ? 0 : '0 1.6rem' }}>
+										{isEdited == `title${item.id}` ? (
+											editForm('title', item.id, item.title!)
+										) : item.title ? (
+											item.title
+										) : (
+											<span className="italic text-gray-400">Untitled</span>
+										)}
+										<div
+											ref={element => (contextMenuButtonRef.current[index] = element)}
+											onClick={(e) => {
+												handleMenuClick(e, item)
+											}}
+											className="absolute top-2 z-10 h-7 w-7 invisible group-hover:visible cursor-pointer rounded-full hover:bg-gray-500 transition-colors duration-150"
+										>
+											<MoreVertIcon />
+										</div>
+									</span>
+									{isLoadingEditForm.includes(`title_${item.id}`) && (
+										<CircularProgress size={30} className="absolute top-[20%] left-[48%]" />
+									)}
+								</td>
+								<td
+									style={{
+										opacity: isLoadingEditForm.includes(`type_${item.id}`) ? 0.5 : 1
+									}}
+									onDoubleClick={() => {
+										setIsEdited(`type${item.id}`)
+									}}
+									className="relative hidden md:table-cell"
+								>
+									<span>
+										{isEdited == `type${item.id}`
+											? editForm('type', item.id, item.type ?? '')
+											: item.type}
+									</span>
+									{isLoadingEditForm.includes(`type_${item.id}`) && (
+										<CircularProgress size={30} className="absolute top-[20%] left-[40%]" />
+									)}
+								</td>
+								<td
+									style={{
+										opacity: isLoadingEditForm.includes(`episode_${item.id}`) ? 0.5 : 1
+									}}
+									onDoubleClick={() => {
+										setIsEdited(`episode${item.id}`)
+									}}
+									className="relative hidden md:table-cell"
+								>
+									<span>
+										{isEdited == `episode${item.id}`
+											? editForm('episode', item.id, item.episode ?? '')
+											: item.episode}
+									</span>
+									{isLoadingEditForm.includes(`episode_${item.id}`) && (
+										<CircularProgress size={30} className="absolute top-[20%] left-[40%]" />
+									)}
+								</td>
+								<td
+									style={{
+										opacity: isLoadingEditForm.includes(`rating1_${item.id}`) ? 0.5 : 1
+									}}
+									onDoubleClick={() => {
+										setIsEdited(`rating1${item.id}`)
+									}}
+									className="relative"
+								>
+									<span>
+										{isEdited == `rating1${item.id}`
+											? editForm('rating1', item.id, item.rating1 ?? '')
+											: item.rating1}
+									</span>
+									{isLoadingEditForm.includes(`rating1_${item.id}`) && (
+										<CircularProgress size={30} className="absolute top-[20%] left-[40%]" />
+									)}
+								</td>
+								<td
+									style={{
+										opacity: isLoadingEditForm.includes(`rating2_${item.id}`) ? 0.5 : 1
+									}}
+									onDoubleClick={() => {
+										setIsEdited(`rating2${item.id}`)
+									}}
+									className="relative"
+								>
+									<span>
+										{isEdited == `rating2${item.id}`
+											? editForm('rating2', item.id, item.rating2 ?? '')
+											: item.rating2}
+									</span>
+									{isLoadingEditForm.includes(`rating2_${item.id}`) && (
+										<CircularProgress size={30} className="absolute top-[20%] left-[40%]" />
+									)}
+								</td>
+								<td
+									style={{
+										opacity: isLoadingEditForm.includes(`start_${item.id}`) ? 0.5 : 1
+									}}
+									onDoubleClick={() => {
+										setIsEdited(`start${item.id}`)
+									}}
+									className="relative hidden md:table-cell"
+								>
+									<span>
+										{isEdited == `start${item.id}`
+											? editForm('start', item.id, item.start ?? '')
+											: item.start}
+									</span>
+									{isLoadingEditForm.includes(`start_${item.id}`) && (
+										<CircularProgress size={30} className="absolute top-[20%] left-[40%]" />
+									)}
+								</td>
+								<td
+									style={{
+										opacity: isLoadingEditForm.includes(`end_${item.id}`) ? 0.5 : 1
+									}}
+									onDoubleClick={() => {
+										setIsEdited(`end${item.id}`)
+									}}
+									className="relative hidden md:table-cell"
+								>
+									<span>
+										{isEdited == `end${item.id}`
+											? editForm('end', item.id, item.end ?? '')
+											: item.end}
+									</span>
+									{isLoadingEditForm.includes(`end_${item.id}`) && (
+										<CircularProgress size={30} className="absolute top-[20%] left-[40%]" />
+									)}
+								</td>
+							</tr>
+						))}
 					</tbody>
 				</table>
 				{contextMenu.currentItem && <ContextMenu />}

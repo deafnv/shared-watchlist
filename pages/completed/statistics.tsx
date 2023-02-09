@@ -395,7 +395,7 @@ export default function Statistics({
 				<link rel="icon" href="/favicon.ico" />
 			</Head>
 
-			<main className="flex flex-col items-center justify-center mb-24 px-1 md:px-0">
+			<main className="flex flex-col items-center justify-center mb-24 px-6 py-2">
 				<h2 className="p-2 text-3xl">Statistics</h2>
 				<div className="grid grid-cols-2 gap-4 place-items-center">
 					<section className="flex flex-col col-span-2 md:col-span-1 items-center justify-center px-6 py-4 w-[25rem] border-[1px] border-white">
