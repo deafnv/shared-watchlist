@@ -1,16 +1,17 @@
 import { createClient } from '@supabase/supabase-js'
 import { Database } from '../../lib/database.types'
-import { BaseSyntheticEvent, useEffect, useState, useRef } from 'react'
+import { BaseSyntheticEvent, useEffect, useState, useRef, MutableRefObject, Dispatch, SetStateAction } from 'react'
 import Head from 'next/head'
 import axios from 'axios'
 import { CircularProgress } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
 import { useLoading } from '../../components/LoadingContext'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
-import { Reorder } from 'framer-motion'
+import { Reorder, useDragControls } from 'framer-motion'
 import isEqual from 'lodash/isEqual'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
+import DragIndicatorIcon from '@mui/icons-material/DragIndicator'
 
 //TODO: Allow sort, and show save changes button to save sort
 
@@ -181,7 +182,7 @@ export default function Seasonal() {
 						</span>
 					</div>
 					<Reorder.Group
-						values={response ?? []}
+						values={response}
 						dragConstraints={{ top: 500 }}
 						/* draggable={sortMethod ? true : false} */
 						onReorder={(newOrder) => {
@@ -190,69 +191,20 @@ export default function Seasonal() {
 						}}
 						className="flex flex-col lg:w-[40rem] min-w-[95dvw] lg:min-w-full w-min border-white border-[1px] border-t-0"
 					>
-						{response?.map((item: any, index: any) => {
-							const statusColor = determineStatus(item)
-							const startDate = new Date(item?.SeasonalDetails?.[0]?.start_date).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })
-							return (
-								<Reorder.Item value={item} key={item.order} className="grid grid-cols-[5fr_1fr] lg:grid-cols-[30rem_10rem_10rem_8rem] p-0 cursor-move hover:bg-neutral-700">
-									<div
-										style={{
-											opacity: isLoadingEditForm.includes(`seasonal_title_${item.order}`) ? 0.5 : 1
-										}}
-										onDoubleClick={() => {
-											setIsEdited(`seasonal_title_${item.title}_${item.order}`)
-										}}
-										className="relative p-2 text-center group"
-									>
-										<span 
-											style={{ margin: isEdited == `seasonal_title_${item.title}_${item.order}` ? 0 : '0 1rem' }}
-											className='cursor-text'
-										>
-											{isEdited == `seasonal_title_${item.title}_${item.order}`
-												? editForm(`seasonal_title`, item.order, item.title!)
-												: item.title}
-										</span>
-										{isLoadingEditForm.includes(`seasonal_title_${item.order}`) && (
-											<CircularProgress size={30} className="absolute top-[20%] left-[48%]" />
-										)}
-										<div
-											ref={element => (contextMenuButtonRef.current[index] = element)}
-											onClick={(e) => {
-												handleMenuClick(e, item)
-											}}
-											className="absolute top-2 z-10 h-7 w-7 invisible group-hover:visible cursor-pointer rounded-full hover:bg-gray-500 transition-colors duration-150"
-										>
-											<MoreVertIcon />
-										</div>
-									</div>
-									<div
-										style={{
-											backgroundColor: statusColor,
-											opacity: isLoadingEditForm.includes(`status_${item.order}`) ? 0.5 : 1
-										}}
-										onDoubleClick={() => {
-											setIsEdited(`seasonal_status_${item.title}_${item.order}`)
-										}}
-										className="relative flex items-center justify-center"
-									>
-										<span className='flex items-center justify-center'>
-											{isEdited == `seasonal_status_${item.title}_${item.order}`
-												? editStatus(item.order, item.title!)
-												: ''}
-										</span>
-										{isLoadingEditForm.includes(`status_${item.order}`) && (
-											<CircularProgress size={30} className="absolute top-[20%] left-[48%]" />
-										)}
-									</div>
-									<div className='hidden lg:flex items-center justify-center'>
-										{startDate != 'Invalid Date' ? startDate : 'N/A'}
-									</div>
-									<div className='hidden lg:flex items-center justify-center'>
-										{item?.SeasonalDetails?.[0]?.latest_episode ?? 'N/A'}
-									</div>
-								</Reorder.Item>
-							)
-						})}
+						{response?.map((item: any, index: any) => 
+						<Item 
+							key={item.order} 
+							item={item} 
+							index={index}
+							contextMenuButtonRef={contextMenuButtonRef}
+							isEdited={isEdited}
+							isLoadingEditForm={isLoadingEditForm}
+							response={response}
+							setContextMenu={setContextMenu}
+							setIsEdited={setIsEdited}
+							setIsLoadingEditForm={setIsLoadingEditForm}
+							setResponse={setResponse}
+						/>)}
 					</Reorder.Group>
 					<div
 						style={{
@@ -292,7 +244,7 @@ export default function Seasonal() {
 			</main>
 		</>
 	)
-
+	
 	function ContextMenu() {
 		async function loadItemDetails() {
 			if (!contextMenu.currentItem) return
@@ -363,19 +315,6 @@ export default function Seasonal() {
 				</li>
 			</menu>
 		)
-	}
-
-	function handleMenuClick(
-		e: BaseSyntheticEvent,
-		item: Database['public']['Tables']['Completed']['Row']
-	) {
-		const { top, left } = e.target.getBoundingClientRect()
-
-		setContextMenu({
-			top: top + window.scrollY,
-			left: left + window.scrollX + 25,
-			currentItem: item
-		})
 	}
 
 	async function saveReorder() {
@@ -486,6 +425,113 @@ export default function Seasonal() {
 			alert(error)
 			return
 		}
+	}
+}
+
+interface ItemProps { 
+	item: any, 
+	index: number,
+	setIsLoadingEditForm: Dispatch<SetStateAction<string[]>>,
+	isLoadingEditForm: string[],
+	setIsEdited: Dispatch<SetStateAction<string>>,
+	isEdited: string,
+	contextMenuButtonRef: MutableRefObject<any>,
+	setContextMenu: Dispatch<SetStateAction<{
+    top: number;
+    left: number;
+    currentItem: any | null;
+	}>>,
+	response: any,
+	setResponse: Dispatch<any>
+}
+
+function Item({ item, index, setIsLoadingEditForm, isLoadingEditForm, setIsEdited, isEdited, contextMenuButtonRef, setContextMenu, response, setResponse }: ItemProps) {
+	const controls = useDragControls()
+	const statusColor = determineStatus(item)
+	const startDate = new Date(item?.SeasonalDetails?.[0]?.start_date).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })
+	return (
+		<Reorder.Item 
+			value={item}
+			dragListener={false}
+      dragControls={controls}
+			className="grid grid-cols-[5fr_1fr] lg:grid-cols-[30rem_10rem_10rem_8rem] p-0 hover:bg-neutral-700"
+		>
+			<div
+				style={{
+					opacity: isLoadingEditForm.includes(`seasonal_title_${item.order}`) ? 0.5 : 1
+				}}
+				onDoubleClick={() => {
+					setIsEdited(`seasonal_title_${item.title}_${item.order}`)
+				}}
+				className="relative p-2 text-center group"
+			>
+				<span 
+					style={{ margin: isEdited == `seasonal_title_${item.title}_${item.order}` ? 0 : '0 1rem' }}
+					className='cursor-text'
+				>
+					{isEdited == `seasonal_title_${item.title}_${item.order}`
+						? editForm(`seasonal_title`, item.order, item.title!)
+						: item.title}
+				</span>
+				{isLoadingEditForm.includes(`seasonal_title_${item.order}`) && (
+					<CircularProgress size={30} className="absolute top-[20%] left-[48%]" />
+				)}
+				<div
+					ref={element => (contextMenuButtonRef.current[index] = element)}
+					onClick={(e) => {
+						handleMenuClick(e, item)
+					}}
+					className="absolute top-2 z-10 h-7 w-7 invisible group-hover:visible cursor-pointer rounded-full hover:bg-gray-500 transition-colors duration-150"
+				>
+					<MoreVertIcon />
+				</div>
+			</div>
+			<div
+				style={{
+					backgroundColor: statusColor,
+					opacity: isLoadingEditForm.includes(`status_${item.order}`) ? 0.5 : 1
+				}}
+				onDoubleClick={() => {
+					setIsEdited(`seasonal_status_${item.title}_${item.order}`)
+				}}
+				className="relative flex items-center justify-center"
+			>
+				<span className='flex items-center justify-center'>
+					{isEdited == `seasonal_status_${item.title}_${item.order}`
+						? editStatus(item.order, item.title!)
+						: ''}
+				</span>
+				{isLoadingEditForm.includes(`status_${item.order}`) && (
+					<CircularProgress size={30} className="absolute top-[20%] left-[48%]" />
+				)}
+			</div>
+			<div className='hidden lg:flex items-center justify-center'>
+				{startDate != 'Invalid Date' ? startDate : 'N/A'}
+			</div>
+			<div className='relative hidden lg:flex items-center justify-center'>
+				{item?.SeasonalDetails?.[0]?.latest_episode ?? 'N/A'}
+				<div
+					ref={element => (contextMenuButtonRef.current[index] = element)}
+					onPointerDown={(e) => controls.start(e)}
+					className="absolute top-1/2 right-0 z-10 flex items-center justify-center h-7 w-7 cursor-grab rounded-full transition-colors duration-150 -translate-y-1/2"
+				>
+					<DragIndicatorIcon sx={{ color: 'silver'}} />
+				</div>
+			</div>
+		</Reorder.Item>
+	)
+
+	function handleMenuClick(
+		e: BaseSyntheticEvent,
+		item: Database['public']['Tables']['Completed']['Row']
+	) {
+		const { top, left } = e.target.getBoundingClientRect()
+
+		setContextMenu({
+			top: top + window.scrollY,
+			left: left + window.scrollX + 25,
+			currentItem: item
+		})
 	}
 
 	function editForm(field: 'seasonal_title', order: number, ogvalue: string): React.ReactNode {

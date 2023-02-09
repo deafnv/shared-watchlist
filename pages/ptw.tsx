@@ -1,7 +1,7 @@
 import Head from 'next/head'
-import { BaseSyntheticEvent, useEffect, useState, useRef } from 'react'
+import { BaseSyntheticEvent, useEffect, useState, useRef, Dispatch, SetStateAction, MutableRefObject } from 'react'
 import axios from 'axios'
-import { Reorder } from 'framer-motion'
+import { Reorder, useDragControls } from 'framer-motion'
 import { getRandomInt, sortListByNamePTW, sortSymbol } from '../lib/list_methods'
 import { createClient } from '@supabase/supabase-js'
 import { Database } from '../lib/database.types'
@@ -13,7 +13,8 @@ import CancelIcon from '@mui/icons-material/Cancel'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
 import AddIcon from '@mui/icons-material/Add'
 import isEqual from 'lodash/isEqual'
-import RefreshIcon from '@mui/icons-material/Refresh';
+import RefreshIcon from '@mui/icons-material/Refresh'
+import DragIndicatorIcon from '@mui/icons-material/DragIndicator'
 
 export default function PTW() {
 	const rolledTitleRef = useRef('???')
@@ -45,6 +46,20 @@ export default function PTW() {
 	}>({ top: 0, left: 0, currentItem: null })
 	const [isAdded, setIsAdded] = useState('')
 	const { setLoading } = useLoading()
+
+	const editFormParams = {
+		isLoadingEditForm,
+		setIsLoadingEditForm,
+		setIsEdited,
+		responseRolled,
+		responseCasual,
+		responseNonCasual,
+		responseMovies,
+		setResponseRolled,
+		setResponseCasual,
+		setResponseNonCasual,
+		setResponseMovies
+	}
 
 	const setRolledTitle = (value: string) => {
 		if (value == '???') {
@@ -286,36 +301,19 @@ export default function PTW() {
 							>
 								{responseRolled?.map((item, index) => {
 									return (
-										!isLoadingClient && (
-											<Reorder.Item value={item} key={item.id} className="p-0 hover:bg-neutral-700">
-												<div
-													style={{
-														cursor: sortMethodRef.current ? 'unset' : 'move',
-														opacity: isLoadingEditForm.includes(`rolled_title_${item.id}`) ? 0.5 : 1
-													}}
-													onDoubleClick={() => setIsEdited(`rolled_${item.title}_${item.id}`)}
-													className="relative p-2 text-center group"
-												>
-													<span className="cursor-text">
-														{isEdited == `rolled_${item.title}_${item.id}`
-															? editForm('rolled_title', item.id, item.title!)
-															: item.title}
-														<div
-															ref={element => (contextMenuButtonRef.current[index] = element)}
-															onClick={(e) => {
-																handleMenuClick(e, item)
-															}}
-															className="absolute top-2 z-10 h-7 w-7 invisible group-hover:visible cursor-pointer rounded-full hover:bg-gray-500 transition-colors duration-150"
-														>
-															<MoreVertIcon />
-														</div>
-													</span>
-													{isLoadingEditForm.includes(`rolled_title_${item.id}`) && (
-														<CircularProgress size={30} className="absolute top-[20%] left-[48%]" />
-													)}
-												</div>
-											</Reorder.Item>
-										)
+										!isLoadingClient && 
+										<Item 
+											key={item.id}
+											contextMenuButtonRef={contextMenuButtonRef}
+											editFormParams={editFormParams}
+											index={index}
+											isEdited={isEdited}
+											isLoadingEditForm={isLoadingEditForm}
+											item={item}
+											setContextMenu={setContextMenu}
+											setIsEdited={setIsEdited}
+											sortMethodRef={sortMethodRef}
+										/>
 									)
 								})}
 							</Reorder.Group>
@@ -334,7 +332,11 @@ export default function PTW() {
 								<button
 									className="input-submit p-2 rounded-md"
 									onClick={() => {
-										saveReorder()
+										saveReorder(
+											responseRolled,
+											setLoading,
+											setReordered
+										)
 										setReordered(false)
 									}}
 								>
@@ -403,19 +405,6 @@ export default function PTW() {
 				alert(error)
 			}
 		}
-	}
-
-	function handleMenuClick(
-		e: BaseSyntheticEvent,
-		item: Database['public']['Tables']['PTW-Rolled']['Row']
-	) {
-		const { top, left } = e.target.getBoundingClientRect()
-
-		setContextMenu({
-			top: top + window.scrollY,
-			left: left + window.scrollX + 25,
-			currentItem: item
-		})
 	}
 
 	function LatencyBadge() {
@@ -776,7 +765,7 @@ export default function PTW() {
 											>
 												<span>
 													{isEdited == `${tableId}_${item.title}_${item.id}`
-														? editForm(`${tableId}_title`, item.id, item.title!)
+														? editForm(`${tableId}_title`, item.id, item.title!, editFormParams)
 														: item.title}
 												</span>
 												{isLoadingEditForm.includes(`${tableId}_title_${item.id}`) && (
@@ -791,122 +780,229 @@ export default function PTW() {
 			</section>
 		)
 	}
+}
 
-	function editForm(
-		field: 'rolled_title' | 'casual_title' | 'noncasual_title' | 'movies_title',
-		id: number,
-		ogvalue: string
-	): React.ReactNode {
-		let column: string
-		let row = (id + 2).toString()
-		if (field == 'movies_title') row = (id + 22).toString()
-		switch (field) {
-			case 'rolled_title':
-				column = 'N'
-				break
-			case 'casual_title':
-				column = 'L'
-				break
-			case 'noncasual_title':
-				column = 'M'
-				break
-			case 'movies_title':
-				column = 'L'
-				break
-			default:
-				alert('Error: missing field')
-				return
-		}
+interface ItemProps {
+	item: Database['public']['Tables']['PTW-Rolled']['Row'],
+	index: number,
+	isLoadingEditForm: string[],
+	setIsEdited: Dispatch<SetStateAction<string>>,
+	isEdited: string,
+	sortMethodRef: MutableRefObject<string>,
+	setContextMenu: Dispatch<SetStateAction<{
+    top: number;
+    left: number;
+    currentItem: Database['public']['Tables']['PTW-Rolled']['Row'] | null;
+	}>>,
+	contextMenuButtonRef: MutableRefObject<any>,
+	editFormParams: EditFormParams
+}
 
-		async function handleSubmit(event: BaseSyntheticEvent): Promise<void> {
-			event.preventDefault()
-			setIsLoadingEditForm(isLoadingEditForm.concat(`${field}_${id}`))
-
-			try {
-				await axios.post('/api/update', {
-					content: event.target[0].value,
-					cell: column + row
-				})
-
-				switch (field) {
-					case 'rolled_title':
-						const changedRolled = responseRolled?.slice()
-						if (!changedRolled) return
-						changedRolled.find((item) => item.id === id)!['title'] = event.target[0].value
-						setResponseRolled(changedRolled)
-						setIsEdited('')
-						setIsLoadingEditForm(isLoadingEditForm.filter((item) => item == `${field}_${id}`))
-						break
-					case 'casual_title':
-						const changedCasual = responseCasual?.slice()
-						if (!changedCasual) return
-						changedCasual.find((item) => item.id === id)!['title'] = event.target[0].value
-						setResponseCasual(changedCasual)
-						setIsEdited('')
-						setIsLoadingEditForm(isLoadingEditForm.filter((item) => item == `${field}_${id}`))
-						break
-					case 'noncasual_title':
-						const changedNonCasual = responseNonCasual?.slice()
-						if (!changedNonCasual) return
-						changedNonCasual.find((item) => item.id === id)!['title'] = event.target[0].value
-						setResponseNonCasual(changedNonCasual)
-						setIsEdited('')
-						setIsLoadingEditForm(isLoadingEditForm.filter((item) => item == `${field}_${id}`))
-						break
-					case 'movies_title':
-						const changedMovies = responseMovies?.slice()
-						if (!changedMovies) return
-						changedMovies.find((item) => item.id === id)!['title'] = event.target[0].value
-						setResponseMovies(changedMovies)
-						setIsEdited('')
-						setIsLoadingEditForm(isLoadingEditForm.filter((item) => item == `${field}_${id}`))
-						break
-				}
-			} catch (error) {
-				alert(error)
-				return
-			}
-		}
-
-		return (
-			<div className="flex items-center justify-center relative w-full">
-				<div
-					style={{
-						opacity: isLoadingEditForm.includes(`${field}_${id}`) ? 0.5 : 1,
-						pointerEvents: isLoadingEditForm.includes(`${field}_${id}`) ? 'none' : 'unset'
-					}}
-					className="w-[85%]"
-				>
-					<form onSubmit={handleSubmit}>
-						<input
-							autoFocus
-							type="text"
-							defaultValue={ogvalue}
-							className="input-text text-center w-full"
-						/>
-					</form>
-				</div>
+function Item({ item, index, isLoadingEditForm, setIsEdited, isEdited, sortMethodRef, setContextMenu, contextMenuButtonRef, editFormParams }: ItemProps) {
+	const controls = useDragControls()
+	return (
+		<Reorder.Item 
+			value={item} 
+			dragListener={false}
+			dragControls={controls}
+			className="p-0 hover:bg-neutral-700"
+		>
+			<div
+				style={{
+					opacity: isLoadingEditForm.includes(`rolled_title_${item.id}`) ? 0.5 : 1
+				}}
+				onDoubleClick={() => setIsEdited(`rolled_${item.title}_${item.id}`)}
+				className="relative p-2 text-center group"
+			>
+				<span className="cursor-text">
+					{isEdited == `rolled_${item.title}_${item.id}`
+						? editForm('rolled_title', item.id, item.title!, editFormParams)
+						: item.title}
+					<div
+						ref={element => (contextMenuButtonRef.current[index] = element)}
+						onClick={(e) => {
+							handleMenuClick(e, item)
+						}}
+						className="absolute top-2 z-10 h-7 w-7 invisible group-hover:visible cursor-pointer rounded-full hover:bg-gray-500 transition-colors duration-150"
+					>
+						<MoreVertIcon />
+					</div>
+					<div
+						onPointerDown={(e) => controls.start(e)}
+						style={{
+							visibility: sortMethodRef.current ? 'hidden' : 'visible'
+						}}
+						className='absolute top-1/2 right-0 z-10 flex items-center justify-center h-7 w-7 cursor-grab rounded-full transition-colors duration-150 -translate-y-1/2'
+					>
+						<DragIndicatorIcon sx={{ color: 'silver'}} />
+					</div>
+				</span>
+				{isLoadingEditForm.includes(`rolled_title_${item.id}`) && (
+					<CircularProgress size={30} className="absolute top-[20%] left-[48%]" />
+				)}
 			</div>
-		)
+		</Reorder.Item>
+	)
+
+	function handleMenuClick(
+		e: BaseSyntheticEvent,
+		item: Database['public']['Tables']['PTW-Rolled']['Row']
+	) {
+		const { top, left } = e.target.getBoundingClientRect()
+
+		setContextMenu({
+			top: top + window.scrollY,
+			left: left + window.scrollX + 25,
+			currentItem: item
+		})
+	}
+}
+
+function editForm(
+	field: 'rolled_title' | 'casual_title' | 'noncasual_title' | 'movies_title',
+	id: number,
+	ogvalue: string,
+	{
+		isLoadingEditForm,
+		setIsLoadingEditForm,
+		setIsEdited,
+		responseRolled,
+		responseCasual,
+		responseNonCasual,
+		responseMovies,
+		setResponseRolled,
+		setResponseCasual,
+		setResponseNonCasual,
+		setResponseMovies
+	}: EditFormParams
+): React.ReactNode {
+	let column: string
+	let row = (id + 2).toString()
+	if (field == 'movies_title') row = (id + 22).toString()
+	switch (field) {
+		case 'rolled_title':
+			column = 'N'
+			break
+		case 'casual_title':
+			column = 'L'
+			break
+		case 'noncasual_title':
+			column = 'M'
+			break
+		case 'movies_title':
+			column = 'L'
+			break
+		default:
+			alert('Error: missing field')
+			return
 	}
 
-	async function saveReorder() {
-		setLoading(true)
-		let endRowIndex = responseRolled!.length + 1
+	async function handleSubmit(event: BaseSyntheticEvent): Promise<void> {
+		event.preventDefault()
+		setIsLoadingEditForm(isLoadingEditForm.concat(`${field}_${id}`))
+
 		try {
-			await axios.post('/api/ptw/reorder', {
-				content: responseRolled,
-				cells: `N2:N${endRowIndex}`,
-				type: 'PTW'
+			await axios.post('/api/update', {
+				content: event.target[0].value,
+				cell: column + row
 			})
 
-			setLoading(false)
-			setReordered(false)
+			switch (field) {
+				case 'rolled_title':
+					const changedRolled = responseRolled?.slice()
+					if (!changedRolled) return
+					changedRolled.find((item) => item.id === id)!['title'] = event.target[0].value
+					setResponseRolled(changedRolled)
+					setIsEdited('')
+					setIsLoadingEditForm(isLoadingEditForm.filter((item) => item == `${field}_${id}`))
+					break
+				case 'casual_title':
+					const changedCasual = responseCasual?.slice()
+					if (!changedCasual) return
+					changedCasual.find((item) => item.id === id)!['title'] = event.target[0].value
+					setResponseCasual(changedCasual)
+					setIsEdited('')
+					setIsLoadingEditForm(isLoadingEditForm.filter((item) => item == `${field}_${id}`))
+					break
+				case 'noncasual_title':
+					const changedNonCasual = responseNonCasual?.slice()
+					if (!changedNonCasual) return
+					changedNonCasual.find((item) => item.id === id)!['title'] = event.target[0].value
+					setResponseNonCasual(changedNonCasual)
+					setIsEdited('')
+					setIsLoadingEditForm(isLoadingEditForm.filter((item) => item == `${field}_${id}`))
+					break
+				case 'movies_title':
+					const changedMovies = responseMovies?.slice()
+					if (!changedMovies) return
+					changedMovies.find((item) => item.id === id)!['title'] = event.target[0].value
+					setResponseMovies(changedMovies)
+					setIsEdited('')
+					setIsLoadingEditForm(isLoadingEditForm.filter((item) => item == `${field}_${id}`))
+					break
+			}
 		} catch (error) {
-			setLoading(false)
 			alert(error)
-			console.log(error)
 			return
 		}
 	}
+
+	return (
+		<div className="flex items-center justify-center relative w-full">
+			<div
+				style={{
+					opacity: isLoadingEditForm.includes(`${field}_${id}`) ? 0.5 : 1,
+					pointerEvents: isLoadingEditForm.includes(`${field}_${id}`) ? 'none' : 'unset'
+				}}
+				className="w-[85%]"
+			>
+				<form onSubmit={handleSubmit}>
+					<input
+						autoFocus
+						type="text"
+						defaultValue={ogvalue}
+						className="input-text text-center w-full"
+					/>
+				</form>
+			</div>
+		</div>
+	)
+}
+
+async function saveReorder(
+	responseRolled: Database['public']['Tables']['PTW-Rolled']['Row'][] | undefined,
+	setLoading: Dispatch<SetStateAction<boolean>>,
+	setReordered: Dispatch<SetStateAction<boolean>>
+) {
+	setLoading(true)
+	let endRowIndex = responseRolled!.length + 1
+	try {
+		await axios.post('/api/ptw/reorder', {
+			content: responseRolled,
+			cells: `N2:N${endRowIndex}`,
+			type: 'PTW'
+		})
+
+		setLoading(false)
+		setReordered(false)
+	} catch (error) {
+		setLoading(false)
+		alert(error)
+		console.log(error)
+		return
+	}
+}
+
+interface EditFormParams {
+	isLoadingEditForm: string[],
+	setIsLoadingEditForm: Dispatch<SetStateAction<string[]>>,
+	setIsEdited: Dispatch<SetStateAction<string>>,
+	responseRolled: Database['public']['Tables']['PTW-Rolled']['Row'][] | undefined,
+	responseCasual: Database['public']['Tables']['PTW-Casual']['Row'][] | undefined,
+	responseNonCasual: Database['public']['Tables']['PTW-NonCasual']['Row'][] | undefined,
+	responseMovies: Database['public']['Tables']['PTW-Movies']['Row'][] | undefined,
+	setResponseRolled: Dispatch<SetStateAction<Database['public']['Tables']['PTW-Rolled']['Row'][] | undefined>>,
+	setResponseCasual: Dispatch<SetStateAction<Database['public']['Tables']['PTW-Casual']['Row'][] | undefined>>,
+	setResponseNonCasual: Dispatch<SetStateAction<Database['public']['Tables']['PTW-NonCasual']['Row'][] | undefined>>,
+	setResponseMovies: Dispatch<SetStateAction<Database['public']['Tables']['PTW-Movies']['Row'][] | undefined>>
 }
