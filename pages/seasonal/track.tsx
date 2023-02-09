@@ -38,6 +38,7 @@ export default function SeasonalDetails({
 }) {
 	const editEpisodesCurrentRef = useRef<HTMLDivElement>(null)
 	const contextMenuRef = useRef<HTMLDivElement>(null)
+	const contextMenuButtonRef = useRef<any>([])
 	const refreshReloadMenuRef = useRef<HTMLDivElement>(null)
 	const refreshReloadMenuButtonRef = useRef<HTMLDivElement>(null)
 
@@ -72,7 +73,8 @@ export default function SeasonalDetails({
 
 		const closeMenus = (e: any) => {
 			if (
-				e.target.tagName !== 'svg' &&
+				!contextMenuButtonRef.current.includes(e.target.parentNode) &&
+				!contextMenuButtonRef.current.includes(e.target.parentNode?.parentNode) &&
 				!contextMenuRef.current?.contains(e.target) &&
 				contextMenuRef.current
 			) {
@@ -80,6 +82,7 @@ export default function SeasonalDetails({
 			}
 			if (
 				e.target.parentNode !== refreshReloadMenuButtonRef.current &&
+				e.target.parentNode.parentNode !== refreshReloadMenuButtonRef.current &&
 				!refreshReloadMenuRef.current?.contains(e.target) &&
 				refreshReloadMenuRef.current
 			) {
@@ -108,7 +111,7 @@ export default function SeasonalDetails({
 
 				<main className="flex flex-col items-center justify-center p-6">
 					<div className="relative">
-						<h2 className="mb-6 text-3xl">Episode Trasdacker</h2>
+						<h2 className="mb-6 text-3xl">Episode Tracker</h2>
 						<div
 							ref={refreshReloadMenuButtonRef}
 							onClick={handleRefreshReloadMenu}
@@ -145,82 +148,85 @@ export default function SeasonalDetails({
 					</div>
 				</header>
 				<div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-					{response.map((item) => {
-						return (
-							<article
-								key={item.mal_id}
-								className="relative flex flex-col gap-2 p-3 bg-slate-700 shadow-md shadow-black rounded-md group"
+					{response.map((item, index) => (
+						<article
+							key={item.mal_id}
+							className="relative flex flex-col gap-2 p-3 bg-slate-700 shadow-md shadow-black rounded-md group"
+						>
+							<span
+								onClick={showTitle}
+								className="h-[3rem] px-7 font-bold self-center text-center line-clamp-2"
 							>
-								<span
-									onClick={showTitle}
-									className="h-[3rem] px-7 font-bold self-center text-center line-clamp-2"
-								>
-									{item.mal_title}
-								</span>
-								<div
-									onClick={(e) => {
-										handleMenuClick(e, item)
-									}}
-									className="absolute top-3 right-3 z-10 flex items-center justify-center h-7 w-7 invisible group-hover:visible cursor-pointer rounded-full hover:bg-gray-500"
-								>
-									<MoreVertIcon />
+								{item.mal_title}
+							</span>
+							<div
+								ref={element => (contextMenuButtonRef.current[index] = element)}
+								onClick={(e) => {
+									handleMenuClick(e, item)
+								}}
+								className="absolute top-3 right-3 z-10 flex items-center justify-center h-7 w-7 invisible group-hover:visible cursor-pointer rounded-full hover:bg-gray-500"
+							>
+								<MoreVertIcon />
+							</div>
+							<div className="flex">
+								<Image
+									src={item.image_url ?? 'https://via.placeholder.com/400x566'}
+									alt="Art"
+									height={200}
+									width={150}
+								/>
+								<div className="flex flex-col items-center gap-1 justify-center w-full">
+									<span className="text-center">
+										<span className="font-semibold">Episodes: </span>
+										{item.num_episodes ? item.num_episodes : 'Unknown'}
+									</span>
+									<span style={{ textTransform: 'capitalize' }} className="text-center">
+										<span className="font-semibold">Status: </span>
+										{item.status?.split('_').join(' ')}
+									</span>
+									<span className="text-center">
+										<span className="font-semibold">Start Date: </span>
+										{item.start_date ? item.start_date : 'Unknown'}
+									</span>
+									<span style={{ textTransform: 'capitalize' }} className="text-center">
+										<span className="font-semibold">Broadcast: </span>
+										{item.broadcast ?? 'Unknown'}
+									</span>
+									<Link
+										href={`https://myanimelist.net/anime/${item.mal_id}`}
+										target="_blank"
+										rel='noopener noreferrer'
+										className="link"
+									>
+										MyAnimeList
+									</Link>
+									<span
+										title='Last time episode tracker updated/edited'
+										className="absolute bottom-[48%] text-center"
+									>
+										<span className="font-semibold">Last updated: </span>
+										{item.last_updated ? new Date(item.last_updated).toLocaleDateString('en-GB', {day: 'numeric', month: 'numeric', year: '2-digit'}) : 'Unknown'}
+									</span>
 								</div>
-								<div className="flex">
-									<Image
-										src={item.image_url ?? 'https://via.placeholder.com/400x566'}
-										alt="Art"
-										height={200}
-										width={150}
-									/>
-									<div className="flex flex-col items-center gap-1 justify-center w-full">
-										<span className="text-center">
-											<span className="font-semibold">Episodes: </span>
-											{item.num_episodes ? item.num_episodes : 'Unknown'}
-										</span>
-										<span style={{ textTransform: 'capitalize' }} className="text-center">
-											<span className="font-semibold">Status: </span>
-											{item.status?.split('_').join(' ')}
-										</span>
-										<span className="text-center">
-											<span className="font-semibold">Start Date: </span>
-											{item.start_date ? item.start_date : 'Unknown'}
-										</span>
-										<span style={{ textTransform: 'capitalize' }} className="text-center">
-											<span className="font-semibold">Broadcast: </span>
-											{item.broadcast ?? 'Unknown'}
-										</span>
-										<Link
-											href={`https://myanimelist.net/anime/${item.mal_id}`}
-											target="_blank"
-											rel='noopener noreferrer'
-											className="link"
-										>
-											MyAnimeList
-										</Link>
-										<span className="absolute bottom-[48%] text-center">
-											<span className="font-semibold">Last updated: </span>
-											{item.last_updated ? new Date(item.last_updated).toLocaleDateString('en-GB', {day: 'numeric', month: 'numeric', year: '2-digit'}) : 'Unknown'}
-										</span>
+							</div>
+							<div>
+								<div className="relative w-full m-2 flex items-center justify-center">
+									<span className="text-lg font-semibold">Episodes</span>
+									{item.message?.includes('Exempt') && (
+										<span className="ml-2 text-lg font-semibold">(Edited)</span>
+									)}
+									<div
+										title='Edit episode count'
+										onClick={() => setEditEpisodesCurrent(item)}
+										className="absolute right-4 flex items-center justify-center h-6 w-6 rounded-full cursor-pointer transition-colors duration-150 invisible group-hover:visible hover:bg-slate-500"
+									>
+										<EditIcon fontSize="small" className="text-slate-500 hover:text-white" />
 									</div>
 								</div>
-								<div>
-									<div className="relative w-full m-2 flex items-center justify-center">
-										<span className="text-lg font-semibold">Episodes</span>
-										{item.message?.includes('Exempt') && (
-											<span className="ml-2 text-lg font-semibold">(Edited)</span>
-										)}
-										<div
-											onClick={() => setEditEpisodesCurrent(item)}
-											className="absolute right-4 flex items-center justify-center h-6 w-6 rounded-full cursor-pointer transition-colors duration-150 invisible group-hover:visible hover:bg-slate-500"
-										>
-											<EditIcon fontSize="small" className="text-slate-500 hover:text-white" />
-										</div>
-									</div>
-									<EpisodeTable item={item} />
-								</div>
-							</article>
-						)
-					})}
+								<EpisodeTable item={item} />
+							</div>
+						</article>
+					))}
 				</div>
 				{editEpisodesCurrent && <EditEpisodes />}
 				{contextMenu.currentItem && <ContextMenu />}
@@ -320,7 +326,11 @@ export default function SeasonalDetails({
 			const editLatestEpisode = parseInt(e.target[0].value)
 			try {
 				await axios.post('/api/updatedb', {
-					content: { latest_episode: editLatestEpisode, message: 'Exempt:Manual Edit' },
+					content: { 
+						latest_episode: editLatestEpisode, 
+						message: 'Exempt:Manual Edit',
+						last_updated: new Date().getTime()
+					},
 					table: 'SeasonalDetails',
 					id: editEpisodesCurrent?.mal_id,
 					compare: 'mal_id'
@@ -354,54 +364,52 @@ export default function SeasonalDetails({
 					<div className="relative grid grid-cols-2 gap-4">
 						{Array(4)
 							.fill('')
-							.map((i, index) => {
-								return (
-									<table key={index}>
-										<tbody>
-											<tr>
-												<th className="w-11">
-													{editEpisodesCurrent?.latest_episode! > 12 ? counter++ + 12 : counter++}
-												</th>
-												<th className="w-11">
-													{editEpisodesCurrent?.latest_episode! > 12 ? counter++ + 12 : counter++}
-												</th>
-												<th className="w-11">
-													{editEpisodesCurrent?.latest_episode! > 12 ? counter++ + 12 : counter++}
-												</th>
-											</tr>
-											<tr>
-												<td
-													style={{
-														background: determineEpisode(
-															editEpisodesCurrent?.latest_episode!,
-															counter - 3
-														)
-													}}
-													className="p-6"
-												/>
-												<td
-													style={{
-														background: determineEpisode(
-															editEpisodesCurrent?.latest_episode!,
-															counter - 2
-														)
-													}}
-													className="p-6"
-												/>
-												<td
-													style={{
-														background: determineEpisode(
-															editEpisodesCurrent?.latest_episode!,
-															counter - 1
-														)
-													}}
-													className="p-6"
-												/>
-											</tr>
-										</tbody>
-									</table>
-								)
-							})}
+							.map((i, index) => (
+								<table key={index}>
+									<tbody>
+										<tr>
+											<th className="w-11">
+												{editEpisodesCurrent?.latest_episode! > 12 ? counter++ + 12 : counter++}
+											</th>
+											<th className="w-11">
+												{editEpisodesCurrent?.latest_episode! > 12 ? counter++ + 12 : counter++}
+											</th>
+											<th className="w-11">
+												{editEpisodesCurrent?.latest_episode! > 12 ? counter++ + 12 : counter++}
+											</th>
+										</tr>
+										<tr>
+											<td
+												style={{
+													background: determineEpisode(
+														editEpisodesCurrent?.latest_episode!,
+														counter - 3
+													)
+												}}
+												className="p-6"
+											/>
+											<td
+												style={{
+													background: determineEpisode(
+														editEpisodesCurrent?.latest_episode!,
+														counter - 2
+													)
+												}}
+												className="p-6"
+											/>
+											<td
+												style={{
+													background: determineEpisode(
+														editEpisodesCurrent?.latest_episode!,
+														counter - 1
+													)
+												}}
+												className="p-6"
+											/>
+										</tr>
+									</tbody>
+								</table>
+							))}
 					</div>
 				</div>
 			</div>
@@ -446,39 +454,37 @@ export default function SeasonalDetails({
 			<div className="relative grid grid-cols-2 gap-4">
 				{Array(4)
 					.fill('')
-					.map((i, index) => {
-						return (
-							<table key={index}>
-								<tbody>
-									<tr>
-										<th className="w-11">
-											{item.latest_episode! > 12 ? counter++ + 12 : counter++}
-										</th>
-										<th className="w-11">
-											{item.latest_episode! > 12 ? counter++ + 12 : counter++}
-										</th>
-										<th className="w-11">
-											{item.latest_episode! > 12 ? counter++ + 12 : counter++}
-										</th>
-									</tr>
-									<tr>
-										<td
-											style={{ background: determineEpisode(item.latest_episode!, counter - 3) }}
-											className="p-6"
-										/>
-										<td
-											style={{ background: determineEpisode(item.latest_episode!, counter - 2) }}
-											className="p-6"
-										/>
-										<td
-											style={{ background: determineEpisode(item.latest_episode!, counter - 1) }}
-											className="p-6"
-										/>
-									</tr>
-								</tbody>
-							</table>
-						)
-					})}
+					.map((i, index) => (
+						<table key={index}>
+							<tbody>
+								<tr>
+									<th className="w-11">
+										{item.latest_episode! > 12 ? counter++ + 12 : counter++}
+									</th>
+									<th className="w-11">
+										{item.latest_episode! > 12 ? counter++ + 12 : counter++}
+									</th>
+									<th className="w-11">
+										{item.latest_episode! > 12 ? counter++ + 12 : counter++}
+									</th>
+								</tr>
+								<tr>
+									<td
+										style={{ background: determineEpisode(item.latest_episode!, counter - 3) }}
+										className="p-6"
+									/>
+									<td
+										style={{ background: determineEpisode(item.latest_episode!, counter - 2) }}
+										className="p-6"
+									/>
+									<td
+										style={{ background: determineEpisode(item.latest_episode!, counter - 1) }}
+										className="p-6"
+									/>
+								</tr>
+							</tbody>
+						</table>
+					))}
 				<Validate item1={item} />
 			</div>
 		)

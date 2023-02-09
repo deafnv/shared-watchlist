@@ -142,15 +142,20 @@ export default function Completed() {
 			setIsEdited('')
 		}
 
+		const closeKeyboard = (e: KeyboardEvent) => {
+			if (e.key == 'Escape' && detailsModal) setDetailsModal(null)
+		}
 
 		document.addEventListener('click', closeMenus)
 		window.addEventListener('focusout', resetEditNoFocus)
+		document.addEventListener('keydown', closeKeyboard)
 
 		return () => {
 			clearInterval(refresh)
 			databaseChannel.unsubscribe()
 			document.removeEventListener('click', closeMenus)
 			window.removeEventListener('focusout', resetEditNoFocus)
+			document.removeEventListener('keydown', closeKeyboard)
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [])
