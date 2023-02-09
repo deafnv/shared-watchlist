@@ -258,23 +258,28 @@ export default function PTW() {
 								<RefreshIcon sx={{ fontSize: 28 }} />
 							</div>}
 						</header>
-						<div
-							onClick={() => {
-								sortListByNamePTW(
-									'title',
-									responseRolled,
-									sortMethodRef,
-									setResponseRolled
-								)
-								setReordered(false)
-							}}
-							className="relative flex items-center justify-center h-10 w-[90dvw] sm:w-[30rem] bg-sky-600 cursor-pointer border-white border-solid border-[1px]"
-						>
-							<span className="font-bold">Title</span>
-							<span className="absolute left-[54%]">{sortSymbol('title', sortMethodRef)}</span>
+						<div className="grid grid-cols-[4fr_1.1fr] min-w-[80dvw] lg:min-w-0 lg:w-[40rem] bg-sky-600 border-white border-solid border-[1px]">
+							<span 
+								onClick={() => {
+									sortListByNamePTW(
+										'title',
+										responseRolled,
+										sortMethodRef,
+										setResponseRolled
+									)
+									setReordered(false)
+								}}
+								className='flex items-center justify-center p-2 h-full border-white border-r-[1px] text-center font-bold'
+							>
+								Title
+								<span className="absolute left-[54%]">{sortSymbol('title', sortMethodRef)}</span>
+							</span>
+							<span className='flex items-center justify-center p-2 h-full text-center font-bold'>
+								Status
+							</span>
 						</div>
 						{isLoadingClient ? (
-							<div className="flex flex-col items-center justify-around h-[448px] w-[90dvw] sm:w-[30rem] border-white border-solid border-[1px] border-t-0">
+							<div className="flex flex-col items-center justify-around h-[448px] w-[80dvw] lg:w-[40rem] border-white border-solid border-[1px] border-t-0">
 								{Array(8)
 									.fill('')
 									.map((item, index) => (
@@ -283,7 +288,7 @@ export default function PTW() {
 											sx={{ backgroundColor: 'grey.700' }}
 											animation="wave"
 											variant="rounded"
-											width={460}
+											width={'95%'}
 											height={40}
 										/>
 									))}
@@ -297,7 +302,7 @@ export default function PTW() {
 									setResponseRolled(newOrder)
 									setReordered(true)
 								}}
-								className="w-[90dvw] sm:w-[30rem] border-white border-solid border-[1px] border-t-0"
+								className="flex flex-col lg:w-[4fr_1fr] min-w-[80dvw] lg:min-w-full w-min border-white border-[1px] border-t-0"
 							>
 								{responseRolled?.map((item, index) => (
 									!isLoadingClient && 
@@ -307,8 +312,7 @@ export default function PTW() {
 										editFormParams={editFormParams}
 									/>
 								))}
-							</Reorder.Group>
-						)}
+							</Reorder.Group>)}
 						<div
 							style={{
 								visibility: !sortMethodRef.current && reordered.current && !isEqual(responseRolled, responseRolled1) ? 'visible' : 'hidden'
@@ -773,14 +777,15 @@ export default function PTW() {
 function Item({ props, editFormParams }: ItemProps) {
 	const { item, index, isLoadingEditForm, setIsEdited, isEdited, sortMethodRef, setContextMenu, contextMenuButtonRef } = props
 	const controls = useDragControls()
+	const statusColor = determineStatus(item)
 	return (
 		<Reorder.Item 
-			value={item} 
+			value={item}
 			dragListener={false}
 			dragControls={controls}
 			dragConstraints={{ top: -25, bottom: 25 }}
 			dragElastic={0.15}
-			className="p-0 bg-[#2e2e2e] hover:bg-neutral-700"
+			className="grid grid-cols-[4fr_1.1fr] p-0 bg-[#2e2e2e] hover:bg-neutral-700"
 		>
 			<div
 				style={{
@@ -789,30 +794,49 @@ function Item({ props, editFormParams }: ItemProps) {
 				onDoubleClick={() => setIsEdited(`rolled_${item.title}_${item.id}`)}
 				className="relative p-2 text-center group"
 			>
-				<span className="cursor-text">
+				<span className="mx-7 cursor-text">
 					{isEdited == `rolled_${item.title}_${item.id}`
 						? editForm('rolled_title', item.id, item.title!, editFormParams)
 						: item.title}
-					<div
-						ref={element => (contextMenuButtonRef.current[index] = element)}
-						onClick={(e) => {
-							handleMenuClick(e, item)
-						}}
-						className="absolute top-2 z-10 h-7 w-7 invisible group-hover:visible cursor-pointer rounded-full hover:bg-gray-500 transition-colors duration-150"
-					>
-						<MoreVertIcon />
-					</div>
-					<div
-						onPointerDown={(e) => controls.start(e)}
-						style={{ visibility: sortMethodRef.current ? 'hidden' : 'visible' }}
-						className='absolute top-1/2 right-0 z-10 flex items-center justify-center h-7 w-7 cursor-grab rounded-full transition-colors duration-150 -translate-y-1/2'
-					>
-						<DragIndicatorIcon sx={{ color: 'silver'}} />
-					</div>
 				</span>
 				{isLoadingEditForm.includes(`rolled_title_${item.id}`) && (
 					<CircularProgress size={30} className="absolute top-[20%] left-[48%]" />
 				)}
+				<div
+					ref={element => (contextMenuButtonRef.current[index] = element)}
+					onClick={(e) => {
+						handleMenuClick(e, item)
+					}}
+					className="absolute top-2 z-10 h-7 w-7 invisible group-hover:visible cursor-pointer rounded-full hover:bg-gray-500 transition-colors duration-150"
+				>
+					<MoreVertIcon />
+				</div>
+				<div
+					onPointerDown={(e) => controls.start(e)}
+					style={{ visibility: sortMethodRef.current ? 'hidden' : 'visible' }}
+					className='absolute top-1/2 right-0 z-10 flex items-center justify-center h-7 w-7 cursor-grab rounded-full transition-colors duration-150 -translate-y-1/2'
+				>
+					<DragIndicatorIcon sx={{ color: 'silver'}} />
+				</div>
+			</div>
+			<div
+				style={{
+					backgroundColor: statusColor,
+					opacity: isLoadingEditForm.includes(`status_${item.id}`) ? 0.5 : 1
+				}}
+				/* onDoubleClick={() => {
+					setIsEdited(`seasonal_status_${item.title}_${item.id}`)
+				}} */
+				className="relative flex items-center justify-center"
+			>
+				{/* <span className='flex items-center justify-center'>
+					{isEdited == `seasonal_status_${item.title}_${item.order}`
+						? editStatus(item.order, item.title!)
+						: ''}
+				</span>
+				{isLoadingEditForm.includes(`status_${item.id}`) && (
+					<CircularProgress size={30} className="absolute top-[20%] left-[48%]" />
+				)} */}
 			</div>
 		</Reorder.Item>
 	)
@@ -828,6 +852,27 @@ function Item({ props, editFormParams }: ItemProps) {
 			left: left + window.scrollX + 25,
 			currentItem: item
 		})
+	}
+
+	function determineStatus(item: Database['public']['Tables']['PTW-Rolled']['Row']) {
+		let status
+		switch (item.status) {
+			case 'Not loaded':
+				status = 'crimson'
+				break
+			case 'Loaded':
+				status = 'orange'
+				break
+			case 'Watched':
+				status = 'green'
+				break
+			case 'Not aired':
+				status = 'black'
+				break
+			default:
+				status = ''
+		}
+		return status
 	}
 }
 
