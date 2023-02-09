@@ -291,7 +291,6 @@ export default function PTW() {
 						) : (
 							<Reorder.Group
 								values={responseRolled ?? []}
-								dragConstraints={{ top: 0, bottom: 0 }}
 								draggable={sortMethodRef.current ? true : false}
 								onReorder={(newOrder) => {
 									setContextMenu({ top: 0, left: 0, currentItem: null })
@@ -779,7 +778,9 @@ function Item({ props, editFormParams }: ItemProps) {
 			value={item} 
 			dragListener={false}
 			dragControls={controls}
-			className="p-0 hover:bg-neutral-700"
+			dragConstraints={{ top: -25, bottom: 25 }}
+			dragElastic={0.15}
+			className="p-0 bg-[#2e2e2e] hover:bg-neutral-700"
 		>
 			<div
 				style={{

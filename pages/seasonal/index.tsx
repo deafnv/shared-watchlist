@@ -183,7 +183,6 @@ export default function Seasonal() {
 					</div>
 					<Reorder.Group
 						values={response}
-						dragConstraints={{ top: 500 }}
 						/* draggable={sortMethod ? true : false} */
 						onReorder={(newOrder) => {
 							setResponse(newOrder)
@@ -449,7 +448,9 @@ function Item({ props }: ItemProps) {
 			value={item}
 			dragListener={false}
       dragControls={controls}
-			className="grid grid-cols-[5fr_1fr] lg:grid-cols-[30rem_10rem_10rem_8rem] p-0 hover:bg-neutral-700"
+			dragConstraints={{ top: -25, bottom: 25 }}
+			dragElastic={0.15}
+			className="grid grid-cols-[5fr_1fr] lg:grid-cols-[30rem_10rem_10rem_8rem] p-0 bg-[#2e2e2e] hover:bg-neutral-700"
 		>
 			<div
 				style={{
