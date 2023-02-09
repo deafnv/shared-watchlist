@@ -191,20 +191,12 @@ export default function Seasonal() {
 						}}
 						className="flex flex-col lg:w-[40rem] min-w-[95dvw] lg:min-w-full w-min border-white border-[1px] border-t-0"
 					>
-						{response?.map((item: any, index: any) => 
-						<Item 
-							key={item.order} 
-							item={item} 
-							index={index}
-							contextMenuButtonRef={contextMenuButtonRef}
-							isEdited={isEdited}
-							isLoadingEditForm={isLoadingEditForm}
-							response={response}
-							setContextMenu={setContextMenu}
-							setIsEdited={setIsEdited}
-							setIsLoadingEditForm={setIsLoadingEditForm}
-							setResponse={setResponse}
-						/>)}
+						{response?.map((item: any, index: any) => (
+							<Item 
+								key={item.order} 
+								props={{ item, index, setIsLoadingEditForm, isLoadingEditForm, setIsEdited, isEdited, contextMenuButtonRef, setContextMenu, response, setResponse }}
+							/>
+						))}
 					</Reorder.Group>
 					<div
 						style={{
@@ -429,23 +421,26 @@ export default function Seasonal() {
 }
 
 interface ItemProps { 
-	item: any, 
-	index: number,
-	setIsLoadingEditForm: Dispatch<SetStateAction<string[]>>,
-	isLoadingEditForm: string[],
-	setIsEdited: Dispatch<SetStateAction<string>>,
-	isEdited: string,
-	contextMenuButtonRef: MutableRefObject<any>,
-	setContextMenu: Dispatch<SetStateAction<{
-    top: number;
-    left: number;
-    currentItem: any | null;
-	}>>,
-	response: any,
-	setResponse: Dispatch<any>
+	props: {
+		item: any, 
+		index: number,
+		setIsLoadingEditForm: Dispatch<SetStateAction<string[]>>,
+		isLoadingEditForm: string[],
+		setIsEdited: Dispatch<SetStateAction<string>>,
+		isEdited: string,
+		contextMenuButtonRef: MutableRefObject<any>,
+		setContextMenu: Dispatch<SetStateAction<{
+			top: number;
+			left: number;
+			currentItem: any | null;
+		}>>,
+		response: any,
+		setResponse: Dispatch<any>
+	}
 }
 
-function Item({ item, index, setIsLoadingEditForm, isLoadingEditForm, setIsEdited, isEdited, contextMenuButtonRef, setContextMenu, response, setResponse }: ItemProps) {
+function Item({ props }: ItemProps) {
+	const { item, index, setIsLoadingEditForm, isLoadingEditForm, setIsEdited, isEdited, contextMenuButtonRef, setContextMenu, response, setResponse } = props
 	const controls = useDragControls()
 	const statusColor = determineStatus(item)
 	const startDate = new Date(item?.SeasonalDetails?.[0]?.start_date).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })

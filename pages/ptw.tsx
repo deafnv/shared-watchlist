@@ -24,6 +24,8 @@ export default function PTW() {
 	const contextMenuRef = useRef<HTMLDivElement>(null)
 	const contextMenuButtonRef = useRef<any>([])
 	const sortMethodRef = useRef('')
+	const reordered = useRef(false)
+	const setReordered = (value: boolean) => reordered.current = value 
 
 	const [responseRolled, setResponseRolled] =
 		useState<Database['public']['Tables']['PTW-Rolled']['Row'][]>()
@@ -36,7 +38,6 @@ export default function PTW() {
 	const [responseMovies, setResponseMovies] =
 		useState<Database['public']['Tables']['PTW-Movies']['Row'][]>()
 	const [isEdited, setIsEdited] = useState<string>('')
-	const [reordered, setReordered] = useState(false)
 	const [isLoadingClient, setIsLoadingClient] = useState(true)
 	const [isLoadingEditForm, setIsLoadingEditForm] = useState<Array<string>>([])
 	const [contextMenu, setContextMenu] = useState<{
@@ -299,28 +300,19 @@ export default function PTW() {
 								}}
 								className="w-[90dvw] sm:w-[30rem] border-white border-solid border-[1px] border-t-0"
 							>
-								{responseRolled?.map((item, index) => {
-									return (
-										!isLoadingClient && 
-										<Item 
-											key={item.id}
-											contextMenuButtonRef={contextMenuButtonRef}
-											editFormParams={editFormParams}
-											index={index}
-											isEdited={isEdited}
-											isLoadingEditForm={isLoadingEditForm}
-											item={item}
-											setContextMenu={setContextMenu}
-											setIsEdited={setIsEdited}
-											sortMethodRef={sortMethodRef}
-										/>
-									)
-								})}
+								{responseRolled?.map((item, index) => (
+									!isLoadingClient && 
+									<Item 
+										key={item.id}
+										props={{ item, index, isLoadingEditForm, setIsEdited, isEdited, sortMethodRef, setContextMenu, contextMenuButtonRef }}
+										editFormParams={editFormParams}
+									/>
+								))}
 							</Reorder.Group>
 						)}
 						<div
 							style={{
-								visibility: !sortMethodRef.current && reordered && !isEqual(responseRolled, responseRolled1) ? 'visible' : 'hidden'
+								visibility: !sortMethodRef.current && reordered.current && !isEqual(responseRolled, responseRolled1) ? 'visible' : 'hidden'
 							}}
 							className="flex flex-col items-center w-[30rem] px-2"
 						>
@@ -331,14 +323,11 @@ export default function PTW() {
 							<div className="flex gap-2 my-2">
 								<button
 									className="input-submit p-2 rounded-md"
-									onClick={() => {
-										saveReorder(
+									onClick={() => saveReorder(
 											responseRolled,
 											setLoading,
 											setReordered
-										)
-										setReordered(false)
-									}}
+									)}
 								>
 									Save Changes
 								</button>
@@ -782,23 +771,8 @@ export default function PTW() {
 	}
 }
 
-interface ItemProps {
-	item: Database['public']['Tables']['PTW-Rolled']['Row'],
-	index: number,
-	isLoadingEditForm: string[],
-	setIsEdited: Dispatch<SetStateAction<string>>,
-	isEdited: string,
-	sortMethodRef: MutableRefObject<string>,
-	setContextMenu: Dispatch<SetStateAction<{
-    top: number;
-    left: number;
-    currentItem: Database['public']['Tables']['PTW-Rolled']['Row'] | null;
-	}>>,
-	contextMenuButtonRef: MutableRefObject<any>,
-	editFormParams: EditFormParams
-}
-
-function Item({ item, index, isLoadingEditForm, setIsEdited, isEdited, sortMethodRef, setContextMenu, contextMenuButtonRef, editFormParams }: ItemProps) {
+function Item({ props, editFormParams }: ItemProps) {
+	const { item, index, isLoadingEditForm, setIsEdited, isEdited, sortMethodRef, setContextMenu, contextMenuButtonRef } = props
 	const controls = useDragControls()
 	return (
 		<Reorder.Item 
@@ -829,9 +803,7 @@ function Item({ item, index, isLoadingEditForm, setIsEdited, isEdited, sortMetho
 					</div>
 					<div
 						onPointerDown={(e) => controls.start(e)}
-						style={{
-							visibility: sortMethodRef.current ? 'hidden' : 'visible'
-						}}
+						style={{ visibility: sortMethodRef.current ? 'hidden' : 'visible' }}
 						className='absolute top-1/2 right-0 z-10 flex items-center justify-center h-7 w-7 cursor-grab rounded-full transition-colors duration-150 -translate-y-1/2'
 					>
 						<DragIndicatorIcon sx={{ color: 'silver'}} />
@@ -856,6 +828,24 @@ function Item({ item, index, isLoadingEditForm, setIsEdited, isEdited, sortMetho
 			currentItem: item
 		})
 	}
+}
+
+interface ItemProps {
+	props: {
+		item: Database['public']['Tables']['PTW-Rolled']['Row'],
+		index: number,
+		isLoadingEditForm: string[],
+		setIsEdited: Dispatch<SetStateAction<string>>,
+		isEdited: string,
+		sortMethodRef: MutableRefObject<string>,
+		setContextMenu: Dispatch<SetStateAction<{
+			top: number;
+			left: number;
+			currentItem: Database['public']['Tables']['PTW-Rolled']['Row'] | null;
+		}>>,
+		contextMenuButtonRef: MutableRefObject<any>,
+	}
+	editFormParams: EditFormParams
 }
 
 function editForm(
@@ -972,7 +962,7 @@ function editForm(
 async function saveReorder(
 	responseRolled: Database['public']['Tables']['PTW-Rolled']['Row'][] | undefined,
 	setLoading: Dispatch<SetStateAction<boolean>>,
-	setReordered: Dispatch<SetStateAction<boolean>>
+	setReordered: (value: boolean) => boolean
 ) {
 	setLoading(true)
 	let endRowIndex = responseRolled!.length + 1
@@ -983,8 +973,8 @@ async function saveReorder(
 			type: 'PTW'
 		})
 
-		setLoading(false)
 		setReordered(false)
+		setLoading(false)
 	} catch (error) {
 		setLoading(false)
 		alert(error)
