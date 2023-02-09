@@ -611,7 +611,7 @@ function Item({ props }: ItemProps) {
 
 		return (
 			<div
-				style={{ backgroundColor: isLoadingEditForm ? 'black' : 'unset' }}
+				style={{ backgroundColor: isLoadingEditForm.includes(`status_${order}`) ? 'black' : 'unset' }}
 				className="flex items-center justify-center relative w-full"
 			>
 				<div

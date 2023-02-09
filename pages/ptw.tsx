@@ -258,7 +258,7 @@ export default function PTW() {
 								<RefreshIcon sx={{ fontSize: 28 }} />
 							</div>}
 						</header>
-						<div className="grid grid-cols-[4fr_1.1fr] min-w-[80dvw] lg:min-w-0 lg:w-[40rem] bg-sky-600 border-white border-solid border-[1px]">
+						<div className="grid grid-cols-[4fr_1.1fr] min-w-0 w-[80dvw] lg:w-[40rem] bg-sky-600 border-white border-solid border-[1px]">
 							<span 
 								onClick={() => {
 									sortListByNamePTW(
@@ -302,13 +302,13 @@ export default function PTW() {
 									setResponseRolled(newOrder)
 									setReordered(true)
 								}}
-								className="flex flex-col lg:w-[4fr_1fr] min-w-[80dvw] lg:min-w-full w-min border-white border-[1px] border-t-0"
+								className="flex flex-col min-w-[80dvw] lg:min-w-full w-min border-white border-[1px] border-t-0"
 							>
 								{responseRolled?.map((item, index) => (
 									!isLoadingClient && 
 									<Item 
 										key={item.id}
-										props={{ item, index, isLoadingEditForm, setIsEdited, isEdited, sortMethodRef, setContextMenu, contextMenuButtonRef }}
+										props={{ item, index, isLoadingEditForm, setIsEdited, isEdited, sortMethodRef, setContextMenu, contextMenuButtonRef, responseRolled, setResponseRolled, setIsLoadingEditForm }}
 										editFormParams={editFormParams}
 									/>
 								))}
@@ -775,7 +775,7 @@ export default function PTW() {
 }
 
 function Item({ props, editFormParams }: ItemProps) {
-	const { item, index, isLoadingEditForm, setIsEdited, isEdited, sortMethodRef, setContextMenu, contextMenuButtonRef } = props
+	const { item, index, isLoadingEditForm, setIsEdited, isEdited, sortMethodRef, setContextMenu, contextMenuButtonRef, responseRolled, setResponseRolled, setIsLoadingEditForm } = props
 	const controls = useDragControls()
 	const statusColor = determineStatus(item)
 	return (
@@ -824,22 +824,76 @@ function Item({ props, editFormParams }: ItemProps) {
 					backgroundColor: statusColor,
 					opacity: isLoadingEditForm.includes(`status_${item.id}`) ? 0.5 : 1
 				}}
-				/* onDoubleClick={() => {
-					setIsEdited(`seasonal_status_${item.title}_${item.id}`)
-				}} */
+				onDoubleClick={() => {
+					setIsEdited(`rolled_status_${item.id}`)
+				}}
 				className="relative flex items-center justify-center"
 			>
-				{/* <span className='flex items-center justify-center'>
-					{isEdited == `seasonal_status_${item.title}_${item.order}`
-						? editStatus(item.order, item.title!)
+				<span className='flex items-center justify-center'>
+					{isEdited == `rolled_status_${item.id}`
+						? editStatus(item.id)
 						: ''}
 				</span>
-				{isLoadingEditForm.includes(`status_${item.id}`) && (
-					<CircularProgress size={30} className="absolute top-[20%] left-[48%]" />
-				)} */}
+				{isLoadingEditForm.includes(`rolled_status_${item.id}`) && (
+					<CircularProgress size={30} className="absolute top-[16%] left-[35%]" />
+				)}
 			</div>
 		</Reorder.Item>
 	)
+
+	function editStatus(id: number) {
+		async function handleSubmit(event: BaseSyntheticEvent) {
+			event.preventDefault()
+			setIsLoadingEditForm(isLoadingEditForm.concat(`rolled_status_${id}`))
+
+			let row = id + 2
+			try {
+				await axios.post('/api/seasonal/updatestatus', {
+					content: event.target.childNodes[0].value,
+					cells: `N${row}:N${row}`
+				})
+
+				const changed = responseRolled?.slice()
+				if (!changed) return
+				changed.find((item: any) => item.id === id)!['status'] = event.target.childNodes[0].value
+				setResponseRolled(changed)
+				setIsEdited('')
+				setIsLoadingEditForm(isLoadingEditForm.filter((item) => item == `rolled_status_${id}`))
+			} catch (error) {
+				setIsLoadingEditForm(isLoadingEditForm.filter((item) => item == `rolled_status_${id}`))
+				alert(error)
+				return
+			}
+		}
+
+		return (
+			<div
+				style={{ backgroundColor: isLoadingEditForm.includes(`rolled_status_${id}`) ? 'black' : 'unset' }}
+				className="flex items-center justify-center relative w-full"
+			>
+				<div
+					style={{
+						opacity: isLoadingEditForm.includes(`rolled_status_${id}`) ? 0.5 : 1,
+						pointerEvents: isLoadingEditForm.includes(`rolled_status_${id}`) ? 'none' : 'unset'
+					}}
+					className="w-full"
+				>
+					<form onSubmit={handleSubmit} className="text-gray-800">
+						<select
+							onChange={(e) => {
+								;(e.target.parentNode as HTMLFormElement)!.requestSubmit()
+							}}
+							className="h-full w-full"
+						>
+							<option>Select status</option>
+							<option>Loaded</option>
+							<option>Not loaded</option>
+						</select>
+					</form>
+				</div>
+			</div>
+		)
+	}
 
 	function handleMenuClick(
 		e: BaseSyntheticEvent,
@@ -890,6 +944,9 @@ interface ItemProps {
 			currentItem: Database['public']['Tables']['PTW-Rolled']['Row'] | null;
 		}>>,
 		contextMenuButtonRef: MutableRefObject<any>,
+		responseRolled: Database['public']['Tables']['PTW-Rolled']['Row'][] | undefined,
+		setResponseRolled: Dispatch<SetStateAction<Database['public']['Tables']['PTW-Rolled']['Row'][] | undefined>>,
+		setIsLoadingEditForm: Dispatch<SetStateAction<string[]>>,
 	}
 	editFormParams: EditFormParams
 }
