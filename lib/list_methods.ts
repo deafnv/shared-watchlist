@@ -183,12 +183,58 @@ export const sortListByNameSupabase = (
 		SetStateAction<Database['public']['Tables']['Completed']['Row'][] | undefined>
 	>
 ) => {
-	if (sortMethodRef.current === `titleasc_title`) {
-		sortMethodRef.current = 'titledesc_title'
+	if (sortMethodRef.current === `asc_title`) {
+		sortMethodRef.current = 'desc_title'
 		setResponse(res?.slice().sort((a, b) => a.title!.localeCompare(b.title!)))
 	} else {
-		sortMethodRef.current = 'titleasc_title'
+		sortMethodRef.current = 'asc_title'
 		setResponse(res?.slice().sort((a, b) => b.title!.localeCompare(a.title!)))
+	}
+}
+
+export const sortListByTypeSupabase = (
+	res: Database['public']['Tables']['Completed']['Row'][] | undefined,
+	sortMethodRef: MutableRefObject<string>,
+	setResponse: Dispatch<
+		SetStateAction<Database['public']['Tables']['Completed']['Row'][] | undefined>
+	>
+) => {
+	if (sortMethodRef.current === `asc_type`) {
+		sortMethodRef.current = 'desc_type'
+		setResponse(res?.slice().sort((a, b) => a.type!.localeCompare(b.type!)))
+	} else {
+		sortMethodRef.current = 'asc_type'
+		setResponse(res?.slice().sort((a, b) => b.type!.localeCompare(a.type!)))
+	}
+}
+
+export const sortListByEpisodeSupabase = (
+	res: Database['public']['Tables']['Completed']['Row'][] | undefined,
+	sortMethodRef: MutableRefObject<string>,
+	setResponse: Dispatch<
+		SetStateAction<Database['public']['Tables']['Completed']['Row'][] | undefined>
+	>
+) => {
+	if (sortMethodRef.current === `desc_episode`) {
+		sortMethodRef.current = `asc_episode`
+		setResponse(
+			res?.slice().sort((a, b) => {
+				if (a.episode_actual == null) {
+					return -1
+				}
+				return a.episode_actual! - b.episode_actual!
+			})
+		)
+	} else {
+		sortMethodRef.current = `desc_episode`
+		setResponse(
+			res?.slice().sort((a, b) => {
+				if (b.episode_actual == null) {
+					return -1
+				}
+				return b.episode_actual! - a.episode_actual!
+			})
+		)
 	}
 }
 
@@ -207,7 +253,7 @@ export const sortListByRatingSupabase = (
 				if (a[`${rating}average`] == null) {
 					return -1
 				}
-				return b[`${rating}average`]! - a[`${rating}average`]!
+				return a[`${rating}average`]! - b[`${rating}average`]!
 			})
 		)
 	} else {
@@ -217,7 +263,7 @@ export const sortListByRatingSupabase = (
 				if (b[`${rating}average`] == null) {
 					return -1
 				}
-				return a[`${rating}average`]! - b[`${rating}average`]!
+				return b[`${rating}average`]! - a[`${rating}average`]!
 			})
 		)
 	}

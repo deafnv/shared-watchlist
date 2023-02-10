@@ -6,8 +6,10 @@ import { Database } from '../../lib/database.types'
 import {
 	initialTitleItemSupabase,
 	sortListByDateSupabase,
+	sortListByEpisodeSupabase,
 	sortListByNameSupabase,
 	sortListByRatingSupabase,
+	sortListByTypeSupabase,
 	sortSymbol
 } from '../../lib/list_methods'
 import { loadingGlimmer } from '../../components/LoadingGlimmer'
@@ -226,8 +228,26 @@ export default function Completed() {
 								<span>Title</span>
 								<span className="absolute">{sortSymbol('title', sortMethodRef)}</span>
 							</th>
-							<th className="w-32 hidden md:table-cell">Type</th>
-							<th className="w-36 hidden md:table-cell">Episode(s)</th>
+							<th
+								tabIndex={0}
+								onClick={() =>
+									sortListByTypeSupabase(response, sortMethodRef, setResponse)
+								}
+								className="w-32 hidden md:table-cell cursor-pointer"
+							>
+								<span>Type</span>
+								<span className="absolute">{sortSymbol('type', sortMethodRef)}</span>
+							</th>
+							<th 
+								tabIndex={0}
+								onClick={() =>
+									sortListByEpisodeSupabase(response, sortMethodRef, setResponse)
+								}
+								className="w-36 hidden md:table-cell cursor-pointer"
+							>
+								<span>Episode(s)</span>
+								<span className="absolute">{sortSymbol('episode', sortMethodRef)}</span>
+							</th>
 							<th
 								tabIndex={0}
 								onClick={() =>
