@@ -53,7 +53,6 @@ export default function App({ Component, pageProps }: AppProps) {
 		document.addEventListener('keydown', (e) => {
 			if (e.key == 'Enter') {
 				(document.activeElement as HTMLElement)?.click()
-				console.log('etner pressed')
 			}
 		})
 

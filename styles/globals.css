@@ -167,6 +167,10 @@ ul > li {
 	filter: invert(100%);
 }
 
+input[type="date"]::-webkit-calendar-picker-indicator {
+	color-scheme: dark;
+}
+
 /** Custom radio button styling */
 .radio-container,
 input[type='radio'] {

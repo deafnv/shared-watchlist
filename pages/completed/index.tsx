@@ -782,12 +782,18 @@ export default function Completed() {
 		}
 
 		async function handleSubmit(event: BaseSyntheticEvent): Promise<void> {
+			const isDate = field == 'start' || field == 'end'
+			const dateEntered = new Date(event.target[0].value)
 			event.preventDefault()
 			setIsLoadingEditForm(isLoadingEditForm.concat(`${field}_${id}`))
 
 			try {
 				await axios.post('/api/update', {
-					content: event.target[0].value,
+					content: isDate ? (dateEntered.toString() == 'Invalid Date' ? 'Unknown' : dateEntered.toLocaleDateString('en-US', {
+						day: 'numeric',
+						month: 'long',
+						year: 'numeric'
+					})) : event.target[0].value,
 					cell: column + row
 				})
 
@@ -798,6 +804,30 @@ export default function Completed() {
 				alert(error)
 				return
 			}
+		}
+
+		if (field == 'start' || field == 'end') {
+			return (
+				<div className="flex items-center justify-center relative w-full">
+					<div
+						style={{
+							opacity: isLoadingEditForm.includes(`${field}_${id}`) ? 0.5 : 1,
+							pointerEvents: isLoadingEditForm.includes(`${field}_${id}`) ? 'none' : 'unset',
+						}}
+						className="w-[90%]"
+					>
+						<form onChange={(e) => (e.target as HTMLElement).focus()} onSubmit={handleSubmit}>
+							<input
+								autoFocus
+								type="date"
+								defaultValue={new Date(ogvalue).toLocaleDateString('en-CA')}
+								className="input-text text-center w-full"
+							/>
+							<input type='submit' className='hidden' />
+						</form>
+					</div>
+				</div>
+			)
 		}
 
 		return (
