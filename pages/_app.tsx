@@ -49,6 +49,13 @@ export default function App({ Component, pageProps }: AppProps) {
 		router.events.on('routeChangeStart', handleRouteStart)
 		router.events.on('routeChangeComplete', handleRouteDone)
 		router.events.on('routeChangeError', handleRouteDone)
+		
+		document.addEventListener('keydown', (e) => {
+			if (e.key == 'Enter') {
+				(document.activeElement as HTMLElement)?.click()
+				console.log('etner pressed')
+			}
+		})
 
 		return () => {
 			// Make sure to remove the event handler on unmount!

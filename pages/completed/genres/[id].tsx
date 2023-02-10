@@ -80,7 +80,7 @@ export default function GenrePage({ id }: { id: number }) {
 				</Head>
 
 				<main className="flex flex-col items-center justify-center gap-3 mx-auto h-[90dvh] md:w-3/5 sm:w-full">
-					<h2 className="p-2 text-3xl">No results found</h2>
+					<h2 className="p-2 text-2xl sm:text-3xl">No results found</h2>
 				</main>
 			</>
 		)
@@ -101,7 +101,7 @@ export default function GenrePage({ id }: { id: number }) {
 			</Head>
 
 			<main className="flex flex-col items-center justify-center gap-3 mx-auto md:w-3/5 sm:w-full">
-				<h2 className="p-2 text-3xl">
+				<h2 className="p-2 text-2xl sm:text-3xl">
 					{(response?.[0]?.Genres as { name: string | null }[])?.[0].name}
 				</h2>
 				<ul className="flex flex-col gap-2 h-[80dvh] overflow-auto border-[1px] border-white">

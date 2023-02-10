@@ -72,7 +72,7 @@ export default function Navbar({ children }: React.PropsWithChildren) {
 		<>
 			{loading && <Loading />}
 			<nav
-				className="sticky top-0 z-50 h-[60px] w-full flex items-center justify-center gap-[20%] bg-black bg-opacity-60 border-b-[1px] backdrop-blur-md backdrop-filter"
+				className="sticky top-0 z-50 h-[60px] min-w-full flex items-center justify-center gap-[20%] bg-black bg-opacity-60 border-b-[1px] backdrop-blur-md backdrop-filter"
 				style={{
 					borderImage: 'linear-gradient(to right, rgb(218, 51, 190), rgb(191, 94, 255))',
 					borderImageSlice: 1,
@@ -81,7 +81,7 @@ export default function Navbar({ children }: React.PropsWithChildren) {
 				}}
 			>
 				<div className="flex items-center">
-					<span className="absolute left-8 text-center 2xl:w-max xl:w-40 lg:w-40 lg:visible invisible">
+					<span className="absolute right-8 text-center 2xl:w-max xl:w-40 lg:w-40 lg:visible invisible">
 						{timer == 'Error'
 							? 'Error'
 							: new Intl.DateTimeFormat('en-GB', {
@@ -89,17 +89,18 @@ export default function Navbar({ children }: React.PropsWithChildren) {
 									timeStyle: 'long'
 							  }).format(new Date(timer!))}
 					</span>
-					<ul>
+					<ul className='flex items-center'>
 						{navLinks.map((link, index) => {
 							if (link.dropdown)
 								return (
 									<li
 										key={index}
-										className="relative inline px-4 py-4 mx-2 rounded-lg hover:bg-pink-400 transition-colors duration-150 cursor-default group"
+										tabIndex={0}
+										className="relative inline px-2 sm:px-4 py-4 mx-0 sm:mx-2 max-h-[60px] text-[0.75rem] sm:text-base rounded-lg hover:bg-pink-400 focus:bg-pink-400 transition-colors duration-150 cursor-default group"
 									>
 										<div
 											style={{ left: link.posLeft }}
-											className="absolute top-[3.4rem] z-50 h-max w-36 bg-black border-pink-400 border-[1px] rounded-md hidden group-hover:block"
+											className="absolute top-[3.4rem] translate-x-2 sm:translate-x-0 z-50 h-max sm:w-36 bg-black border-pink-400 border-[1px] rounded-md hidden group-hover:block group-focus-within:block"
 										>
 											<ul className="py-1">
 												{link.dropdown.map((item, index) => {
@@ -107,7 +108,11 @@ export default function Navbar({ children }: React.PropsWithChildren) {
 														<li key={index} className="flex py-0">
 															<Link
 																href={item.route}
-																className="h-full w-full px-3 py-3 rounded-md text-center hover:bg-pink-400 transition-colors duration-150"
+																style={{
+																	background: item.route == router.pathname ? 'rgb(244 114 182)' : '',
+																	pointerEvents: item.route == router.pathname ? 'none' : 'auto'
+																}}
+																className="h-full w-full px-3 py-3 rounded-md text-center hover:bg-pink-400 focus:bg-pink-400 transition-colors duration-150"
 															>
 																{item.name}
 															</Link>
@@ -125,9 +130,10 @@ export default function Navbar({ children }: React.PropsWithChildren) {
 										<Link
 											href={link.route}
 											style={{
-												background: link.route == router.pathname ? 'rgb(244 114 182)' : ''
+												background: link.route == router.pathname ? 'rgb(244 114 182)' : '',
+												pointerEvents: link.route == router.pathname ? 'none' : 'auto'
 											}}
-											className="p-4 rounded-lg hover:bg-pink-400 focus:bg-pink-400 transition-colors duration-150"
+											className="px-2 sm:px-4 py-4 text-[0.75rem] sm:text-base rounded-lg hover:bg-pink-400 focus:bg-pink-400 transition-colors duration-150"
 										>
 											{link.name}
 										</Link>

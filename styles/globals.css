@@ -73,6 +73,18 @@ a {
 	/* outline: 1px solid #f00 !important; */
 }
 
+@media (max-width: 640px) {
+  body {
+		font-size: small;
+	}
+}
+
+@media (max-width: 320px) {
+  body {
+		font-size: x-small;
+	}
+}
+
 /* @media (prefers-color-scheme: dark) {
   html {
     color-scheme: dark;
@@ -199,6 +211,30 @@ input[type='radio'] {
 	animation: fadeInSize 100ms ease-in-out;
 }
 
+@media (max-width: 640px) {
+  .radio-container .custom-radio {
+		height: 0.8rem;
+		width: 0.8rem;
+	}
+
+	.radio-container:has(input[type='radio']:checked) > .custom-radio::after {
+		height: 0.45rem;
+		width: 0.45rem;
+	}
+}
+
+@media (max-width: 320px) {
+  .radio-container .custom-radio {
+		height: 0.6rem;
+		width: 0.6rem;
+	}
+
+	.radio-container:has(input[type='radio']:checked) > .custom-radio::after {
+		height: 0.35rem;
+		width: 0.35rem;
+	}
+}
+
 /** Custom checkbox styling */
 .checkbox-container,
 input[type='checkbox'] {
@@ -218,6 +254,20 @@ input[type='checkbox'] {
 	border-radius: 15%;
 	border-width: 1px;
 	border-color: rgb(13, 130, 207);
+}
+
+@media (max-width: 640px) {
+  .checkbox-container .custom-checkbox {
+		min-height: 0.8rem;
+		min-width: 0.8rem;
+	}
+}
+
+@media (max-width: 320px) {
+  .checkbox-container .custom-checkbox {
+		min-height: 0.6rem;
+		min-width: 0.6rem;
+	}
 }
 
 .checkbox-container:hover > .custom-checkbox {

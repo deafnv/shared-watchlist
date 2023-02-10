@@ -25,9 +25,7 @@ import {
 	variance,
 	medianAbsoluteDeviation,
 	sampleCorrelation,
-	sampleCovariance,
-	linearRegression,
-	linearRegressionLine
+	sampleCovariance
 } from 'simple-statistics'
 import 'chartjs-adapter-date-fns'
 import dynamic from 'next/dynamic'
@@ -396,7 +394,7 @@ export default function Statistics({
 			</Head>
 
 			<main className="flex flex-col items-center justify-center mb-24 px-6 py-2">
-				<h2 className="p-2 text-3xl">Statistics</h2>
+				<h2 className="p-2 text-2xl sm:text-3xl">Statistics</h2>
 				<div className="grid grid-cols-2 gap-4 place-items-center">
 					<section className="flex flex-col col-span-2 md:col-span-1 items-center justify-center px-6 py-4 w-[25rem] border-[1px] border-white">
 						<h3 className="text-2xl font-semibold text-center">Title count</h3>
@@ -448,6 +446,7 @@ export default function Statistics({
 						<div className="flex items-center justify-center w-full bg-sky-600 border-white border-solid border-[1px] border-b-0">
 							<div className="grow p-3 text-lg text-center font-semibold">Title</div>
 							<div
+								tabIndex={0}
 								onClick={() =>
 									handleSort(
 										rating1ByGenre,
@@ -467,6 +466,7 @@ export default function Statistics({
 								)}
 							</div>
 							<div
+								tabIndex={0}
 								onClick={() =>
 									handleSort(
 										rating1ByGenre,
@@ -515,6 +515,7 @@ export default function Statistics({
 						<div className="flex items-center justify-center w-full bg-sky-600 border-white border-solid border-[1px] border-b-0">
 							<div className="grow p-3 text-lg text-center font-semibold">Title</div>
 							<div
+								tabIndex={0}
 								onClick={() =>
 									handleSort(
 										rating2ByGenre,
@@ -534,6 +535,7 @@ export default function Statistics({
 								)}
 							</div>
 							<div
+								tabIndex={0}
 								onClick={() =>
 									handleSort(
 										rating2ByGenre,

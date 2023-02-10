@@ -41,8 +41,8 @@ export default function CompletedDetails() {
 			</Head>
 
 			<main className="flex flex-col items-center justify-center px-6 py-2">
-				<h2 className="text-3xl">Genres</h2>
-				<span onClick={() => setAdvancedSearch('block')} className="mb-2 cursor-pointer link">
+				<h2 className="text-2xl sm:text-3xl">Genres</h2>
+				<span tabIndex={0} onClick={() => setAdvancedSearch('block')} className="mb-2 cursor-pointer link">
 					Advanced Search
 				</span>
 				<div className="grid grid-cols-3 gap-x-12 md:gap-x-24 gap-y-3">

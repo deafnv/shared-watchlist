@@ -82,17 +82,22 @@ export default function CompletedPage({ id }: { id: number }) {
 				<link rel="icon" href="/favicon.ico" />
 			</Head>
 
-			<main className="flex flex-col items-center justify-center mx-auto mb-16 px-12 py-6 md:w-3/5 sm:w-full">
+			<main className="flex flex-col items-center justify-center mx-auto mb-16 px-6 sm:px-12 py-6 md:w-3/5 sm:w-full">
 				<div className="relative h-full">
-					<h3 className="p-2 text-2xl font-semibold text-center">{response?.[0].title}</h3>
+					<h3 className="p-2 text-2xl sm:text-3xl font-semibold text-center">{response?.[0].title}</h3>
 					<div
 						onClick={() => (editModalRef.current!.style.display = 'block')}
-						className="absolute -top-2 -right-12 sm:-right-20 md:top-0 md:-right-52 lg:-right-60 xl:-right-72 flex items-center justify-center h-11 w-11 rounded-full cursor-pointer transition-colors duration-150 hover:bg-slate-500"
+						className="absolute -top-2 -right-12 xs:top-0 xs:-right-24 sm:-right-20 md:top-0 md:-right-52 lg:-right-60 xl:-right-72 flex items-center justify-center h-7 sm:h-11 w-7 sm:w-11 rounded-full cursor-pointer transition-colors duration-150 hover:bg-slate-500"
 					>
-						<EditIcon fontSize="large" />
+						<EditIcon sx={{
+							fontSize: {
+								sm: 20,
+								lg: 30	
+							}
+						}} />
 					</div>
 				</div>
-				<h5 className="text-lg text-center">
+				<h5 className="text-base sm:text-lg text-center">
 					{response?.[0].CompletedDetails.mal_alternative_title}
 				</h5>
 				<Image

@@ -169,14 +169,15 @@ export default function Completed() {
 				<link rel="icon" href="/favicon.ico" />
 			</Head>
 
-			<main className="flex flex-col items-center justify-center mb-24 px-6 py-2">
+			<main className="flex flex-col items-center justify-center mb-24 px-0 sm:px-6 py-2">
 				<header className='flex items-center'>
-					<h2 className="p-2 text-3xl">
+					<h2 className="p-2 text-2xl sm:text-3xl">
 						Completed
 					</h2>
 					{sortMethodRef.current &&
 					<div
 						title="Reset sort"
+						tabIndex={0}
 						onClick={() => {
 							sortMethodRef.current = ''
 							setResponse(response1)
@@ -187,6 +188,7 @@ export default function Completed() {
 					</div>}
 					<div
 						ref={settingsMenuButtonRef}
+						tabIndex={0}
 						onClick={handleSettingsMenu}
 						className="flex items-center justify-center h-7 w-7 cursor-pointer rounded-full hover:bg-gray-500 transition-colors duration-150 translate-y-[1px]"
 					>
@@ -194,31 +196,32 @@ export default function Completed() {
 					</div>
 				</header>
 				<div className="flex items-center gap-2">
-					<form className="px-3 mb-1 bg-neutral-700 shadow-md shadow-black rounded-md">
+					<div className="px-3 mb-1 bg-neutral-700 shadow-md shadow-black rounded-md">
 						<SearchIcon />
 						<input
 							onChange={searchTable}
 							type="search"
 							placeholder=" Search Titles"
-							className="input-text my-2 p-1 w-64 md:w-96 text-lg"
+							className="input-text my-2 p-1 w-[60dvw] md:w-96 text-sm sm:text-lg"
 						/>
-					</form>
+					</div>
 					<button
 						onClick={addRecord}
 						title="Add new record to table"
-						className="input-submit h-3/5 mb-1 p-2 text-lg rounded-md"
+						className="input-submit h-3/5 mb-1 px-2 py-2 text-lg rounded-md"
 					>
-						<AddIcon fontSize="large" />
+						<AddIcon sx={{ fontSize: 28 }} />
 					</button>
 				</div>
 				<table>
 					<tbody>
 						<tr>
 							<th
+								tabIndex={0}
 								onClick={() =>
 									sortListByNameSupabase(response, sortMethodRef, setResponse)
 								}
-								className="w-[48rem] cursor-pointer"
+								className="min-w-[1rem] sm:min-w-0 w-[48rem] cursor-pointer"
 							>
 								<span>Title</span>
 								<span className="absolute">{sortSymbol('title', sortMethodRef)}</span>
@@ -226,6 +229,7 @@ export default function Completed() {
 							<th className="w-32 hidden md:table-cell">Type</th>
 							<th className="w-36 hidden md:table-cell">Episode(s)</th>
 							<th
+								tabIndex={0}
 								onClick={() =>
 									sortListByRatingSupabase(
 										'rating1',
@@ -240,6 +244,7 @@ export default function Completed() {
 								<span className="absolute">{sortSymbol('rating1', sortMethodRef)}</span>
 							</th>
 							<th
+								tabIndex={0}
 								onClick={() =>
 									sortListByRatingSupabase(
 										'rating2',
@@ -254,6 +259,7 @@ export default function Completed() {
 								<span className="absolute">{sortSymbol('rating2', sortMethodRef)}</span>
 							</th>
 							<th
+								tabIndex={0}
 								onClick={() =>
 									sortListByDateSupabase(
 										'startconv',
@@ -268,6 +274,7 @@ export default function Completed() {
 								<span className="absolute">{sortSymbol('start', sortMethodRef)}</span>
 							</th>
 							<th
+								tabIndex={0}
 								onClick={() =>
 									sortListByDateSupabase(
 										'endconv',
@@ -293,9 +300,9 @@ export default function Completed() {
 									onDoubleClick={() => {
 										setIsEdited(`title${item.id}`)
 									}}
-									className="relative"
+									className="relative min-w-[1rem]"
 								>
-									<span style={{ margin: isEdited == `title${item.id}` ? 0 : '0 1.6rem' }}>
+									<span>
 										{isEdited == `title${item.id}` ? (
 											editForm('title', item.id, item.title!)
 										) : item.title ? (
@@ -308,7 +315,7 @@ export default function Completed() {
 											onClick={(e) => {
 												handleMenuClick(e, item)
 											}}
-											className="absolute top-2 z-10 h-7 w-7 invisible group-hover:visible cursor-pointer rounded-full hover:bg-gray-500 transition-colors duration-150"
+											className="absolute flex items-center justify-center top-1/2 -translate-y-1/2 z-10 h-7 w-7 invisible group-hover:visible cursor-pointer rounded-full hover:bg-gray-500 transition-colors duration-150"
 										>
 											<MoreVertIcon />
 										</div>
@@ -452,7 +459,7 @@ export default function Completed() {
 				className="absolute z-20 p-2 shadow-md shadow-black bg-black border-pink-400 border-[1px] rounded-md completed-settings-menu"
 			>
 				<li className="flex justify-center h-fit rounded-md hover:bg-pink-400">
-					<button onClick={handleLoadDetails} className="py-2 w-full">
+					<button tabIndex={0} onClick={handleLoadDetails} className="py-2 w-full">
 						Load details
 					</button>
 				</li>
@@ -550,18 +557,23 @@ export default function Completed() {
 					onClick={() => setDetailsModal(null)}
 					className="fixed top-0 left-0 h-[100dvh] w-[100dvw] glass-modal"
 				/>
-				<article className="fixed flex flex-col items-center h-[50rem] w-[60rem] px-10 py-6 bg-gray-700 rounded-md shadow-md shadow-black drop-shadow-md top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 modal">
+				<article className="fixed flex flex-col items-center h-[80dvh] w-[80dvw] md:w-[50dvw] px-4 sm:px-10 py-6 bg-gray-700 rounded-md shadow-md shadow-black drop-shadow-md top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 modal">
 					<Link
 						href={`${location.origin}/completed/anime/${details?.id}`}
-						className="px-12 font-bold text-2xl text-center link"
+						className="px-12 font-bold text-lg sm:text-2xl text-center line-clamp-3 link"
 					>
 						{details?.mal_title}
 					</Link>
 					<div
 						onClick={() => (editModalRef.current!.style.display = 'block')}
-						className="absolute top-8 right-12 flex items-center justify-center h-11 w-11 rounded-full cursor-pointer transition-colors duration-150 hover:bg-slate-500"
+						className="absolute top-4 sm:top-8 right-4 sm:right-12 flex items-center justify-center h-7 sm:h-11 w-7 sm:w-11 rounded-full cursor-pointer transition-colors duration-150 hover:bg-slate-500"
 					>
-						<EditIcon fontSize="large" />
+						<EditIcon sx={{
+							fontSize: {
+								sm: 20,
+								lg: 30	
+							}
+						}} />
 					</div>
 					{loadingDetails ? (
 						<>
@@ -589,31 +601,32 @@ export default function Completed() {
 						</>
 					) : (
 						<>
-							<span>{details?.mal_alternative_title}</span>
-							<Image
-								src={details?.image_url!}
-								alt="Art"
-								height={380}
-								width={220}
-								className="my-5"
-							/>
-							<p title={details?.mal_synopsis!} className="mb-6 text-center line-clamp-[8]">
+							<span className='hidden lg:block'>{details?.mal_alternative_title}</span>
+							<div className='relative my-5 h-[18rem] sm:h-[20rem] w-[12rem] sm:w-[15rem] overflow-hidden'>
+								<Image
+									src={details?.image_url!}
+									alt="Art"
+									fill
+									className="object-contain"
+								/>
+							</div>
+							<p title={details?.mal_synopsis!} className="mb-6 text-center lg:line-clamp-[8] hidden">
 								{details?.mal_synopsis}
 							</p>
 						</>
 					)}
 					<div className="flex mb-6 gap-16">
 						<div className="flex flex-col">
-							<h5 className="mb-2 font-semibold text-lg">Start Date</h5>
-							<span>{details?.start_date}</span>
+							<h5 className="mb-2 font-semibold text-center text-lg">Start Date</h5>
+							<span className='text-center'>{details?.start_date}</span>
 						</div>
 						<div className="flex flex-col items-center justify-center">
-							<h5 className="mb-2 font-semibold text-lg">End Date</h5>
-							<span>{details?.end_date}</span>
+							<h5 className="mb-2 font-semibold text-center text-lg">End Date</h5>
+							<span className='text-center'>{details?.end_date}</span>
 						</div>
 					</div>
 					<h5 className="font-semibold text-lg">Genres</h5>
-					<span className="mb-2">
+					<span className="mb-2 text-center">
 						{genres?.map((item, index) => {
 							return (
 								<Link
@@ -634,7 +647,7 @@ export default function Completed() {
 						}
 						target="_blank"
 						rel='noopener noreferrer'
-						className="text-lg link"
+						className="text-base sm:text-lg link"
 					>
 						MyAnimeList
 					</Link>
@@ -758,10 +771,6 @@ export default function Completed() {
 					cell: column + row
 				})
 
-				const changed = response?.slice()
-				if (!changed) return
-				changed.find((item) => item.id === id)![field] = event.target[0].value
-				setResponse(changed)
 				setIsEdited('')
 				setIsLoadingEditForm(isLoadingEditForm.filter((item) => item == `${field}_${id}`))
 			} catch (error) {
@@ -793,9 +802,8 @@ export default function Completed() {
 		)
 	}
 
-	// TODO: add loading here to prevent spamming add record
-	async function addRecord(event: React.MouseEvent<HTMLButtonElement, MouseEvent>): Promise<void> {
-		if (!response?.[response.length - 1].title) {
+	async function addRecord(event: React.MouseEvent<HTMLButtonElement, MouseEvent>): Promise<void> {	
+		if (!response?.[0].title) {
 			alert('Insert title for latest row before adding a new one')
 			return
 		}
@@ -807,9 +815,6 @@ export default function Completed() {
 				cell: 'A' + (response.length + 2).toString()
 			})
 
-			const changed = response.slice()
-			changed.push({ ...initialTitleItemSupabase, id: response.length + 1 })
-			setResponse(changed)
 			setIsEdited(`title${response.length + 1}`)
 			setLoading(false)
 		} catch (error) {

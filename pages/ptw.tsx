@@ -243,12 +243,13 @@ export default function PTW() {
 				<section className="flex flex-col lg:flex-row items-center justify-center w-full gap-12">
 					<div className="flex flex-col items-center min-h-[40rem] w-[30rem] lg:w-auto">
 						<header className='flex items-center mt-5'>
-							<h2 className="p-2 text-3xl">
+							<h2 className="p-2 text-2xl sm:text-3xl">
 								Plan to Watch (Rolled)
 							</h2>
 							{sortMethodRef.current &&
 							<div
 								title="Reset sort"
+								tabIndex={0}
 								onClick={() => {
 									sortMethodRef.current = ''
 									setResponseRolled(responseRolled1)
@@ -260,6 +261,7 @@ export default function PTW() {
 						</header>
 						<div className="grid grid-cols-[4fr_1.1fr] min-w-0 w-[80dvw] lg:w-[40rem] bg-sky-600 border-white border-solid border-[1px]">
 							<span 
+								tabIndex={0}
 								onClick={() => {
 									sortListByNamePTW(
 										'title',
@@ -269,7 +271,7 @@ export default function PTW() {
 									)
 									setReordered(false)
 								}}
-								className='flex items-center justify-center p-2 h-full border-white border-r-[1px] text-center font-bold'
+								className='flex items-center justify-center p-2 h-full border-white border-r-[1px] text-center font-bold cursor-pointer'
 							>
 								Title
 								<span className="absolute left-[54%]">{sortSymbol('title', sortMethodRef)}</span>
@@ -606,10 +608,10 @@ export default function PTW() {
 
 		return (
 			<div className="relative flex flex-col items-center justify-center gap-4 h-[30rem] w-[80dvw] md:w-[25rem] bg-slate-700 rounded-lg -translate-y-8">
-				<h2 className="absolute top-5 p-2 text-3xl">Gacha</h2>
+				<h2 className="absolute top-5 p-2 text-2xl sm:text-3xl">Gacha</h2>
 				<div className="absolute top-20 flex items-center justify-center h-52 max-h-52 w-80">
 					<div className="max-h-full max-w-[90%] bg-slate-100 border-black border-solid border-[1px] overflow-auto">
-						<h3 ref={rolledTitleElementRef} className="p-2 text-black text-2xl text-center">
+						<h3 ref={rolledTitleElementRef} className="p-2 text-black text-xl sm:text-2xl text-center">
 							???
 						</h3>
 					</div>
@@ -647,7 +649,7 @@ export default function PTW() {
 							Include movies?
 						</label>
 					</div>
-					<input type="submit" value="Roll" className="input-submit px-2 p-1" />
+					<input type="submit" value="Roll" className="input-submit px-2 p-1 text-base sm:text-xl" />
 				</form>
 			</div>
 		)
@@ -717,11 +719,12 @@ export default function PTW() {
 		return (
 			<section className="relative flex flex-col items-center">
 				<header className='flex items-center'>
-					<h2 className="p-2 text-3xl">{tableName}</h2>
+					<h2 className="p-2 text-2xl sm:text-3xl">{tableName}</h2>
 					<div
 						title='Add new entry' 
+						tabIndex={0}
 						onClick={handleAddMenu} 
-						className='flex items-center justify-center h-7 w-7 cursor-pointer rounded-full hover:bg-gray-500 transition-colors duration-150 translate-y-[2px]'
+						className='flex items-center justify-center h-7 w-7 cursor-pointer rounded-full hover:bg-gray-500 transition-colors duration-150 sm:translate-y-[2px]'
 					>
 						<AddIcon />
 					</div>
@@ -794,7 +797,7 @@ function Item({ props, editFormParams }: ItemProps) {
 				onDoubleClick={() => setIsEdited(`rolled_${item.title}_${item.id}`)}
 				className="relative p-2 text-center group"
 			>
-				<span className="mx-7 cursor-text">
+				<span className=" cursor-text">
 					{isEdited == `rolled_${item.title}_${item.id}`
 						? editForm('rolled_title', item.id, item.title!, editFormParams)
 						: item.title}
@@ -807,7 +810,7 @@ function Item({ props, editFormParams }: ItemProps) {
 					onClick={(e) => {
 						handleMenuClick(e, item)
 					}}
-					className="absolute top-2 z-10 h-7 w-7 invisible group-hover:visible cursor-pointer rounded-full hover:bg-gray-500 transition-colors duration-150"
+					className="absolute flex items-center justify-center top-1/2 -translate-y-1/2 z-10 h-7 w-7 invisible group-hover:visible cursor-pointer rounded-full hover:bg-gray-500 transition-colors duration-150"
 				>
 					<MoreVertIcon />
 				</div>
@@ -880,9 +883,7 @@ function Item({ props, editFormParams }: ItemProps) {
 				>
 					<form onSubmit={handleSubmit} className="text-gray-800">
 						<select
-							onChange={(e) => {
-								;(e.target.parentNode as HTMLFormElement)!.requestSubmit()
-							}}
+							onChange={(e) => (e.target.parentNode as HTMLFormElement)!.requestSubmit()}
 							className="h-full w-full"
 						>
 							<option>Select status</option>

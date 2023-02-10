@@ -17,11 +17,25 @@ export default async function AddToCompleted(req: NextApiRequest, res: NextApiRe
 
 	let cells
 	let rowsToInsert
-	const dataCompleted = await supabase.from('Completed').select()
+	const dataCompleted = await supabase
+		.from('Completed')
+		.select('id, title')
+		.order('id', { ascending: false })
 	if (!dataCompleted.data) return res.status(500).send('Failed to query database')
 
-	let lastTitleCompletedID = dataCompleted.data.length
-	if (!dataCompleted.data[lastTitleCompletedID]?.title) lastTitleCompletedID--
+	let lastTitleCompletedID = 0
+	let loopThrough = true
+	let counter = 0
+	while (loopThrough) {
+		if (dataCompleted.data[counter].title) {
+			lastTitleCompletedID = dataCompleted.data[counter].id + 1
+			loopThrough = false
+		} else {
+			counter++
+		}
+	}
+
+	console.log(lastTitleCompletedID)
 
 	if (type === 'PTW') {
 		const completedPTWRolled = content.filter(
@@ -134,7 +148,7 @@ export default async function AddToCompleted(req: NextApiRequest, res: NextApiRe
 			}
 		})
 	
-		const newIndex = lastTitleCompletedID! + 2
+		const newIndex = lastTitleCompletedID!
 		console.log(lastTitleCompletedID)
 		let completedTitle
 		if (type === 'PTW') {
@@ -152,7 +166,7 @@ export default async function AddToCompleted(req: NextApiRequest, res: NextApiRe
 			requestBody: {
 				data: [
 					{
-						range: `A${lastTitleCompletedID! + 3}:B${lastTitleCompletedID! + 3}`,
+						range: `A${lastTitleCompletedID! + 1}:B${lastTitleCompletedID! + 1}`,
 						majorDimension: 'ROWS',
 						values: [[newIndex, completedTitle[0].title]]
 					}

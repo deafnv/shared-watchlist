@@ -138,11 +138,12 @@ export default function SeasonalDetails({
 
 			<main className="flex flex-col items-center justify-center mb-24 px-6 py-2">
 				<header className='flex items-center mb-2'>
-					<h2 className="p-2 text-3xl">Episode Tracker</h2>
+					<h2 className="p-2 text-2xl sm:text-3xl">Episode Tracker</h2>
 					<div
 						ref={refreshReloadMenuButtonRef}
+						tabIndex={0}
 						onClick={handleRefreshReloadMenu}
-						className="flex items-center justify-center h-7 w-7 cursor-pointer rounded-full hover:bg-gray-500 transition-colors duration-150 translate-y-[2px]"
+						className="flex items-center justify-center h-7 w-7 cursor-pointer rounded-full hover:bg-gray-500 transition-colors duration-150 translate-y-0 sm:translate-y-[2px]"
 					>
 						<MoreVertIcon sx={{ fontSize: 28 }} />
 					</div>
@@ -155,7 +156,7 @@ export default function SeasonalDetails({
 						>
 							<span
 								onClick={showTitle}
-								className="h-[3rem] px-7 font-bold self-center text-center line-clamp-2"
+								className="px-7 font-bold self-center text-sm sm:text-base text-center line-clamp-2"
 							>
 								{item.mal_title}
 							</span>
@@ -169,12 +170,14 @@ export default function SeasonalDetails({
 								<MoreVertIcon />
 							</div>
 							<div className="flex">
-								<Image
-									src={item.image_url ?? 'https://via.placeholder.com/400x566'}
-									alt="Art"
-									height={200}
-									width={150}
-								/>
+								<div className='relative h-[10rem] sm:h-[13rem] w-[12rem] sm:w-[15rem] overflow-hidden'>
+									<Image
+										src={item.image_url ?? 'https://via.placeholder.com/400x566'}
+										alt="Art"
+										fill
+										className="object-contain"
+									/>
+								</div>
 								<div className="flex flex-col items-center gap-1 justify-center w-full">
 									<span className="text-center">
 										<span className="font-semibold">Episodes: </span>
@@ -202,7 +205,7 @@ export default function SeasonalDetails({
 									</Link>
 									<span
 										title='Last time episode tracker updated/edited'
-										className="absolute bottom-[48%] text-center"
+										className="text-center"
 									>
 										<span className="font-semibold">Last updated: </span>
 										{item.last_updated ? new Date(item.last_updated).toLocaleDateString('en-GB', {day: 'numeric', month: 'numeric', year: '2-digit'}) : 'Unknown'}
@@ -451,7 +454,7 @@ export default function SeasonalDetails({
 	}) {
 		let counter = 1
 		return (
-			<div className="relative grid grid-cols-2 gap-4">
+			<div className="relative grid grid-cols-1 min-[390px]:grid-cols-2 gap-4">
 				{Array(4)
 					.fill('')
 					.map((i, index) => (

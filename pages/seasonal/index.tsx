@@ -146,9 +146,10 @@ export default function Seasonal() {
 			<main className="flex flex-col items-center justify-center mb-24 px-6 py-2">
 				<section className='relative flex flex-col items-center'>
 					<header className='flex items-center mb-2'>
-						<h2 className="p-2 text-3xl">Current Season</h2>
+						<h2 className="p-2 text-2xl sm:text-3xl">Current Season</h2>
 						<div
 							ref={settingsMenuButtonRef}
+							tabIndex={0}
 							onClick={handleSettingsMenu}
 							className="flex items-center justify-center h-7 w-7 cursor-pointer rounded-full hover:bg-gray-500 transition-colors duration-150 translate-y-[2px]"
 						>
@@ -157,6 +158,7 @@ export default function Seasonal() {
 						<div
 							ref={addRecordButtonRef}
 						 	title='Add new entry'
+							tabIndex={0}
 							onClick={() => setIsAdded(true)} 
 							className='flex items-center justify-center h-7 w-7 cursor-pointer rounded-full hover:bg-gray-500 transition-colors duration-150 translate-y-[2px]'
 						>
@@ -173,7 +175,7 @@ export default function Seasonal() {
 						<span className='flex items-center justify-center p-2 h-full border-white border-r-[1px] text-center font-bold'>
 							Title
 						</span>
-						<span className='flex items-center justify-center p-2 h-full border-white border-r-[1px] text-center font-bold'>
+						<span className='flex items-center justify-center p-2 h-full border-white lg:border-r-[1px] text-center font-bold'>
 							Status
 						</span>
 						<span className='hidden lg:flex items-center justify-center p-2 h-full border-white border-r-[1px] text-center font-bold'>
@@ -479,7 +481,7 @@ function Item({ props }: ItemProps) {
 					onClick={(e) => {
 						handleMenuClick(e, item)
 					}}
-					className="absolute top-2 z-10 h-7 w-7 invisible group-hover:visible cursor-pointer rounded-full hover:bg-gray-500 transition-colors duration-150"
+					className="absolute flex items-center justify-center top-1/2 -translate-y-1/2 z-10 h-7 w-7 invisible group-hover:visible cursor-pointer rounded-full hover:bg-gray-500 transition-colors duration-150"
 				>
 					<MoreVertIcon />
 				</div>
