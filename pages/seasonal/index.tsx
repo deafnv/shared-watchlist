@@ -85,7 +85,9 @@ export default function Seasonal() {
 		)
 		
 		const closeMenusOnClick = (e: any) => {
-			if (e.target?.tagName !== 'INPUT' && e.target?.tagName !== 'SELECT') setIsEdited('')
+			if (e.target?.tagName !== 'INPUT' && e.target?.tagName !== 'SELECT') {
+				setIsEdited('')
+			}
 			if (
 				e.target.parentNode !== addRecordButtonRef.current &&
 				e.target.parentNode?.parentNode !== addRecordButtonRef.current &&
@@ -507,7 +509,6 @@ function Item({ props }: ItemProps) {
 			<div className='relative hidden lg:flex items-center justify-center'>
 				{item?.SeasonalDetails?.[0]?.latest_episode ?? 'N/A'}
 				<div
-					ref={element => (contextMenuButtonRef.current[index] = element)}
 					onPointerDown={(e) => controls.start(e)}
 					className="absolute top-1/2 right-0 z-10 flex items-center justify-center h-7 w-7 cursor-grab rounded-full transition-colors duration-150 -translate-y-1/2"
 				>
