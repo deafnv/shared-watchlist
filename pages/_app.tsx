@@ -44,7 +44,10 @@ export default function App({ Component, pageProps }: AppProps) {
 
 	useEffect(() => {
 		const handleRouteStart = () => NProgress.start()
-		const handleRouteDone = () => NProgress.done()
+		const handleRouteDone = () => {
+			(document.activeElement as HTMLElement).blur()
+			NProgress.done()
+		}
 
 		router.events.on('routeChangeStart', handleRouteStart)
 		router.events.on('routeChangeComplete', handleRouteDone)
