@@ -1,6 +1,7 @@
-import { createClient } from '@supabase/supabase-js'
 import axios from 'axios'
 import { NextApiRequest, NextApiResponse } from 'next'
+import { createClient } from '@supabase/supabase-js'
+import uniqBy from 'lodash/uniqBy'
 import { Database } from '../../lib/database.types'
 
 export default async function ChangeDetails(req: NextApiRequest, res: NextApiResponse) {
@@ -36,6 +37,44 @@ export default async function ChangeDetails(req: NextApiRequest, res: NextApiRes
 				})
 
 				//TODO: Add function here to add new genres if any are available. Later on, also delete genres with no entries.
+				const supabase = createClient<Database>(
+					'https://esjopxdrlewtpffznsxh.supabase.co',
+					process.env.SUPABASE_SERVICE_API_KEY!
+				)
+				await supabase
+					.from('Genre_to_Titles')
+					.delete()
+					.eq('anime_id', id)
+
+				let genres: any[] = []
+				let genreRelationships: {
+					anime_id: number
+					genre_id: number
+				}[] = []
+				genres = genres.concat(data?.genres)
+
+				data?.genres.forEach((item1: { id: number; name: string }) => {
+					genreRelationships.push({
+						anime_id: id,
+						genre_id: item1.id
+					})
+				})
+
+				await supabase.from('Genre_to_Titles').upsert(genreRelationships)
+
+				const genresNoDupe = uniqBy(genres, 'id')
+				await supabase.from('Genres').upsert(genresNoDupe)
+
+				const deleteEmptyGenres = await supabase
+					.from('Genres')
+					.select('*, Genre_to_Titles!left(*)')
+				const emptyGenreIds = deleteEmptyGenres.data
+					?.filter(item => (item.Genre_to_Titles as Database['public']['Tables']['Genre_to_Titles']['Row'][]).length == 0)
+					.map(item => item.id)
+				await supabase
+					.from('Genres')
+					.delete()
+					.in('id', emptyGenreIds ?? [-1])
 
 				const anime = {
 					end_date: data?.end_date ?? '',
@@ -51,10 +90,6 @@ export default async function ChangeDetails(req: NextApiRequest, res: NextApiRes
 				}
 
 				//* Through testing, these API routes with restricted queries like UPDATE, DELETE, or INSERT fails silently if the public API key is provided instead of the service key
-				const supabase = createClient<Database>(
-					'https://esjopxdrlewtpffznsxh.supabase.co',
-					process.env.SUPABASE_SERVICE_API_KEY!
-				)
 				await supabase.from('CompletedDetails').delete().eq('id', id)
 
 				await supabase.from('CompletedDetails').upsert(anime)
