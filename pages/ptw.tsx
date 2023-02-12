@@ -45,7 +45,12 @@ export default function PTW() {
 		left: number
 		currentItem: Database['public']['Tables']['PTW-Rolled']['Row'] | null
 	}>({ top: 0, left: 0, currentItem: null })
-	const [isAdded, setIsAdded] = useState('')
+	const [isAdded, setIsAdded] = useState<{
+		top: number
+		left: number
+		response: Database['public']['Tables']['PTW-Casual']['Row'][] | undefined
+		tableId: 'rolled' | 'casual' | 'noncasual' | 'movies'
+	} | null>(null)
 	const { setLoading } = useLoading()
 
 	const editFormParams = {
@@ -201,7 +206,7 @@ export default function PTW() {
 				setContextMenu({ top: 0, left: 0, currentItem: null })
 			}
 			if (e.target?.tagName !== 'INPUT' && e.target?.tagName !== 'svg' && e.target?.tagName !== 'path') {
-				setIsAdded('')
+				setIsAdded(null)
 			}
 		}
 
@@ -246,6 +251,14 @@ export default function PTW() {
 							<h2 className="p-2 text-2xl sm:text-3xl">
 								Plan to Watch (Rolled)
 							</h2>
+							<div
+						title='Add new entry' 
+						tabIndex={0}
+						onClick={(e) => handleAddMenu(e, responseRolled, 'rolled')} 
+						className='flex items-center justify-center h-7 w-7 cursor-pointer rounded-full hover:bg-gray-500 transition-colors duration-150 sm:translate-y-[2px]'
+					>
+						<AddIcon />
+					</div>
 							{sortMethodRef.current &&
 							<div
 								title="Reset sort"
@@ -357,6 +370,7 @@ export default function PTW() {
 				</section>
 				<LatencyBadge />
 				{contextMenu.currentItem && <ContextMenu />}
+				{isAdded && <AddRecordMenu />}
 			</main>
 		</>
 	)
@@ -655,26 +669,19 @@ export default function PTW() {
 		)
 	}
 
-	function PTWTable({
-		response,
-		tableName,
-		tableId
-	}: {
-		response: Database['public']['Tables']['PTW-Casual']['Row'][] | undefined
-		tableName: string
-		tableId: 'casual' | 'noncasual' | 'movies'
-	}) {
-		function handleAddMenu() {
-			setIsAdded(tableName)
-		}
-
+	function AddRecordMenu() {
 		async function handleAddRecord(e: BaseSyntheticEvent) {
 			e.preventDefault()
 			const enteredTitle = e.target[0].value
-			if (!enteredTitle || !response) return
+			if (!enteredTitle || !isAdded?.response) return
 
 			let cell = 'L';
-			switch (tableId) {
+			switch (isAdded.tableId) {
+				case 'rolled':
+					cell = 'N'
+					break
+				case 'movies':
+					cell = 'L'
 				case 'casual':
 					cell = 'L'
 					break
@@ -686,28 +693,28 @@ export default function PTW() {
 			setLoading(true)
 			
 			try {
-				if (tableId == 'movies') {
-					if (response.length >= 5) {
+				if (isAdded.tableId == 'movies') {
+					if (isAdded.response.length >= 5) {
 						setLoading(false)
 						alert('No space left')
 						return
 					}
 					await axios.post('/api/update', {
 						content: enteredTitle,
-						cell: cell + (response.length + 22).toString()
+						cell: cell + (isAdded.response.length + 22).toString()
 					})
 				} else {
-					if (response.length >= 15) {
+					if (isAdded.response.length >= 15) {
 						setLoading(false)
 						alert('No space left')
 						return
 					}
 					await axios.post('/api/update', {
 						content: enteredTitle,
-						cell: cell + (response.length + 2).toString()
+						cell: cell + (isAdded.response.length + 2).toString()
 					})
 				}
-				setIsAdded('')
+				setIsAdded(null)
 				setLoading(false)
 			} catch (error) {
 				setLoading(false)
@@ -716,6 +723,46 @@ export default function PTW() {
 			}
 		}
 
+		if (!isAdded) return null
+		return (
+			<menu 
+				style={{
+					top: isAdded.top + 38,
+					left: isAdded.left - (isAdded.tableId == 'rolled' ? 280 : 190)
+				}}
+				className='absolute top-14 z-10 p-1 rounded-lg bg-black border-[1px] border-pink-400'
+			>
+				<form onSubmit={handleAddRecord}>
+					<input placeholder='Insert title' className='w-60 text-lg rounded-sm bg-gray-800 focus:outline-none' />
+				</form>
+			</menu>
+		)
+	}
+
+	function handleAddMenu(
+		e: BaseSyntheticEvent, 
+		response: Database['public']['Tables']['PTW-Casual']['Row'][] | undefined, 
+		tableId: 'rolled' | 'casual' | 'noncasual' | 'movies'
+	) {
+		const { top, left } = e.target.getBoundingClientRect()
+
+		setIsAdded({ 
+			top: top + window.scrollY,
+			left: left + window.scrollX,
+			response, 
+			tableId 
+		 })
+	}
+
+	function PTWTable({
+		response,
+		tableName,
+		tableId
+	}: {
+		response: Database['public']['Tables']['PTW-Casual']['Row'][] | undefined
+		tableName: string
+		tableId: 'casual' | 'noncasual' | 'movies'
+	}) {
 		return (
 			<section className="relative flex flex-col items-center">
 				<header className='flex items-center'>
@@ -723,18 +770,12 @@ export default function PTW() {
 					<div
 						title='Add new entry' 
 						tabIndex={0}
-						onClick={handleAddMenu} 
+						onClick={(e) => handleAddMenu(e, response, tableId)} 
 						className='flex items-center justify-center h-7 w-7 cursor-pointer rounded-full hover:bg-gray-500 transition-colors duration-150 sm:translate-y-[2px]'
 					>
 						<AddIcon />
 					</div>
 				</header>
-				{isAdded == tableName && 
-				<menu className='absolute top-14 z-10 p-1 rounded-lg bg-black border-[1px] border-pink-400'>
-					<form onSubmit={handleAddRecord}>
-						<input placeholder='Insert title' className='w-60 text-lg rounded-sm bg-gray-800 focus:outline-none' />
-					</form>
-				</menu>}
 				<table>
 					<tbody>
 						<tr>
