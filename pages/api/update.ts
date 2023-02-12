@@ -1,3 +1,8 @@
+export const config = {
+  runtime: 'edge',
+  regions: ['sin1'],
+};
+
 import axios from 'axios'
 import { google } from 'googleapis'
 import { NextApiRequest, NextApiResponse } from 'next'
