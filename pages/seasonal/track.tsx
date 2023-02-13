@@ -29,8 +29,6 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
 	}
 }
 
-//TODO: Context menu refs for path click
-
 export default function SeasonalDetails({
 	res
 }: {

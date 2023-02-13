@@ -7,8 +7,7 @@ import DoneIcon from '@mui/icons-material/Done'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import CloseIcon from '@mui/icons-material/Close'
 
-//TODO: Sort the genres vertically in alphabetical order
-export default function CompletedDetails() {
+export default function Genres() {
 	const [response, setResponse] = useState<Database['public']['Tables']['Genres']['Row'][]>()
 	const [advancedSearch, setAdvancedSearch] = useState('none')
 	const [advancedSearchResult, setAdvancedSearchResult] = useState<any>(null)
@@ -31,6 +30,7 @@ export default function CompletedDetails() {
 		getData()
 	}, [])
 
+	const noOfRows = Math.ceil(response?.length! / 3)
 	return (
 		<>
 			<Head>
@@ -43,13 +43,20 @@ export default function CompletedDetails() {
 				<span tabIndex={0} onClick={() => setAdvancedSearch('block')} className="mb-2 cursor-pointer link">
 					Advanced Search
 				</span>
-				<div className="grid grid-cols-3 gap-x-12 md:gap-x-24 gap-y-3">
+				<div
+					style={{
+						gridTemplateColumns: 'repeat(1fr)',
+						gridTemplateRows: `repeat(${noOfRows}, 1em)`,
+						gridAutoFlow: 'column'
+					}}
+					className="grid gap-x-6 md:gap-x-12 gap-y-5 w-3/5"
+				>
 					{response?.map((item, index) => {
 						return (
 							<Link
 								key={index}
 								href={`${location.href}/${item.id}`}
-								className="text-center text-white link"
+								className="whitespace-nowrap text-center text-white link"
 							>
 								{item.name}
 							</Link>
@@ -144,7 +151,12 @@ export default function CompletedDetails() {
 						<form
 							id="advanced-search"
 							onSubmit={handleSubmit}
-							className="grid grid-cols-3 gap-x-20 gap-y-3 overflow-auto"
+							style={{
+								gridTemplateColumns: 'repeat(1fr)',
+								gridTemplateRows: `repeat(${noOfRows}, 1em)`,
+								gridAutoFlow: 'column'
+							}}
+							className="grid gap-x-20 gap-y-4 overflow-auto"
 						>
 							{response?.map((item, index) => {
 								return (
