@@ -838,6 +838,10 @@ export default function Completed() {
 					cell: column + row
 				})
 
+				const changed = response?.slice()
+				if (!changed) return
+				changed.find((item) => item.id === id)!['title'] = event.target[0].value
+				setResponse(changed)
 				if (isEditedRef.current == currentlyProcessedEdit) setIsEdited('')
 				setIsLoadingEditForm(isLoadingEditForm.filter((item) => item == `${field}_${id}`))
 			} catch (error) {
