@@ -109,13 +109,13 @@ export default function PTW() {
 			setIsLoadingClient(false)
 
 			await axios
-				.get('https://update.ilovesabrina.org/refresh')
+				.get(`${process.env.NEXT_PUBLIC_UPDATE_URL}/refresh`)
 				.catch((error) => console.log(error))
 		}
 		getData()
 
 		const refresh = setInterval(
-			() => axios.get('https://update.ilovesabrina.org/refresh'),
+			() => axios.get(`${process.env.NEXT_PUBLIC_UPDATE_URL}/refresh`),
 			3500000
 		)
 

@@ -59,7 +59,7 @@ export default function Seasonal() {
 			setResponse1(data!)
 
 			await axios
-				.get('https://update.ilovesabrina.org/refresh')
+				.get(`${process.env.NEXT_PUBLIC_UPDATE_URL}/refresh`)
 				.catch((error) => console.log(error))
 		}
 		getData()
@@ -80,7 +80,7 @@ export default function Seasonal() {
 			.subscribe()
 
 		const refresh = setInterval(
-			() => axios.get('https://update.ilovesabrina.org/refresh'),
+			() => axios.get(`${process.env.NEXT_PUBLIC_UPDATE_URL}/refresh`),
 			3500000
 		)
 		
