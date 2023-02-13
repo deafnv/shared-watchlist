@@ -24,6 +24,7 @@ export default function PTW() {
 	const contextMenuRef = useRef<HTMLDivElement>(null)
 	const contextMenuButtonRef = useRef<any>([])
 	const sortMethodRef = useRef('')
+	const isEditedRef = useRef('')
 	const reordered = useRef(false)
 	const setReordered = (value: boolean) => reordered.current = value 
 
@@ -37,7 +38,7 @@ export default function PTW() {
 		useState<Database['public']['Tables']['PTW-NonCasual']['Row'][]>()
 	const [responseMovies, setResponseMovies] =
 		useState<Database['public']['Tables']['PTW-Movies']['Row'][]>()
-	const [isEdited, setIsEdited] = useState<string>('')
+	const [isEdited, setIsEditedState] = useState<string>('')
 	const [isLoadingClient, setIsLoadingClient] = useState(true)
 	const [isLoadingEditForm, setIsLoadingEditForm] = useState<Array<string>>([])
 	const [contextMenu, setContextMenu] = useState<{
@@ -53,18 +54,9 @@ export default function PTW() {
 	} | null>(null)
 	const { setLoading } = useLoading()
 
-	const editFormParams = {
-		isLoadingEditForm,
-		setIsLoadingEditForm,
-		setIsEdited,
-		responseRolled,
-		responseCasual,
-		responseNonCasual,
-		responseMovies,
-		setResponseRolled,
-		setResponseCasual,
-		setResponseNonCasual,
-		setResponseMovies
+	const setIsEdited = (value: string) => {
+		isEditedRef.current = value
+		setIsEditedState(value)
 	}
 
 	const setRolledTitle = (value: string) => {
@@ -75,6 +67,21 @@ export default function PTW() {
 		}
 		rolledTitleElementRef.current!.innerHTML = value
 		rolledTitleRef.current = value
+	}
+
+	const editFormParams = {
+		isLoadingEditForm,
+		setIsLoadingEditForm,
+		isEditedRef,
+		setIsEdited,
+		responseRolled,
+		responseCasual,
+		responseNonCasual,
+		responseMovies,
+		setResponseRolled,
+		setResponseCasual,
+		setResponseNonCasual,
+		setResponseMovies
 	}
 
 	useEffect(() => {
@@ -977,7 +984,7 @@ interface ItemProps {
 		item: Database['public']['Tables']['PTW-Rolled']['Row'],
 		index: number,
 		isLoadingEditForm: string[],
-		setIsEdited: Dispatch<SetStateAction<string>>,
+		setIsEdited: (value: string) => void,
 		isEdited: string,
 		sortMethodRef: MutableRefObject<string>,
 		setContextMenu: Dispatch<SetStateAction<{
@@ -1000,6 +1007,7 @@ function editForm(
 	{
 		isLoadingEditForm,
 		setIsLoadingEditForm,
+		isEditedRef,
 		setIsEdited,
 		responseRolled,
 		responseCasual,
@@ -1034,6 +1042,13 @@ function editForm(
 
 	async function handleSubmit(event: BaseSyntheticEvent): Promise<void> {
 		event.preventDefault()
+		const currentlyProcessedEdit = isEditedRef.current
+
+		if (ogvalue == event.target[0].value) {
+			setIsEdited('')
+			return
+		}
+
 		setIsLoadingEditForm(isLoadingEditForm.concat(`${field}_${id}`))
 
 		try {
@@ -1044,41 +1059,30 @@ function editForm(
 
 			switch (field) {
 				case 'rolled_title':
-					const changedRolled = responseRolled?.slice()
-					if (!changedRolled) return
-					changedRolled.find((item) => item.id === id)!['title'] = event.target[0].value
-					setResponseRolled(changedRolled)
-					setIsEdited('')
-					setIsLoadingEditForm(isLoadingEditForm.filter((item) => item == `${field}_${id}`))
+					changeResponse(responseRolled, setResponseRolled)
 					break
 				case 'casual_title':
-					const changedCasual = responseCasual?.slice()
-					if (!changedCasual) return
-					changedCasual.find((item) => item.id === id)!['title'] = event.target[0].value
-					setResponseCasual(changedCasual)
-					setIsEdited('')
-					setIsLoadingEditForm(isLoadingEditForm.filter((item) => item == `${field}_${id}`))
+					changeResponse(responseCasual, setResponseCasual)
 					break
 				case 'noncasual_title':
-					const changedNonCasual = responseNonCasual?.slice()
-					if (!changedNonCasual) return
-					changedNonCasual.find((item) => item.id === id)!['title'] = event.target[0].value
-					setResponseNonCasual(changedNonCasual)
-					setIsEdited('')
-					setIsLoadingEditForm(isLoadingEditForm.filter((item) => item == `${field}_${id}`))
+					changeResponse(responseNonCasual, setResponseNonCasual)
 					break
 				case 'movies_title':
-					const changedMovies = responseMovies?.slice()
-					if (!changedMovies) return
-					changedMovies.find((item) => item.id === id)!['title'] = event.target[0].value
-					setResponseMovies(changedMovies)
-					setIsEdited('')
-					setIsLoadingEditForm(isLoadingEditForm.filter((item) => item == `${field}_${id}`))
+					changeResponse(responseMovies, setResponseMovies)
 					break
 			}
 		} catch (error) {
 			alert(error)
 			return
+		}
+
+		function changeResponse(response: Array<{[key: string]: any}> | undefined, setResponse: Dispatch<SetStateAction<any>>, ) {
+			const changed = response?.slice()
+			if (!changed) return
+			changed.find((item) => item.id === id)!['title'] = event.target[0].value
+			setResponse(changed)
+			if (isEditedRef.current == currentlyProcessedEdit) setIsEdited('')
+			setIsLoadingEditForm(isLoadingEditForm.filter((item) => item == `${field}_${id}`))
 		}
 	}
 
@@ -1131,7 +1135,8 @@ async function saveReorder(
 interface EditFormParams {
 	isLoadingEditForm: string[],
 	setIsLoadingEditForm: Dispatch<SetStateAction<string[]>>,
-	setIsEdited: Dispatch<SetStateAction<string>>,
+	isEditedRef: MutableRefObject<string>,
+	setIsEdited: (value: string) => void,
 	responseRolled: Database['public']['Tables']['PTW-Rolled']['Row'][] | undefined,
 	responseCasual: Database['public']['Tables']['PTW-Casual']['Row'][] | undefined,
 	responseNonCasual: Database['public']['Tables']['PTW-NonCasual']['Row'][] | undefined,
