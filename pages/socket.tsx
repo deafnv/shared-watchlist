@@ -11,7 +11,7 @@ export default function SocketTest() {
   }, [])
   
   const socketInitializer = async () => {
-    socket = io('https://api.ilovesabrina.org/')
+    socket = io(process.env.NEXT_PUBLIC_API_URL!)
     socket.on('connect', () => {
       console.log('connected')
     })

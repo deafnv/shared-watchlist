@@ -276,9 +276,10 @@ export default function SeasonalDetails({
 		async function handleReloadTrack() {
 			try {
 				setLoading(true)
-				await axios.post('/api/seasonaldetails/trackitem', {
+				await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/seasonal/trackitem`, {
 					id: contextMenu.currentItem?.mal_id
 				})
+				await axios.get('/api/revalidate')
 				router.reload()
 			} catch (error) {
 				setLoading(false)
@@ -428,7 +429,8 @@ export default function SeasonalDetails({
 	async function refresh() {
 		try {
 			setLoading(true)
-			await axios.get('/api/seasonaldetails/loadtracker')
+			await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/seasonal/batchtrack`)
+			await axios.get('/api/revalidate')
 			router.reload()
 		} catch (error) {
 			setLoading(false)

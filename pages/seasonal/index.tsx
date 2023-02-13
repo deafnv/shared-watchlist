@@ -338,7 +338,7 @@ export default function Seasonal() {
 			setLoading(true)
 		
 			try {
-				await axios.post('/api/update', {
+				await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/update`, {
 					content: '',
 					cell: 'O2:O22',
 					type: 'MULTI',
@@ -409,7 +409,7 @@ export default function Seasonal() {
 				alert('No space left')
 				return
 			}
-			await axios.post('/api/update', {
+			await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/update`, {
 				content: enteredTitle,
 				cell: 'O' + (response.length + 2).toString()
 			})
@@ -547,7 +547,7 @@ function Item({ props }: ItemProps) {
 			setIsLoadingEditForm(isLoadingEditForm.concat(`${field}_${order}`))
 
 			try {
-				await axios.post('/api/update', {
+				await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/update`, {
 					content: event.target[0].value,
 					cell: column + row
 				})

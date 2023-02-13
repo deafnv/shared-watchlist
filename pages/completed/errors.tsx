@@ -212,7 +212,7 @@ export default function CompletedErrors() {
 			}
 
 			try {
-				await axios.post('/api/changedetails', {
+				await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/changedetails`, {
 					id: changed.id,
 					mal_id: idInput,
 					type: 'CHANGED'
@@ -282,7 +282,7 @@ export default function CompletedErrors() {
 	}) {
 		setLoading(true)
 		try {
-			await axios.post('/api/changedetails', {
+			await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/changedetails`, {
 				id: item.id,
 				mal_id: 0,
 				type: 'IGNORE'

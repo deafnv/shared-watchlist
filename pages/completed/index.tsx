@@ -788,7 +788,7 @@ export default function Completed() {
 			setIsLoadingEditForm(isLoadingEditForm.concat(`${field}_${id}`))
 
 			try {
-				await axios.post('/api/update', {
+				await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/update`, {
 					content: isDate ? (dateEntered.toString() == 'Invalid Date' ? 'Unknown' : dateEntered.toLocaleDateString('en-US', {
 						day: 'numeric',
 						month: 'long',
@@ -860,7 +860,7 @@ export default function Completed() {
 
 		setLoading(true)
 		try {
-			await axios.post('/api/update', {
+			await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/update`, {
 				content: (response.length + 1).toString(),
 				cell: 'A' + (response.length + 2).toString()
 			})

@@ -699,7 +699,7 @@ export default function PTW() {
 						alert('No space left')
 						return
 					}
-					await axios.post('/api/update', {
+					await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/update`, {
 						content: enteredTitle,
 						cell: cell + (isAdded.response.length + 22).toString()
 					})
@@ -709,7 +709,7 @@ export default function PTW() {
 						alert('No space left')
 						return
 					}
-					await axios.post('/api/update', {
+					await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/update`, {
 						content: enteredTitle,
 						cell: cell + (isAdded.response.length + 2).toString()
 					})
@@ -1037,7 +1037,7 @@ function editForm(
 		setIsLoadingEditForm(isLoadingEditForm.concat(`${field}_${id}`))
 
 		try {
-			await axios.post('/api/update', {
+			await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/update`, {
 				content: event.target[0].value,
 				cell: column + row
 			})

@@ -47,7 +47,7 @@ export default function EditModal({
 		}
 
 		try {
-			await axios.post('/api/changedetails', {
+			await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/changedetails`, {
 				id: detailsModal.id,
 				mal_id: idInput
 			})
