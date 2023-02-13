@@ -38,6 +38,7 @@ export default function Completed() {
 	const settingsMenuButtonRef = useRef<HTMLDivElement>(null)
 	const sortMethodRef = useRef('')
 	const isEditedRef = useRef('')
+	const detailsModalRef = useRef<Database['public']['Tables']['Completed']['Row'] | null>(null)
 
 	const [response, setResponse] = useState<Database['public']['Tables']['Completed']['Row'][]>()
 	const [response1, setResponse1] = useState<Database['public']['Tables']['Completed']['Row'][]>()
@@ -54,7 +55,7 @@ export default function Completed() {
 		left: number
 		display: string
 	}>({ top: 0, left: 0, display: 'none' })
-	const [detailsModal, setDetailsModal] = useState<
+	const [detailsModal, setDetailsModalState] = useState<
 		Database['public']['Tables']['Completed']['Row'] | null
 	>(null)
 	const { setLoading } = useLoading()
@@ -64,6 +65,11 @@ export default function Completed() {
 	const setIsEdited = (value: string) => {
 		isEditedRef.current = value
 		setIsEditedState(value)
+	}
+
+	const setDetailsModal = (value: Database['public']['Tables']['Completed']['Row'] | null) => {
+		detailsModalRef.current = value
+		setDetailsModalState(value)
 	}
 
 	const supabase = createClient<Database>(
@@ -151,11 +157,10 @@ export default function Completed() {
 
 		const closeKeyboard = (e: KeyboardEvent) => {
 			if (e.key == 'Escape') {
-				if (detailsModal) setDetailsModal(null) //FIXME: Create ref so this works
+				if (detailsModalRef.current) setDetailsModal(null)
 				if (isEditedRef.current) setIsEdited('')
 			}
 			if (e.key == 'Tab' && isEditedRef.current) {
-				console.log(isEditedRef.current)
 				e.preventDefault()
 				const fields = ['title', 'type', 'episode', 'rating1', 'rating2', 'start', 'end']
 				const split = isEditedRef.current.split('_')
@@ -166,7 +171,6 @@ export default function Completed() {
 				setTimeout(() => {
 					setIsEdited(nextIsEdited)
 				}, 100)
-				console.log(isEditedRef.current)
 			}
 		}
 
@@ -644,7 +648,7 @@ export default function Completed() {
 							<Skeleton
 								animation="wave"
 								variant="rounded"
-								width={880}
+								width={'80%'}
 								height={170}
 								className="mb-6 bg-gray-500"
 							/>
