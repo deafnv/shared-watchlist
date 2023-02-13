@@ -372,7 +372,7 @@ export default function SeasonalDetails({
 							.fill('')
 							.map((i, index) => (
 								<table key={index}>
-									<tbody>
+									<thead>
 										<tr>
 											<th className="w-11">
 												{editEpisodesCurrent?.latest_episode! > 12 ? counter++ + 12 : counter++}
@@ -384,6 +384,8 @@ export default function SeasonalDetails({
 												{editEpisodesCurrent?.latest_episode! > 12 ? counter++ + 12 : counter++}
 											</th>
 										</tr>
+									</thead>
+									<tbody>
 										<tr>
 											<td
 												style={{
@@ -465,7 +467,7 @@ export default function SeasonalDetails({
 					.fill('')
 					.map((i, index) => (
 						<table key={index}>
-							<tbody>
+							<thead>
 								<tr>
 									<th className="w-11">
 										{item.latest_episode! > 12 ? counter++ + 12 : counter++}
@@ -477,6 +479,8 @@ export default function SeasonalDetails({
 										{item.latest_episode! > 12 ? counter++ + 12 : counter++}
 									</th>
 								</tr>
+							</thead>
+							<tbody>
 								<tr>
 									<td
 										style={{ background: determineEpisode(item.latest_episode!, counter - 3) }}

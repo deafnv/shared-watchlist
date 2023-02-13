@@ -777,12 +777,14 @@ export default function PTW() {
 					</div>
 				</header>
 				<table>
-					<tbody>
+					<thead>
 						<tr>
 							<th className="w-[100dvw] sm:w-[30rem]">
 								<span>Title</span>
 							</th>
 						</tr>
+					</thead>
+					<tbody>
 						{isLoadingClient
 							? loadingGlimmer(1)
 							: response?.map((item) => {

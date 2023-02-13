@@ -112,12 +112,14 @@ export default function CompletedPage({ id }: { id: number }) {
 					<div className="flex flex-col items-center px-8 py-4 max-w-[95%] border-[1px] border-white">
 						<h5 className="self-center mb-4 text-xl font-semibold">Ratings</h5>
 						<table className="mb-8">
-							<tbody>
+							<thead>
 								<tr>
 									<th>GoodTaste</th>
 									<th>TomoLover</th>
 									<th>TTAHHP(?)</th>
 								</tr>
+							</thead>
+							<tbody>
 								<tr>
 									<td>{response?.[0].rating1}</td>
 									<td>{response?.[0].rating2}</td>

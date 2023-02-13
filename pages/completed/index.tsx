@@ -216,9 +216,9 @@ export default function Completed() {
 					</button>
 				</div>
 				<table>
-					<tbody>
+					<thead>
 						<tr>
-							<th
+						<th
 								tabIndex={0}
 								onClick={() =>
 									sortListByNameSupabase(response, sortMethodRef, setResponse)
@@ -309,6 +309,8 @@ export default function Completed() {
 								<span className="absolute">{sortSymbol('end', sortMethodRef)}</span>
 							</th>
 						</tr>
+					</thead>
+					<tbody>
 						{isLoadingClient ? 
 						loadingGlimmer(7) : 
 						response?.map((item, index) => (

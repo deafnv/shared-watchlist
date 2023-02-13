@@ -160,7 +160,7 @@ td:not(:has(th)) {
 	border: none;
 }
 
-tr:not(:first-child):hover {
+tr:hover {
 	background-color: #3f3f3f;
 }
 

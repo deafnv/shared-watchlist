@@ -35,11 +35,13 @@ function UsersTable() {
 
   return (
     <table>
-      <tbody>
+      <thead>
         <tr>
           <th className='w-60'>Id</th>
           <th className='w-80'>Online at</th>
         </tr>
+      </thead>
+      <tbody>
         {Object.keys(onlineUsers ?? {}).map((key) => {
           return onlineUsers?.[key].map((item, index) => (
             <tr key={index}>

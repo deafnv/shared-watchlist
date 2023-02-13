@@ -609,7 +609,7 @@ export default function Statistics({
 					<h4 className="mt-2 text-xl font-semibold">Central Tendency</h4>
 					<div className="flex flex-col md:flex-row">
 						<table>
-							<tbody>
+							<thead>
 								<tr>
 									<th colSpan={3}>Mean</th>
 								</tr>
@@ -618,6 +618,8 @@ export default function Statistics({
 										<th key={item + 'a'}>{item}</th>
 									))}
 								</tr>
+							</thead>
+							<tbody>
 								<tr>
 									<td>{ratingStatTable.rating1Mean.toFixed(2)}</td>
 									<td>{ratingStatTable.rating2Mean.toFixed(2)}</td>
@@ -626,7 +628,7 @@ export default function Statistics({
 							</tbody>
 						</table>
 						<table>
-							<tbody>
+							<thead>
 								<tr>
 									<th colSpan={3}>Median</th>
 								</tr>
@@ -635,6 +637,8 @@ export default function Statistics({
 										<th key={item + 'b'}>{item}</th>
 									))}
 								</tr>
+							</thead>
+							<tbody>
 								<tr>
 									<td>{ratingStatTable.rating1Median.toFixed(2)}</td>
 									<td>{ratingStatTable.rating2Median.toFixed(2)}</td>
@@ -646,7 +650,7 @@ export default function Statistics({
 					<h4 className="mt-2 text-xl font-semibold">Dispersion</h4>
 					<div className="flex flex-col md:flex-row">
 						<table>
-							<tbody>
+							<thead>
 								<tr>
 									<th colSpan={3}>Standard Deviation</th>
 								</tr>
@@ -655,6 +659,8 @@ export default function Statistics({
 										<th key={item + 'a'}>{item}</th>
 									))}
 								</tr>
+							</thead>
+							<tbody>
 								<tr>
 									<td>{ratingStatTable.rating1SD.toFixed(4)}</td>
 									<td>{ratingStatTable.rating2SD.toFixed(4)}</td>
@@ -663,7 +669,7 @@ export default function Statistics({
 							</tbody>
 						</table>
 						<table>
-							<tbody>
+							<thead>
 								<tr>
 									<th colSpan={3}>Median Absolute Deviation</th>
 								</tr>
@@ -672,6 +678,8 @@ export default function Statistics({
 										<th key={item + 'b'}>{item}</th>
 									))}
 								</tr>
+							</thead>
+							<tbody>
 								<tr>
 									<td>{ratingStatTable.rating1MAD.toFixed(4)}</td>
 									<td>{ratingStatTable.rating2MAD.toFixed(4)}</td>
@@ -680,7 +688,7 @@ export default function Statistics({
 							</tbody>
 						</table>
 						<table>
-							<tbody>
+							<thead>
 								<tr>
 									<th colSpan={3}>Variance</th>
 								</tr>
@@ -689,6 +697,8 @@ export default function Statistics({
 										<th key={item + 'b'}>{item}</th>
 									))}
 								</tr>
+							</thead>
+							<tbody>
 								<tr>
 									<td>{ratingStatTable.rating1Variance.toFixed(4)}</td>
 									<td>{ratingStatTable.rating2Variance.toFixed(4)}</td>
@@ -700,7 +710,7 @@ export default function Statistics({
 					<h4 className="mt-2 text-xl font-semibold">Similarity</h4>
 					<div>
 						<table>
-							<tbody>
+							<thead>
 								<tr>
 									<th colSpan={3}>Correlation</th>
 								</tr>
@@ -709,6 +719,8 @@ export default function Statistics({
 									<th>TomoLover & MAL Rating</th>
 									<th>GoodTaste & TomoLover</th>
 								</tr>
+							</thead>
+							<tbody>
 								<tr>
 									<td>{ratingStatTable.rating1MalCorrelation.toFixed(4)}</td>
 									<td>{ratingStatTable.rating2MalCorrelation.toFixed(4)}</td>
@@ -717,7 +729,7 @@ export default function Statistics({
 							</tbody>
 						</table>
 						<table>
-							<tbody>
+							<thead>
 								<tr>
 									<th colSpan={3}>Covariance</th>
 								</tr>
@@ -726,6 +738,8 @@ export default function Statistics({
 									<th>TomoLover & MAL Rating</th>
 									<th>GoodTaste & TomoLover</th>
 								</tr>
+							</thead>
+							<tbody>
 								<tr>
 									<td>{ratingStatTable.rating1MalCovariance.toFixed(4)}</td>
 									<td>{ratingStatTable.rating2MalCovariance.toFixed(4)}</td>
