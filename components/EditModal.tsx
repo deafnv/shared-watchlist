@@ -65,11 +65,13 @@ export default function EditModal({
 					opacity: isInMainPage ? 0.3 : 'initial',
 					backgroundColor: isInMainPage ? 'black' : 'initial'
 				}}
+				onClick={() => (editModalRef.current!.style.display = 'none')}
 				className="fixed top-0 left-0 h-[100dvh] w-[100dvw]"
 			/>
 			<div className="fixed flex flex-col items-center h-[30rem] w-[50rem] px-10 py-6 bg-gray-700 rounded-md shadow-md shadow-black drop-shadow-md border-4 border-black top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 modal">
 				{isInMainPage ? (
 					<div
+						tabIndex={0}
 						onClick={() => (editModalRef.current!.style.display = 'none')}
 						className="absolute right-6 flex items-center justify-center h-11 w-11 rounded-full cursor-pointer transition-colors duration-150 hover:bg-slate-500"
 					>
@@ -88,9 +90,9 @@ export default function EditModal({
 					onSubmit={handleChange}
 					className="flex flex-col items-center absolute top-[40%] w-3/5"
 				>
-					<label className="flex flex-col gap-4 items-center mb-6 text-lg">
+					<label className="flex flex-col gap-4 items-center mb-6 w-4/5 text-lg">
 						Enter MyAnimeList link:
-						<input type="text" className="input-text" />
+						<input type="text" className="text-base input-text" />
 					</label>
 					<Link
 						href={`https://myanimelist.net/anime.php?q=${detailsModal?.title?.substring(0, 64)}`}

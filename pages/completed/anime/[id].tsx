@@ -69,7 +69,14 @@ export default function CompletedPage({ id }: { id: number }) {
 			setGenres(dataGenre.data!)
 		}
 		getData()
-		console.log(response)
+
+		const closeMenu = (e: KeyboardEvent) => {
+			if (e.key == 'Escape') {
+				if (editModalRef.current?.style.display == 'block') editModalRef.current.style.display = 'none'
+			}
+		}
+
+		document.addEventListener('keydown', closeMenu)
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [])
 

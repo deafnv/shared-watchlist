@@ -157,7 +157,8 @@ export default function Completed() {
 
 		const closeKeyboard = (e: KeyboardEvent) => {
 			if (e.key == 'Escape') {
-				if (detailsModalRef.current) setDetailsModal(null)
+				if (detailsModalRef.current && editModalRef.current?.style.display == 'none') setDetailsModal(null)
+				if (editModalRef.current?.style.display == 'block') editModalRef.current.style.display = 'none'
 				if (isEditedRef.current) setIsEdited('')
 			}
 			if (e.key == 'Tab' && isEditedRef.current) {
@@ -611,7 +612,7 @@ export default function Completed() {
 					onClick={() => setDetailsModal(null)}
 					className="fixed top-0 left-0 h-[100dvh] w-[100dvw] glass-modal"
 				/>
-				<article className="fixed flex flex-col items-center h-[80dvh] w-[80dvw] md:w-[50dvw] px-4 sm:px-10 py-6 bg-gray-700 rounded-md shadow-md shadow-black drop-shadow-md top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 modal">
+				<article className="fixed flex flex-col items-center h-[80dvh] w-[80dvw] md:w-[60dvw] px-4 sm:px-10 py-6 bg-gray-700 rounded-md shadow-md shadow-black drop-shadow-md top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 modal">
 					<Link
 						href={`${location.origin}/completed/anime/${details?.id}`}
 						className="px-12 font-bold text-lg sm:text-2xl text-center line-clamp-3 link"
@@ -624,8 +625,8 @@ export default function Completed() {
 					>
 						<EditIcon sx={{
 							fontSize: {
-								sm: 20,
-								lg: 30	
+								sm: 25,
+								lg: 30
 							}
 						}} />
 					</div>
@@ -661,10 +662,11 @@ export default function Completed() {
 									src={details?.image_url!}
 									alt="Art"
 									fill
+									sizes="30vw"
 									className="object-contain"
 								/>
 							</div>
-							<p title={details?.mal_synopsis!} className="mb-6 text-center lg:line-clamp-[8] hidden">
+							<p title={details?.mal_synopsis!} className="mb-6 text-center lg:line-clamp-3 hidden">
 								{details?.mal_synopsis}
 							</p>
 						</>
