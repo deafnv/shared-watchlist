@@ -22,10 +22,11 @@ export default function Seasonal() {
 	const addRecordButtonRef = useRef<HTMLDivElement>(null)
 	const contextMenuRef = useRef<HTMLDivElement>(null)
 	const contextMenuButtonRef = useRef<any>([])
+	const isEditedRef = useRef('')
 
 	const [response, setResponse] = useState<any>()
 	const [response1, setResponse1] = useState<any>()
-	const [isEdited, setIsEdited] = useState<string>('')
+	const [isEdited, setIsEditedState] = useState<string>('')
 	const [isLoadingEditForm, setIsLoadingEditForm] = useState<Array<string>>([])
 	const [isAdded, setIsAdded] = useState(false)
 	const [settingsMenu, setSettingsMenu] = useState<{
@@ -43,6 +44,11 @@ export default function Seasonal() {
 	const { setLoading } = useLoading()
 
 	const router = useRouter()
+
+	const setIsEdited = (value: string) => {
+		isEditedRef.current = value
+		setIsEditedState(value)
+	}
 
 	useEffect(() => {
 		const supabase = createClient<Database>(
@@ -195,7 +201,7 @@ export default function Seasonal() {
 						{response?.map((item: any, index: any) => (
 							<Item 
 								key={item.order} 
-								props={{ item, index, setIsLoadingEditForm, isLoadingEditForm, setIsEdited, isEdited, contextMenuButtonRef, setContextMenu, response, setResponse }}
+								props={{ item, index, setIsLoadingEditForm, isLoadingEditForm, setIsEdited, isEdited, isEditedRef, contextMenuButtonRef, setContextMenu, response, setResponse }}
 							/>
 						))}
 					</Reorder.Group>
@@ -427,8 +433,9 @@ interface ItemProps {
 		index: number,
 		setIsLoadingEditForm: Dispatch<SetStateAction<string[]>>,
 		isLoadingEditForm: string[],
-		setIsEdited: Dispatch<SetStateAction<string>>,
+		setIsEdited: (value: string) => void,
 		isEdited: string,
+		isEditedRef: MutableRefObject<string>,
 		contextMenuButtonRef: MutableRefObject<any>,
 		setContextMenu: Dispatch<SetStateAction<{
 			top: number;
@@ -441,7 +448,7 @@ interface ItemProps {
 }
 
 function Item({ props }: ItemProps) {
-	const { item, index, setIsLoadingEditForm, isLoadingEditForm, setIsEdited, isEdited, contextMenuButtonRef, setContextMenu, response, setResponse } = props
+	const { item, index, setIsLoadingEditForm, isLoadingEditForm, setIsEdited, isEdited, isEditedRef, contextMenuButtonRef, setContextMenu, response, setResponse } = props
 	const controls = useDragControls()
 	const statusColor = determineStatus(item)
 	const startDate = new Date(item?.SeasonalDetails?.[0]?.start_date).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })
@@ -496,7 +503,7 @@ function Item({ props }: ItemProps) {
 			>
 				<span className='flex items-center justify-center'>
 					{isEdited == `seasonal_status_${item.title}_${item.order}`
-						? editStatus(item.order, item.title!)
+						? editStatus(item.order, item.title!, item.status)
 						: ''}
 				</span>
 				{isLoadingEditForm.includes(`status_${item.order}`) && (
@@ -542,6 +549,13 @@ function Item({ props }: ItemProps) {
 
 		async function handleSubmit(event: BaseSyntheticEvent): Promise<void> {
 			event.preventDefault()
+			const currentlyProcessedEdit = isEditedRef.current
+
+			if (ogvalue == event.target[0].value) {
+				setIsEdited('')
+				return
+			}
+
 			setIsLoadingEditForm(isLoadingEditForm.concat(`${field}_${order}`))
 
 			try {
@@ -550,11 +564,7 @@ function Item({ props }: ItemProps) {
 					cell: column + row
 				})
 
-				const changed = response?.slice()
-				if (!changed) return
-				changed.find((item: any) => item.order === order)!['title'] = event.target[0].value
-				setResponse(changed)
-				setIsEdited('')
+				if (isEditedRef.current == currentlyProcessedEdit) setIsEdited('')
 				setIsLoadingEditForm(isLoadingEditForm.filter((item) => item == `${field}_${order}`))
 			} catch (error) {
 				setIsLoadingEditForm(isLoadingEditForm.filter((item) => item == `${field}_${order}`))
@@ -585,9 +595,16 @@ function Item({ props }: ItemProps) {
 		)
 	}
 
-	function editStatus(order: number, title: string) {
+	function editStatus(order: number, title: string, ogvalue: string) {
 		async function handleSubmit(event: BaseSyntheticEvent) {
 			event.preventDefault()
+			const currentlyProcessedEdit = isEditedRef.current
+
+			if (ogvalue == event.target[0].value) {
+				setIsEdited('')
+				return
+			}
+
 			setIsLoadingEditForm(isLoadingEditForm.concat(`status_${order}`))
 
 			let row = order + 2
@@ -601,7 +618,7 @@ function Item({ props }: ItemProps) {
 				if (!changed) return
 				changed.find((item: any) => item.order === order)!['status'] = event.target.childNodes[0].value
 				setResponse(changed)
-				setIsEdited('')
+				if (isEditedRef.current == currentlyProcessedEdit) setIsEdited('')
 				setIsLoadingEditForm(isLoadingEditForm.filter((item) => item == `status_${order}`))
 			} catch (error) {
 				setIsLoadingEditForm(isLoadingEditForm.filter((item) => item == `status_${order}`))
@@ -627,7 +644,7 @@ function Item({ props }: ItemProps) {
 							onChange={(e) => {
 								;(e.target.parentNode as HTMLFormElement)!.requestSubmit()
 							}}
-							className="h-full w-full"
+							className="p-2 h-full w-full select-none text-white bg-[#2e2e2e] rounded-md"
 						>
 							<option>Select status</option>
 							<option>Watched</option>
