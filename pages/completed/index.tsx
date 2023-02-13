@@ -166,12 +166,10 @@ export default function Completed() {
 				const fields = ['title', 'type', 'episode', 'rating1', 'rating2', 'start', 'end']
 				const split = isEditedRef.current.split('_')
 				const nextField = fields.findIndex(item => item == split[0]) + 1
-				const nextIsEdited = nextField < fields.length ? `${fields[nextField]}_${split[1]}` : '';
+				const nextIsEdited = nextField < fields.length ? `${fields[nextField]}_${split[1]}` : `title_${parseInt(split[1]) - 1}`;
 				((e.target as HTMLElement).parentNode as HTMLFormElement).requestSubmit()
 				setIsEdited('')
-				setTimeout(() => {
-					setIsEdited(nextIsEdited)
-				}, 100)
+				setTimeout(() => setIsEdited(nextIsEdited), 100)
 			}
 		}
 
@@ -819,8 +817,17 @@ export default function Completed() {
 			const dateEntered = new Date(event.target[0].value)
 			const currentlyProcessedEdit = isEditedRef.current
 			event.preventDefault()
+			
+			if (ogvalue == event.target[0].value || ogvalue == dateEntered.toLocaleDateString('en-US', {
+				day: 'numeric',
+				month: 'long',
+				year: 'numeric'
+			})) {
+				setIsEdited('')
+				return
+			}
+			
 			setIsLoadingEditForm(isLoadingEditForm.concat(`${field}_${id}`))
-
 			try {
 				await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/update`, {
 					content: isDate ? (dateEntered.toString() == 'Invalid Date' ? 'Unknown' : dateEntered.toLocaleDateString('en-US', {
