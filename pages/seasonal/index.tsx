@@ -207,10 +207,10 @@ export default function Seasonal() {
 						}}
 						className="flex flex-col items-center w-[30rem] px-2"
 					>
-						<span className="mt-2 text-red-500 text-center">
+						{/* <span className="mt-2 text-red-500 text-center">
 							⚠ Live updates will be paused while changes are being made to this table (Not
 							really)
-						</span>
+						</span> */}
 						<div className="flex gap-2 my-2">
 							<button
 								className="input-submit p-2 rounded-md"

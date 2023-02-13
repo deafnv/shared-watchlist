@@ -37,10 +37,11 @@ export default function Completed() {
 	const settingsMenuRef = useRef<HTMLDivElement>(null)
 	const settingsMenuButtonRef = useRef<HTMLDivElement>(null)
 	const sortMethodRef = useRef('')
+	const isEditedRef = useRef('')
 
 	const [response, setResponse] = useState<Database['public']['Tables']['Completed']['Row'][]>()
 	const [response1, setResponse1] = useState<Database['public']['Tables']['Completed']['Row'][]>()
-	const [isEdited, setIsEdited] = useState<string>('')
+	const [isEdited, setIsEditedState] = useState<string>('')
 	const [isLoadingClient, setIsLoadingClient] = useState(true)
 	const [isLoadingEditForm, setIsLoadingEditForm] = useState<Array<string>>([])
 	const [contextMenu, setContextMenu] = useState<{
@@ -60,13 +61,18 @@ export default function Completed() {
 
 	const router = useRouter()
 
+	const setIsEdited = (value: string) => {
+		isEditedRef.current = value
+		setIsEditedState(value)
+	}
+
 	const supabase = createClient<Database>(
 		'https://esjopxdrlewtpffznsxh.supabase.co',
 		process.env.NEXT_PUBLIC_SUPABASE_API_KEY!
 	)
 
 	useEffect(() => {
-		//FIXME: Don't expose API key to client side
+		//FIXME: Don't expose API key to client side (currently exposing read-only key)
 		const supabase = createClient<Database>(
 			'https://esjopxdrlewtpffznsxh.supabase.co',
 			process.env.NEXT_PUBLIC_SUPABASE_API_KEY!
@@ -89,7 +95,6 @@ export default function Completed() {
 				'postgres_changes',
 				{ event: '*', schema: 'public', table: 'Completed' },
 				async (payload) => {
-					//FIXME: Create timeout here so it doesn't query DB every change if change occurs too frequently
 					const { data } = await supabase
 						.from('Completed')
 						.select()
@@ -145,7 +150,24 @@ export default function Completed() {
 		}
 
 		const closeKeyboard = (e: KeyboardEvent) => {
-			if (e.key == 'Escape' && detailsModal) setDetailsModal(null)
+			if (e.key == 'Escape') {
+				if (detailsModal) setDetailsModal(null) //FIXME: Create ref so this works
+				if (isEditedRef.current) setIsEdited('')
+			}
+			if (e.key == 'Tab' && isEditedRef.current) {
+				console.log(isEditedRef.current)
+				e.preventDefault()
+				const fields = ['title', 'type', 'episode', 'rating1', 'rating2', 'start', 'end']
+				const split = isEditedRef.current.split('_')
+				const nextField = fields.findIndex(item => item == split[0]) + 1
+				const nextIsEdited = nextField < fields.length ? `${fields[nextField]}_${split[1]}` : '';
+				((e.target as HTMLElement).parentNode as HTMLFormElement).requestSubmit()
+				setIsEdited('')
+				setTimeout(() => {
+					setIsEdited(nextIsEdited)
+				}, 100)
+				console.log(isEditedRef.current)
+			}
 		}
 
 		document.addEventListener('click', closeMenus)
@@ -320,12 +342,12 @@ export default function Completed() {
 										opacity: isLoadingEditForm.includes(`title_${item.id}`) ? 0.5 : 1
 									}}
 									onDoubleClick={() => {
-										setIsEdited(`title${item.id}`)
+										setIsEdited(`title_${item.id}`)
 									}}
 									className="relative min-w-[1rem]"
 								>
 									<span>
-										{isEdited == `title${item.id}` ? (
+										{isEdited == `title_${item.id}` ? (
 											editForm('title', item.id, item.title!)
 										) : item.title ? (
 											item.title
@@ -351,12 +373,12 @@ export default function Completed() {
 										opacity: isLoadingEditForm.includes(`type_${item.id}`) ? 0.5 : 1
 									}}
 									onDoubleClick={() => {
-										setIsEdited(`type${item.id}`)
+										setIsEdited(`type_${item.id}`)
 									}}
 									className="relative hidden md:table-cell"
 								>
 									<span>
-										{isEdited == `type${item.id}`
+										{isEdited == `type_${item.id}`
 											? editForm('type', item.id, item.type ?? '')
 											: item.type}
 									</span>
@@ -369,12 +391,12 @@ export default function Completed() {
 										opacity: isLoadingEditForm.includes(`episode_${item.id}`) ? 0.5 : 1
 									}}
 									onDoubleClick={() => {
-										setIsEdited(`episode${item.id}`)
+										setIsEdited(`episode_${item.id}`)
 									}}
 									className="relative hidden md:table-cell"
 								>
 									<span>
-										{isEdited == `episode${item.id}`
+										{isEdited == `episode_${item.id}`
 											? editForm('episode', item.id, item.episode ?? '')
 											: item.episode}
 									</span>
@@ -387,12 +409,12 @@ export default function Completed() {
 										opacity: isLoadingEditForm.includes(`rating1_${item.id}`) ? 0.5 : 1
 									}}
 									onDoubleClick={() => {
-										setIsEdited(`rating1${item.id}`)
+										setIsEdited(`rating1_${item.id}`)
 									}}
 									className="relative"
 								>
 									<span>
-										{isEdited == `rating1${item.id}`
+										{isEdited == `rating1_${item.id}`
 											? editForm('rating1', item.id, item.rating1 ?? '')
 											: item.rating1}
 									</span>
@@ -405,12 +427,12 @@ export default function Completed() {
 										opacity: isLoadingEditForm.includes(`rating2_${item.id}`) ? 0.5 : 1
 									}}
 									onDoubleClick={() => {
-										setIsEdited(`rating2${item.id}`)
+										setIsEdited(`rating2_${item.id}`)
 									}}
 									className="relative"
 								>
 									<span>
-										{isEdited == `rating2${item.id}`
+										{isEdited == `rating2_${item.id}`
 											? editForm('rating2', item.id, item.rating2 ?? '')
 											: item.rating2}
 									</span>
@@ -423,12 +445,12 @@ export default function Completed() {
 										opacity: isLoadingEditForm.includes(`start_${item.id}`) ? 0.5 : 1
 									}}
 									onDoubleClick={() => {
-										setIsEdited(`start${item.id}`)
+										setIsEdited(`start_${item.id}`)
 									}}
 									className="relative hidden md:table-cell"
 								>
 									<span>
-										{isEdited == `start${item.id}`
+										{isEdited == `start_${item.id}`
 											? editForm('start', item.id, item.start ?? '')
 											: item.start}
 									</span>
@@ -441,12 +463,12 @@ export default function Completed() {
 										opacity: isLoadingEditForm.includes(`end_${item.id}`) ? 0.5 : 1
 									}}
 									onDoubleClick={() => {
-										setIsEdited(`end${item.id}`)
+										setIsEdited(`end_${item.id}`)
 									}}
 									className="relative hidden md:table-cell"
 								>
 									<span>
-										{isEdited == `end${item.id}`
+										{isEdited == `end_${item.id}`
 											? editForm('end', item.id, item.end ?? '')
 											: item.end}
 									</span>
@@ -754,7 +776,6 @@ export default function Completed() {
 		)
 	}
 
-	//TODO: Detect pressing tab so it jumps to the next field to be edited
 	function editForm(
 		field: 'title' | 'type' | 'episode' | 'rating1' | 'rating2' | 'start' | 'end',
 		id: number,
@@ -792,6 +813,7 @@ export default function Completed() {
 		async function handleSubmit(event: BaseSyntheticEvent): Promise<void> {
 			const isDate = field == 'start' || field == 'end'
 			const dateEntered = new Date(event.target[0].value)
+			const currentlyProcessedEdit = isEditedRef.current
 			event.preventDefault()
 			setIsLoadingEditForm(isLoadingEditForm.concat(`${field}_${id}`))
 
@@ -805,7 +827,7 @@ export default function Completed() {
 					cell: column + row
 				})
 
-				setIsEdited('')
+				if (isEditedRef.current == currentlyProcessedEdit) setIsEdited('')
 				setIsLoadingEditForm(isLoadingEditForm.filter((item) => item == `${field}_${id}`))
 			} catch (error) {
 				setIsLoadingEditForm(isLoadingEditForm.filter((item) => item == `${field}_${id}`))
@@ -873,7 +895,7 @@ export default function Completed() {
 				cell: 'A' + (response.length + 2).toString()
 			})
 
-			setIsEdited(`title${response.length + 1}`)
+			setIsEdited(`title_${response.length + 1}`)
 			setLoading(false)
 		} catch (error) {
 			setLoading(false)
