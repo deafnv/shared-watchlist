@@ -53,7 +53,7 @@ export default function Navbar({ children }: React.PropsWithChildren) {
 	useEffect(() => {
 		async function getTimer() {
 			axios
-				.get('https://update.ilovesabrina.org/timer')
+				.get(`${process.env.NEXT_PUBLIC_UPDATE_URL}/timer`)
 				.then((response) => setTimer(response.data))
 				.catch((error) => setTimer('Error'))
 		}
