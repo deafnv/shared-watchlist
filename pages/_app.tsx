@@ -10,6 +10,8 @@ import { ThemeProvider, createTheme } from '@mui/material'
 import { orange } from '@mui/material/colors'
 import { Analytics } from '@vercel/analytics/react'
 import { PresenceProvider } from '../components/PresenceProvider'
+import Head from 'next/head'
+import HeadCommon from '../components/Head'
 
 declare module '@mui/material/styles' {
 	interface Theme {
@@ -71,15 +73,18 @@ export default function App({ Component, pageProps }: AppProps) {
 	const env = process.env.NODE_ENV == 'production'
 
 	return (
-		<ThemeProvider theme={theme}>
-			<PresenceProvider>
-				<LoadingProvider>
-					<Navbar>
-						<Component {...pageProps} />
-					</Navbar>
-				</LoadingProvider>
-				{env && <Analytics />}
-			</PresenceProvider>
-		</ThemeProvider>
+		<>
+			<HeadCommon />
+			<ThemeProvider theme={theme}>
+				<PresenceProvider>
+					<LoadingProvider>
+						<Navbar>
+							<Component {...pageProps} />
+						</Navbar>
+					</LoadingProvider>
+					{env && <Analytics />}
+				</PresenceProvider>
+			</ThemeProvider>
+		</>
 	)
 }

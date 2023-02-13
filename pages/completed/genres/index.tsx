@@ -36,8 +36,6 @@ export default function CompletedDetails() {
 			<Head>
 				<title>Cytube Watchlist</title>
 				<meta name="description" content="Completed Details" />
-				<meta name="viewport" content="width=device-width, initial-scale=1" />
-				<link rel="icon" href="/favicon.ico" />
 			</Head>
 
 			<main className="flex flex-col items-center justify-center px-6 py-2">

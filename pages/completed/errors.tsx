@@ -99,8 +99,6 @@ export default function CompletedErrors() {
 				<Head>
 					<title>Cytube Watchlist</title>
 					<meta name="description" content="Completed Errors" />
-					<meta name="viewport" content="width=device-width, initial-scale=1" />
-					<link rel="icon" href="/favicon.ico" />
 				</Head>
 
 				<main className="flex flex-col items-center justify-center h-[100dvh] mb-24 px-1 md:px-0">
@@ -117,8 +115,6 @@ export default function CompletedErrors() {
 			<Head>
 				<title>Cytube Watchlist</title>
 				<meta name="description" content="Completed Errors" />
-				<meta name="viewport" content="width=device-width, initial-scale=1" />
-				<link rel="icon" href="/favicon.ico" />
 			</Head>
 
 			<main className="flex flex-col items-center justify-center mb-24 px-6 py-2">

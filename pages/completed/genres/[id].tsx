@@ -75,8 +75,6 @@ export default function GenrePage({ id }: { id: number }) {
 							(response?.[0]?.Genres as { name: string | null }[])?.[0].name
 						} animes in Completed`}
 					/>
-					<meta name="viewport" content="width=device-width, initial-scale=1" />
-					<link rel="icon" href="/favicon.ico" />
 				</Head>
 
 				<main className="flex flex-col items-center justify-center gap-3 mx-auto h-[90dvh] md:w-3/5 sm:w-full">
@@ -96,8 +94,6 @@ export default function GenrePage({ id }: { id: number }) {
 						(response?.[0]?.Genres as { name: string | null }[])?.[0].name
 					} animes in Completed`}
 				/>
-				<meta name="viewport" content="width=device-width, initial-scale=1" />
-				<link rel="icon" href="/favicon.ico" />
 			</Head>
 
 			<main className="flex flex-col items-center justify-center gap-3 mx-auto md:w-3/5 sm:w-full">
