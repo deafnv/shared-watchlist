@@ -494,7 +494,10 @@ export default function Completed() {
 		async function handleLoadDetails() {
 			setLoading(true)
 			try {
-				await axios.get('/api/completed/loadcompleteddetails')
+				await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/completed/loadcompleteddetails`)
+				await axios.post('/api/revalidate', {
+					route: '/completed/statistics'
+				})
 				setLoading(false)
 			} catch (error) {
 				setLoading(false)
@@ -544,7 +547,10 @@ export default function Completed() {
 		async function handleReload() {
 			try {
 				setLoading(true)
-				await axios.get('/api/loadcompleteddetails')
+				await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/completed/loadcompleteddetails`)
+				await axios.post('/api/revalidate', {
+					route: '/completed/statistics'
+				})
 				router.reload()
 			} catch (error) {
 				setLoading(false)

@@ -279,7 +279,9 @@ export default function SeasonalDetails({
 				await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/seasonal/trackitem`, {
 					id: contextMenu.currentItem?.mal_id
 				})
-				await axios.get('/api/revalidate')
+				await axios.post('/api/revalidate', {
+					route: '/seasonal/track'
+				})
 				router.reload()
 			} catch (error) {
 				setLoading(false)
@@ -430,7 +432,9 @@ export default function SeasonalDetails({
 		try {
 			setLoading(true)
 			await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/seasonal/batchtrack`)
-			await axios.get('/api/revalidate')
+			await axios.post('/api/revalidate', {
+				route: '/seasonal/track'
+			})
 			router.reload()
 		} catch (error) {
 			setLoading(false)
