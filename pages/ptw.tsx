@@ -15,6 +15,9 @@ import AddIcon from '@mui/icons-material/Add'
 import isEqual from 'lodash/isEqual'
 import RefreshIcon from '@mui/icons-material/Refresh'
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator'
+import { io, Socket } from 'socket.io-client'
+
+let socket: Socket
 
 export default function PTW() {
 	const rolledTitleRef = useRef('???')
@@ -121,6 +124,21 @@ export default function PTW() {
 		}
 		getData()
 
+		const initializeSocket = async () => {
+			socket = io(process.env.NEXT_PUBLIC_API_URL!)
+			socket.on('connect', () => {
+				console.log('connected')
+			})
+
+			socket.on('roll', payload => {
+				setRolledTitle(payload.message)
+				if (payload.isLoading) {
+					setLoading(true)
+				} else setLoading(false)
+			})
+		}
+		initializeSocket()
+
 		const refresh = setInterval(
 			() => axios.get(`${process.env.NEXT_PUBLIC_UPDATE_URL}/refresh`),
 			3500000
@@ -158,15 +176,6 @@ export default function PTW() {
 							break
 					}
 				}
-			})
-			.subscribe()
-
-		channel
-			.on('broadcast', { event: 'ROLL' }, (payload) => {
-				setRolledTitle(payload.message)
-				if (payload.isLoading) {
-					setLoading(true)
-				} else setLoading(false)
 			})
 			.subscribe()
 
@@ -232,7 +241,6 @@ export default function PTW() {
 		return () => {
 			latencyChannel.unsubscribe()
 			databaseChannel.unsubscribe()
-			channel.unsubscribe()
 			clearInterval(refresh)
 			clearInterval(pingInterval)
 			document.removeEventListener('click', resetOnClickOut)
@@ -447,20 +455,15 @@ export default function PTW() {
 				concatArr = categoryCasual ? responseCasual : responseNonCasual
 			}
 
-			if (supabase.getChannels()[0].state != 'joined') channel.subscribe()
 			if (categoryCasual) {
 				const randomTitle = concatArr?.[getRandomInt(responseCasual.length)].title!
-				channel.send({
-					type: 'broadcast',
-					event: 'ROLL',
+				socket.emit('roll', {
 					message: randomTitle
 				})
 				setRolledTitle(randomTitle)
 			} else {
 				const randomTitle = concatArr?.[getRandomInt(responseNonCasual.length)].title!
-				channel.send({
-					type: 'broadcast',
-					event: 'ROLL',
+				socket.emit('roll', {
 					message: randomTitle
 				})
 				setRolledTitle(randomTitle)
@@ -468,10 +471,7 @@ export default function PTW() {
 		}
 
 		function handleCancel() {
-			if (supabase.getChannels()[0].state != 'joined') channel.subscribe()
-			channel.send({
-				type: 'broadcast',
-				event: 'ROLL',
+			socket.emit('roll', {
 				message: '???'
 			})
 			setRolledTitle('???')
@@ -492,10 +492,7 @@ export default function PTW() {
 				return
 			}
 
-			if (supabase.getChannels()[0].state != 'joined') channel.subscribe()
-			channel.send({
-				type: 'broadcast',
-				event: 'ROLL',
+			socket.emit('roll', {
 				message: rolledTitle,
 				isLoading: true
 			})
@@ -514,20 +511,14 @@ export default function PTW() {
 				try {
 					await addRolledAPI(range, updatePayload, addCell)
 					setLoading(false)
-					if (supabase.getChannels()[0].state != 'joined') channel.subscribe()
-					channel.send({
-						type: 'broadcast',
-						event: 'ROLL',
+					socket.emit('roll', {
 						message: '???',
 						isLoading: false
 					})
 					setRolledTitle('???')
 					return
 				} catch (error) {
-					if (supabase.getChannels()[0].state != 'joined') channel.subscribe()
-					channel.send({
-						type: 'broadcast',
-						event: 'ROLL',
+					socket.emit('roll', {
 						message: rolledTitle,
 						isLoading: false
 					})
@@ -550,10 +541,7 @@ export default function PTW() {
 				const addCell = `N${responseRolled.length + 2}:N${responseRolled.length + 2}`
 				try {
 					await addRolledAPI(range, updatePayload, addCell)
-					if (supabase.getChannels()[0].state != 'joined') channel.subscribe()
-					channel.send({
-						type: 'broadcast',
-						event: 'ROLL',
+					socket.emit('roll', {
 						message: '???',
 						isLoading: false
 					})
@@ -561,10 +549,7 @@ export default function PTW() {
 					setRolledTitle('???')
 					return
 				} catch (error) {
-					if (supabase.getChannels()[0].state != 'joined') channel.subscribe()
-					channel.send({
-						type: 'broadcast',
-						event: 'ROLL',
+					socket.emit('roll', {
 						message: rolledTitle,
 						isLoading: false
 					})
@@ -583,10 +568,7 @@ export default function PTW() {
 				const addCell = `N${responseRolled.length + 2}:N${responseRolled.length + 2}`
 				try {
 					await addRolledAPI(range, updatePayload, addCell)
-					if (supabase.getChannels()[0].state != 'joined') channel.subscribe()
-					channel.send({
-						type: 'broadcast',
-						event: 'ROLL',
+					socket.emit('roll', {
 						message: '???',
 						isLoading: false
 					})
@@ -594,10 +576,7 @@ export default function PTW() {
 					setRolledTitle('???')
 					return
 				} catch (error) {
-					if (supabase.getChannels()[0].state != 'joined') channel.subscribe()
-					channel.send({
-						type: 'broadcast',
-						event: 'ROLL',
+					socket.emit('roll', {
 						message: rolledTitle,
 						isLoading: false
 					})
