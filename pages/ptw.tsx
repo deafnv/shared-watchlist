@@ -26,7 +26,6 @@ export default function PTW() {
 	const sortMethodRef = useRef('')
 	const isEditedRef = useRef('')
 	const reordered = useRef(false)
-	const statusRef = useRef<HTMLSpanElement>(null)
 	const setReordered = (value: boolean) => reordered.current = value 
 
 	const [responseRolled, setResponseRolled] =
@@ -121,17 +120,6 @@ export default function PTW() {
 				.catch((error) => console.log(error))
 		}
 		getData()
-
-		const statusInterval = setInterval(() => {
-			console.log(supabase.getChannels())
-			if (supabase.getChannels()[0].state == 'joined') {
-				statusRef.current!.innerHTML = 'Connected'
-				statusRef.current!.style.color = 'limegreen'
-			} else {
-				statusRef.current!.innerHTML = 'Offline'
-				statusRef.current!.style.color = 'orangered'
-			}
-		}, 1000)
 
 		const refresh = setInterval(
 			() => axios.get(`${process.env.NEXT_PUBLIC_UPDATE_URL}/refresh`),
@@ -245,7 +233,6 @@ export default function PTW() {
 			latencyChannel.unsubscribe()
 			databaseChannel.unsubscribe()
 			channel.unsubscribe()
-			clearInterval(statusInterval)
 			clearInterval(refresh)
 			clearInterval(pingInterval)
 			document.removeEventListener('click', resetOnClickOut)
@@ -263,10 +250,6 @@ export default function PTW() {
 			</Head>
 
 			<main className="flex flex-col items-center justify-center gap-4 mb-24 px-6 py-2">
-				<span
-					ref={statusRef}
-					className='fixed top-0 left-8 z-[60] m-4 font-semibold lg:visible invisible'
-				></span>
 				<section className="flex flex-col lg:flex-row items-center justify-center w-full gap-12">
 					<div className="flex flex-col items-center min-h-[40rem] w-[30rem] lg:w-auto">
 						<header className='flex items-center mt-5'>
