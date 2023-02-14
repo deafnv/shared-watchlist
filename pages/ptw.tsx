@@ -144,7 +144,6 @@ export default function PTW() {
 		
 			socket.emit("ping", () => {
 				const duration = Date.now() - start
-				console.log(duration)
 				setLatency(duration)
 			})
 		}, 2500)
@@ -507,7 +506,7 @@ export default function PTW() {
 				}
 			}
 
-			const isInCasual = responseMovies.find((item) => item.title == rolledTitle)
+			const isInCasual = responseCasual.find((item) => item.title == rolledTitle)
 
 			if (isInCasual) {
 				//? If rolled title is in category casual
