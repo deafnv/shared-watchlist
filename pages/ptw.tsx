@@ -139,6 +139,16 @@ export default function PTW() {
 		}
 		initializeSocket()
 
+		const pingInterval = setInterval(() => {
+			const start = Date.now()
+		
+			socket.emit("ping", () => {
+				const duration = Date.now() - start
+				console.log(duration)
+				setLatency(duration)
+			})
+		}, 2500)
+
 		const refresh = setInterval(
 			() => axios.get(`${process.env.NEXT_PUBLIC_UPDATE_URL}/refresh`),
 			3500000
@@ -179,36 +189,6 @@ export default function PTW() {
 			})
 			.subscribe()
 
-		let pingInterval: ReturnType<typeof setInterval> | undefined
-		const latencyChannel = supabase
-			.channel(`ping:${getRandomInt(1000000000)}`, {
-				config: {
-					broadcast: { ack: true }
-				}
-			})
-			.subscribe((status) => {
-				if (status == 'SUBSCRIBED') {
-					pingInterval = setInterval(async () => {
-						const begin = performance.now()
-
-						const response = await latencyChannel.send({
-							type: 'broadcast',
-							event: 'latency',
-							payload: {}
-						})
-
-						if (response !== 'ok') {
-							console.log('Ping error')
-							setLatency(-1)
-						} else {
-							const end = performance.now()
-							const newLatency = end - begin
-							setLatency(newLatency)
-						}
-					}, 5000)
-				}
-			})
-
 		const resetOnClickOut = (e: any) => {
 			if (e.target?.tagName !== 'INPUT' && isEdited) {
 				setIsEdited('')
@@ -239,7 +219,6 @@ export default function PTW() {
 		window.addEventListener('keydown', resetEditedOnEscape)
 
 		return () => {
-			latencyChannel.unsubscribe()
 			databaseChannel.unsubscribe()
 			clearInterval(refresh)
 			clearInterval(pingInterval)
