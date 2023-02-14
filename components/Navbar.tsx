@@ -102,14 +102,13 @@ export default function Navbar() {
 											style={{ left: link.posLeft }}
 											className="absolute top-[3.4rem] translate-x-2 sm:translate-x-0 z-50 h-max sm:w-36 bg-black border-pink-400 border-[1px] rounded-md hidden group-hover:block group-focus-within:block"
 										>
-											<ul className="py-1">
+											<ul className="flex flex-col gap-1 py-1">
 												{link.dropdown.map((item, index) => {
 													return (
 														<li key={index} className="flex py-0">
 															<Link
 																href={item.route}
 																style={{
-																	background: item.route == router.pathname ? 'rgb(244 114 182)' : '',
 																	pointerEvents: item.route == router.pathname ? 'none' : 'auto'
 																}}
 																className="h-full w-full px-3 py-3 rounded-md text-center hover:bg-pink-400 focus:bg-pink-400 transition-colors duration-150"
@@ -130,7 +129,6 @@ export default function Navbar() {
 										<Link
 											href={link.route}
 											style={{
-												background: link.route == router.pathname ? 'rgb(244 114 182)' : '',
 												pointerEvents: link.route == router.pathname ? 'none' : 'auto'
 											}}
 											className="px-2 sm:px-4 py-4 text-[0.75rem] sm:text-base rounded-lg hover:bg-pink-400 focus:bg-pink-400 transition-colors duration-150"
