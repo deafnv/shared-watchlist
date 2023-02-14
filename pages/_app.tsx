@@ -78,9 +78,8 @@ export default function App({ Component, pageProps }: AppProps) {
 			<ThemeProvider theme={theme}>
 				<PresenceProvider>
 					<LoadingProvider>
-						<Navbar>
-							<Component {...pageProps} />
-						</Navbar>
+						<Navbar />
+						<Component {...pageProps} />
 					</LoadingProvider>
 					{env && <Analytics />}
 				</PresenceProvider>

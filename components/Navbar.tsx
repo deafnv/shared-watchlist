@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react'
 import Loading from './LoadingComponent'
 import { useLoading } from './LoadingContext'
 
-export default function Navbar({ children }: React.PropsWithChildren) {
+export default function Navbar() {
 	const router = useRouter()
 	const { loading } = useLoading()
 	const [timer, setTimer] = useState<string>('1970-01-01T11:18:58.453Z')
@@ -143,8 +143,6 @@ export default function Navbar({ children }: React.PropsWithChildren) {
 					</ul>
 				</div>
 			</nav>
-
-			{children}
 		</>
 	)
 }

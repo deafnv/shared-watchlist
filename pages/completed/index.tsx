@@ -39,6 +39,7 @@ export default function Completed() {
 	const sortMethodRef = useRef('')
 	const isEditedRef = useRef('')
 	const detailsModalRef = useRef<Database['public']['Tables']['Completed']['Row'] | null>(null)
+	const statusRef = useRef<HTMLSpanElement>(null)
 
 	const [response, setResponse] = useState<Database['public']['Tables']['Completed']['Row'][]>()
 	const [response1, setResponse1] = useState<Database['public']['Tables']['Completed']['Row'][]>()
@@ -124,6 +125,16 @@ export default function Completed() {
 			)
 			.subscribe()
 
+		const statusInterval = setInterval(() => {
+			if (supabase.getChannels()[0].state == 'joined') {
+				statusRef.current!.innerHTML = 'Connected'
+				statusRef.current!.style.color = 'limegreen'
+			} else {
+				statusRef.current!.innerHTML = 'Offline'
+				statusRef.current!.style.color = 'orangered'
+			}
+		}, 1000)
+
 		const refresh = setInterval(
 			() => axios.get(`${process.env.NEXT_PUBLIC_UPDATE_URL}/refresh`),
 			3500000
@@ -179,6 +190,7 @@ export default function Completed() {
 
 		return () => {
 			clearInterval(refresh)
+			clearInterval(statusInterval)
 			databaseChannel.unsubscribe()
 			document.removeEventListener('click', closeMenus)
 			window.removeEventListener('focusout', resetEditNoFocus)
@@ -195,6 +207,10 @@ export default function Completed() {
 			</Head>
 
 			<main className="flex flex-col items-center justify-center mb-24 px-0 sm:px-6 py-2">
+				<span
+					ref={statusRef}
+					className='fixed top-0 left-8 z-[60] m-4 font-semibold lg:visible invisible'
+				></span>
 				<header className='flex items-center'>
 					<h2 className="p-2 text-2xl sm:text-3xl">
 						Completed

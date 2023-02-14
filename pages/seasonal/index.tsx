@@ -23,6 +23,7 @@ export default function Seasonal() {
 	const contextMenuRef = useRef<HTMLDivElement>(null)
 	const contextMenuButtonRef = useRef<any>([])
 	const isEditedRef = useRef('')
+	const statusRef = useRef<HTMLSpanElement>(null)
 
 	const [response, setResponse] = useState<any>()
 	const [response1, setResponse1] = useState<any>()
@@ -85,6 +86,16 @@ export default function Seasonal() {
 			)
 			.subscribe()
 
+		const statusInterval = setInterval(() => {
+			if (supabase.getChannels()[0].state == 'joined') {
+				statusRef.current!.innerHTML = 'Connected'
+				statusRef.current!.style.color = 'limegreen'
+			} else {
+				statusRef.current!.innerHTML = 'Offline'
+				statusRef.current!.style.color = 'orangered'
+			}
+		}, 1000)
+
 		const refresh = setInterval(
 			() => axios.get(`${process.env.NEXT_PUBLIC_UPDATE_URL}/refresh`),
 			3500000
@@ -133,6 +144,7 @@ export default function Seasonal() {
 		return () => {
 			databaseChannel.unsubscribe()
 			clearInterval(refresh)
+			clearInterval(statusInterval)
 			document.removeEventListener('click', closeMenusOnClick)
 			window.removeEventListener('focusout', closeMenusOnFocusout)
 			window.removeEventListener('keydown', closeMenusOnEscape)
@@ -148,6 +160,10 @@ export default function Seasonal() {
 			</Head>
 
 			<main className="flex flex-col items-center justify-center mb-24 px-6 py-2">
+				<span
+					ref={statusRef}
+					className='fixed top-0 left-8 z-[60] m-4 font-semibold lg:visible invisible'
+				></span>
 				<section className='relative flex flex-col items-center'>
 					<header className='flex items-center mb-2'>
 						<h2 className="p-2 text-2xl sm:text-3xl">Current Season</h2>
