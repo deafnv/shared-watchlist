@@ -1,9 +1,9 @@
 import { GetStaticPropsContext } from 'next'
 import Head from 'next/head'
-import { Dispatch, MutableRefObject, SetStateAction, useEffect, useRef, useState } from 'react'
+import { Dispatch, MutableRefObject, SetStateAction, useRef, useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
 import { Database } from '../../lib/database.types'
-import { Line, Pie, Scatter } from 'react-chartjs-2'
+import { Line, Pie } from 'react-chartjs-2'
 import {
 	Chart as ChartJS,
 	CategoryScale,

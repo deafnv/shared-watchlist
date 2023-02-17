@@ -6,11 +6,8 @@ import '../styles/nprogress.css'
 import NProgress from 'nprogress'
 import { useRouter } from 'next/router'
 import { LoadingProvider } from '../components/LoadingContext'
-import { ThemeProvider, createTheme } from '@mui/material'
-import { orange } from '@mui/material/colors'
 import { Analytics } from '@vercel/analytics/react'
 import { PresenceProvider } from '../components/PresenceProvider'
-import Head from 'next/head'
 import HeadCommon from '../components/Head'
 
 declare module '@mui/material/styles' {
@@ -31,17 +28,6 @@ export default function App({ Component, pageProps }: AppProps) {
 	const router = useRouter()
 	NProgress.configure({
 		showSpinner: false
-	})
-
-	const theme = createTheme({
-		status: {
-			danger: orange[500]
-		},
-		palette: {
-			primary: {
-				main: '#14a1ff'
-			}
-		}
 	})
 
 	useEffect(() => {
@@ -75,15 +61,13 @@ export default function App({ Component, pageProps }: AppProps) {
 	return (
 		<>
 			<HeadCommon />
-			<ThemeProvider theme={theme}>
-				<PresenceProvider>
-					<LoadingProvider>
-						<Navbar />
-						<Component {...pageProps} />
-					</LoadingProvider>
-					{env && <Analytics />}
-				</PresenceProvider>
-			</ThemeProvider>
+			<PresenceProvider>
+				<LoadingProvider>
+					<Navbar />
+					<Component {...pageProps} />
+				</LoadingProvider>
+				{env && <Analytics />}
+			</PresenceProvider>
 		</>
 	)
 }

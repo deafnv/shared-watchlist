@@ -169,6 +169,9 @@ export default function SeasonalDetails({
 										src={item.image_url ?? 'https://via.placeholder.com/400x566'}
 										alt="Art"
 										fill
+										priority
+										sizes="(max-width: 768px) 20vw,
+											10vw"
 										className="object-contain"
 									/>
 								</div>

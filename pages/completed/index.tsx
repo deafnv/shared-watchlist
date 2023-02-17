@@ -4,7 +4,6 @@ import axios from 'axios'
 import { createClient } from '@supabase/supabase-js'
 import { Database } from '../../lib/database.types'
 import {
-	initialTitleItemSupabase,
 	sortListByDateSupabase,
 	sortListByEpisodeSupabase,
 	sortListByNameSupabase,
@@ -13,7 +12,7 @@ import {
 	sortSymbol
 } from '../../lib/list_methods'
 import { loadingGlimmer } from '../../components/LoadingGlimmer'
-import { CircularProgress } from '@mui/material'
+import CircularProgress from '@mui/material/CircularProgress'
 import { useLoading } from '../../components/LoadingContext'
 import AddIcon from '@mui/icons-material/Add'
 import MoreVertIcon from '@mui/icons-material/MoreVert'

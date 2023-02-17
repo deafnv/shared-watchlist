@@ -6,7 +6,8 @@ import { getRandomInt, sortListByNamePTW, sortSymbol } from '../lib/list_methods
 import { createClient } from '@supabase/supabase-js'
 import { Database } from '../lib/database.types'
 import { loadingGlimmer } from '../components/LoadingGlimmer'
-import { CircularProgress, Skeleton } from '@mui/material'
+import CircularProgress from '@mui/material/CircularProgress'
+import Skeleton from '@mui/material/Skeleton'
 import DoneIcon from '@mui/icons-material/Done'
 import { useLoading } from '../components/LoadingContext'
 import CancelIcon from '@mui/icons-material/Cancel'
@@ -15,7 +16,7 @@ import AddIcon from '@mui/icons-material/Add'
 import isEqual from 'lodash/isEqual'
 import RefreshIcon from '@mui/icons-material/Refresh'
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator'
-import { io, Socket } from 'socket.io-client'
+import io, { Socket } from 'socket.io-client'
 
 let socket: Socket
 
