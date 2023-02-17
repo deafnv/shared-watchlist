@@ -609,7 +609,7 @@ function Item({ props }: ItemProps) {
 
 			let row = order + 2
 			try {
-				await axios.post('/api/seasonal/updatestatus', {
+				await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/updatestatus`, {
 					content: event.target.childNodes[0].value,
 					cells: `P${row}:P${row}`
 				})

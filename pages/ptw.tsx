@@ -865,7 +865,7 @@ function Item({ props, editFormParams }: ItemProps) {
 
 			let row = id + 2
 			try {
-				await axios.post('/api/seasonal/updatestatus', {
+				await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/updatestatus`, {
 					content: event.target.childNodes[0].value,
 					cells: `N${row}:N${row}`
 				})
