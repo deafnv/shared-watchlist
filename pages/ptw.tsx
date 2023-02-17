@@ -218,6 +218,7 @@ export default function PTW() {
 		window.addEventListener('keydown', resetEditedOnEscape)
 
 		return () => {
+			socket.off('roll')
 			databaseChannel.unsubscribe()
 			clearInterval(refresh)
 			clearInterval(pingInterval)
@@ -314,7 +315,7 @@ export default function PTW() {
 									!isLoadingClient && 
 									<Item 
 										key={item.id}
-										props={{ item, index, isLoadingEditForm, setIsEdited, isEdited, sortMethodRef, setContextMenu, contextMenuButtonRef, responseRolled, setResponseRolled, setIsLoadingEditForm }}
+										props={{ item, index, isLoadingEditForm, setIsEdited, isEdited, isEditedRef, sortMethodRef, setContextMenu, contextMenuButtonRef, responseRolled, setResponseRolled, setIsLoadingEditForm }}
 										editFormParams={editFormParams}
 									/>
 								))}
@@ -783,7 +784,7 @@ export default function PTW() {
 }
 
 function Item({ props, editFormParams }: ItemProps) {
-	const { item, index, isLoadingEditForm, setIsEdited, isEdited, sortMethodRef, setContextMenu, contextMenuButtonRef, responseRolled, setResponseRolled, setIsLoadingEditForm } = props
+	const { item, index, isLoadingEditForm, setIsEdited, isEdited, isEditedRef, sortMethodRef, setContextMenu, contextMenuButtonRef, responseRolled, setResponseRolled, setIsLoadingEditForm } = props
 	const controls = useDragControls()
 	const statusColor = determineStatus(item)
 	return (
@@ -839,7 +840,7 @@ function Item({ props, editFormParams }: ItemProps) {
 			>
 				<span className='flex items-center justify-center'>
 					{isEdited == `rolled_status_${item.id}`
-						? editStatus(item.id)
+						? editStatus(item.id, item.status!)
 						: ''}
 				</span>
 				{isLoadingEditForm.includes(`rolled_status_${item.id}`) && (
@@ -849,9 +850,16 @@ function Item({ props, editFormParams }: ItemProps) {
 		</Reorder.Item>
 	)
 
-	function editStatus(id: number) {
+	function editStatus(id: number, ogvalue: string) {
 		async function handleSubmit(event: BaseSyntheticEvent) {
 			event.preventDefault()
+			const currentlyProcessedEdit = isEditedRef.current
+
+			if (ogvalue == event.target[0].value) {
+				setIsEdited('')
+				return
+			}
+
 			setIsLoadingEditForm(isLoadingEditForm.concat(`rolled_status_${id}`))
 
 			let row = id + 2
@@ -889,7 +897,7 @@ function Item({ props, editFormParams }: ItemProps) {
 					<form onSubmit={handleSubmit} className="text-gray-800">
 						<select
 							onChange={(e) => (e.target.parentNode as HTMLFormElement)!.requestSubmit()}
-							className="h-full w-full"
+							className="p-2 h-full w-full select-none text-white bg-[#2e2e2e] rounded-md"
 						>
 							<option>Select status</option>
 							<option>Loaded</option>
@@ -943,6 +951,7 @@ interface ItemProps {
 		isLoadingEditForm: string[],
 		setIsEdited: (value: string) => void,
 		isEdited: string,
+		isEditedRef: MutableRefObject<string>,
 		sortMethodRef: MutableRefObject<string>,
 		setContextMenu: Dispatch<SetStateAction<{
 			top: number;

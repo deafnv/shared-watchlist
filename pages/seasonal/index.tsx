@@ -503,7 +503,7 @@ function Item({ props }: ItemProps) {
 			>
 				<span className='flex items-center justify-center'>
 					{isEdited == `seasonal_status_${item.title}_${item.order}`
-						? editStatus(item.order, item.title!, item.status)
+						? editStatus(item.order, item.status)
 						: ''}
 				</span>
 				{isLoadingEditForm.includes(`status_${item.order}`) && (
@@ -595,7 +595,7 @@ function Item({ props }: ItemProps) {
 		)
 	}
 
-	function editStatus(order: number, title: string, ogvalue: string) {
+	function editStatus(order: number, ogvalue: string) {
 		async function handleSubmit(event: BaseSyntheticEvent) {
 			event.preventDefault()
 			const currentlyProcessedEdit = isEditedRef.current
@@ -641,9 +641,7 @@ function Item({ props }: ItemProps) {
 				>
 					<form onSubmit={handleSubmit} className="text-gray-800">
 						<select
-							onChange={(e) => {
-								;(e.target.parentNode as HTMLFormElement)!.requestSubmit()
-							}}
+							onChange={(e) => (e.target.parentNode as HTMLFormElement)!.requestSubmit()}
 							className="p-2 h-full w-full select-none text-white bg-[#2e2e2e] rounded-md"
 						>
 							<option>Select status</option>
