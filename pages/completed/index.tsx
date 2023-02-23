@@ -838,8 +838,9 @@ export default function Completed() {
 				})
 
 				const changed = response?.slice()
+				//FIXME: Issue with changed value always showing in title column
 				if (!changed) return
-				changed.find((item) => item.id === id)!['title'] = event.target[0].value
+				changed.find((item) => item.id === id)![field] = event.target[0].value
 				setResponse(changed)
 				if (isEditedRef.current == currentlyProcessedEdit) setIsEdited('')
 				setIsLoadingEditForm(isLoadingEditForm.filter((item) => item == `${field}_${id}`))

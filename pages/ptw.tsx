@@ -874,7 +874,7 @@ function Item({ props, editFormParams }: ItemProps) {
 				if (!changed) return
 				changed.find((item: any) => item.id === id)!['status'] = event.target.childNodes[0].value
 				setResponseRolled(changed)
-				setIsEdited('')
+				if (isEditedRef.current == currentlyProcessedEdit) setIsEdited('')
 				setIsLoadingEditForm(isLoadingEditForm.filter((item) => item == `rolled_status_${id}`))
 			} catch (error) {
 				setIsLoadingEditForm(isLoadingEditForm.filter((item) => item == `rolled_status_${id}`))
