@@ -12,6 +12,7 @@ import EditIcon from '@mui/icons-material/Edit'
 import CloseIcon from '@mui/icons-material/Close'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
 
+//TODO: Consider adding a soft reload, so that status gets updated when tracking episodes, also handling the end of shows
 export const getStaticProps = async (context: GetStaticPropsContext) => {
 	const supabase = createClient<Database>(
 		'https://esjopxdrlewtpffznsxh.supabase.co',
@@ -361,7 +362,7 @@ export default function SeasonalDetails({
 					<form onSubmit={handleEditSubmit}>
 						<label className="flex flex-col items-center gap-2">
 							Enter latest episode:
-							<input type="number" min={-1} max={9999} className="text-center input-text" />
+							<input autoFocus type="number" min={-1} max={9999} className="text-center input-text" />
 						</label>
 					</form>
 					<div className="relative grid grid-cols-2 gap-4">

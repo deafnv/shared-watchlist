@@ -1,8 +1,3 @@
-export const config = {
-  runtime: 'edge',
-  regions: ['sin1'],
-};
-
 import { createClient } from '@supabase/supabase-js'
 import axios from 'axios'
 import { NextApiRequest, NextApiResponse } from 'next'

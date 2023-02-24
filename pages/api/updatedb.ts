@@ -1,9 +1,4 @@
-export const config = {
-  runtime: 'edge',
-  regions: ['sin1'],
-};
-
-import { createClient } from '@supabase/supabase-js'
+	import { createClient } from '@supabase/supabase-js'
 import { NextApiRequest, NextApiResponse } from 'next'
 import { Database } from '../../lib/database.types'
 
