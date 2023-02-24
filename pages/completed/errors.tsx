@@ -281,7 +281,7 @@ export default function CompletedErrors() {
 			await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/changedetails`, {
 				id: item.id,
 				mal_id: 0,
-				type: 'IGNORE'
+				type: 'IGNORE_ERROR'
 			})
 			router.reload()
 		} catch (error) {

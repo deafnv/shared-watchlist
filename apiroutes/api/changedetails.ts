@@ -9,7 +9,7 @@ export default async function ChangeDetails(req: NextApiRequest, res: NextApiRes
 	const { id, mal_id, type } = body
 
 	if (method === 'POST') {
-		if (type == 'IGNORE') {
+		if (type == 'IGNORE_ERROR') {
 			try {
 				const supabase = createClient<Database>(
 					'https://esjopxdrlewtpffznsxh.supabase.co',
@@ -26,7 +26,26 @@ export default async function ChangeDetails(req: NextApiRequest, res: NextApiRes
 				console.log(error)
 				return res.status(500).send(error)
 			}
-		} else {
+		} 
+		else if (type == 'IGNORE_SEQUEL') {
+			try {
+				const supabase = createClient<Database>(
+					'https://esjopxdrlewtpffznsxh.supabase.co',
+					process.env.SUPABASE_SERVICE_API_KEY!
+				)
+
+				await supabase.from('UnwatchedSequels').upsert({
+					id: id,
+					message: 'IGNORE'
+				})
+
+				return res.status(200).send('OK')
+			} catch (error) {
+				console.log(error)
+				return res.status(500).send(error)
+			}
+		}
+		else {
 			try {
 				const { data } = await axios.get(`https://api.myanimelist.net/v2/anime/${mal_id}`, {
 					headers: { 'X-MAL-CLIENT-ID': process.env.MAL_CLIENT_ID },

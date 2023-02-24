@@ -25,6 +25,10 @@ export default function Navbar() {
 					route: '/completed/genres'
 				},
 				{
+					name: 'Sequels',
+					route: '/completed/sequels'
+				},
+				{
 					name: 'Statistics',
 					route: '/completed/statistics'
 				}
