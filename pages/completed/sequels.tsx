@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { useEffect, useState, BaseSyntheticEvent } from 'react'
 import axios from 'axios'
 import { createClient } from '@supabase/supabase-js'
-import CloseIcon from '@mui/icons-material/Close'
+import RefreshIcon from '@mui/icons-material/Refresh'
 import { Database } from '../../lib/database.types'
 import { useLoading } from '../../components/LoadingContext'
 import { useRouter } from 'next/router'
@@ -70,7 +70,17 @@ export default function CompleteSequels() {
 			</Head>
 
 			<main className="flex flex-col items-center justify-center mb-24 px-6 py-2">
-				<h2 className="p-2 text-2xl sm:text-3xl text-center">Unwatched Sequels</h2>
+				<header className='flex items-center'>
+					<h2 className="p-2 text-2xl sm:text-3xl text-center">Unwatched Sequels</h2>
+					<div
+						title="Load sequels"
+						tabIndex={0}
+						onClick={handleLoadSequels}
+						className="flex items-center justify-center h-7 w-7 cursor-pointer rounded-full hover:bg-gray-500 transition-colors duration-150 translate-y-[1px]"
+					>
+						<RefreshIcon sx={{ fontSize: 28 }} />
+					</div>
+				</header>
 				<section>
 					<div className="grid grid-cols-[0.6fr_5fr_5fr_0.8fr] xl:grid-cols-[4rem_30rem_30rem_10rem] min-w-[95dvw] xl:min-w-0 sm:w-min bg-sky-600 border-white border-solid border-[1px]">
             <span className="flex items-center justify-center p-2 h-full text-xs md:text-base border-white border-r-[1px] text-center font-bold">
@@ -123,6 +133,17 @@ export default function CompleteSequels() {
 			</main>
 		</>
 	)
+
+	async function handleLoadSequels() {
+		setLoading(true)
+		try {
+			await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/completed/loadsequels`)
+			router.reload()
+		} catch (error) {
+			setLoading(false)
+			alert(error)
+		}
+	}
 
 	async function handleIgnore(item: any) {
 		setLoading(true)
