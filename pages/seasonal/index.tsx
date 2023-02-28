@@ -12,6 +12,7 @@ import isEqual from 'lodash/isEqual'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator'
+import CloseIcon from '@mui/icons-material/Close'
 
 //TODO: Allow sort, and show save changes button to save sort
 
@@ -40,6 +41,7 @@ export default function Seasonal() {
 		currentItem: any | null
 	}>({ top: 0, left: 0, currentItem: null })
 	const [confirmModal, setConfirmModal] = useState(false)
+	const [editModal, setEditModal] = useState(false)
 	const [reordered, setReordered] = useState(false)
 	const { setLoading } = useLoading()
 
@@ -240,9 +242,57 @@ export default function Seasonal() {
 				{contextMenu.currentItem && <ContextMenu />}
 				{settingsMenu.display == 'block' && <SettingsMenu />}
 				{confirmModal && <ConfirmModal />}
+				{editModal && <EditModal />}
 			</main>
 		</>
 	)
+
+	function EditModal() {
+		async function handleSubmit(event: BaseSyntheticEvent) {
+			event.preventDefault()
+			const row = response.length + 1
+			try {
+				setLoading(true)
+				await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/updatestatus`, {
+					content: event.target.childNodes[0].value,
+					cells: `P2:P${row}`
+				})
+				router.reload()
+			} catch (error) {
+				setLoading(false)
+				alert(error)
+				console.log(error)
+			}
+		}
+
+		return (
+			<menu>
+				<div className="fixed top-0 left-0 h-[100dvh] w-[100dvw] bg-black opacity-30" />
+				<div className="fixed flex flex-col items-center justify-center gap-4 h-[15rem] w-[30rem] px-10 py-6 bg-gray-700 rounded-md shadow-md shadow-black drop-shadow-md border-4 border-black top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 modal">
+					<div
+						tabIndex={0}
+						onClick={() => setEditModal(false)}
+						className="absolute top-6 right-6 flex items-center justify-center h-11 w-11 rounded-full cursor-pointer transition-colors duration-150 hover:bg-slate-500"
+					>
+						<CloseIcon fontSize="large" />
+					</div>
+					<h3 className='text-2xl'>Change status all</h3>
+					<form onSubmit={handleSubmit} className="text-gray-800">
+						<select
+							onChange={(e) => (e.target.parentNode as HTMLFormElement)!.requestSubmit()}
+							className="p-2 h-full w-full select-none text-white bg-[#2e2e2e] rounded-md"
+						>
+							<option>Select status</option>
+							<option>Watched</option>
+							<option>Loaded</option>
+							<option>Not loaded</option>
+							<option>Not aired</option>
+						</select>
+					</form>
+				</div>
+			</menu>
+		)
+	}
 	
 	function ContextMenu() {
 		async function loadItemDetails() {
@@ -382,8 +432,13 @@ export default function Seasonal() {
 				className="absolute z-20 p-2 shadow-md shadow-black bg-black border-pink-400 border-[1px] rounded-md seasonal-settings-menu"
 			>
 				<li className="flex justify-center h-fit rounded-md hover:bg-pink-400">
+					<button onClick={() => setEditModal(true)} className="py-2 w-full">
+						Change status all
+					</button>
+				</li>
+				<li className="flex justify-center h-fit rounded-md hover:bg-pink-400">
 					<button onClick={() => setConfirmModal(true)} className="py-2 w-full">
-						Delete All
+						Delete all
 					</button>
 				</li>
 			</menu>
