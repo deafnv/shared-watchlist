@@ -26,10 +26,14 @@ export default async function EpisodeTracker(req: NextApiRequest, res: NextApiRe
 				})
         const $ = load(cheerioData.data)
         const latestEpisode = $('tr#topicRow1').find('td.forum_boardrow1:nth-child(2) > a').text().match(/Episode (\d+)/)?.[1]
+        const episodeCount = $('h2:contains("Information")').next().next().text()
+        const status = $('h2:contains("Information")').next().next().next().text()
         latestEpisodes.push({
           mal_id: item.mal_id,
-          latest_episode: latestEpisode ?? 0,
-          last_updated: new Date().getTime()
+          latest_episode: parseInt(latestEpisode ?? '-1'),
+          last_updated: new Date().getTime(),
+          num_episodes: parseInt(episodeCount.trim().split(/\s+/).pop() ?? '-1'),
+          status: parseStatus(status)
         })
       })
     )
@@ -41,4 +45,16 @@ export default async function EpisodeTracker(req: NextApiRequest, res: NextApiRe
 		console.log(error)
 		return res.status(500).send(error)
 	}
+}
+
+function parseStatus(status: string) {
+  if (status.includes('Currently Airing')) {
+    return 'currently_airing'
+  } else if (status.includes('Finished Airing')) {
+    return 'finished_airing'
+  } else if (status.includes('Not yet aired')) {
+    return 'not_yet_aired'
+  } else {
+    return 'unknown'
+  }
 }
