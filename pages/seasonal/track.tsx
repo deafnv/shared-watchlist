@@ -212,7 +212,7 @@ export default function SeasonalDetails({
 							</div>
 							<div>
 								<div className="relative w-full m-2 flex items-center justify-center">
-									<span className="text-lg font-semibold">Episodes</span>
+									<span className="text-lg font-semibold">Aired Episodes {`(${item.latest_episode ?? '-'}/${item.num_episodes ?? '-'})`}</span>
 									{item.message?.includes('Exempt') && (
 										<span className="ml-2 text-lg font-semibold">(Edited)</span>
 									)}
