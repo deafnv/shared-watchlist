@@ -311,6 +311,23 @@ export default function Seasonal() {
 			}
 		}
 
+		//TODO: Add confirm for delete entry
+		async function handleDelete() {
+			setLoading(true)
+			try {
+				await axios.post('/api/addtocompleted', {
+					content: response1,
+					id: contextMenu.currentItem?.title,
+					type: 'SEASONAL',
+					action: 'DELETE'
+				})
+				setLoading(false)
+			} catch (error) {
+				setLoading(false)
+				alert(error)
+			}
+		}
+
 		async function handleAddToCompleted() {
 			setLoading(true)
 			try {
@@ -360,6 +377,11 @@ export default function Seasonal() {
 				<li className="flex justify-center h-8 rounded-sm hover:bg-slate-500">
 					<button onClick={handleAddToCompleted} className="w-full">
 						Add to Completed
+					</button>
+				</li>
+				<li className="flex justify-center h-8 rounded-sm hover:bg-slate-500">
+					<button onClick={handleDelete} className="w-full">
+						Delete entry
 					</button>
 				</li>
 			</menu>

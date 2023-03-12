@@ -5,7 +5,7 @@ import { google } from 'googleapis'
 
 export default async function AddToCompleted(req: NextApiRequest, res: NextApiResponse) {
 	const { body, method } = req
-	const { content, id, type } = body
+	const { content, id, type, action } = body
 
 	if (method !== 'POST') return res.status(405).send('Method not supported')
 	if (!content || !id || !type) return res.status(400)
@@ -147,6 +147,8 @@ export default async function AddToCompleted(req: NextApiRequest, res: NextApiRe
 				]
 			}
 		})
+
+		if (action === 'DELETE') return res.status(200).send('OK')
 	
 		const newIndex = lastTitleCompletedID!
 		console.log(lastTitleCompletedID)
