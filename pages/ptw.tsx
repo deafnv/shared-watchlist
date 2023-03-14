@@ -385,14 +385,38 @@ export default function PTW() {
 				</li>
 				<hr className="my-2 border-gray-500 border-t-[1px]" />
 				<li className="flex justify-center h-8 rounded-sm hover:bg-slate-500">
-					<button onClick={addToCompleted} className="w-full">
+					<button onClick={handleAddToCompleted} className="w-full">
 						Add to Completed
+					</button>
+				</li>
+				<li className="flex justify-center h-8 rounded-sm hover:bg-slate-500">
+					<button onClick={handleDelete} className="w-full">
+						Delete entry
 					</button>
 				</li>
 			</menu>
 		)
 
-		async function addToCompleted() {
+		//TODO: Add confirm for delete entry
+		//TODO: Add delete for unrolled entries
+		//TODO: Test this
+		async function handleDelete() {
+			setLoading(true)
+			try {
+				await axios.post('/api/addtocompleted', {
+					content: responseRolled,
+					id: contextMenu.currentItem?.title,
+					type: 'PTW',
+					action: 'DELETE'
+				})
+				setLoading(false)
+			} catch (error) {
+				setLoading(false)
+				alert(error)
+			}
+		}
+
+		async function handleAddToCompleted() {
 			setLoading(true)
 			try {
 				await axios.post('/api/addtocompleted', {
