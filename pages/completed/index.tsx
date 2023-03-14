@@ -2,7 +2,7 @@ import { BaseSyntheticEvent, useEffect, useRef, useState } from 'react'
 import Head from 'next/head'
 import axios from 'axios'
 import { createClient } from '@supabase/supabase-js'
-import { Database } from '../../lib/database.types'
+import { Database } from '@/lib/database.types'
 import {
 	sortListByDateSupabase,
 	sortListByEpisodeSupabase,
@@ -10,10 +10,10 @@ import {
 	sortListByRatingSupabase,
 	sortListByTypeSupabase,
 	sortSymbol
-} from '../../lib/list_methods'
-import { loadingGlimmer } from '../../components/LoadingGlimmer'
+} from '@/lib/list_methods'
+import { loadingGlimmer } from '@/components/LoadingGlimmer'
 import CircularProgress from '@mui/material/CircularProgress'
-import { useLoading } from '../../components/LoadingContext'
+import { useLoading } from '@/components/LoadingContext'
 import AddIcon from '@mui/icons-material/Add'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
 import Image from 'next/image'
@@ -21,7 +21,7 @@ import Link from 'next/link'
 import Skeleton from '@mui/material/Skeleton'
 import { useRouter } from 'next/router'
 import EditIcon from '@mui/icons-material/Edit'
-import EditModal from '../../components/EditModal'
+import EditModal from '@/components/EditModal'
 import SearchIcon from '@mui/icons-material/Search'
 import RefreshIcon from '@mui/icons-material/Refresh';
 

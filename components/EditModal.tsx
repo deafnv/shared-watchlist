@@ -4,7 +4,7 @@ import { Dispatch, SetStateAction, BaseSyntheticEvent, RefObject } from 'react'
 import axios from 'axios'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import CloseIcon from '@mui/icons-material/Close'
-import { Database } from '../lib/database.types'
+import { Database } from '@/lib/database.types'
 
 export default function EditModal({
 	editModalRef,

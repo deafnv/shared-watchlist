@@ -1,13 +1,13 @@
 import { createClient } from '@supabase/supabase-js'
 import { GetStaticPropsContext } from 'next'
-import { Database } from '../../../lib/database.types'
+import { Database } from '@/lib/database.types'
 import { useEffect, useState, useRef } from 'react'
 import Head from 'next/head'
 import Image from 'next/image'
 import Link from 'next/link'
 import EditIcon from '@mui/icons-material/Edit'
-import EditModal from '../../../components/EditModal'
-import { useLoading } from '../../../components/LoadingContext'
+import EditModal from '@/components/EditModal'
+import { useLoading } from '@/components/LoadingContext'
 
 export async function getStaticPaths() {
 	const supabase = createClient<Database>(

@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { GetStaticPropsContext } from 'next'
-import { Database } from '../../../lib/database.types'
+import { Database } from '@/lib/database.types'
 import { useEffect, useState } from 'react'
 import Head from 'next/head'
 import Link from 'next/link'

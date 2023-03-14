@@ -2,7 +2,7 @@ import { GetStaticPropsContext } from 'next'
 import Head from 'next/head'
 import { Dispatch, MutableRefObject, SetStateAction, useRef, useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
-import { Database } from '../../lib/database.types'
+import { Database } from '@/lib/database.types'
 import { Line, Pie } from 'react-chartjs-2'
 import {
 	Chart as ChartJS,
@@ -376,10 +376,10 @@ export default function Statistics({
 		}
 	}
 
-	const RatingBroadcastScatter = dynamic(() => import('../../components/RatingBroadcastScatter'), {
+	const RatingBroadcastScatter = dynamic(() => import('@/components/RatingBroadcastScatter'), {
 		ssr: false
 	})
-	const RatingEndScatter = dynamic(() => import('../../components/RatingEndScatter'), {
+	const RatingEndScatter = dynamic(() => import('@/components/RatingEndScatter'), {
 		ssr: false
 	})
 

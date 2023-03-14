@@ -1,11 +1,11 @@
 import { createClient } from '@supabase/supabase-js'
-import { Database } from '../../lib/database.types'
+import { Database } from '@/lib/database.types'
 import { BaseSyntheticEvent, useEffect, useState, useRef, MutableRefObject, Dispatch, SetStateAction } from 'react'
 import Head from 'next/head'
 import axios from 'axios'
 import CircularProgress from '@mui/material/CircularProgress'
 import AddIcon from '@mui/icons-material/Add'
-import { useLoading } from '../../components/LoadingContext'
+import { useLoading } from '@/components/LoadingContext'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
 import { Reorder, useDragControls } from 'framer-motion'
 import isEqual from 'lodash/isEqual'
@@ -13,7 +13,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/router'
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator'
 import CloseIcon from '@mui/icons-material/Close'
-import ModalTemplate from '../../components/ModalTemplate'
+import ModalTemplate from '@/components/ModalTemplate'
 
 //TODO: Allow sort, and show save changes button to save sort
 

@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextApiRequest, NextApiResponse } from 'next'
-import { Database } from '../../lib/database.types'
+import { Database } from '@/lib/database.types'
 import { google } from 'googleapis'
 
 export default async function AddToCompleted(req: NextApiRequest, res: NextApiResponse) {

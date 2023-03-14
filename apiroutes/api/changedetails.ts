@@ -2,7 +2,7 @@ import axios from 'axios'
 import { NextApiRequest, NextApiResponse } from 'next'
 import { createClient } from '@supabase/supabase-js'
 import uniqBy from 'lodash/uniqBy'
-import { Database } from '../../lib/database.types'
+import { Database } from '@/lib/database.types'
 
 export default async function ChangeDetails(req: NextApiRequest, res: NextApiResponse) {
 	const { body, method } = req

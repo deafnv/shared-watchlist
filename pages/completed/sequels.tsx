@@ -4,8 +4,8 @@ import { useEffect, useState, BaseSyntheticEvent } from 'react'
 import axios from 'axios'
 import { createClient } from '@supabase/supabase-js'
 import RefreshIcon from '@mui/icons-material/Refresh'
-import { Database } from '../../lib/database.types'
-import { useLoading } from '../../components/LoadingContext'
+import { Database } from '@/lib/database.types'
+import { useLoading } from '@/components/LoadingContext'
 import { useRouter } from 'next/router'
 
 export default function CompleteSequels() {

@@ -1,6 +1,6 @@
 	import { createClient } from '@supabase/supabase-js'
 import { NextApiRequest, NextApiResponse } from 'next'
-import { Database } from '../../lib/database.types'
+import { Database } from '@/lib/database.types'
 
 export default async function UpdateDatabase(req: NextApiRequest, res: NextApiResponse) {
 	const { body, method } = req

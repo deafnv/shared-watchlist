@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import Head from 'next/head'
 import { BaseSyntheticEvent, useEffect, useState } from 'react'
-import { Database } from '../../../lib/database.types'
+import { Database } from '@/lib/database.types'
 import Link from 'next/link'
 import DoneIcon from '@mui/icons-material/Done'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'

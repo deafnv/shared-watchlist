@@ -4,9 +4,9 @@ import { useEffect, useState, BaseSyntheticEvent } from 'react'
 import axios from 'axios'
 import { createClient } from '@supabase/supabase-js'
 import CloseIcon from '@mui/icons-material/Close'
-import { levenshtein } from '../../lib/list_methods'
-import { Database } from '../../lib/database.types'
-import { useLoading } from '../../components/LoadingContext'
+import { levenshtein } from '@/lib/list_methods'
+import { Database } from '@/lib/database.types'
+import { useLoading } from '@/components/LoadingContext'
 import { useRouter } from 'next/router'
 
 export default function CompletedErrors() {

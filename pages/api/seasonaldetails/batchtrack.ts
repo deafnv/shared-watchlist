@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import axios from 'axios'
 import { load } from 'cheerio'
 import { createClient } from '@supabase/supabase-js'
-import { Database } from '../../../lib/database.types'
+import { Database } from '@/lib/database.types'
 
 //! This batchtrack method uses MAL forums to get latest episode
 export default async function EpisodeTracker(req: NextApiRequest, res: NextApiResponse) {

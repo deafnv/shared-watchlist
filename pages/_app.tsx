@@ -1,13 +1,13 @@
 import { useEffect } from 'react'
-import Navbar from '../components/Navbar'
-import '../styles/globals.css'
+import Navbar from '@/components/Navbar'
+import '@/styles/globals.css'
 import type { AppProps } from 'next/app'
-import '../styles/nprogress.css'
+import '@/styles/nprogress.css'
 import NProgress from 'nprogress'
 import { useRouter } from 'next/router'
-import { LoadingProvider } from '../components/LoadingContext'
+import { LoadingProvider } from '@/components/LoadingContext'
 import { Analytics } from '@vercel/analytics/react'
-import HeadCommon from '../components/Head'
+import HeadCommon from '@/components/Head'
 
 declare module '@mui/material/styles' {
 	interface Theme {
