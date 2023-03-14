@@ -7,7 +7,6 @@ import NProgress from 'nprogress'
 import { useRouter } from 'next/router'
 import { LoadingProvider } from '../components/LoadingContext'
 import { Analytics } from '@vercel/analytics/react'
-import { PresenceProvider } from '../components/PresenceProvider'
 import HeadCommon from '../components/Head'
 
 declare module '@mui/material/styles' {
@@ -61,13 +60,11 @@ export default function App({ Component, pageProps }: AppProps) {
 	return (
 		<>
 			<HeadCommon />
-			<PresenceProvider>
-				<LoadingProvider>
-					<Navbar />
-					<Component {...pageProps} />
-				</LoadingProvider>
-				{env && <Analytics />}
-			</PresenceProvider>
+			<LoadingProvider>
+				<Navbar />
+				<Component {...pageProps} />
+			</LoadingProvider>
+			{env && <Analytics />}
 		</>
 	)
 }
