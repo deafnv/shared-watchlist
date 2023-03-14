@@ -273,31 +273,31 @@ export default function Seasonal() {
 		}
 
 		return (
-			<menu>
-				<div className="fixed top-0 left-0 h-[100dvh] w-[100dvw] bg-black opacity-30" />
-				<div className="fixed flex flex-col items-center justify-center gap-4 h-[15rem] w-[30rem] px-10 py-6 bg-gray-700 rounded-md shadow-md shadow-black drop-shadow-md border-4 border-black top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 modal">
-					<div
-						tabIndex={0}
-						onClick={() => setEditModal(false)}
-						className="absolute top-6 right-6 flex items-center justify-center h-11 w-11 rounded-full cursor-pointer transition-colors duration-150 hover:bg-slate-500"
-					>
-						<CloseIcon fontSize="large" />
-					</div>
-					<h3 className='text-2xl'>Change status all</h3>
-					<form onSubmit={handleSubmit} className="text-gray-800">
-						<select
-							onChange={(e) => (e.target.parentNode as HTMLFormElement)!.requestSubmit()}
-							className="p-2 h-full w-full select-none text-white bg-[#2e2e2e] rounded-md"
-						>
-							<option>Select status</option>
-							<option>Watched</option>
-							<option>Loaded</option>
-							<option>Not loaded</option>
-							<option>Not aired</option>
-						</select>
-					</form>
+			<ModalTemplate
+				extraClassname='h-[15rem] w-[30rem]'
+				exitFunction={() => setEditModal(false)}
+			>
+				<div
+					tabIndex={0}
+					onClick={() => setEditModal(false)}
+					className="absolute top-6 right-6 flex items-center justify-center h-11 w-11 rounded-full cursor-pointer transition-colors duration-150 hover:bg-slate-500"
+				>
+					<CloseIcon fontSize="large" />
 				</div>
-			</menu>
+				<h3 className='text-2xl'>Change status all</h3>
+				<form onSubmit={handleSubmit} className="text-gray-800">
+					<select
+						onChange={(e) => (e.target.parentNode as HTMLFormElement)!.requestSubmit()}
+						className="p-2 h-full w-full select-none text-white bg-[#2e2e2e] rounded-md"
+					>
+						<option>Select status</option>
+						<option>Watched</option>
+						<option>Loaded</option>
+						<option>Not loaded</option>
+						<option>Not aired</option>
+					</select>
+				</form>
+			</ModalTemplate>
 		)
 	}
 	
@@ -438,7 +438,7 @@ export default function Seasonal() {
 
 		if (confirmModal === 'DELETEALL') {
 			return (
-				<ModalTemplate>
+				<ModalTemplate exitFunction={() => setConfirmModal('')}>
 					<h3 className='text-2xl'>Confirm Delete All Entries?</h3>
 					<div className='flex gap-4'>
 						<button onClick={handleDeleteAll} className='px-3 py-1 input-submit'>Yes</button>
@@ -448,7 +448,7 @@ export default function Seasonal() {
 			)
 		} else if (confirmModal === 'DELETE') {
 			return (
-				<ModalTemplate>
+				<ModalTemplate exitFunction={() => setConfirmModal('')}>
 					<h3 className='text-2xl'>Confirm delete entry?</h3>
 					<div className='flex gap-4'>
 						<button onClick={handleDelete} className='px-3 py-1 input-submit'>Yes</button>

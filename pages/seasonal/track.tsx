@@ -11,6 +11,7 @@ import { BaseSyntheticEvent, useEffect, useState, useRef } from 'react'
 import EditIcon from '@mui/icons-material/Edit'
 import CloseIcon from '@mui/icons-material/Close'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
+import ModalTemplate from '@/components/ModalTemplate'
 
 //TODO: Consider adding a soft reload, so that status gets updated when tracking episodes, also handling the end of shows
 export const getStaticProps = async (context: GetStaticPropsContext) => {
@@ -35,7 +36,7 @@ export default function SeasonalDetails({
 }: {
 	res: Database['public']['Tables']['SeasonalDetails']['Row'][]
 }) {
-	const editEpisodesCurrentRef = useRef<HTMLDivElement>(null)
+	const editEpisodesCurrentRef = useRef<HTMLMenuElement>(null)
 	const contextMenuRef = useRef<HTMLDivElement>(null)
 	const contextMenuButtonRef = useRef<any>([])
 	const refreshReloadMenuRef = useRef<HTMLDivElement>(null)
@@ -348,77 +349,78 @@ export default function SeasonalDetails({
 
 		let counter = 1
 		return (
-			<div ref={editEpisodesCurrentRef}>
-				<div className="fixed top-0 left-0 h-[100dvh] w-[100dvw] bg-black opacity-30 modal-background" />
-				<div className="fixed flex flex-col items-center gap-6 h-[30rem] w-[50rem] px-10 py-6 bg-gray-700 rounded-md shadow-md shadow-black drop-shadow-md border-4 border-black top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 modal">
-					<h3 className="font-bold text-2xl">Manual Edit Episodes</h3>
-					<div
-						onClick={() => setEditEpisodesCurrent(null)}
-						className="absolute right-6 flex items-center justify-center h-11 w-11 rounded-full cursor-pointer transition-colors duration-150 hover:bg-slate-500"
-					>
-						<CloseIcon fontSize="large" />
-					</div>
-					<span>{editEpisodesCurrent?.mal_title}</span>
-					<form onSubmit={handleEditSubmit}>
-						<label className="flex flex-col items-center gap-2">
-							Enter latest episode:
-							<input autoFocus type="number" min={-1} max={9999} className="text-center input-text" />
-						</label>
-					</form>
-					<div className="relative grid grid-cols-2 gap-4">
-						{Array(4)
-							.fill('')
-							.map((i, index) => (
-								<table key={index}>
-									<thead>
-										<tr>
-											<th className="w-11">
-												{editEpisodesCurrent?.latest_episode! > 12 ? counter++ + 12 : counter++}
-											</th>
-											<th className="w-11">
-												{editEpisodesCurrent?.latest_episode! > 12 ? counter++ + 12 : counter++}
-											</th>
-											<th className="w-11">
-												{editEpisodesCurrent?.latest_episode! > 12 ? counter++ + 12 : counter++}
-											</th>
-										</tr>
-									</thead>
-									<tbody>
-										<tr>
-											<td
-												style={{
-													background: determineEpisode(
-														editEpisodesCurrent?.latest_episode!,
-														counter - 3
-													)
-												}}
-												className="p-6"
-											/>
-											<td
-												style={{
-													background: determineEpisode(
-														editEpisodesCurrent?.latest_episode!,
-														counter - 2
-													)
-												}}
-												className="p-6"
-											/>
-											<td
-												style={{
-													background: determineEpisode(
-														editEpisodesCurrent?.latest_episode!,
-														counter - 1
-													)
-												}}
-												className="p-6"
-											/>
-										</tr>
-									</tbody>
-								</table>
-							))}
-					</div>
+			<ModalTemplate
+				extraClassname='h-[30rem] w-[50rem]'
+				exitFunction={() => setEditEpisodesCurrent(null)}
+				menuRef={editEpisodesCurrentRef}
+			>
+				<h3 className="font-bold text-2xl">Manual Edit Episodes</h3>
+				<div
+					onClick={() => setEditEpisodesCurrent(null)}
+					className="absolute right-6 flex items-center justify-center h-11 w-11 rounded-full cursor-pointer transition-colors duration-150 hover:bg-slate-500"
+				>
+					<CloseIcon fontSize="large" />
 				</div>
-			</div>
+				<span>{editEpisodesCurrent?.mal_title}</span>
+				<form onSubmit={handleEditSubmit}>
+					<label className="flex flex-col items-center gap-2">
+						Enter latest episode:
+						<input autoFocus type="number" min={-1} max={9999} className="text-center input-text" />
+					</label>
+				</form>
+				<div className="relative grid grid-cols-2 gap-4">
+					{Array(4)
+						.fill('')
+						.map((i, index) => (
+							<table key={index}>
+								<thead>
+									<tr>
+										<th className="w-11">
+											{editEpisodesCurrent?.latest_episode! > 12 ? counter++ + 12 : counter++}
+										</th>
+										<th className="w-11">
+											{editEpisodesCurrent?.latest_episode! > 12 ? counter++ + 12 : counter++}
+										</th>
+										<th className="w-11">
+											{editEpisodesCurrent?.latest_episode! > 12 ? counter++ + 12 : counter++}
+										</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr>
+										<td
+											style={{
+												background: determineEpisode(
+													editEpisodesCurrent?.latest_episode!,
+													counter - 3
+												)
+											}}
+											className="p-6"
+										/>
+										<td
+											style={{
+												background: determineEpisode(
+													editEpisodesCurrent?.latest_episode!,
+													counter - 2
+												)
+											}}
+											className="p-6"
+										/>
+										<td
+											style={{
+												background: determineEpisode(
+													editEpisodesCurrent?.latest_episode!,
+													counter - 1
+												)
+											}}
+											className="p-6"
+										/>
+									</tr>
+								</tbody>
+							</table>
+						))}
+				</div>
+			</ModalTemplate>
 		)
 	}
 

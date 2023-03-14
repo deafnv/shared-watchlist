@@ -24,6 +24,7 @@ import EditIcon from '@mui/icons-material/Edit'
 import EditModal from '@/components/EditModal'
 import SearchIcon from '@mui/icons-material/Search'
 import RefreshIcon from '@mui/icons-material/Refresh';
+import ModalTemplate from '@/components/ModalTemplate'
 
 //! Non-null assertion for the response state variable here will throw some errors if it does end up being null, fix maybe.
 //! ISSUES:
@@ -584,126 +585,120 @@ export default function Completed() {
 
 		if (!loadingDetails && (!details || details.mal_id == -1 || !details.mal_title)) {
 			return (
-				<div className="z-40">
-					<div
-						onClick={() => setDetailsModal(null)}
-						className="fixed top-0 left-0 h-[100dvh] w-[100dvw] glass-modal"
-					/>
-					<article className="fixed flex flex-col items-center justify-center h-[50rem] w-[60rem] px-10 py-6 bg-gray-700 rounded-md shadow-md shadow-black drop-shadow-md top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 modal">
-						<h3 className="mb-6 font-bold text-2xl">
-							Details for this title have not been loaded yet.
-						</h3>
-						<span onClick={handleReload} className="cursor-pointer link">
-							Click here to reload database and view details
-						</span>
-					</article>
-				</div>
+				<ModalTemplate
+					extraClassname='h-[50rem] w-[60rem]'
+					exitFunction={() => setDetailsModal(null)}
+				>
+					<h3 className="mb-6 font-bold text-2xl">
+						Details for this title have not been loaded yet.
+					</h3>
+					<span onClick={handleReload} className="cursor-pointer link">
+						Click here to reload database and view details
+					</span>
+				</ModalTemplate>
 			)
 		}
 
 		return (
-			<div>
+			<ModalTemplate
+				extraClassname='h-[80dvh] w-[80dvw] md:w-[60dvw]'
+				exitFunction={() => setDetailsModal(null)}
+			>
+				<Link
+					href={`${location.origin}/completed/anime/${details?.id}`}
+					className="px-12 font-bold text-lg sm:text-2xl text-center line-clamp-3 link"
+				>
+					{details?.mal_title}
+				</Link>
 				<div
-					onClick={() => setDetailsModal(null)}
-					className="fixed top-0 left-0 h-[100dvh] w-[100dvw] glass-modal"
-				/>
-				<article className="fixed flex flex-col items-center h-[80dvh] w-[80dvw] md:w-[60dvw] px-4 sm:px-10 py-6 bg-gray-700 rounded-md shadow-md shadow-black drop-shadow-md top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 modal">
-					<Link
-						href={`${location.origin}/completed/anime/${details?.id}`}
-						className="px-12 font-bold text-lg sm:text-2xl text-center line-clamp-3 link"
-					>
-						{details?.mal_title}
-					</Link>
-					<div
-						onClick={() => (editModalRef.current!.style.display = 'block')}
-						className="absolute top-4 sm:top-8 right-4 sm:right-12 flex items-center justify-center h-7 sm:h-11 w-7 sm:w-11 rounded-full cursor-pointer transition-colors duration-150 hover:bg-slate-500"
-					>
-						<EditIcon sx={{
-							fontSize: {
-								sm: 25,
-								lg: 30
-							}
-						}} />
-					</div>
-					{loadingDetails ? (
-						<>
-							<Skeleton
-								animation="wave"
-								variant="rounded"
-								width={350}
-								height={25}
-								className="bg-gray-500"
-							/>
-							<Skeleton
-								animation="wave"
-								variant="rounded"
-								width={220}
-								height={310}
-								className="my-5 bg-gray-500"
-							/>
-							<Skeleton
-								animation="wave"
-								variant="rounded"
-								width={'80%'}
-								height={170}
-								className="mb-6 bg-gray-500"
-							/>
-						</>
-					) : (
-						<>
-							<span className='hidden lg:block'>{details?.mal_alternative_title}</span>
-							<div className='relative my-5 h-[18rem] sm:h-[20rem] w-[12rem] sm:w-[15rem] overflow-hidden'>
-								<Image
-									src={details?.image_url!}
-									alt="Art"
-									fill
-									sizes="30vw"
-									className="object-contain"
-								/>
-							</div>
-							<p title={details?.mal_synopsis!} className="mb-6 text-center lg:line-clamp-3 hidden">
-								{details?.mal_synopsis}
-							</p>
-						</>
-					)}
-					<div className="flex mb-6 gap-16">
-						<div className="flex flex-col">
-							<h5 className="mb-2 font-semibold text-center text-lg">Start Date</h5>
-							<span className='text-center'>{details?.start_date}</span>
-						</div>
-						<div className="flex flex-col items-center justify-center">
-							<h5 className="mb-2 font-semibold text-center text-lg">End Date</h5>
-							<span className='text-center'>{details?.end_date}</span>
-						</div>
-					</div>
-					<h5 className="font-semibold text-lg">Genres</h5>
-					<span className="mb-2 text-center">
-						{genres?.map((item, index) => {
-							return (
-								<Link
-									href={`${location.origin}/completed/genres/${item.id}`}
-									key={index}
-									className="link"
-								>
-									{item.name}
-									<span className="text-white">{index < genres.length - 1 ? ', ' : null}</span>
-								</Link>
-							)
-						})}
-					</span>
-					<Link
-						href={
-							`https://myanimelist.net/anime/${details?.mal_id}` ??
-							'https://via.placeholder.com/400x566'
+					onClick={() => (editModalRef.current!.style.display = 'block')}
+					className="absolute top-4 sm:top-8 right-4 sm:right-12 flex items-center justify-center h-7 sm:h-11 w-7 sm:w-11 rounded-full cursor-pointer transition-colors duration-150 hover:bg-slate-500"
+				>
+					<EditIcon sx={{
+						fontSize: {
+							sm: 25,
+							lg: 30
 						}
-						target="_blank"
-						rel='noopener noreferrer'
-						className="text-base sm:text-lg link"
-					>
-						MyAnimeList
-					</Link>
-				</article>
-			</div>
+					}} />
+				</div>
+				{loadingDetails ? (
+					<>
+						<Skeleton
+							animation="wave"
+							variant="rounded"
+							width={350}
+							height={25}
+							className="bg-gray-500"
+						/>
+						<Skeleton
+							animation="wave"
+							variant="rounded"
+							width={220}
+							height={310}
+							className="my-5 bg-gray-500"
+						/>
+						<Skeleton
+							animation="wave"
+							variant="rounded"
+							width={'80%'}
+							height={170}
+							className="mb-6 bg-gray-500"
+						/>
+					</>
+				) : (
+					<>
+						<span className='hidden lg:block'>{details?.mal_alternative_title}</span>
+						<div className='relative my-5 h-[18rem] sm:h-[20rem] w-[12rem] sm:w-[15rem] overflow-hidden'>
+							<Image
+								src={details?.image_url!}
+								alt="Art"
+								fill
+								sizes="30vw"
+								className="object-contain"
+							/>
+						</div>
+						<p title={details?.mal_synopsis!} className="mb-6 text-center lg:line-clamp-3 hidden">
+							{details?.mal_synopsis}
+						</p>
+					</>
+				)}
+				<div className="flex mb-6 gap-16">
+					<div className="flex flex-col">
+						<h5 className="mb-2 font-semibold text-center text-lg">Start Date</h5>
+						<span className='text-center'>{details?.start_date}</span>
+					</div>
+					<div className="flex flex-col items-center justify-center">
+						<h5 className="mb-2 font-semibold text-center text-lg">End Date</h5>
+						<span className='text-center'>{details?.end_date}</span>
+					</div>
+				</div>
+				<h5 className="font-semibold text-lg">Genres</h5>
+				<span className="mb-2 text-center">
+					{genres?.map((item, index) => {
+						return (
+							<Link
+								href={`${location.origin}/completed/genres/${item.id}`}
+								key={index}
+								className="link"
+							>
+								{item.name}
+								<span className="text-white">{index < genres.length - 1 ? ', ' : null}</span>
+							</Link>
+						)
+					})}
+				</span>
+				<Link
+					href={
+						`https://myanimelist.net/anime/${details?.mal_id}` ??
+						'https://via.placeholder.com/400x566'
+					}
+					target="_blank"
+					rel='noopener noreferrer'
+					className="text-base sm:text-lg link"
+				>
+					MyAnimeList
+				</Link>
+			</ModalTemplate>
 		)
 	}
 

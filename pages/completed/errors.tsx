@@ -8,6 +8,7 @@ import { levenshtein } from '@/lib/list_methods'
 import { Database } from '@/lib/database.types'
 import { useLoading } from '@/components/LoadingContext'
 import { useRouter } from 'next/router'
+import ModalTemplate from '@/components/ModalTemplate'
 
 export default function CompletedErrors() {
 	const [isLoadingClient, setIsLoadingClient] = useState(true)
@@ -221,41 +222,39 @@ export default function CompletedErrors() {
 		}
 
 		return (
-			<div>
+			<ModalTemplate 
+				extraClassname='h-[30rem] w-[50rem]'
+				exitFunction={() => setChanged(null)}
+			>
 				<div
+					tabIndex={0}
 					onClick={() => setChanged(null)}
-					className="fixed top-0 left-0 h-[100dvh] w-[100dvw] bg-black opacity-30"
-				/>
-				<div className="fixed flex flex-col items-center h-[30rem] w-[50rem] px-10 py-6 bg-gray-700 rounded-md shadow-md shadow-black drop-shadow-md border-4 border-black top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 modal">
-					<div
-						onClick={() => setChanged(null)}
-						className="absolute right-6 flex items-center justify-center h-11 w-11 rounded-full cursor-pointer transition-colors duration-150 hover:bg-slate-500"
-					>
-						<CloseIcon fontSize="large" />
-					</div>
-					<h3 className="font-bold text-2xl">Edit Details</h3>
-					<form
-						onSubmit={handleChange}
-						className="flex flex-col items-center absolute top-[40%] w-3/5"
-					>
-						<label className="flex flex-col gap-4 items-center mb-6 text-lg">
-							Enter MyAnimeList link:
-							<input type="text" className="input-text" />
-						</label>
-						<Link
-							href={`https://myanimelist.net/anime.php?q=${changed?.entryTitle?.substring(
-								0,
-								64
-							)}`}
-							target="_blank"
-							rel='noopener noreferrer'
-							className="text-lg link"
-						>
-							Search for anime title
-						</Link>
-					</form>
+					className="absolute right-6 flex items-center justify-center h-11 w-11 rounded-full cursor-pointer transition-colors duration-150 hover:bg-slate-500"
+				>
+					<CloseIcon fontSize="large" />
 				</div>
-			</div>
+				<h3 className="font-bold text-2xl">Edit Details</h3>
+				<form
+					onSubmit={handleChange}
+					className="flex flex-col items-center absolute top-[40%] w-3/5"
+				>
+					<label className="flex flex-col gap-4 items-center mb-6 text-lg">
+						Enter MyAnimeList link:
+						<input type="text" className="input-text" />
+					</label>
+					<Link
+						href={`https://myanimelist.net/anime.php?q=${changed?.entryTitle?.substring(
+							0,
+							64
+						)}`}
+						target="_blank"
+						rel='noopener noreferrer'
+						className="text-lg link"
+					>
+						Search for anime title
+					</Link>
+				</form>
+			</ModalTemplate>
 		)
 	}
 

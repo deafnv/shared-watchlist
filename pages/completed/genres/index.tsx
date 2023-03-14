@@ -103,7 +103,7 @@ export default function Genres() {
 			<div style={{ display: advancedSearch }} className="z-10">
 				<div
 					onClick={() => setAdvancedSearch('none')}
-					className="fixed top-0 left-0 h-[100dvh] w-[100dvw] opacity-30 bg-black modal-background"
+					className="fixed top-0 left-0 h-[100dvh] w-[100dvw] glass-modal"
 				/>
 				{advancedSearchResult ? (
 					<div className="fixed flex flex-col items-center gap-4 w-[45rem] px-10 py-6 bg-gray-700 rounded-md shadow-md shadow-black drop-shadow-md top-1/2 left-1/2 -translate-x-1/2 -translate-y-[45%] modal">
