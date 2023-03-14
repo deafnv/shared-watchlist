@@ -26,6 +26,7 @@ export default function PTW() {
 	const onlineUsersRef = useRef<any>(null)
 	const onlineUsersElementRef = useRef<HTMLSpanElement>(null)
 	const latencyRef = useRef<HTMLSpanElement>(null)
+	const latencyBadgeRef = useRef<HTMLDivElement>(null)
 	const addGachaRollRef = useRef<HTMLDivElement>(null)
 	const contextMenuRef = useRef<HTMLDivElement>(null)
 	const contextMenuButtonRef = useRef<any>([])
@@ -456,24 +457,33 @@ export default function PTW() {
 
 	function LatencyBadge() {
 		function handleOpen(e: BaseSyntheticEvent) {
-			const target = e.target as HTMLDivElement
-			if (target.style.width != '18rem') {
-				target.style.width = '18rem'
+			if (!latencyBadgeRef.current) return
+			const child = latencyBadgeRef.current.children[1] as HTMLSpanElement
+			if (latencyBadgeRef.current.style.width != '18rem') {
+				latencyBadgeRef.current.style.width = '18rem'
+				child.style.display = 'block'
 			} else {
-				target.style.width = '8.4rem'
+				latencyBadgeRef.current.style.width = '8.4rem'
+				child.style.display = 'none'
 			}
 		}
 
 		return (
 			<div
 				onClick={handleOpen}
-				className="fixed bottom-6 left-6 flex items-center justify-between z-50 p-2 max-h-[2.5rem] w-[8.4rem] rounded-full bg-black border-pink-500 border-[1px] whitespace-nowrap overflow-hidden cursor-pointer ease-out transition-[width]"
+				ref={latencyBadgeRef}
+				style={{
+					width: '18rem'
+				}}
+				className="fixed bottom-6 left-6 flex items-center justify-between z-50 p-2 max-h-[2.5rem] rounded-full bg-black border-pink-500 border-[1px] whitespace-nowrap overflow-hidden cursor-pointer ease-out transition-[width]"
 			>
 				<span ref={latencyRef} className="text-gray-300 p-1 pointer-events-none">
 					Latency: -1.0ms
 				</span>
-				<span className="text-gray-300 mx-auto pointer-events-none"> · </span>
-				<span ref={onlineUsersElementRef} className="text-gray-300 ml-4 pointer-events-none"></span>
+				<span>
+					<span className="text-gray-300 mx-auto pointer-events-none"> · </span>
+					<span ref={onlineUsersElementRef} className="text-gray-300 ml-4 pointer-events-none"></span>
+				</span>
 			</div>
 		)
 	}
