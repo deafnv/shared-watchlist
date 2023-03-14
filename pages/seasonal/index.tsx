@@ -13,6 +13,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/router'
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator'
 import CloseIcon from '@mui/icons-material/Close'
+import ModalTemplate from '../../components/ModalTemplate'
 
 //TODO: Allow sort, and show save changes button to save sort
 
@@ -24,6 +25,7 @@ export default function Seasonal() {
 	const contextMenuRef = useRef<HTMLDivElement>(null)
 	const contextMenuButtonRef = useRef<any>([])
 	const isEditedRef = useRef('')
+	const entryToDelete = useRef<any | null>(null)
 
 	const [response, setResponse] = useState<any>()
 	const [response1, setResponse1] = useState<any>()
@@ -40,7 +42,7 @@ export default function Seasonal() {
 		left: number
 		currentItem: any | null
 	}>({ top: 0, left: 0, currentItem: null })
-	const [confirmModal, setConfirmModal] = useState(false)
+	const [confirmModal, setConfirmModal] = useState<'' | 'DELETE' | 'DELETEALL'>('')
 	const [editModal, setEditModal] = useState(false)
 	const [reordered, setReordered] = useState(false)
 	const { setLoading } = useLoading()
@@ -50,6 +52,11 @@ export default function Seasonal() {
 	const setIsEdited = (value: string) => {
 		isEditedRef.current = value
 		setIsEditedState(value)
+	}
+
+	const setConfirmModalDelEntry = () => {
+		entryToDelete.current = contextMenu.currentItem
+		setConfirmModal('DELETE')
 	}
 
 	useEffect(() => {
@@ -311,23 +318,6 @@ export default function Seasonal() {
 			}
 		}
 
-		//TODO: Add confirm for delete entry
-		async function handleDelete() {
-			setLoading(true)
-			try {
-				await axios.post('/api/addtocompleted', {
-					content: response1,
-					id: contextMenu.currentItem?.title,
-					type: 'SEASONAL',
-					action: 'DELETE'
-				})
-				setLoading(false)
-			} catch (error) {
-				setLoading(false)
-				alert(error)
-			}
-		}
-
 		async function handleAddToCompleted() {
 			setLoading(true)
 			try {
@@ -380,7 +370,7 @@ export default function Seasonal() {
 					</button>
 				</li>
 				<li className="flex justify-center h-8 rounded-sm hover:bg-slate-500">
-					<button onClick={handleDelete} className="w-full">
+					<button onClick={() => setConfirmModalDelEntry()} className="w-full">
 						Delete entry
 					</button>
 				</li>
@@ -420,7 +410,7 @@ export default function Seasonal() {
 					type: 'MULTI',
 					length: 21
 				})
-				setConfirmModal(false)
+				setConfirmModal('')
 				setLoading(false)
 			} catch (error) {
 				setLoading(false)
@@ -429,18 +419,44 @@ export default function Seasonal() {
 			}
 		}
 
-		return (
-			<menu>
-				<div className="fixed top-0 left-0 h-[100dvh] w-[100dvw] bg-black opacity-30" />
-				<div className="fixed flex flex-col items-center justify-center gap-4 h-[15rem] w-[30rem] px-10 py-6 bg-gray-700 rounded-md shadow-md shadow-black drop-shadow-md border-4 border-black top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 modal">
+		async function handleDelete() {
+			setLoading(true)
+			try {
+				await axios.post('/api/addtocompleted', {
+					content: response1,
+					id: entryToDelete.current.title,
+					type: 'SEASONAL',
+					action: 'DELETE'
+				})
+				setConfirmModal('')
+				setLoading(false)
+			} catch (error) {
+				setLoading(false)
+				alert(error)
+			}
+		}
+
+		if (confirmModal === 'DELETEALL') {
+			return (
+				<ModalTemplate>
 					<h3 className='text-2xl'>Confirm Delete All Entries?</h3>
 					<div className='flex gap-4'>
 						<button onClick={handleDeleteAll} className='px-3 py-1 input-submit'>Yes</button>
-						<button onClick={() => setConfirmModal(false)} className='px-3 py-1 input-submit'>No</button>
+						<button onClick={() => setConfirmModal('')} className='px-3 py-1 input-submit'>No</button>
 					</div>
-				</div>
-			</menu>
-		)
+				</ModalTemplate>
+			)
+		} else if (confirmModal === 'DELETE') {
+			return (
+				<ModalTemplate>
+					<h3 className='text-2xl'>Confirm delete entry?</h3>
+					<div className='flex gap-4'>
+						<button onClick={handleDelete} className='px-3 py-1 input-submit'>Yes</button>
+						<button onClick={() => setConfirmModal('')} className='px-3 py-1 input-submit'>No</button>
+					</div>
+				</ModalTemplate>
+			)
+		} else return null
 	}
 
 	function SettingsMenu() {
@@ -459,7 +475,7 @@ export default function Seasonal() {
 					</button>
 				</li>
 				<li className="flex justify-center h-fit rounded-md hover:bg-pink-400">
-					<button onClick={() => setConfirmModal(true)} className="py-2 w-full">
+					<button onClick={() => setConfirmModal('DELETEALL')} className="py-2 w-full">
 						Delete all
 					</button>
 				</li>

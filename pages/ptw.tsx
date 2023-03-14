@@ -463,7 +463,7 @@ export default function PTW() {
 				latencyBadgeRef.current.style.width = '18rem'
 				child.style.display = 'block'
 			} else {
-				latencyBadgeRef.current.style.width = '8.4rem'
+				latencyBadgeRef.current.style.width = '8.6rem'
 				child.style.display = 'none'
 			}
 		}
@@ -475,14 +475,14 @@ export default function PTW() {
 				style={{
 					width: '18rem'
 				}}
-				className="fixed bottom-6 left-6 flex items-center justify-between z-50 p-2 max-h-[2.5rem] rounded-full bg-black border-pink-500 border-[1px] whitespace-nowrap overflow-hidden cursor-pointer ease-out transition-[width]"
+				className="fixed bottom-6 left-6 flex items-center justify-between z-50 p-2 max-h-[2.5rem] max-w-[60vw] rounded-full bg-black border-pink-500 border-[1px] whitespace-nowrap overflow-hidden cursor-pointer ease-out transition-[width]"
 			>
 				<span ref={latencyRef} className="text-gray-300 p-1 pointer-events-none">
 					Latency: -1.0ms
 				</span>
 				<span>
 					<span className="text-gray-300 mx-auto pointer-events-none"> · </span>
-					<span ref={onlineUsersElementRef} className="text-gray-300 ml-4 pointer-events-none"></span>
+					<span ref={onlineUsersElementRef} className="text-gray-300 ml-4 pointer-events-none">- user(s) online</span>
 				</span>
 			</div>
 		)
