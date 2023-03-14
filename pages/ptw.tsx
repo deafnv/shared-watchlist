@@ -23,6 +23,8 @@ let socket: Socket
 export default function PTW() {
 	const rolledTitleRef = useRef('???')
 	const rolledTitleElementRef = useRef<HTMLHeadingElement>(null)
+	const onlineUsersRef = useRef<any>(null)
+	const onlineUsersElementRef = useRef<HTMLSpanElement>(null)
 	const latencyRef = useRef<HTMLSpanElement>(null)
 	const addGachaRollRef = useRef<HTMLDivElement>(null)
 	const contextMenuRef = useRef<HTMLDivElement>(null)
@@ -71,6 +73,13 @@ export default function PTW() {
 		}
 		rolledTitleElementRef.current!.innerHTML = value
 		rolledTitleRef.current = value
+	}
+
+	const setOnlineUsers = (value: any) => {
+		if (!value) return
+		const valueArr = Object.keys(value).map((key, index) => value[key])
+		onlineUsersRef.current = value
+		onlineUsersElementRef.current!.innerHTML = `${valueArr.length} user(s) online`
 	}
 
 	const editFormParams = {
@@ -189,6 +198,18 @@ export default function PTW() {
 			})
 			.subscribe()
 
+		const onlineChannel = supabase
+			.channel('online-users')
+			.on('presence', { event: 'sync' }, () => {
+				setOnlineUsers(onlineChannel.presenceState())
+			})
+			.subscribe(async (status) => {
+				if (status === 'SUBSCRIBED') {
+					const status = await onlineChannel.track({ online_at: new Date().toISOString() })
+					console.log(status)
+				}
+			})
+
 		const resetOnClickOut = (e: any) => {
 			if (e.target?.tagName !== 'INPUT' && isEdited) {
 				setIsEdited('')
@@ -221,6 +242,7 @@ export default function PTW() {
 		return () => {
 			socket.off('roll')
 			databaseChannel.unsubscribe()
+			onlineChannel.unsubscribe()
 			clearInterval(refresh)
 			clearInterval(pingInterval)
 			document.removeEventListener('click', resetOnClickOut)
@@ -433,13 +455,25 @@ export default function PTW() {
 	}
 
 	function LatencyBadge() {
+		function handleOpen(e: BaseSyntheticEvent) {
+			const target = e.target as HTMLDivElement
+			if (target.style.width != '18rem') {
+				target.style.width = '18rem'
+			} else {
+				target.style.width = '8.4rem'
+			}
+		}
+
 		return (
 			<div
-				className="fixed bottom-6 left-6 flex items-center justify-center z-50 p-2 max-h-[2.5rem] rounded-full bg-black border-pink-500 border-[1px] whitespace-nowrap"
+				onClick={handleOpen}
+				className="fixed bottom-6 left-6 flex items-center justify-between z-50 p-2 max-h-[2.5rem] w-[8.4rem] rounded-full bg-black border-pink-500 border-[1px] whitespace-nowrap overflow-hidden cursor-pointer ease-out transition-[width]"
 			>
 				<span ref={latencyRef} className="text-gray-300 p-1 pointer-events-none">
 					Latency: -1.0ms
 				</span>
+				<span className="text-gray-300 mx-auto pointer-events-none"> · </span>
+				<span ref={onlineUsersElementRef} className="text-gray-300 ml-4 pointer-events-none"></span>
 			</div>
 		)
 	}
