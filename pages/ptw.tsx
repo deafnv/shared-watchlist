@@ -25,7 +25,7 @@ let socket: Socket
 export default function PTW() {
 	const rolledTitleRef = useRef('???')
 	const rolledTitleElementRef = useRef<HTMLHeadingElement>(null)
-	const onlineUsersRef = useRef<any>(null)
+	const onlineUsersRef = useRef<number>(0)
 	const onlineUsersElementRef = useRef<HTMLSpanElement>(null)
 	const latencyRef = useRef<HTMLSpanElement>(null)
 	const latencyBadgeRef = useRef<HTMLDivElement>(null)
@@ -88,7 +88,7 @@ export default function PTW() {
 	const setOnlineUsers = (value: any) => {
 		if (!value) return
 		const valueArr = Object.keys(value).map((key, index) => value[key])
-		onlineUsersRef.current = value
+		onlineUsersRef.current = valueArr.length
 		onlineUsersElementRef.current!.innerHTML = `${valueArr.length} user(s) online`
 	}
 
@@ -540,7 +540,7 @@ export default function PTW() {
 				</span>
 				<span>
 					<span className="text-gray-300 mx-auto pointer-events-none"> · </span>
-					<span ref={onlineUsersElementRef} className="text-gray-300 ml-4 pointer-events-none">- user(s) online</span>
+					<span ref={onlineUsersElementRef} className="text-gray-300 ml-4 pointer-events-none">{onlineUsersRef.current} user(s) online</span>
 				</span>
 			</div>
 		)
