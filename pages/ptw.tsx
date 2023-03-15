@@ -18,6 +18,7 @@ import RefreshIcon from '@mui/icons-material/Refresh'
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator'
 import io, { Socket } from 'socket.io-client'
 import ModalTemplate from '@/components/ModalTemplate'
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
 
 let socket: Socket
 
@@ -401,22 +402,55 @@ export default function PTW() {
 	)
 
 	function ConfirmModal() {
-		//TODO: Add delete for unrolled entries
 		async function handleDelete() {
-			setLoading(true)
-			try {
-				await axios.delete('/api/deleteentry', {
-					data: {
-						content: responseRolled,
-						id: entryToDelete.current.id,
-						type: 'PTW'
-					}
-				})
-				setConfirmModal(false)
-				setLoading(false)
-			} catch (error) {
-				setLoading(false)
-				alert(error)
+			if (entryToDelete.current.tableId) {
+				let responseTable
+				switch (entryToDelete.current.tableId) {
+					case 'casual':
+						responseTable = responseCasual
+						break
+					case 'noncasual':
+						responseTable = responseNonCasual
+						break
+					case 'movies':
+						responseTable = responseMovies
+						break
+					default:
+						break
+				}
+				setLoading(true)
+				try {
+					await axios.delete('/api/deleteentry', {
+						data: {
+							content: responseTable,
+							id: entryToDelete.current.item.id,
+							tableId: entryToDelete.current.tableId,
+							type: 'PTW_UNROLLED'
+						}
+					})
+					setConfirmModal(false)
+					setLoading(false)
+				} catch (error) {
+					setLoading(false)
+					console.log(error)
+					alert(error)
+				}
+			} else {
+				setLoading(true)
+				try {
+					await axios.delete('/api/deleteentry', {
+						data: {
+							content: responseRolled,
+							id: entryToDelete.current.id,
+							type: 'PTW'
+						}
+					})
+					setConfirmModal(false)
+					setLoading(false)
+				} catch (error) {
+					setLoading(false)
+					alert(error)
+				}
 			}
 		}
 
@@ -810,6 +844,14 @@ export default function PTW() {
 		 })
 	}
 
+	function handleDeleteUnrolled(
+		tableId: 'casual' | 'noncasual' | 'movies',
+		item: { id: number; title: string; }
+	) {
+		entryToDelete.current = { tableId, item }
+		setConfirmModal(true)
+	}
+
 	function PTWTable({
 		response,
 		tableName,
@@ -855,9 +897,9 @@ export default function PTW() {
 												onDoubleClick={() => {
 													setIsEdited(`${tableId}_${item.title}_${item.id}`)
 												}}
-												className="relative"
+												className="relative group"
 											>
-												<span>
+												<span className='pr-4'>
 													{isEdited == `${tableId}_${item.title}_${item.id}`
 														? editForm(`${tableId}_title`, item.id, item.title!, editFormParams)
 														: item.title}
@@ -865,6 +907,12 @@ export default function PTW() {
 												{isLoadingEditForm.includes(`${tableId}_title_${item.id}`) && (
 													<CircularProgress size={30} className="absolute top-[20%] left-[48%]" />
 												)}
+												<div
+													onClick={() => handleDeleteUnrolled(tableId, item)}
+													className="absolute flex items-center justify-center top-1/2 right-1 -translate-y-1/2 z-10 h-7 w-7 invisible group-hover:visible cursor-pointer rounded-full hover:bg-gray-500 transition-colors duration-150"
+												>
+													<DeleteOutlineIcon />
+												</div>
 											</td>
 										</tr>
 									)

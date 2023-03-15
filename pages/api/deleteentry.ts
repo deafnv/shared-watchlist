@@ -5,10 +5,11 @@ import { google } from 'googleapis'
 
 export default async function DeleteEntry(req: NextApiRequest, res: NextApiResponse) {
 	const { body, method } = req
-	const { content, id, type } = body
+	const { content, id, tableId, type } = body
+	console.log(id)
 
 	if (method !== 'DELETE') return res.status(405).send('Method not supported')
-	if (!content || !id || !type || !(content instanceof Array)) 
+	if (!content || !type || !(content instanceof Array)) //TODO: Check for id here, id can be 0/falsy
     return res.status(400).send('Invalid content provided')
 
 	let cells
@@ -18,7 +19,7 @@ export default async function DeleteEntry(req: NextApiRequest, res: NextApiRespo
 		const toDeletePTWRolled = content.filter(
 			(item: Database['public']['Tables']['PTW-Rolled']['Row']) => item.id != id
 		)
-		toDeletePTWRolled.push({ id: toDeletePTWRolled.length + 1, status: 'Empty', title: '' })
+		toDeletePTWRolled.push({ id: toDeletePTWRolled.length, status: 'Empty', title: '' })
 		const endRowIndex1 = content.length + 1
 		cells = `N2:N${endRowIndex1}`
 
@@ -44,6 +45,36 @@ export default async function DeleteEntry(req: NextApiRequest, res: NextApiRespo
 			}
 		)
 	}
+	else if (type === 'PTW_UNROLLED') {
+		const toDeletePTWUnrolled = content.filter(
+			(item: Database['public']['Tables']['PTW-Casual']['Row']) => item.id != id
+		)
+		toDeletePTWUnrolled.push({ id: toDeletePTWUnrolled.length, title: '' })
+		const { column, startRow } = getColumnRow(tableId)
+		const endRowIndex1 = parseInt(startRow) + content.length - 1
+		cells = `${column}${startRow}:${column}${endRowIndex1}`
+		
+		rowsToInsert = toDeletePTWUnrolled.map(
+			(item: Database['public']['Tables']['PTW-Casual']['Row']) => {
+				return {
+					values: [
+						{
+							userEnteredValue: {
+								stringValue: item.title
+							},
+							userEnteredFormat: {
+								backgroundColor: {
+									red: 0.8,
+									green: 0.8,
+									blue: 0.8
+								}
+							}
+						}
+					]
+				}
+			}
+		)
+	}
 	else if (type === 'SEASONAL') {
 		const completedSeasonal = content.filter(
 			(item: Database['public']['Tables']['PTW-CurrentSeason']['Row']) => item.title != id //? id here is provided as entry title
@@ -52,7 +83,6 @@ export default async function DeleteEntry(req: NextApiRequest, res: NextApiRespo
 		const endRowIndex1 = content.length + 1
 		cells = `O2:P${endRowIndex1}`
 
-		if (!Array.isArray(content)) return res.status(400).send('Invalid content provided')
 		rowsToInsert = completedSeasonal.map(
 			(item: Database['public']['Tables']['PTW-CurrentSeason']['Row']) => {
 				const { red, green, blue } = determineStatus(item)
@@ -129,6 +159,25 @@ export default async function DeleteEntry(req: NextApiRequest, res: NextApiRespo
 		console.log(error)
 		return res.status(500).send(error)
 	}
+}
+
+function getColumnRow(tableId: string) {
+	let tableName: { column: string, startRow: string }
+	switch (tableId) {
+		case 'casual':
+			tableName = { column: 'L', startRow: '2' }
+			break
+		case 'noncasual':
+			tableName = { column: 'M', startRow: '2' }
+			break
+		case 'movies':
+			tableName = { column: 'L', startRow: '22' }
+			break
+		default:
+			tableName = { column: 'L', startRow: '2' }
+			break
+	}
+	return tableName
 }
 
 function determineStatus(item: any) {
