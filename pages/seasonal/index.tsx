@@ -321,7 +321,7 @@ export default function Seasonal() {
 		async function handleAddToCompleted() {
 			setLoading(true)
 			try {
-				await axios.post('/api/addtocompleted', {
+				await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/addtocompleted`, {
 					content: response1,
 					id: contextMenu.currentItem?.title,
 					type: 'SEASONAL'

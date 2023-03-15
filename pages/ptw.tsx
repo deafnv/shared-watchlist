@@ -500,7 +500,7 @@ export default function PTW() {
 		async function handleAddToCompleted() {
 			setLoading(true)
 			try {
-				await axios.post('/api/addtocompleted', {
+				await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/addtocompleted`, {
 					content: responseRolled,
 					id: contextMenu.currentItem?.id,
 					type: 'PTW'
