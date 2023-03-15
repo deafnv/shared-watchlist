@@ -5,10 +5,11 @@ import { google } from 'googleapis'
 
 export default async function AddToCompleted(req: NextApiRequest, res: NextApiResponse) {
 	const { body, method } = req
-	const { content, id, type, action } = body
+	const { content, id, type } = body
 
 	if (method !== 'POST') return res.status(405).send('Method not supported')
-	if (!content || !id || !type) return res.status(400)
+	if (!content || !id || !type || !(content instanceof Array)) 
+		return res.status(400).send('Invalid content provided')
 	
 	const supabase = createClient<Database>(
 		'https://esjopxdrlewtpffznsxh.supabase.co',
@@ -45,7 +46,6 @@ export default async function AddToCompleted(req: NextApiRequest, res: NextApiRe
 		const endRowIndex1 = content.length + 1
 		cells = `N2:N${endRowIndex1}`
 
-		if (!Array.isArray(content)) return res.status(400).send('Invalid content provided')
 		rowsToInsert = completedPTWRolled.map(
 			(item: Database['public']['Tables']['PTW-Rolled']['Row']) => {
 				const { red, green, blue } = determineStatus(item)
@@ -76,7 +76,6 @@ export default async function AddToCompleted(req: NextApiRequest, res: NextApiRe
 		const endRowIndex1 = content.length + 1
 		cells = `O2:P${endRowIndex1}`
 
-		if (!Array.isArray(content)) return res.status(400).send('Invalid content provided')
 		rowsToInsert = completedSeasonal.map(
 			(item: Database['public']['Tables']['PTW-CurrentSeason']['Row']) => {
 				const { red, green, blue } = determineStatus(item)
@@ -147,8 +146,6 @@ export default async function AddToCompleted(req: NextApiRequest, res: NextApiRe
 				]
 			}
 		})
-
-		if (action === 'DELETE') return res.status(200).send('OK')
 	
 		const newIndex = lastTitleCompletedID!
 		console.log(lastTitleCompletedID)

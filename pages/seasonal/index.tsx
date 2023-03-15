@@ -422,11 +422,12 @@ export default function Seasonal() {
 		async function handleDelete() {
 			setLoading(true)
 			try {
-				await axios.post('/api/addtocompleted', {
-					content: response1,
-					id: entryToDelete.current.title,
-					type: 'SEASONAL',
-					action: 'DELETE'
+				await axios.delete('/api/deleteentry', {
+					data: {
+						content: response1,
+						id: entryToDelete.current.title,
+						type: 'SEASONAL'
+					}
 				})
 				setConfirmModal('')
 				setLoading(false)

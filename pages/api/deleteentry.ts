@@ -7,16 +7,9 @@ export default async function DeleteEntry(req: NextApiRequest, res: NextApiRespo
 	const { body, method } = req
 	const { content, id, type } = body
 
-  console.log(body)
-
 	if (method !== 'DELETE') return res.status(405).send('Method not supported')
 	if (!content || !id || !type || !(content instanceof Array)) 
     return res.status(400).send('Invalid content provided')
-	
-	const supabase = createClient<Database>(
-		'https://esjopxdrlewtpffznsxh.supabase.co',
-		process.env.SUPABASE_SERVICE_API_KEY!
-	)
 
 	let cells
 	let rowsToInsert
