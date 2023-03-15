@@ -438,7 +438,10 @@ export default function Seasonal() {
 
 		if (confirmModal === 'DELETEALL') {
 			return (
-				<ModalTemplate exitFunction={() => setConfirmModal('')}>
+				<ModalTemplate
+					extraClassname='h-[15rem] w-[30rem] justify-center'
+					exitFunction={() => setConfirmModal('')}
+				>
 					<h3 className='text-2xl'>Confirm Delete All Entries?</h3>
 					<div className='flex gap-4'>
 						<button onClick={handleDeleteAll} className='px-3 py-1 input-submit'>Yes</button>
@@ -448,7 +451,10 @@ export default function Seasonal() {
 			)
 		} else if (confirmModal === 'DELETE') {
 			return (
-				<ModalTemplate exitFunction={() => setConfirmModal('')}>
+				<ModalTemplate
+					extraClassname='h-[15rem] w-[30rem] justify-center'
+					exitFunction={() => setConfirmModal('')}
+				>
 					<h3 className='text-2xl'>Confirm delete entry?</h3>
 					<div className='flex gap-4'>
 						<button onClick={handleDelete} className='px-3 py-1 input-submit'>Yes</button>

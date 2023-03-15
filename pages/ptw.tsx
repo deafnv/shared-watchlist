@@ -17,6 +17,7 @@ import isEqual from 'lodash/isEqual'
 import RefreshIcon from '@mui/icons-material/Refresh'
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator'
 import io, { Socket } from 'socket.io-client'
+import ModalTemplate from '@/components/ModalTemplate'
 
 let socket: Socket
 
@@ -33,6 +34,7 @@ export default function PTW() {
 	const sortMethodRef = useRef('')
 	const isEditedRef = useRef('')
 	const reordered = useRef(false)
+	const entryToDelete = useRef<any | null>(null)
 	const setReordered = (value: boolean) => reordered.current = value 
 
 	const [responseRolled, setResponseRolled] =
@@ -48,6 +50,7 @@ export default function PTW() {
 	const [isEdited, setIsEditedState] = useState<string>('')
 	const [isLoadingClient, setIsLoadingClient] = useState(true)
 	const [isLoadingEditForm, setIsLoadingEditForm] = useState<Array<string>>([])
+	const [confirmModal, setConfirmModal] = useState(false)
 	const [contextMenu, setContextMenu] = useState<{
 		top: number
 		left: number
@@ -64,6 +67,11 @@ export default function PTW() {
 	const setIsEdited = (value: string) => {
 		isEditedRef.current = value
 		setIsEditedState(value)
+	}
+
+	const setConfirmModalDelEntry = () => {
+		entryToDelete.current = contextMenu.currentItem
+		setConfirmModal(true)
 	}
 
 	const setRolledTitle = (value: string) => {
@@ -387,9 +395,44 @@ export default function PTW() {
 				<LatencyBadge />
 				{contextMenu.currentItem && <ContextMenu />}
 				{isAdded && <AddRecordMenu />}
+				{confirmModal && <ConfirmModal />}
 			</main>
 		</>
 	)
+
+	function ConfirmModal() {
+		//TODO: Add delete for unrolled entries
+		async function handleDelete() {
+			setLoading(true)
+			try {
+				await axios.delete('/api/deleteentry', {
+					data: {
+						content: responseRolled,
+						id: entryToDelete.current.id,
+						type: 'PTW'
+					}
+				})
+				setConfirmModal(false)
+				setLoading(false)
+			} catch (error) {
+				setLoading(false)
+				alert(error)
+			}
+		}
+
+		return (
+			<ModalTemplate
+				extraClassname='h-[15rem] w-[30rem] justify-center'
+				exitFunction={() => setConfirmModal(false)}
+			>
+				<h3 className='text-2xl'>Confirm delete entry?</h3>
+				<div className='flex gap-4'>
+					<button onClick={handleDelete} className='px-3 py-1 input-submit'>Yes</button>
+					<button onClick={() => setConfirmModal(false)} className='px-3 py-1 input-submit'>No</button>
+				</div>
+			</ModalTemplate>
+		)
+	}
 
 	function ContextMenu() {
 		return (
@@ -413,31 +456,12 @@ export default function PTW() {
 					</button>
 				</li>
 				<li className="flex justify-center h-8 rounded-sm hover:bg-slate-500">
-					<button onClick={handleDelete} className="w-full">
+					<button onClick={() => setConfirmModalDelEntry()} className="w-full">
 						Delete entry
 					</button>
 				</li>
 			</menu>
 		)
-
-		//TODO: Add confirm for delete entry
-		//TODO: Add delete for unrolled entries
-		//TODO: Test this
-		async function handleDelete() {
-			setLoading(true)
-			try {
-				await axios.post('/api/addtocompleted', {
-					content: responseRolled,
-					id: contextMenu.currentItem?.title,
-					type: 'PTW',
-					action: 'DELETE'
-				})
-				setLoading(false)
-			} catch (error) {
-				setLoading(false)
-				alert(error)
-			}
-		}
 
 		async function handleAddToCompleted() {
 			setLoading(true)
@@ -892,7 +916,7 @@ function Item({ props, editFormParams }: ItemProps) {
 				<div
 					onPointerDown={(e) => controls.start(e)}
 					style={{ visibility: sortMethodRef.current ? 'hidden' : 'visible' }}
-					className='absolute top-1/2 right-0 z-10 flex items-center justify-center h-7 w-7 cursor-grab rounded-full transition-colors duration-150 -translate-y-1/2'
+					className='absolute top-1/2 right-0 flex items-center justify-center h-7 w-7 cursor-grab rounded-full transition-colors duration-150 -translate-y-1/2'
 				>
 					<DragIndicatorIcon sx={{ color: 'silver'}} />
 				</div>
