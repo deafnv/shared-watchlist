@@ -697,7 +697,7 @@ export default function PTW() {
 				updatePayload: Array<string | null>,
 				addCell: string
 			) {
-				await axios.post('/api/ptw/addrolled', {
+				await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/ptw/addrolled`, {
 					deleteStep: {
 						range: range,
 						content: updatePayload
