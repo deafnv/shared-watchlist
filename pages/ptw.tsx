@@ -593,7 +593,7 @@ export default function PTW() {
 				rolledTitle == '???'
 			)
 				return
-			if (responseRolled.length >= 20) {
+			if (responseRolled.length >= 21) {
 				alert('Unable to add roll to record, insufficient space.')
 				return
 			}
@@ -603,11 +603,11 @@ export default function PTW() {
 				isLoading: true
 			})
 			setLoading(true)
-			const isInMovies = responseMovies.find((item) => item.title == rolledTitle)
+			const isInMovies = responseMovies.find((item) => item.title.trim() == rolledTitle)
 
 			if (isInMovies) {
 				//? If rolled title is a movie
-				const changed = responseMovies.slice().filter((item) => item.title != rolledTitle)
+				const changed = responseMovies.slice().filter((item) => item.title.trim() != rolledTitle)
 
 				const range = `L22:L${22 + responseMovies.length - 1}`
 				const updatePayload = changed.map((item) => item.title)
@@ -634,11 +634,12 @@ export default function PTW() {
 				}
 			}
 
-			const isInCasual = responseCasual.find((item) => item.title == rolledTitle)
+			const isInCasual = responseCasual.find((item) => item.title.trim() == rolledTitle)
 
 			if (isInCasual) {
 				//? If rolled title is in category casual
-				const changed = responseCasual.slice().filter((item) => item.title != rolledTitle)
+				console.log('CASUAL')
+				const changed = responseCasual.slice().filter((item) => item.title.trim() != rolledTitle)
 
 				const range = `L2:L${responseCasual.length + 1}`
 				const updatePayload = changed.map((item) => item.title)
@@ -663,9 +664,14 @@ export default function PTW() {
 					alert(error)
 					return
 				}
-			} else {
+			} 
+			
+			const isInNonCasual = responseNonCasual.find((item) => item.title.trim() == rolledTitle)
+
+			if (isInNonCasual) { 
 				//? If rolled title is in category non-casual
-				const changed = responseNonCasual.slice().filter((item) => item.title != rolledTitle)
+				console.log('NONCASUAL')
+				const changed = responseNonCasual.slice().filter((item) => item.title.trim() != rolledTitle)
 
 				const range = `M2:M${responseNonCasual.length + 1}`
 				const updatePayload = changed.map((item) => item.title)
@@ -691,6 +697,9 @@ export default function PTW() {
 					return
 				}
 			}
+
+			//? In case title is not found
+			alert('Error: Rolled title not found. Check entries to make sure they have no special characters.')
 
 			async function addRolledAPI(
 				range: string,
