@@ -25,6 +25,7 @@ import EditModal from '@/components/EditModal'
 import SearchIcon from '@mui/icons-material/Search'
 import RefreshIcon from '@mui/icons-material/Refresh'
 import ModalTemplate from '@/components/ModalTemplate'
+import debounce from 'lodash/debounce'
 
 //! Non-null assertion for the response state variable here will throw some errors if it does end up being null, fix maybe.
 //! ISSUES:
@@ -186,6 +187,18 @@ export default function Completed() {
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [])
+
+	const debouncedSearch = debounce(async function (e: BaseSyntheticEvent) {
+		console.log('Searching...')
+		const Fuse = (await import('fuse.js')).default
+		const fuse = new Fuse(response1 ?? [], { 
+			keys: ['title'],
+			threshold: 0.35
+		})
+		const results = fuse.search(e.target.value).map(item => item.item)
+
+		setResponse(results)
+	}, 200)
 
 	return (
 		<>
@@ -759,21 +772,13 @@ export default function Completed() {
 	}
 
 	async function searchTable(e: BaseSyntheticEvent) {
-		if (e.target.value == '') {
+		if (e.target.value == '') { //TODO: Resetting state is super laggy, could fix by changing display property instead of adding/removing from the DOM
 			sortMethodRef.current = ''
 			setResponse(response1)
 			return	
 		}
 		if (!response || !response1) return
-
-		const Fuse = (await import('fuse.js')).default
-		const fuse = new Fuse(response1, { 
-			keys: ['title'],
-			threshold: 0.35
-		})
-		const results = fuse.search(e.target.value).map(item => item.item)
-
-		setResponse(results)
+		debouncedSearch(e)
 	}
 
 	function editForm(
