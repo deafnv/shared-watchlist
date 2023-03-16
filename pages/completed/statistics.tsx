@@ -60,7 +60,7 @@ interface StatisticsProps {
 	totalTimeWatched: number
 	typeFreq: { [key: string]: number }
 	genreFreq: { id: number; name: string | null; count: number }[]
-	ratingByGenre: {
+	genreByRating: {
 		id: number
 		name: string
 		rating1mean: number
@@ -239,7 +239,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
 			})
 		}
 	})
-	const ratingByGenre = ratingByGenreAgg
+	const genreByRating = ratingByGenreAgg
 		.map((item) => {
 			return {
 				id: item.id,
@@ -279,7 +279,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
 			totalTimeWatched,
 			typeFreq,
 			genreFreq,
-			ratingByGenre,
+			genreByRating,
 			rating1FreqArr,
 			rating2FreqArr,
 			ratingMalFreqArr,
@@ -336,7 +336,7 @@ export default function Statistics({
 	totalTimeWatched,
 	typeFreq,
 	genreFreq,
-	ratingByGenre,
+	genreByRating,
 	rating1FreqArr,
 	rating2FreqArr,
 	ratingMalFreqArr,
@@ -346,8 +346,8 @@ export default function Statistics({
 	const sortMethodRating1Ref = useRef('')
 	const sortMethodRating2Ref = useRef('')
 
-	const [rating1ByGenre, setRating1ByGenre] = useState(ratingByGenre)
-	const [rating2ByGenre, setRating2ByGenre] = useState(ratingByGenre)
+	const [genreByRating1, setRating1ByGenre] = useState(genreByRating)
+	const [genreByRating2, setRating2ByGenre] = useState(genreByRating)
 
 	ChartJS.register(
 		CategoryScale,
@@ -442,12 +442,12 @@ export default function Statistics({
 							</h3>
 						</div>
 						<div className="flex items-center justify-center w-full bg-sky-600 border-white border-solid border-[1px] border-b-0">
-							<div className="grow p-3 text-lg text-center font-semibold">Title</div>
+							<div className="grow p-3 text-lg text-center font-semibold">Genre Title</div>
 							<div
 								tabIndex={0}
 								onClick={() =>
 									handleSort(
-										rating1ByGenre,
+										genreByRating1,
 										'rating1',
 										setRating1ByGenre,
 										sortMethodRating1Ref,
@@ -467,7 +467,7 @@ export default function Statistics({
 								tabIndex={0}
 								onClick={() =>
 									handleSort(
-										rating1ByGenre,
+										genreByRating1,
 										'rating1',
 										setRating1ByGenre,
 										sortMethodRating1Ref,
@@ -484,10 +484,10 @@ export default function Statistics({
 								)}
 							</div>
 						</div>
-						{rating1ByGenre.map((item, index) => (
+						{genreByRating1.map((item, index) => (
 							<div
 								key={index}
-								style={{ borderBottomWidth: index >= ratingByGenre.length - 1 ? 1 : 0 }}
+								style={{ borderBottomWidth: index >= genreByRating.length - 1 ? 1 : 0 }}
 								className="flex justify-between w-full p-2 border-[1px] border-white"
 							>
 								<Link
@@ -511,12 +511,12 @@ export default function Statistics({
 							</h3>
 						</div>
 						<div className="flex items-center justify-center w-full bg-sky-600 border-white border-solid border-[1px] border-b-0">
-							<div className="grow p-3 text-lg text-center font-semibold">Title</div>
+							<div className="grow p-3 text-lg text-center font-semibold">Genre Title</div>
 							<div
 								tabIndex={0}
 								onClick={() =>
 									handleSort(
-										rating2ByGenre,
+										genreByRating2,
 										'rating2',
 										setRating2ByGenre,
 										sortMethodRating2Ref,
@@ -536,7 +536,7 @@ export default function Statistics({
 								tabIndex={0}
 								onClick={() =>
 									handleSort(
-										rating2ByGenre,
+										genreByRating2,
 										'rating2',
 										setRating2ByGenre,
 										sortMethodRating2Ref,
@@ -553,10 +553,10 @@ export default function Statistics({
 								)}
 							</div>
 						</div>
-						{rating2ByGenre.map((item, index) => (
+						{genreByRating2.map((item, index) => (
 							<div
 								key={index}
-								style={{ borderBottomWidth: index >= ratingByGenre.length - 1 ? 1 : 0 }}
+								style={{ borderBottomWidth: index >= genreByRating.length - 1 ? 1 : 0 }}
 								className="flex justify-between w-full p-2 border-[1px] border-white"
 							>
 								<Link
