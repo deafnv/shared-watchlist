@@ -23,7 +23,7 @@ import { useRouter } from 'next/router'
 import EditIcon from '@mui/icons-material/Edit'
 import EditModal from '@/components/EditModal'
 import SearchIcon from '@mui/icons-material/Search'
-import RefreshIcon from '@mui/icons-material/Refresh';
+import RefreshIcon from '@mui/icons-material/Refresh'
 import ModalTemplate from '@/components/ModalTemplate'
 
 //! Non-null assertion for the response state variable here will throw some errors if it does end up being null, fix maybe.
@@ -758,18 +758,22 @@ export default function Completed() {
 		})
 	}
 
-	function searchTable(e: BaseSyntheticEvent) {
+	async function searchTable(e: BaseSyntheticEvent) {
 		if (e.target.value == '') {
 			sortMethodRef.current = ''
 			setResponse(response1)
+			return	
 		}
 		if (!response || !response1) return
 
-		setResponse(
-			response1
-				.slice()
-				.filter((item) => item.title?.toLowerCase().includes(e.target.value.toLowerCase()))
-		)
+		const Fuse = (await import('fuse.js')).default
+		const fuse = new Fuse(response1, { 
+			keys: ['title'],
+			threshold: 0.35
+		})
+		const results = fuse.search(e.target.value).map(item => item.item)
+
+		setResponse(results)
 	}
 
 	function editForm(
