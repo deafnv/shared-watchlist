@@ -69,6 +69,15 @@ interface StatisticsProps {
 		rating2median: number | null
 		titlecount: number
 	}[]
+	titleByRatingDiff: {
+		id: number
+		title: string | null
+		rating1average: number | null
+		rating2average: number | null
+		rating1MalDiff: number
+		rating2MalDiff: number
+		rating1rating2Diff: number
+	}[]
 	rating1FreqArr: Array<{ [key: number]: number }>
 	rating2FreqArr: Array<{ [key: number]: number }>
 	ratingMalFreqArr: Array<{ [key: number]: number }>
@@ -253,6 +262,19 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
 		})
 		.sort((a, b) => b.titlecount - a.titlecount)
 
+	const titleByRatingDiff = data
+		?.map((item) => {
+			return {
+				id: item.id,
+				title: item.title,
+				rating1average: item.rating1average,
+				rating2average: item.rating2average,
+				rating1MalDiff: (item.rating1average ?? 0) - ((item.CompletedDetails as Database['public']['Tables']['CompletedDetails']['Row']).mal_rating ?? 0),
+				rating2MalDiff: (item.rating2average ?? 0) - ((item.CompletedDetails as Database['public']['Tables']['CompletedDetails']['Row']).mal_rating ?? 0),
+				rating1rating2Diff: (item.rating1average ?? 0) - (item.rating2average ?? 0)
+			}
+		})
+
 	const dateRatingData = data
 		?.map((item) => {
 			return {
@@ -280,6 +302,7 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
 			typeFreq,
 			genreFreq,
 			genreByRating,
+			titleByRatingDiff,
 			rating1FreqArr,
 			rating2FreqArr,
 			ratingMalFreqArr,
@@ -337,6 +360,7 @@ export default function Statistics({
 	typeFreq,
 	genreFreq,
 	genreByRating,
+	titleByRatingDiff,
 	rating1FreqArr,
 	rating2FreqArr,
 	ratingMalFreqArr,
@@ -345,9 +369,15 @@ export default function Statistics({
 }: StatisticsProps) {
 	const sortMethodRating1Ref = useRef('')
 	const sortMethodRating2Ref = useRef('')
+	const sortMethodRating1Rating2Diff = useRef('diff_desc')
+	const sortMethodRating1MalDiff = useRef('diff_desc')
+	const sortMethodRating2MalDiff = useRef('diff_desc')
 
 	const [genreByRating1, setRating1ByGenre] = useState(genreByRating)
 	const [genreByRating2, setRating2ByGenre] = useState(genreByRating)
+	const [titleByRating1Rating2Diff, setTitleByRating1Rating2Diff] = useState(titleByRatingDiff.slice().sort((a, b) => b.rating1rating2Diff - a.rating1rating2Diff))
+	const [titleByRating1MalDiff, setTitleByRating1MalDiff] = useState(titleByRatingDiff.slice().sort((a, b) => b.rating1MalDiff - a.rating1MalDiff))
+	const [titleByRating2MalDiff, setTitleByRating2MalDiff] = useState(titleByRatingDiff.slice().sort((a, b) => b.rating2MalDiff - a.rating2MalDiff))
 
 	ChartJS.register(
 		CategoryScale,
@@ -570,6 +600,149 @@ export default function Statistics({
 									{item.rating2mean.toFixed(2)}
 								</span>
 								<span className="w-24 px-3 py-2 text-lg text-center">{item.rating2median}</span>
+							</div>
+						))}
+					</div>
+				</section>
+				<section className="grid grid-cols-2 gap-3 place-items-center my-6">
+					<div className="flex flex-col col-span-2 md:col-span-1 items-center h-[20rem] w-[30rem] border-[1px] border-white overflow-auto">
+						<div className="sticky top-0 h-16 w-full p-3 bg-black z-10">
+							<h3 className="mb-1 text-xl font-semibold text-center">
+								Top Animes by Difference (GoodTaste - MAL)
+							</h3>
+						</div>
+						<div className="flex items-center justify-center w-full bg-sky-600 border-white border-solid border-[1px] border-b-0">
+							<div className="grow p-3 text-lg text-center font-semibold">Title</div>
+							<div
+								tabIndex={0}
+								onClick={() =>
+									handleSortTitlesByDiff(
+										titleByRating1MalDiff,
+										'rating1MalDiff',
+										setTitleByRating1MalDiff,
+										sortMethodRating1MalDiff
+									)
+								}
+								className="relative p-3 min-w-[6rem] text-lg text-center font-semibold cursor-pointer border-l-[1px] border-white"
+							>
+								Diff.
+								{sortMethodRating1MalDiff.current.includes('diff') && (
+									<span className="absolute">
+										{sortMethodRating1MalDiff.current.includes('asc') ? '▲' : '▼'}
+									</span>
+								)}
+							</div>
+						</div>
+						{titleByRating1MalDiff.map((item, index) => (
+							<div
+								key={index}
+								style={{ borderBottomWidth: index >= titleByRatingDiff.length - 1 ? 1 : 0 }}
+								className="flex justify-between w-full border-[1px] border-white"
+							>
+								<Link
+									href={`/completed/anime/${item.id}`}
+									target="_blank"
+									className="grow px-3 py-2 text-lg font-semibold link"
+								>
+									{item.title}
+								</Link>
+								<span className="min-w-[6rem] px-3 py-2 text-lg text-center">
+									{item.rating1MalDiff.toFixed(2)}
+								</span>
+							</div>
+						))}
+					</div>
+					<div className="flex flex-col col-span-2 md:col-span-1 items-center h-[20rem] w-[30rem] border-[1px] border-white overflow-auto">
+						<div className="sticky top-0 h-16 w-full p-3 bg-black z-10">
+							<h3 className="mb-1 text-xl font-semibold text-center">
+								Top Animes by Difference (TomoLover - MAL)
+							</h3>
+						</div>
+						<div className="flex items-center justify-center w-full bg-sky-600 border-white border-solid border-[1px] border-b-0">
+							<div className="grow p-3 text-lg text-center font-semibold">Title</div>
+							<div
+								tabIndex={0}
+								onClick={() =>
+									handleSortTitlesByDiff(
+										titleByRating2MalDiff,
+										'rating2MalDiff',
+										setTitleByRating2MalDiff,
+										sortMethodRating2MalDiff
+									)
+								}
+								className="relative p-3 min-w-[6rem] text-lg text-center font-semibold cursor-pointer border-l-[1px] border-white"
+							>
+								Diff.
+								{sortMethodRating2MalDiff.current.includes('diff') && (
+									<span className="absolute">
+										{sortMethodRating2MalDiff.current.includes('asc') ? '▲' : '▼'}
+									</span>
+								)}
+							</div>
+						</div>
+						{titleByRating2MalDiff.map((item, index) => (
+							<div
+								key={index}
+								style={{ borderBottomWidth: index >= titleByRatingDiff.length - 1 ? 1 : 0 }}
+								className="flex justify-between w-full border-[1px] border-white"
+							>
+								<Link
+									href={`/completed/anime/${item.id}`}
+									target="_blank"
+									className="grow px-3 py-2 text-lg font-semibold link"
+								>
+									{item.title}
+								</Link>
+								<span className="min-w-[6rem] px-3 py-2 text-lg text-center">
+									{item.rating2MalDiff.toFixed(2)}
+								</span>
+							</div>
+						))}
+					</div>
+					<div className="col-span-2 flex flex-col items-center h-[20rem] w-[33rem] border-[1px] border-white overflow-auto">
+						<div className="sticky top-0 h-16 w-full p-3 bg-black z-10">
+							<h3 className="mb-1 text-xl font-semibold text-center">
+								Top Animes by Difference (GoodTaste - TomoLover)
+							</h3>
+						</div>
+						<div className="flex items-center justify-center w-full bg-sky-600 border-white border-solid border-[1px] border-b-0">
+							<div className="grow p-3 text-lg text-center font-semibold">Title</div>
+							<div
+								tabIndex={0}
+								onClick={() =>
+									handleSortTitlesByDiff(
+										titleByRating1Rating2Diff,
+										'rating1rating2Diff',
+										setTitleByRating1Rating2Diff,
+										sortMethodRating1Rating2Diff
+									)
+								}
+								className="relative p-3 min-w-[6rem] text-lg text-center font-semibold cursor-pointer border-l-[1px] border-white"
+							>
+								Diff.
+								{sortMethodRating1Rating2Diff.current.includes('diff') && (
+									<span className="absolute">
+										{sortMethodRating1Rating2Diff.current.includes('asc') ? '▲' : '▼'}
+									</span>
+								)}
+							</div>
+						</div>
+						{titleByRating1Rating2Diff.map((item, index) => (
+							<div
+								key={index}
+								style={{ borderBottomWidth: index >= titleByRatingDiff.length - 1 ? 1 : 0 }}
+								className="flex justify-between w-full border-[1px] border-white"
+							>
+								<Link
+									href={`/completed/anime/${item.id}`}
+									target="_blank"
+									className="grow px-3 py-2 text-lg font-semibold link"
+								>
+									{item.title}
+								</Link>
+								<span className="min-w-[6rem] px-3 py-2 text-lg text-center">
+									{item.rating1rating2Diff.toFixed(2)}
+								</span>
 							</div>
 						))}
 					</div>
@@ -850,6 +1023,47 @@ export default function Statistics({
 			</main>
 		</>
 	)
+
+	function handleSortTitlesByDiff(
+		toReorderArr: {
+			id: number;
+			title: string | null;
+			rating1average: number | null;
+			rating2average: number | null;
+			rating1MalDiff: number;
+			rating2MalDiff: number;
+			rating1rating2Diff: number;
+		}[],
+		toReorder: 'rating1MalDiff' | 'rating2MalDiff' | 'rating1rating2Diff',
+		setReorderFunc: Dispatch<
+			SetStateAction<
+				{
+					id: number;
+					title: string | null;
+					rating1average: number | null;
+					rating2average: number | null;
+					rating1MalDiff: number;
+					rating2MalDiff: number;
+					rating1rating2Diff: number;
+				}[]
+			>
+		>,
+		sortMethodRef: MutableRefObject<string>
+	) {
+		if (sortMethodRef.current == `${toReorder}_diff_asc`) {
+			const reordered = toReorderArr
+				.slice()
+				.sort((a, b) => b[toReorder] - a[toReorder])
+			sortMethodRef.current = `${toReorder}_diff_desc`
+			setReorderFunc(reordered)
+		} else {
+			const reordered = toReorderArr
+				.slice()
+				.sort((a, b) => a[toReorder] - b[toReorder])
+			sortMethodRef.current = `${toReorder}_diff_asc`
+			setReorderFunc(reordered)
+		}
+	}
 
 	function handleSort(
 		toReorderArr: {
