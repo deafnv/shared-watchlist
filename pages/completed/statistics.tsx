@@ -464,14 +464,17 @@ export default function Statistics({
 						))}
 					</section>
 				</div>
-				<section className="flex flex-col md:flex-row gap-3 my-6">
-					<div className="flex flex-col items-center h-[20rem] w-[30rem] border-[1px] border-white overflow-auto">
+				<section className="grid grid-cols-2 gap-3 place-items-center my-6 p-4 border-white border-solid border-[1px]">
+					<h3 className="col-span-2 mb-1 text-xl font-semibold text-center">
+						Top Genres by Rating
+					</h3>
+					<div className="flex flex-col col-span-2 md:col-span-1 items-center h-[20rem] w-[30rem] border-[1px] border-gray-300 overflow-auto">
 						<div className="sticky top-0 h-16 w-full p-3 bg-black z-10">
-							<h3 className="mb-1 text-2xl font-semibold text-center">
-								Top Genres by Rating (GoodTaste)
+							<h3 className="mb-1 text-xl font-semibold text-center">
+								GoodTaste
 							</h3>
 						</div>
-						<div className="flex items-center justify-center w-full bg-sky-600 border-white border-solid border-[1px] border-b-0">
+						<div className="flex items-center justify-center w-full bg-sky-600 border-white border-solid border-[1px] border-l-0 border-b-0">
 							<div className="grow p-3 text-lg text-center font-semibold">Genre Title</div>
 							<div
 								tabIndex={0}
@@ -518,7 +521,7 @@ export default function Statistics({
 							<div
 								key={index}
 								style={{ borderBottomWidth: index >= genreByRating.length - 1 ? 1 : 0 }}
-								className="flex justify-between w-full p-2 border-[1px] border-white"
+								className="flex justify-between w-full p-2 border-[1px] border-l-0 border-white"
 							>
 								<Link
 									href={`/completed/genres/${item.id}`}
@@ -534,13 +537,13 @@ export default function Statistics({
 							</div>
 						))}
 					</div>
-					<div className="flex flex-col items-center h-[20rem] w-[30rem] border-[1px] border-white overflow-auto">
+					<div className="flex flex-col col-span-2 md:col-span-1 items-center h-[20rem] w-[30rem] border-[1px] border-gray-300 overflow-auto">
 						<div className="sticky top-0 h-16 w-full p-3 bg-black z-10">
-							<h3 className="mb-1 text-2xl font-semibold text-center">
-								Top Genres by Rating (TomoLover)
+							<h3 className="mb-1 text-xl font-semibold text-center">
+								TomoLover
 							</h3>
 						</div>
-						<div className="flex items-center justify-center w-full bg-sky-600 border-white border-solid border-[1px] border-b-0">
+						<div className="flex items-center justify-center w-full bg-sky-600 border-white border-solid border-[1px] border-l-0 border-b-0">
 							<div className="grow p-3 text-lg text-center font-semibold">Genre Title</div>
 							<div
 								tabIndex={0}
@@ -587,7 +590,7 @@ export default function Statistics({
 							<div
 								key={index}
 								style={{ borderBottomWidth: index >= genreByRating.length - 1 ? 1 : 0 }}
-								className="flex justify-between w-full p-2 border-[1px] border-white"
+								className="flex justify-between w-full p-2 border-[1px] border-l-0 border-white"
 							>
 								<Link
 									href={`/completed/genres/${item.id}`}
@@ -604,14 +607,17 @@ export default function Statistics({
 						))}
 					</div>
 				</section>
-				<section className="grid grid-cols-2 gap-3 place-items-center my-6">
-					<div className="flex flex-col col-span-2 md:col-span-1 items-center h-[20rem] w-[30rem] border-[1px] border-white overflow-auto">
+				<section className="grid grid-cols-2 gap-3 place-items-center my-6 p-4 border-white border-solid border-[1px]">
+					<h3 className="col-span-2 mb-2 text-2xl font-semibold">
+						Top Animes by Difference
+					</h3>
+					<div className="flex flex-col col-span-2 md:col-span-1 items-center h-[20rem] w-[30rem] border-[1px] border-gray-300 overflow-auto">
 						<div className="sticky top-0 h-16 w-full p-3 bg-black z-10">
 							<h3 className="mb-1 text-xl font-semibold text-center">
-								Top Animes by Difference (GoodTaste - MAL)
+								 GoodTaste − MAL
 							</h3>
 						</div>
-						<div className="flex items-center justify-center w-full bg-sky-600 border-white border-solid border-[1px] border-b-0">
+						<div className="flex items-center justify-center w-full bg-sky-600 border-white border-solid border-[1px] border-l-0 border-b-0">
 							<div className="grow p-3 text-lg text-center font-semibold">Title</div>
 							<div
 								tabIndex={0}
@@ -637,7 +643,7 @@ export default function Statistics({
 							<div
 								key={index}
 								style={{ borderBottomWidth: index >= titleByRatingDiff.length - 1 ? 1 : 0 }}
-								className="flex justify-between w-full border-[1px] border-white"
+								className="flex justify-between w-full border-[1px] border-l-0 border-white"
 							>
 								<Link
 									href={`/completed/anime/${item.id}`}
@@ -652,13 +658,13 @@ export default function Statistics({
 							</div>
 						))}
 					</div>
-					<div className="flex flex-col col-span-2 md:col-span-1 items-center h-[20rem] w-[30rem] border-[1px] border-white overflow-auto">
+					<div className="flex flex-col col-span-2 md:col-span-1 items-center h-[20rem] w-[30rem] border-[1px] border-gray-300 overflow-auto">
 						<div className="sticky top-0 h-16 w-full p-3 bg-black z-10">
 							<h3 className="mb-1 text-xl font-semibold text-center">
-								Top Animes by Difference (TomoLover - MAL)
+								TomoLover − MAL
 							</h3>
 						</div>
-						<div className="flex items-center justify-center w-full bg-sky-600 border-white border-solid border-[1px] border-b-0">
+						<div className="flex items-center justify-center w-full bg-sky-600 border-white border-solid border-[1px] border-l-0 border-b-0">
 							<div className="grow p-3 text-lg text-center font-semibold">Title</div>
 							<div
 								tabIndex={0}
@@ -684,7 +690,7 @@ export default function Statistics({
 							<div
 								key={index}
 								style={{ borderBottomWidth: index >= titleByRatingDiff.length - 1 ? 1 : 0 }}
-								className="flex justify-between w-full border-[1px] border-white"
+								className="flex justify-between w-full border-[1px] border-l-0 border-white"
 							>
 								<Link
 									href={`/completed/anime/${item.id}`}
@@ -699,13 +705,13 @@ export default function Statistics({
 							</div>
 						))}
 					</div>
-					<div className="col-span-2 flex flex-col items-center h-[20rem] w-[33rem] border-[1px] border-white overflow-auto">
+					<div className="col-span-2 flex flex-col items-center h-[20rem] w-[33rem] border-[1px] border-gray-300 overflow-auto">
 						<div className="sticky top-0 h-16 w-full p-3 bg-black z-10">
 							<h3 className="mb-1 text-xl font-semibold text-center">
-								Top Animes by Difference (GoodTaste - TomoLover)
+								GoodTaste − TomoLover
 							</h3>
 						</div>
-						<div className="flex items-center justify-center w-full bg-sky-600 border-white border-solid border-[1px] border-b-0">
+						<div className="flex items-center justify-center w-full bg-sky-600 border-white border-solid border-[1px] border-l-0 border-b-0">
 							<div className="grow p-3 text-lg text-center font-semibold">Title</div>
 							<div
 								tabIndex={0}
@@ -731,7 +737,7 @@ export default function Statistics({
 							<div
 								key={index}
 								style={{ borderBottomWidth: index >= titleByRatingDiff.length - 1 ? 1 : 0 }}
-								className="flex justify-between w-full border-[1px] border-white"
+								className="flex justify-between w-full border-[1px] border-l-0 border-white"
 							>
 								<Link
 									href={`/completed/anime/${item.id}`}
