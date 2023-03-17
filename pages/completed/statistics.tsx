@@ -424,7 +424,7 @@ export default function Statistics({
 			<main className="flex flex-col items-center justify-center mb-24 px-6 py-2">
 				<h2 className="p-2 text-2xl sm:text-3xl">Statistics</h2>
 				<div className="grid grid-cols-2 gap-4 place-items-center">
-					<section className="flex flex-col col-span-2 md:col-span-1 items-center justify-center px-6 py-4 w-[25rem] border-[1px] border-white">
+					<section className="flex flex-col col-span-2 md:col-span-1 items-center justify-center px-6 py-4 w-[24rem] border-[1px] border-white">
 						<h3 className="text-2xl font-semibold text-center">Title count</h3>
 						<span className="mb-2 text-2xl">{titleCount}</span>
 						<h3 className="text-2xl font-semibold text-center">Total episodes watched</h3>
@@ -450,7 +450,7 @@ export default function Statistics({
 						{genreFreq.map((item, index) => (
 							<div
 								key={index}
-								className="flex justify-between w-full p-2 border-[1px] border-white"
+								className="flex justify-between w-full p-2 border-[1px] border-l-0 border-b-0 border-white"
 							>
 								<Link
 									href={`/completed/genres/${item.id}`}
@@ -464,11 +464,11 @@ export default function Statistics({
 						))}
 					</section>
 				</div>
-				<section className="grid grid-cols-2 gap-3 place-items-center my-6 p-4 border-white border-solid border-[1px]">
-					<h3 className="col-span-2 mb-1 text-xl font-semibold text-center">
+				<section className="grid grid-cols-2 gap-3 place-items-center my-6 p-4 w-[70%] border-white border-solid border-[1px]">
+					<h3 className="col-span-2 mb-1 text-2xl font-semibold text-center">
 						Top Genres by Rating
 					</h3>
-					<div className="flex flex-col col-span-2 md:col-span-1 items-center h-[20rem] w-[30rem] border-[1px] border-gray-300 overflow-auto">
+					<div className="flex flex-col col-span-2 lg:col-span-1 items-center h-[20rem] w-[97%] border-[1px] border-gray-300 overflow-auto">
 						<div className="sticky top-0 h-16 w-full p-3 bg-black z-10">
 							<h3 className="mb-1 text-xl font-semibold text-center">
 								GoodTaste
@@ -487,7 +487,7 @@ export default function Statistics({
 										'mean'
 									)
 								}
-								className="relative p-3 w-24 text-lg text-center font-semibold cursor-pointer border-l-[1px] border-white"
+								className="relative p-3 min-w-[6rem] text-lg text-center font-semibold cursor-pointer border-l-[1px] border-white"
 							>
 								Mean
 								{sortMethodRating1Ref.current.includes('rating1_mean') && (
@@ -507,7 +507,7 @@ export default function Statistics({
 										'median'
 									)
 								}
-								className="relative p-3 w-24 text-lg text-center font-semibold cursor-pointer border-l-[1px] border-white"
+								className="relative p-3 min-w-[6rem] text-lg text-center font-semibold cursor-pointer border-l-[1px] border-white"
 							>
 								Median
 								{sortMethodRating1Ref.current.includes('rating1_median') && (
@@ -530,14 +530,14 @@ export default function Statistics({
 								>
 									{item.name}
 								</Link>
-								<span className="w-24 px-3 py-2 text-lg text-center">
+								<span className="min-w-[6rem] px-3 py-2 text-lg text-center">
 									{item.rating1mean.toFixed(2)}
 								</span>
-								<span className="w-24 px-3 py-2 text-lg text-center">{item.rating1median}</span>
+								<span className="min-w-[6rem] px-3 py-2 text-lg text-center">{item.rating1median}</span>
 							</div>
 						))}
 					</div>
-					<div className="flex flex-col col-span-2 md:col-span-1 items-center h-[20rem] w-[30rem] border-[1px] border-gray-300 overflow-auto">
+					<div className="flex flex-col col-span-2 lg:col-span-1 items-center h-[20rem] w-[97%] border-[1px] border-gray-300 overflow-auto">
 						<div className="sticky top-0 h-16 w-full p-3 bg-black z-10">
 							<h3 className="mb-1 text-xl font-semibold text-center">
 								TomoLover
@@ -556,7 +556,7 @@ export default function Statistics({
 										'mean'
 									)
 								}
-								className="relative p-3 w-24 text-lg text-center font-semibold cursor-pointer border-l-[1px] border-white"
+								className="relative p-3 min-w-[6rem] text-lg text-center font-semibold cursor-pointer border-l-[1px] border-white"
 							>
 								Mean
 								{sortMethodRating2Ref.current.includes('rating2_mean') && (
@@ -576,7 +576,7 @@ export default function Statistics({
 										'median'
 									)
 								}
-								className="relative p-3 w-24 text-lg text-center font-semibold cursor-pointer border-l-[1px] border-white"
+								className="relative p-3 min-w-[6rem] text-lg text-center font-semibold cursor-pointer border-l-[1px] border-white"
 							>
 								Median
 								{sortMethodRating2Ref.current.includes('rating2_median') && (
@@ -599,19 +599,19 @@ export default function Statistics({
 								>
 									{item.name}
 								</Link>
-								<span className="w-24 px-3 py-2 text-lg text-center">
+								<span className="min-w-[6rem] px-3 py-2 text-lg text-center">
 									{item.rating2mean.toFixed(2)}
 								</span>
-								<span className="w-24 px-3 py-2 text-lg text-center">{item.rating2median}</span>
+								<span className="min-w-[6rem] px-3 py-2 text-lg text-center">{item.rating2median}</span>
 							</div>
 						))}
 					</div>
 				</section>
-				<section className="grid grid-cols-2 gap-3 place-items-center my-6 p-4 border-white border-solid border-[1px]">
+				<section className="grid grid-cols-2 gap-3 place-items-center my-6 p-4 w-[70%] border-white border-solid border-[1px]">
 					<h3 className="col-span-2 mb-2 text-2xl font-semibold">
 						Top Animes by Difference
 					</h3>
-					<div className="flex flex-col col-span-2 md:col-span-1 items-center h-[20rem] w-[30rem] border-[1px] border-gray-300 overflow-auto">
+					<div className="flex flex-col col-span-2 lg:col-span-1 items-center h-[20rem] w-[97%] border-[1px] border-gray-300 overflow-auto">
 						<div className="sticky top-0 h-16 w-full p-3 bg-black z-10">
 							<h3 className="mb-1 text-xl font-semibold text-center">
 								 GoodTaste − MAL
@@ -658,7 +658,7 @@ export default function Statistics({
 							</div>
 						))}
 					</div>
-					<div className="flex flex-col col-span-2 md:col-span-1 items-center h-[20rem] w-[30rem] border-[1px] border-gray-300 overflow-auto">
+					<div className="flex flex-col col-span-2 lg:col-span-1 items-center h-[20rem] w-[97%] border-[1px] border-gray-300 overflow-auto">
 						<div className="sticky top-0 h-16 w-full p-3 bg-black z-10">
 							<h3 className="mb-1 text-xl font-semibold text-center">
 								TomoLover − MAL
@@ -705,7 +705,7 @@ export default function Statistics({
 							</div>
 						))}
 					</div>
-					<div className="col-span-2 flex flex-col items-center h-[20rem] w-[33rem] border-[1px] border-gray-300 overflow-auto">
+					<div className="col-span-2 flex flex-col items-center h-[20rem] w-[97%] md:w-[33rem] border-[1px] border-gray-300 overflow-auto">
 						<div className="sticky top-0 h-16 w-full p-3 bg-black z-10">
 							<h3 className="mb-1 text-xl font-semibold text-center">
 								GoodTaste − TomoLover
