@@ -367,14 +367,14 @@ export default function Statistics({
 	dateRatingData,
 	ratingStatTable
 }: StatisticsProps) {
-	const sortMethodRating1Ref = useRef('')
-	const sortMethodRating2Ref = useRef('')
+	const sortMethodRating1Ref = useRef('rating1_mean_desc')
+	const sortMethodRating2Ref = useRef('rating2_mean_desc')
 	const sortMethodRating1Rating2Diff = useRef('diff_desc')
 	const sortMethodRating1MalDiff = useRef('diff_desc')
 	const sortMethodRating2MalDiff = useRef('diff_desc')
 
-	const [genreByRating1, setRating1ByGenre] = useState(genreByRating)
-	const [genreByRating2, setRating2ByGenre] = useState(genreByRating)
+	const [genreByRating1, setRating1ByGenre] = useState(genreByRating.slice().sort((a, b) => b.rating1mean - a.rating1mean))
+	const [genreByRating2, setRating2ByGenre] = useState(genreByRating.slice().sort((a, b) => b.rating2mean - a.rating2mean))
 	const [titleByRating1Rating2Diff, setTitleByRating1Rating2Diff] = useState(titleByRatingDiff.slice().sort((a, b) => b.rating1rating2Diff - a.rating1rating2Diff))
 	const [titleByRating1MalDiff, setTitleByRating1MalDiff] = useState(titleByRatingDiff.slice().sort((a, b) => b.rating1MalDiff - a.rating1MalDiff))
 	const [titleByRating2MalDiff, setTitleByRating2MalDiff] = useState(titleByRatingDiff.slice().sort((a, b) => b.rating2MalDiff - a.rating2MalDiff))
