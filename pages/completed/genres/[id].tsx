@@ -32,12 +32,7 @@ export function getStaticProps(context: GetStaticPropsContext) {
 }
 
 export default function GenrePage({ id }: { id: number }) {
-	const [response, setResponse] = useState<
-		| ({ id: number } & { title: string | null } & {
-				Genres: { name: string | null } | { name: string | null }[] | null
-		  })[]
-		| null
-	>()
+	const [response, setResponse] = useState<({ id: number } & { title: string | null } & { rating1: string | null } & { rating2: string | null } & { Genres: { name: string | null } | { name: string | null }[] | null })[] | null>()
 
 	useEffect(() => {
 		const supabase = createClient<Database>(
@@ -51,6 +46,8 @@ export default function GenrePage({ id }: { id: number }) {
 					`
           id,
           title,
+					rating1,
+					rating2,
           Genres!inner (
             name
           )
@@ -96,23 +93,42 @@ export default function GenrePage({ id }: { id: number }) {
 				/>
 			</Head>
 
-			<main className="flex flex-col items-center justify-center gap-3 mx-auto md:w-3/5 sm:w-full">
-				<h2 className="p-2 text-2xl sm:text-3xl">
+			<main className="flex flex-col items-center justify-center mx-auto md:w-3/5 sm:w-full">
+				<h2 className="p-2 mb-3 text-2xl sm:text-3xl">
 					{(response?.[0]?.Genres as { name: string | null }[])?.[0].name}
 				</h2>
-				<ul className="flex flex-col gap-2 h-[80dvh] overflow-auto border-[1px] border-white">
+				<div className="flex items-center justify-center w-[85%] bg-sky-600 border-white border-solid border-[1px] border-b-0 rounded-tl-lg rounded-tr-lg">
+					<div className="grow p-3 text-lg text-center font-semibold">Title</div>
+					<div
+						className="relative p-3 min-w-[8rem] text-lg text-center font-semibold border-l-[1px] border-white"
+					>
+						GoodTaste
+					</div>
+					<div
+						className="relative p-3 min-w-[8rem] text-lg text-center font-semibold border-l-[1px] border-white"
+					>
+						TomoLover	
+					</div>
+				</div>
+				<ul className="flex flex-col gap-2 h-[80dvh] w-[85%] overflow-auto border-[1px] border-white rounded-bl-lg rounded-br-lg">
 					{response?.map((item, index) => {
 						return (
 							<li
 								key={index}
-								className="p-0 text-center rounded-md transition-colors duration-75 hover:bg-slate-500"
+								className="flex items-center justify-center p-0 text-center rounded-md transition-colors duration-75 hover:bg-slate-500"
 							>
 								<Link
-									href={`${location.origin}/completed/anime/${item.id}`}
-									className="inline-block px-5 py-3 h-full w-full"
+									href={`/completed/anime/${item.id}`}
+									className="grow px-5 py-3 h-full w-full"
 								>
 									{item.title}
 								</Link>
+								<span className='min-w-[8rem] px-3 py-2 text-lg text-center'>
+									{item.rating1}
+								</span>
+								<span className='min-w-[8rem] px-3 py-2 text-lg text-center'>
+									{item.rating2}
+								</span>
 							</li>
 						)
 					})}

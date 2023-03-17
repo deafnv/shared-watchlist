@@ -424,7 +424,7 @@ export default function Statistics({
 			<main className="flex flex-col items-center justify-center mb-24 px-6 py-2">
 				<h2 className="p-2 text-2xl sm:text-3xl">Statistics</h2>
 				<div className="grid grid-cols-2 gap-4 place-items-center">
-					<section className="flex flex-col col-span-2 md:col-span-1 items-center justify-center px-6 py-4 w-[24rem] border-[1px] border-white">
+					<section className="flex flex-col col-span-2 md:col-span-1 items-center justify-center px-6 py-4 w-[24rem] border-[1px] border-white rounded-lg">
 						<h3 className="text-2xl font-semibold text-center">Title count</h3>
 						<span className="mb-2 text-2xl">{titleCount}</span>
 						<h3 className="text-2xl font-semibold text-center">Total episodes watched</h3>
@@ -434,7 +434,7 @@ export default function Statistics({
 						</h3>
 						<span className="text-2xl">{totalEpisodes}</span>
 					</section>
-					<section className="flex flex-col col-span-2 md:col-span-1 items-center justify-center p-4 w-[20rem] border-[1px] border-white">
+					<section className="flex flex-col col-span-2 md:col-span-1 items-center justify-center p-4 w-[20rem] border-[1px] border-white rounded-lg">
 						<h3 className="mb-4 text-2xl font-semibold">Total time watched</h3>
 						<span className="mb-1 text-xl">{Math.floor(totalTimeWatched / 60 / 60 / 24)} days</span>
 						<span className="mb-1 text-xl">
@@ -443,7 +443,7 @@ export default function Statistics({
 						<span className="mb-1 text-xl">{Math.floor((totalTimeWatched / 60) % 60)} minutes</span>
 						<span className="mb-1 text-xl">{Math.floor(totalTimeWatched % 60)} seconds</span>
 					</section>
-					<section className="col-span-2 flex flex-col items-center h-[20rem] w-[20rem] border-[1px] border-white overflow-auto">
+					<section className="col-span-2 flex flex-col items-center h-[20rem] w-[20rem] border-[1px] border-white overflow-auto rounded-lg">
 						<div className="sticky top-0 h-16 w-full p-3 bg-black">
 							<h3 className="text-2xl font-semibold text-center">Top Genres by count</h3>
 						</div>
@@ -464,7 +464,7 @@ export default function Statistics({
 						))}
 					</section>
 				</div>
-				<section className="grid grid-cols-2 gap-3 place-items-center my-6 p-4 w-[70%] border-white border-solid border-[1px]">
+				<section className="grid grid-cols-2 gap-3 place-items-center my-6 p-4 w-[70%] border-white border-solid border-[1px] rounded-lg">
 					<h3 className="col-span-2 mb-1 text-2xl font-semibold text-center">
 						Top Genres by Rating
 					</h3>
@@ -607,7 +607,7 @@ export default function Statistics({
 						))}
 					</div>
 				</section>
-				<section className="grid grid-cols-2 gap-3 place-items-center my-6 p-4 w-[70%] border-white border-solid border-[1px]">
+				<section className="grid grid-cols-2 gap-3 place-items-center my-6 p-4 w-[70%] border-white border-solid border-[1px] rounded-lg">
 					<h3 className="col-span-2 mb-2 text-2xl font-semibold">
 						Top Animes by Difference
 					</h3>
@@ -753,7 +753,7 @@ export default function Statistics({
 						))}
 					</div>
 				</section>
-				<section className="flex flex-col items-center justify-center h-[30rem] w-[30rem] col-span-2 p-4 mb-6 border-[1px] border-white">
+				<section className="flex flex-col items-center justify-center h-[30rem] w-[30rem] col-span-2 p-4 mb-6 border-[1px] border-white rounded-lg">
 					<h3 className="mb-2 text-2xl font-semibold">Types</h3>
 					<div className="p-4 h-full w-full bg-gray-400 rounded-lg">
 						<Pie
@@ -781,7 +781,7 @@ export default function Statistics({
 						/>
 					</div>
 				</section>
-				<section className="flex flex-col items-center justify-center gap-4 p-4 w-[52rem] border-[1px] border-white">
+				<section className="flex flex-col items-center justify-center gap-4 p-4 w-[52rem] border-[1px] border-b-0 border-white rounded-lg rounded-b-none">
 					<h3 className="mb-1 text-2xl font-semibold">Ratings</h3>
 					<h4 className="mt-2 text-xl font-semibold">Central Tendency</h4>
 					<div className="flex flex-col md:flex-row">
@@ -1016,12 +1016,12 @@ export default function Statistics({
 						/>
 					</div>
 				</section>
-				<section className="flex flex-col items-center justify-center gap-4 p-4 w-[52rem] border-[1px] border-white">
+				<section className="flex flex-col items-center justify-center gap-4 p-4 w-[52rem] border-[1px] border-b-0 border-white">
 					<div className="relative h-[27rem] w-[47rem]">
 						<RatingBroadcastScatter dateRatingData={dateRatingData} />
 					</div>
 				</section>
-				<section className="flex flex-col items-center justify-center gap-4 p-4 w-[52rem] border-[1px] border-white">
+				<section className="flex flex-col items-center justify-center gap-4 p-4 w-[52rem] border-[1px] border-white rounded-lg rounded-t-none">
 					<div className="relative h-[27rem] w-[47rem]">
 						<RatingEndScatter dateRatingData={dateRatingData} />
 					</div>
