@@ -433,7 +433,7 @@ export default function SeasonalDetails({
 	async function refresh() {
 		try {
 			setLoading(true)
-			await axios.get(`/api/seasonaldetails/batchtrack`)
+			await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/seasonal/batchtrack`)
 			await axios.post('/api/revalidate', {
 				route: '/seasonal/track'
 			})
