@@ -106,28 +106,47 @@ export default function Genres() {
 					className="fixed top-0 left-0 h-[100dvh] w-[100dvw] glass-modal"
 				/>
 				{advancedSearchResult ? (
-					<div className="fixed flex flex-col items-center gap-4 w-[45rem] px-10 py-6 bg-gray-700 rounded-md shadow-md shadow-black drop-shadow-md top-1/2 left-1/2 -translate-x-1/2 -translate-y-[45%] modal">
+					<div className="fixed flex flex-col items-center w-full md:w-[80%] px-10 py-6 bg-gray-700 rounded-md shadow-md shadow-black drop-shadow-md top-1/2 left-1/2 -translate-x-1/2 -translate-y-[45%] modal">
 						<div
 							onClick={() => setAdvancedSearchResult(null)}
 							className="absolute left-6 flex items-center justify-center h-11 w-11 rounded-full cursor-pointer transition-colors duration-150 hover:bg-slate-500"
 						>
 							<ArrowBackIcon fontSize="large" />
 						</div>
-						<h3 className="font-semibold text-2xl">Result</h3>
-						<ul className="flex flex-col gap-2 h-[70dvh] overflow-auto">
+						<h3 className="mb-4 font-semibold text-2xl">Result</h3>
+						<div className="flex items-center justify-center w-[85%] bg-sky-600 border-white border-solid border-[1px] border-b-0 rounded-tl-lg rounded-tr-lg">
+							<div className="grow p-3 text-lg text-center font-semibold">Title</div>
+							<div
+								className="relative p-3 min-w-[8rem] text-lg text-center font-semibold border-l-[1px] border-white"
+							>
+								GoodTaste
+							</div>
+							<div
+								className="relative p-3 min-w-[8rem] text-lg text-center font-semibold border-l-[1px] border-white"
+							>
+								TomoLover	
+							</div>
+						</div>
+						<ul className="flex flex-col gap-2 h-[70dvh] w-[85%] overflow-auto border-[1px] border-white rounded-bl-lg rounded-br-lg">
 							{advancedSearchResult.length ?
 							advancedSearchResult.map((item: any, index: number) => {
 								return (
 									<li
 										key={index}
-										className="p-0 text-center rounded-md transition-colors duration-75 hover:bg-slate-500"
+										className="flex items-center justify-center p-0 text-center rounded-md transition-colors duration-75 hover:bg-slate-500"
 									>
 										<Link
 											href={`${location.origin}/completed/anime/${item.id}`}
-											className="inline-block px-3 py-5 h-full w-full"
+											className="grow px-5 py-3 h-full w-full"
 										>
 											{item.title}
 										</Link>
+										<span className='min-w-[8rem] px-3 py-2 text-lg text-center'>
+											{item.rating1}
+										</span>
+										<span className='min-w-[8rem] px-3 py-2 text-lg text-center'>
+											{item.rating2}
+										</span>
 									</li>
 								)
 							})
