@@ -53,9 +53,15 @@ export default function CompleteSequels() {
 					<meta name="description" content="Unwatched Sequels" />
 				</Head>
 
-				<main className="flex flex-col items-center justify-center h-[100dvh] mb-24 px-1 md:px-0">
-					<h2 className="p-2 text-2xl sm:text-3xl">No unwatched sequels found</h2>
+				<main className="flex flex-col items-center justify-center gap-4 h-[100dvh] mb-24 px-1 md:px-0">
+					<h2 className="text-2xl sm:text-3xl">No unwatched sequels found</h2>
 					<span>Check console for details on omitted entries</span>
+					<button
+						onClick={handleLoadSequels}
+						className='link'
+					>
+						Click to reload sequels
+					</button>
 				</main>
 			</>
 		)
