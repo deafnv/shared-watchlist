@@ -540,7 +540,12 @@ export default function PTW() {
 				</span>
 				<span>
 					<span className="text-gray-300 mx-auto pointer-events-none"> · </span>
-					<span ref={onlineUsersElementRef} className="text-gray-300 ml-4 pointer-events-none">{onlineUsersRef.current} user(s) online</span>
+					<span 
+						ref={onlineUsersElementRef}
+						className="text-gray-300 ml-4 pointer-events-none"
+					>
+						{onlineUsersRef.current} user(s) online
+					</span>
 				</span>
 			</div>
 		)
@@ -801,6 +806,16 @@ export default function PTW() {
 					await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/update`, {
 						content: enteredTitle,
 						cell: cell + (isAdded.response.length + 22).toString()
+					})
+				} else if (isAdded.tableId == 'rolled') {
+					if (isAdded.response.length >= 21) {
+						setLoading(false)
+						alert('No space left')
+						return
+					}
+					await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/update`, {
+						content: enteredTitle,
+						cell: cell + (isAdded.response.length + 2).toString()
 					})
 				} else {
 					if (isAdded.response.length >= 15) {
