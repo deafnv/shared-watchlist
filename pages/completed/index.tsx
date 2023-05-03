@@ -616,13 +616,16 @@ export default function Completed() {
 			<ModalTemplate
 				extraClassname='h-[80dvh] w-[80dvw] md:w-[60dvw]'
 				exitFunction={() => setDetailsModal(null)}
-			>
-				<Link
-					href={`${location.origin}/completed/anime/${details?.id}`}
-					className="px-12 font-bold text-lg sm:text-2xl text-center line-clamp-3 link"
-				>
-					{details?.mal_title}
-				</Link>
+			>	
+				<div>
+					<Link
+						href={`${location.origin}/completed/anime/${details?.id}`}
+						title={details?.mal_title ?? ''}
+						className="px-12 font-bold text-lg sm:text-2xl line-clamp-1 text-center link"
+					>
+						{details?.mal_title}
+					</Link>
+				</div>
 				<div
 					onClick={() => (editModalRef.current!.style.display = 'block')}
 					className="absolute top-4 sm:top-8 right-4 sm:right-12 flex items-center justify-center h-7 sm:h-11 w-7 sm:w-11 rounded-full cursor-pointer transition-colors duration-150 hover:bg-slate-500"
@@ -668,14 +671,16 @@ export default function Completed() {
 								fill
 								sizes="30vw"
 								className="object-contain"
+								draggable={false}
 							/>
 						</div>
-						<p title={details?.mal_synopsis!} className="mb-6 text-center lg:line-clamp-3 hidden">
-							{details?.mal_synopsis}
-						</p>
 					</>
 				)}
-				<div className="flex mb-6 gap-16">
+				<h5 className="font-semibold text-lg">Notes</h5>
+				<span className="mb-2 text-center">
+					{detailsModal?.notes ? detailsModal?.notes : 'n/a'}
+				</span>
+				<div className="flex mb-6 gap-12">
 					<div className="flex flex-col">
 						<h5 className="mb-2 font-semibold text-center text-lg">Start Date</h5>
 						<span className='text-center'>{details?.start_date}</span>

@@ -87,12 +87,12 @@ export default function CompletedPage({ id }: { id: number }) {
 				<meta name="description" content={response?.[0].title} />
 			</Head>
 
-			<main className="flex flex-col items-center justify-center mx-auto mb-16 px-6 sm:px-12 py-6 md:w-3/5 sm:w-full">
+			<main className="flex flex-col items-center justify-center mx-auto mb-16 px-6 sm:px-12 py-6 md:4/5 lg:w-3/5 sm:w-full">
 				<div className="relative h-full">
-					<h3 className="p-2 text-2xl sm:text-3xl font-semibold text-center">{response?.[0].title}</h3>
+					<h3 className="p-2 text-2xl sm:text-2xl font-semibold text-center">{response?.[0].title}</h3>
 					<div
 						onClick={() => (editModalRef.current!.style.display = 'block')}
-						className="absolute -top-2 -right-12 xs:top-0 xs:-right-24 sm:-right-20 md:top-0 md:-right-52 lg:-right-60 xl:-right-72 flex items-center justify-center h-7 sm:h-11 w-7 sm:w-11 rounded-full cursor-pointer transition-colors duration-150 hover:bg-slate-500"
+						className="absolute -top-2 -right-12 xs:top-0 xs:right-0 sm:right-0 md:top-0 md:-right-12 lg:-right-60 xl:-right-72 flex items-center justify-center h-7 sm:h-11 w-7 sm:w-11 rounded-full cursor-pointer transition-colors duration-150 hover:bg-slate-500"
 					>
 						<EditIcon sx={{
 							fontSize: {
@@ -102,7 +102,7 @@ export default function CompletedPage({ id }: { id: number }) {
 						}} />
 					</div>
 				</div>
-				<h5 className="text-base sm:text-lg text-center">
+				<h5 className="text-base text-center">
 					{response?.[0].CompletedDetails.mal_alternative_title}
 				</h5>
 				<Image
@@ -113,8 +113,8 @@ export default function CompletedPage({ id }: { id: number }) {
 					className="my-4"
 				/>
 				<p className="mb-8 text-center">{response?.[0].CompletedDetails.mal_synopsis}</p>
-				<div className="flex flex-col items-center md:items-stretch md:flex-row gap-16">
-					<div className="flex flex-col items-center px-8 py-4 max-w-[95%] border-[1px] border-white">
+				<div className="grid md:grid-cols-2 gap-16">
+					<div className="col-span-2 md:col-span-1 flex flex-col items-center px-8 py-4 max-w-[95%] min-w-fit border-[1px] border-white">
 						<h5 className="self-center mb-4 text-xl font-semibold">Ratings</h5>
 						<table className="mb-8">
 							<thead>
@@ -143,7 +143,7 @@ export default function CompletedPage({ id }: { id: number }) {
 							</div>
 						</div>
 					</div>
-					<div className="flex flex-col items-center px-8 py-4 max-w-[95%] border-[1px] border-white">
+					<div className="col-span-2 md:col-span-1 flex flex-col items-center px-8 py-4 max-w-[95%] min-w-fit border-[1px] border-white">
 						<h5 className="self-center mb-6 text-xl font-semibold link">
 							<Link
 								href={`https://myanimelist.net/anime/${response?.[0].CompletedDetails.mal_id}`}
@@ -190,6 +190,12 @@ export default function CompletedPage({ id }: { id: number }) {
 								</span>
 							</div>
 						</div>
+					</div>
+					<div className="col-span-2 flex flex-col items-center justify-self-center px-8 py-4 max-w-[95%] w-2/3 border-[1px] border-white">
+						<h5 className="self-center mb-6 text-xl font-semibold">Notes</h5>
+						<span className='text-center'>
+							{response?.[0].notes ? response?.[0].notes : 'n/a'}
+						</span>
 					</div>
 				</div>
 				<EditModal
