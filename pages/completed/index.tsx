@@ -653,10 +653,6 @@ export default function Completed() {
 						</div>
 					</>
 				)}
-				<h5 className="font-semibold text-lg">Notes</h5>
-				<span className="mb-2 text-center">
-					{detailsModal?.notes ? detailsModal?.notes : 'n/a'}
-				</span>
 				<div className="flex mb-6 gap-12">
 					<div className="flex flex-col">
 						<h5 className="mb-2 font-semibold text-center text-lg">Start Date</h5>

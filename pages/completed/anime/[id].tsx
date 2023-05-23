@@ -191,12 +191,6 @@ export default function CompletedPage({ id }: { id: number }) {
 							</div>
 						</div>
 					</div>
-					<div className="col-span-2 flex flex-col items-center justify-self-center px-8 py-4 max-w-[95%] w-2/3 border-[1px] border-white">
-						<h5 className="self-center mb-6 text-xl font-semibold">Notes</h5>
-						<span className='text-center'>
-							{response?.[0].notes ? response?.[0].notes : 'n/a'}
-						</span>
-					</div>
 				</div>
 				<EditModal
 					editModalRef={editModalRef}

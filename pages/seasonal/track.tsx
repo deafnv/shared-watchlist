@@ -36,7 +36,7 @@ export default function SeasonalDetails({
 	res: Database['public']['Tables']['SeasonalDetails']['Row'][]
 }) {
 	const editEpisodesCurrentRef = useRef<HTMLMenuElement>(null)
-	const contextMenuRef = useRef<HTMLDivElement>(null)
+	const contextMenuRef = useRef<HTMLMenuElement>(null)
 	const contextMenuButtonRef = useRef<any>([])
 	const refreshReloadMenuRef = useRef<HTMLDivElement>(null)
 	const refreshReloadMenuButtonRef = useRef<HTMLDivElement>(null)
@@ -236,7 +236,7 @@ export default function SeasonalDetails({
 				{contextMenu.currentItem && 
 				<ContextMenu 
 					contextMenu={contextMenu} 
-					contextMenuRef={contextMenuButtonRef} 
+					contextMenuRef={contextMenuRef} 
 				/>}
 				{refreshReloadMenu.display == 'block' && <RefreshReloadMenu />}
 			</main>
