@@ -50,7 +50,7 @@ export default function EditModal({
 			await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/changedetails`, {
 				id: detailsModal.id,
 				mal_id: idInput
-			})
+			}, { withCredentials: true })
 			router.reload()
 		} catch (error) {
 			setLoading(false)

@@ -504,7 +504,7 @@ export default function PTW() {
 					content: responseRolled,
 					id: contextMenu.currentItem?.id,
 					type: 'PTW'
-				})
+				}, { withCredentials: true })
 				setLoading(false)
 			} catch (error) {
 				setLoading(false)
@@ -720,7 +720,7 @@ export default function PTW() {
 						cell: addCell,
 						content: rolledTitle
 					}
-				})
+				}, { withCredentials: true })
 			}
 		}
 
@@ -806,7 +806,7 @@ export default function PTW() {
 					await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/update`, {
 						content: enteredTitle,
 						cell: cell + (isAdded.response.length + 22).toString()
-					})
+					}, { withCredentials: true })
 				} else if (isAdded.tableId == 'rolled') {
 					if (isAdded.response.length >= 21) {
 						setLoading(false)
@@ -816,7 +816,7 @@ export default function PTW() {
 					await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/update`, {
 						content: enteredTitle,
 						cell: cell + (isAdded.response.length + 2).toString()
-					})
+					}, { withCredentials: true })
 				} else {
 					if (isAdded.response.length >= 15) {
 						setLoading(false)
@@ -826,7 +826,7 @@ export default function PTW() {
 					await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/update`, {
 						content: enteredTitle,
 						cell: cell + (isAdded.response.length + 2).toString()
-					})
+					}, { withCredentials: true })
 				}
 				setIsAdded(null)
 				setLoading(false)
@@ -1030,7 +1030,7 @@ function PTWRolledTableItem({ props, editFormParams }: PTWRolledTableItemProps) 
 				await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/updatestatus`, {
 					content: event.target.childNodes[0].value,
 					cells: `N${row}:N${row}`
-				})
+				}, { withCredentials: true })
 
 				const changed = responseRolled?.slice()
 				if (!changed) return
@@ -1163,7 +1163,7 @@ function EditForm(
 			await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/update`, {
 				content: event.target[0].value,
 				cell: column + row
-			})
+			}, { withCredentials: true })
 
 			switch (field) {
 				case 'rolled_title':

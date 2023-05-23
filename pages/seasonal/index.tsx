@@ -267,7 +267,7 @@ export default function Seasonal() {
 				await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/updatestatus`, {
 					content: event.target.childNodes[0].value,
 					cells: `P2:P${row}`
-				})
+				}, { withCredentials: true })
 				router.reload()
 			} catch (error) {
 				setLoading(false)
@@ -336,7 +336,7 @@ export default function Seasonal() {
 					cell: 'O2:O22',
 					type: 'MULTI',
 					length: 21
-				})
+				}, { withCredentials: true })
 				setConfirmModal('')
 				setLoading(false)
 			} catch (error) {
@@ -443,7 +443,7 @@ export default function Seasonal() {
 			await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/update`, {
 				content: enteredTitle,
 				cell: 'O' + (response.length + 2).toString()
-			})
+			}, { withCredentials: true })
 			setIsAdded(false)
 			setLoading(false)
 		} catch (error) {
@@ -569,7 +569,7 @@ function SeasonalTableItem({ props }: SeasonalTableItemProps) {
 				await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/update`, {
 					content: event.target[0].value,
 					cell: column + row
-				})
+				}, { withCredentials: true })
 
 				if (isEditedRef.current == currentlyProcessedEdit) setIsEdited('')
 				setIsLoadingEditForm(isLoadingEditForm.filter((item) => item == `${field}_${order}`))
@@ -626,7 +626,7 @@ function SeasonalTableItem({ props }: SeasonalTableItemProps) {
 				await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/updatestatus`, {
 					content: event.target.childNodes[0].value,
 					cells: `P${row}:P${row}`
-				})
+				}, { withCredentials: true })
 
 				const changed = response?.slice()
 				if (!changed) return
@@ -735,7 +735,7 @@ function ContextMenu({
 				content: response1,
 				id: contextMenu.currentItem?.title,
 				type: 'SEASONAL'
-			})
+			}, { withCredentials: true })
 			setLoading(false)
 		} catch (error) {
 			setLoading(false)

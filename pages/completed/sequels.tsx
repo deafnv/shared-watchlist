@@ -143,7 +143,7 @@ export default function CompleteSequels() {
 	async function handleLoadSequels() {
 		setLoading(true)
 		try {
-			await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/completed/loadsequels`)
+			await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/completed/loadsequels`, { withCredentials: true })
 			router.reload()
 		} catch (error) {
 			setLoading(false)
@@ -158,7 +158,7 @@ export default function CompleteSequels() {
 				id: item.id,
 				mal_id: 0,
 				type: 'IGNORE_SEQUEL'
-			})
+			}, { withCredentials: true })
 			router.reload()
 		} catch (error) {
 			setLoading(false)

@@ -213,7 +213,7 @@ export default function CompletedErrors() {
 					id: changed.id,
 					mal_id: idInput,
 					type: 'CHANGED'
-				})
+				}, { withCredentials: true })
 				router.reload()
 			} catch (error) {
 				setLoading(false)
@@ -281,7 +281,7 @@ export default function CompletedErrors() {
 				id: item.id,
 				mal_id: 0,
 				type: 'IGNORE_ERROR'
-			})
+			}, { withCredentials: true })
 			router.reload()
 		} catch (error) {
 			setLoading(false)

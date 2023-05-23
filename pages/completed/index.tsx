@@ -509,7 +509,7 @@ export default function Completed() {
 		async function handleLoadDetails() {
 			setLoading(true)
 			try {
-				await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/completed/loadcompleteddetails`)
+				await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/completed/loadcompleteddetails`, { withCredentials: true })
 				await axios.post('/api/revalidate', {
 					route: '/completed/statistics'
 				})
@@ -562,7 +562,7 @@ export default function Completed() {
 		async function handleReload() {
 			try {
 				setLoading(true)
-				await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/completed/loadcompleteddetails`)
+				await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/completed/loadcompleteddetails`, { withCredentials: true })
 				await axios.post('/api/revalidate', {
 					route: '/completed/statistics'
 				})
@@ -821,7 +821,7 @@ export default function Completed() {
 						year: 'numeric'
 					})) : event.target[0].value,
 					cell: column + row
-				})
+				}, { withCredentials: true })
 
 				const changed = response?.slice()
 				if (!changed) return
@@ -897,7 +897,7 @@ export default function Completed() {
 			await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/update`, {
 				content: (response.length + 1).toString(),
 				cell: 'A' + (response.length + 2).toString()
-			})
+			}, { withCredentials: true })
 
 			setIsEdited(`title_${response.length + 1}`)
 			setLoading(false)
