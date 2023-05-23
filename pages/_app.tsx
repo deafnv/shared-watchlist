@@ -1,13 +1,13 @@
+import Head from 'next/head'
+import type { AppProps } from 'next/app'
+import { useRouter } from 'next/router'
 import { useEffect } from 'react'
+import { Analytics } from '@vercel/analytics/react'
+import NProgress from 'nprogress'
+import { LoadingProvider } from '@/components/LoadingContext'
 import Navbar from '@/components/Navbar'
 import '@/styles/globals.css'
-import type { AppProps } from 'next/app'
 import '@/styles/nprogress.css'
-import NProgress from 'nprogress'
-import { useRouter } from 'next/router'
-import { LoadingProvider } from '@/components/LoadingContext'
-import { Analytics } from '@vercel/analytics/react'
-import HeadCommon from '@/components/Head'
 
 declare module '@mui/material/styles' {
 	interface Theme {
@@ -15,7 +15,6 @@ declare module '@mui/material/styles' {
 			danger: string
 		}
 	}
-	// allow configuration using `createTheme`
 	interface ThemeOptions {
 		status?: {
 			danger?: string
@@ -59,8 +58,10 @@ export default function App({ Component, pageProps }: AppProps) {
 
 	return (
 		<>
-			<HeadCommon />
 			<LoadingProvider>
+				<Head>
+					<meta name="viewport" content="width=device-width, initial-scale=1" />
+				</Head>
 				<Navbar />
 				<Component {...pageProps} />
 			</LoadingProvider>

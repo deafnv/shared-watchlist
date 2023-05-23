@@ -1,5 +1,5 @@
-import { createClient } from '@supabase/supabase-js'
 import { NextApiRequest, NextApiResponse } from 'next'
+import { createClient } from '@supabase/supabase-js'
 import { Database } from '@/lib/database.types'
 import axios from 'axios'
 import isEqual from 'lodash/isEqual'

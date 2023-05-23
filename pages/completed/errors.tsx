@@ -1,13 +1,13 @@
 import Head from 'next/head'
 import Link from 'next/link'
-import { useEffect, useState, BaseSyntheticEvent } from 'react'
+import { useRouter } from 'next/router'
+import { useEffect, useState, BaseSyntheticEvent, Fragment } from 'react'
 import axios from 'axios'
-import { createClient } from '@supabase/supabase-js'
 import CloseIcon from '@mui/icons-material/Close'
+import { createClient } from '@supabase/supabase-js'
 import { levenshtein } from '@/lib/list_methods'
 import { Database } from '@/lib/database.types'
 import { useLoading } from '@/components/LoadingContext'
-import { useRouter } from 'next/router'
 import ModalTemplate from '@/components/ModalTemplate'
 
 export default function CompletedErrors() {
@@ -98,7 +98,7 @@ export default function CompletedErrors() {
 		return (
 			<>
 				<Head>
-					<title>Cytube Watchlist</title>
+					<title>Watchlist</title>
 					<meta name="description" content="Completed Errors" />
 				</Head>
 
@@ -114,7 +114,7 @@ export default function CompletedErrors() {
 	return (
 		<>
 			<Head>
-				<title>Cytube Watchlist</title>
+				<title>Watchlist</title>
 				<meta name="description" content="Completed Errors" />
 			</Head>
 
@@ -139,9 +139,9 @@ export default function CompletedErrors() {
 						</span>
 					</div>
 					<div className="grid grid-cols-[5fr_5fr_1fr_1fr] xl:grid-cols-[26rem_26rem_10rem_12rem] text-sm md:text-base min-w-[95dvw] xl:min-w-0 sm:w-min border-white border-solid border-[1px] border-t-0">
-						{response?.map((item, index) => {
+						{response?.map(item => {
 							return (
-								<>
+								<Fragment key={item.mal_id}>
 									<span className="flex items-center justify-center sm:px-3 py-3 h-full text-xs md:text-base border-white border-b-[1px] text-center">
 										{item.entryTitle}
 									</span>
@@ -170,7 +170,7 @@ export default function CompletedErrors() {
 											Ignore
 										</button>
 									</span>
-								</>
+								</Fragment>
 							)
 						})}
 					</div>

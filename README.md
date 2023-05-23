@@ -1,3 +1,3 @@
-# Cytube Watchlist
+# Shared Watchlist
 
-Site to track watched anime.
+Site to track watched anime for multiple people.

@@ -1,8 +1,8 @@
-import { createClient } from '@supabase/supabase-js'
 import { NextApiRequest, NextApiResponse } from 'next'
-import { Database } from '@/lib/database.types'
 import axios from 'axios'
 import isEqual from 'lodash/isEqual'
+import { createClient } from '@supabase/supabase-js'
+import { Database } from '@/lib/database.types'
 
 export default async function RefreshItem(req: NextApiRequest, res: NextApiResponse) {
   const { body, method } = req

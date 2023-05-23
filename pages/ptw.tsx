@@ -1,24 +1,24 @@
 import Head from 'next/head'
-import { BaseSyntheticEvent, useEffect, useState, useRef, Dispatch, SetStateAction, MutableRefObject } from 'react'
+import { BaseSyntheticEvent, useEffect, useState, useRef, Dispatch, SetStateAction } from 'react'
 import axios from 'axios'
 import { Reorder, useDragControls } from 'framer-motion'
-import { getRandomInt, sortListByNamePTW, sortSymbol } from '@/lib/list_methods'
-import { createClient } from '@supabase/supabase-js'
-import { Database } from '@/lib/database.types'
-import { loadingGlimmer } from '@/components/LoadingGlimmer'
+import isEqual from 'lodash/isEqual'
+import io, { Socket } from 'socket.io-client'
 import CircularProgress from '@mui/material/CircularProgress'
 import Skeleton from '@mui/material/Skeleton'
 import DoneIcon from '@mui/icons-material/Done'
-import { useLoading } from '@/components/LoadingContext'
 import CancelIcon from '@mui/icons-material/Cancel'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
 import AddIcon from '@mui/icons-material/Add'
-import isEqual from 'lodash/isEqual'
 import RefreshIcon from '@mui/icons-material/Refresh'
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator'
-import io, { Socket } from 'socket.io-client'
-import ModalTemplate from '@/components/ModalTemplate'
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
+import { createClient } from '@supabase/supabase-js'
+import { EditFormParams, PTWRolledTableItemProps, getRandomInt, sortListByNamePTW, sortSymbol } from '@/lib/list_methods'
+import { Database } from '@/lib/database.types'
+import { loadingGlimmer } from '@/components/LoadingGlimmer'
+import { useLoading } from '@/components/LoadingContext'
+import ModalTemplate from '@/components/ModalTemplate'
 
 let socket: Socket
 
@@ -87,7 +87,7 @@ export default function PTW() {
 
 	const setOnlineUsers = (value: any) => {
 		if (!value) return
-		const valueArr = Object.keys(value).map((key, index) => value[key])
+		const valueArr = Object.keys(value).map(key => value[key])
 		onlineUsersRef.current = valueArr.length
 		onlineUsersElementRef.current!.innerHTML = `${valueArr.length} user(s) online`
 	}
@@ -265,7 +265,7 @@ export default function PTW() {
 	return (
 		<>
 			<Head>
-				<title>Cytube Watchlist</title>
+				<title>Watchlist</title>
 				<meta name="description" content="Plan to Watch" />
 			</Head>
 
@@ -346,7 +346,7 @@ export default function PTW() {
 							>
 								{responseRolled?.map((item, index) => (
 									!isLoadingClient && 
-									<Item 
+									<PTWRolledTableItem
 										key={item.id}
 										props={{ item, index, isLoadingEditForm, setIsEdited, isEdited, isEditedRef, sortMethodRef, setContextMenu, contextMenuButtonRef, responseRolled, setResponseRolled, setIsLoadingEditForm }}
 										editFormParams={editFormParams}
@@ -907,40 +907,38 @@ export default function PTW() {
 						</tr>
 					</thead>
 					<tbody>
-						{isLoadingClient
-							? loadingGlimmer(1)
-							: response?.map((item) => {
-									return (
-										<tr key={item.id}>
-											<td
-												style={{
-													opacity: isLoadingEditForm.includes(`${tableId}_title_${item.id}`)
-														? 0.5
-														: 1
-												}}
-												onDoubleClick={() => {
-													setIsEdited(`${tableId}_${item.title}_${item.id}`)
-												}}
-												className="relative group"
-											>
-												<span className='pr-4'>
-													{isEdited == `${tableId}_${item.title}_${item.id}`
-														? editForm(`${tableId}_title`, item.id, item.title!, editFormParams)
-														: item.title}
-												</span>
-												{isLoadingEditForm.includes(`${tableId}_title_${item.id}`) && (
-													<CircularProgress size={30} className="absolute top-[20%] left-[48%]" />
-												)}
-												<div
-													onClick={() => handleDeleteUnrolled(tableId, item)}
-													className="absolute flex items-center justify-center top-1/2 right-1 -translate-y-1/2 z-10 h-7 w-7 invisible group-hover:visible cursor-pointer rounded-full hover:bg-gray-500 transition-colors duration-150"
-												>
-													<DeleteOutlineIcon />
-												</div>
-											</td>
-										</tr>
-									)
-							  })}
+						{isLoadingClient ? 
+						loadingGlimmer(1) : 
+						response?.map((item) => (
+							<tr key={item.id}>
+								<td
+									style={{
+										opacity: isLoadingEditForm.includes(`${tableId}_title_${item.id}`)
+											? 0.5
+											: 1
+									}}
+									onDoubleClick={() => {
+										setIsEdited(`${tableId}_${item.title}_${item.id}`)
+									}}
+									className="relative group"
+								>
+									<span className='pr-4'>
+										{isEdited == `${tableId}_${item.title}_${item.id}`
+											? EditForm(`${tableId}_title`, item.id, item.title!, editFormParams)
+											: item.title}
+									</span>
+									{isLoadingEditForm.includes(`${tableId}_title_${item.id}`) && (
+										<CircularProgress size={30} className="absolute top-[20%] left-[48%]" />
+									)}
+									<div
+										onClick={() => handleDeleteUnrolled(tableId, item)}
+										className="absolute flex items-center justify-center top-1/2 right-1 -translate-y-1/2 z-10 h-7 w-7 invisible group-hover:visible cursor-pointer rounded-full hover:bg-gray-500 transition-colors duration-150"
+									>
+										<DeleteOutlineIcon />
+									</div>
+								</td>
+							</tr>
+						))}
 					</tbody>
 				</table>
 			</section>
@@ -948,7 +946,7 @@ export default function PTW() {
 	}
 }
 
-function Item({ props, editFormParams }: ItemProps) {
+function PTWRolledTableItem({ props, editFormParams }: PTWRolledTableItemProps) {
 	const { item, index, isLoadingEditForm, setIsEdited, isEdited, isEditedRef, sortMethodRef, setContextMenu, contextMenuButtonRef, responseRolled, setResponseRolled, setIsLoadingEditForm } = props
 	const controls = useDragControls()
 	const statusColor = determineStatus(item)
@@ -970,7 +968,7 @@ function Item({ props, editFormParams }: ItemProps) {
 			>
 				<span className=" cursor-text">
 					{isEdited == `rolled_${item.title}_${item.id}`
-						? editForm('rolled_title', item.id, item.title!, editFormParams)
+						? EditForm('rolled_title', item.id, item.title!, editFormParams)
 						: item.title}
 				</span>
 				{isLoadingEditForm.includes(`rolled_title_${item.id}`) && (
@@ -1109,29 +1107,8 @@ function Item({ props, editFormParams }: ItemProps) {
 	}
 }
 
-interface ItemProps {
-	props: {
-		item: Database['public']['Tables']['PTW-Rolled']['Row'],
-		index: number,
-		isLoadingEditForm: string[],
-		setIsEdited: (value: string) => void,
-		isEdited: string,
-		isEditedRef: MutableRefObject<string>,
-		sortMethodRef: MutableRefObject<string>,
-		setContextMenu: Dispatch<SetStateAction<{
-			top: number;
-			left: number;
-			currentItem: Database['public']['Tables']['PTW-Rolled']['Row'] | null;
-		}>>,
-		contextMenuButtonRef: MutableRefObject<any>,
-		responseRolled: Database['public']['Tables']['PTW-Rolled']['Row'][] | undefined,
-		setResponseRolled: Dispatch<SetStateAction<Database['public']['Tables']['PTW-Rolled']['Row'][] | undefined>>,
-		setIsLoadingEditForm: Dispatch<SetStateAction<string[]>>,
-	}
-	editFormParams: EditFormParams
-}
-
-function editForm(
+//* Input field for editing any table items
+function EditForm(
 	field: 'rolled_title' | 'casual_title' | 'noncasual_title' | 'movies_title',
 	id: number,
 	ogvalue: string,
@@ -1263,17 +1240,3 @@ async function saveReorder(
 	}
 }
 
-interface EditFormParams {
-	isLoadingEditForm: string[],
-	setIsLoadingEditForm: Dispatch<SetStateAction<string[]>>,
-	isEditedRef: MutableRefObject<string>,
-	setIsEdited: (value: string) => void,
-	responseRolled: Database['public']['Tables']['PTW-Rolled']['Row'][] | undefined,
-	responseCasual: Database['public']['Tables']['PTW-Casual']['Row'][] | undefined,
-	responseNonCasual: Database['public']['Tables']['PTW-NonCasual']['Row'][] | undefined,
-	responseMovies: Database['public']['Tables']['PTW-Movies']['Row'][] | undefined,
-	setResponseRolled: Dispatch<SetStateAction<Database['public']['Tables']['PTW-Rolled']['Row'][] | undefined>>,
-	setResponseCasual: Dispatch<SetStateAction<Database['public']['Tables']['PTW-Casual']['Row'][] | undefined>>,
-	setResponseNonCasual: Dispatch<SetStateAction<Database['public']['Tables']['PTW-NonCasual']['Row'][] | undefined>>,
-	setResponseMovies: Dispatch<SetStateAction<Database['public']['Tables']['PTW-Movies']['Row'][] | undefined>>
-}

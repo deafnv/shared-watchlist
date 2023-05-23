@@ -1,18 +1,19 @@
-import { createClient } from '@supabase/supabase-js'
-import { Database } from '@/lib/database.types'
-import { BaseSyntheticEvent, useEffect, useState, useRef, MutableRefObject, Dispatch, SetStateAction } from 'react'
 import Head from 'next/head'
-import axios from 'axios'
-import CircularProgress from '@mui/material/CircularProgress'
-import AddIcon from '@mui/icons-material/Add'
-import { useLoading } from '@/components/LoadingContext'
-import MoreVertIcon from '@mui/icons-material/MoreVert'
-import { Reorder, useDragControls } from 'framer-motion'
-import isEqual from 'lodash/isEqual'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import DragIndicatorIcon from '@mui/icons-material/DragIndicator'
+import { BaseSyntheticEvent, useEffect, useState, useRef, RefObject } from 'react'
+import axios from 'axios'
+import { Reorder, useDragControls } from 'framer-motion'
+import isEqual from 'lodash/isEqual'
+import CircularProgress from '@mui/material/CircularProgress'
+import AddIcon from '@mui/icons-material/Add'
+import MoreVertIcon from '@mui/icons-material/MoreVert'
 import CloseIcon from '@mui/icons-material/Close'
+import DragIndicatorIcon from '@mui/icons-material/DragIndicator'
+import { createClient } from '@supabase/supabase-js'
+import { Database } from '@/lib/database.types'
+import { SeasonalTableItemProps } from '@/lib/list_methods'
+import { useLoading } from '@/components/LoadingContext'
 import ModalTemplate from '@/components/ModalTemplate'
 
 //TODO: Allow sort, and show save changes button to save sort
@@ -152,7 +153,7 @@ export default function Seasonal() {
 	return (
 		<>
 			<Head>
-				<title>Cytube Watchlist</title>
+				<title>Watchlist</title>
 				<meta name="description" content="Current Season" />
 			</Head>
 
@@ -200,15 +201,16 @@ export default function Seasonal() {
 					</div>
 					<Reorder.Group
 						values={response}
-						/* draggable={sortMethod ? true : false} */
 						onReorder={(newOrder) => {
+							if (settingsMenu.display == 'block') setSettingsMenu({...settingsMenu, display: 'none'})
+							if (contextMenu.currentItem) setContextMenu({...contextMenu, currentItem: null})
 							setResponse(newOrder)
 							setReordered(true)
 						}}
 						className="flex flex-col lg:w-[40rem] min-w-[95dvw] lg:min-w-full w-min border-white border-[1px] border-t-0"
 					>
 						{response?.map((item: any, index: any) => (
-							<Item 
+							<SeasonalTableItem 
 								key={item.order} 
 								props={{ item, index, setIsLoadingEditForm, isLoadingEditForm, setIsEdited, isEdited, isEditedRef, contextMenuButtonRef, setContextMenu, response, setResponse }}
 							/>
@@ -220,10 +222,6 @@ export default function Seasonal() {
 						}}
 						className="flex flex-col items-center w-[30rem] px-2"
 					>
-						{/* <span className="mt-2 text-red-500 text-center">
-							⚠ Live updates will be paused while changes are being made to this table (Not
-							really)
-						</span> */}
 						<div className="flex gap-2 my-2">
 							<button
 								className="input-submit p-2 rounded-md"
@@ -246,7 +244,13 @@ export default function Seasonal() {
 						</div>
 					</div>
 				</section>
-				{contextMenu.currentItem && <ContextMenu />}
+				{contextMenu.currentItem && 
+				<ContextMenu 
+					contextMenuRef={contextMenuRef}
+					contextMenu={contextMenu}
+					response1={response1}
+					setConfirmModalDelEntry={setConfirmModalDelEntry}
+				/>}
 				{settingsMenu.display == 'block' && <SettingsMenu />}
 				{confirmModal && <ConfirmModal />}
 				{editModal && <EditModal />}
@@ -298,83 +302,6 @@ export default function Seasonal() {
 					</select>
 				</form>
 			</ModalTemplate>
-		)
-	}
-	
-	function ContextMenu() {
-		async function loadItemDetails() {
-			if (!contextMenu.currentItem) return
-			setLoading(true)
-			try {
-				await axios.post('/api/seasonaldetails/loaditem', {
-					title: contextMenu.currentItem.title
-				})
-				router.reload()
-			} catch (error) {
-				setLoading(false)
-				alert(error)
-				console.log(error)
-				return
-			}
-		}
-
-		async function handleAddToCompleted() {
-			setLoading(true)
-			try {
-				await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/addtocompleted`, {
-					content: response1,
-					id: contextMenu.currentItem?.title,
-					type: 'SEASONAL'
-				})
-				setLoading(false)
-			} catch (error) {
-				setLoading(false)
-				alert(error)
-			}
-		}
-
-		return (
-			<menu
-				ref={contextMenuRef}
-				style={{
-					top: contextMenu.top,
-					left: contextMenu.left
-				}}
-				className="absolute z-10 p-2 shadow-md shadow-gray-600 bg-slate-200 text-black rounded-sm border-black border-solid border-2 seasonal-context-menu"
-			>
-				<li className="flex justify-center">
-					<span className="text-center font-semibold line-clamp-2">
-						{contextMenu.currentItem?.title}
-					</span>
-				</li>
-				<hr className="my-2 border-gray-500 border-t-[1px]" />
-				{contextMenu.currentItem.SeasonalDetails?.[0]?.mal_id && 
-				<li className="flex justify-center h-8 rounded-sm hover:bg-slate-500">
-					<Link
-						href={`https://myanimelist.net/anime/${contextMenu.currentItem.SeasonalDetails[0].mal_id}`} 
-						target='_blank' 
-						rel='noopener noreferrer' 
-						className="p-1 w-full text-center"
-					>
-						Visit on MAL
-					</Link>
-				</li>}
-				<li className="flex justify-center h-8 rounded-sm hover:bg-slate-500">
-					<button onClick={loadItemDetails} className="w-full">
-						Load details
-					</button>
-				</li>
-				<li className="flex justify-center h-8 rounded-sm hover:bg-slate-500">
-					<button onClick={handleAddToCompleted} className="w-full">
-						Add to Completed
-					</button>
-				</li>
-				<li className="flex justify-center h-8 rounded-sm hover:bg-slate-500">
-					<button onClick={() => setConfirmModalDelEntry()} className="w-full">
-						Delete entry
-					</button>
-				</li>
-			</menu>
 		)
 	}
 
@@ -527,27 +454,8 @@ export default function Seasonal() {
 	}
 }
 
-interface ItemProps { 
-	props: {
-		item: any, 
-		index: number,
-		setIsLoadingEditForm: Dispatch<SetStateAction<string[]>>,
-		isLoadingEditForm: string[],
-		setIsEdited: (value: string) => void,
-		isEdited: string,
-		isEditedRef: MutableRefObject<string>,
-		contextMenuButtonRef: MutableRefObject<any>,
-		setContextMenu: Dispatch<SetStateAction<{
-			top: number;
-			left: number;
-			currentItem: any | null;
-		}>>,
-		response: any,
-		setResponse: Dispatch<any>
-	}
-}
-
-function Item({ props }: ItemProps) {
+//* Component for each seasonal show in table
+function SeasonalTableItem({ props }: SeasonalTableItemProps) {
 	const { item, index, setIsLoadingEditForm, isLoadingEditForm, setIsEdited, isEdited, isEditedRef, contextMenuButtonRef, setContextMenu, response, setResponse } = props
 	const controls = useDragControls()
 	const statusColor = determineStatus(item)
@@ -602,9 +510,8 @@ function Item({ props }: ItemProps) {
 				className="relative flex items-center justify-center"
 			>
 				<span className='flex items-center justify-center'>
-					{isEdited == `seasonal_status_${item.title}_${item.order}`
-						? editStatus(item.order, item.status)
-						: ''}
+					{isEdited == `seasonal_status_${item.title}_${item.order}` && 
+					<EditStatus order={item.order} ogvalue={item.status} />}
 				</span>
 				{isLoadingEditForm.includes(`status_${item.order}`) && (
 					<CircularProgress size={30} className="absolute top-[20%] left-[48%]" />
@@ -695,7 +602,14 @@ function Item({ props }: ItemProps) {
 		)
 	}
 
-	function editStatus(order: number, ogvalue: string) {
+	//* Status edit dropdown
+	function EditStatus({
+		order,
+		ogvalue
+	}: {
+		order: number; 
+		ogvalue: string;
+	}) {
 		async function handleSubmit(event: BaseSyntheticEvent) {
 			event.preventDefault()
 			const currentlyProcessedEdit = isEditedRef.current
@@ -776,4 +690,100 @@ function Item({ props }: ItemProps) {
 		}
 		return status
 	}
+}
+
+//* Context menu for each table item
+function ContextMenu({
+	contextMenuRef,
+	contextMenu,
+	response1,
+	setConfirmModalDelEntry
+}: {
+	contextMenuRef: RefObject<HTMLDivElement>;
+	contextMenu: {
+    top: number;
+    left: number;
+    currentItem: any | null;
+	};
+	response1: any;
+	setConfirmModalDelEntry: () => void;
+}) {
+	const router = useRouter()
+
+	const { setLoading } = useLoading()
+
+	async function loadItemDetails() {
+		if (!contextMenu.currentItem) return
+		setLoading(true)
+		try {
+			await axios.post('/api/seasonaldetails/loaditem', {
+				title: contextMenu.currentItem.title
+			})
+			router.reload()
+		} catch (error) {
+			setLoading(false)
+			alert(error)
+			console.log(error)
+			return
+		}
+	}
+
+	async function handleAddToCompleted() {
+		setLoading(true)
+		try {
+			await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/addtocompleted`, {
+				content: response1,
+				id: contextMenu.currentItem?.title,
+				type: 'SEASONAL'
+			})
+			setLoading(false)
+		} catch (error) {
+			setLoading(false)
+			alert(error)
+		}
+	}
+
+	return (
+		<menu
+			ref={contextMenuRef}
+			style={{
+				top: contextMenu.top,
+				left: contextMenu.left
+			}}
+			className="absolute z-10 p-2 shadow-md shadow-gray-600 bg-slate-200 text-black rounded-sm border-black border-solid border-2 seasonal-context-menu"
+		>
+			<li className="flex justify-center">
+				<span className="text-center font-semibold line-clamp-2">
+					{contextMenu.currentItem?.title}
+				</span>
+			</li>
+			<hr className="my-2 border-gray-500 border-t-[1px]" />
+			{contextMenu.currentItem.SeasonalDetails?.[0]?.mal_id && 
+			<li className="flex justify-center h-8 rounded-sm hover:bg-slate-500">
+				<Link
+					href={`https://myanimelist.net/anime/${contextMenu.currentItem.SeasonalDetails[0].mal_id}`} 
+					target='_blank' 
+					rel='noopener noreferrer' 
+					className="p-1 w-full text-center"
+				>
+					Visit on MAL
+				</Link>
+			</li>}
+			<li className="flex justify-center h-8 rounded-sm hover:bg-slate-500">
+				<button onClick={loadItemDetails} className="w-full">
+					Load details
+				</button>
+			</li>
+			<li className="flex justify-center h-8 rounded-sm hover:bg-slate-500">
+				<button onClick={handleAddToCompleted} className="w-full">
+					Add to Completed
+				</button>
+			</li>
+			<li className="flex justify-center h-8 rounded-sm hover:bg-slate-500">
+				<button onClick={() => setConfirmModalDelEntry()} className="w-full">
+					Delete entry
+				</button>
+			</li>
+		</menu>
+	)
 }

@@ -163,7 +163,7 @@ export default function ScatterChart({
 			data={{
 				datasets: [
 					{
-						label: 'GoodTaste',
+						label: 'Rating 1',
 						data: dateRatingDataSorted.map((item) => {
 							const startDate = new Date(item.endWatchDate!).getTime()
 							return {
@@ -174,7 +174,7 @@ export default function ScatterChart({
 						backgroundColor: '#ff4d73'
 					},
 					{
-						label: 'Regression Line (GoodTaste)',
+						label: 'Regression Line (Rating 1)',
 						data: Array(14)
 							.fill('')
 							.map((i, index) => {
@@ -190,7 +190,7 @@ export default function ScatterChart({
 						pointBackgroundColor: 'rgba(0,0,0,0.2)'
 					},
 					{
-						label: 'TomoLover',
+						label: 'Rating 2',
 						data: dateRatingDataSorted.map((item) => {
 							const startDate = new Date(item.endWatchDate!).getTime()
 							return {
@@ -201,7 +201,7 @@ export default function ScatterChart({
 						backgroundColor: '#4da0ff'
 					},
 					{
-						label: 'Regression Line (TomoLover)',
+						label: 'Regression Line (Rating 2)',
 						data: Array(14)
 							.fill('')
 							.map((i, index) => {

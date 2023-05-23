@@ -72,7 +72,7 @@ export default function GenrePage({ id }: { id: number }) {
 		return (
 			<>
 				<Head>
-					<title>Cytube Watchlist</title>
+					<title>Watchlist</title>
 					<meta
 						name="description"
 						content={`${
@@ -107,7 +107,7 @@ export default function GenrePage({ id }: { id: number }) {
 	return (
 		<>
 			<Head>
-				<title>Cytube Watchlist</title>
+				<title>Watchlist</title>
 				<meta
 					name="description"
 					content={`${
@@ -140,7 +140,7 @@ export default function GenrePage({ id }: { id: number }) {
 						onClick={() => handleSort('rating1')}
 						className="relative p-3 min-w-[8rem] text-lg text-center font-semibold cursor-pointer border-l-[1px] border-white"
 					>
-						GoodTaste
+						Rating 1
 						{sortMethodRef.current.includes('rating1') && (
 							<span className="absolute">
 								{sortMethodRef.current.includes('asc') ? '▲' : '▼'}
@@ -151,7 +151,7 @@ export default function GenrePage({ id }: { id: number }) {
 						onClick={() => handleSort('rating2')}
 						className="relative p-3 min-w-[8rem] text-lg text-center font-semibold cursor-pointer border-l-[1px] border-white"
 					>
-						TomoLover
+						Rating 2
 						{sortMethodRef.current.includes('rating2') && (
 							<span className="absolute">
 								{sortMethodRef.current.includes('asc') ? '▲' : '▼'}

@@ -1,6 +1,17 @@
-import { BaseSyntheticEvent, useEffect, useRef, useState } from 'react'
 import Head from 'next/head'
+import Image from 'next/image'
+import Link from 'next/link'
+import { useRouter } from 'next/router'
+import { BaseSyntheticEvent, useEffect, useRef, useState } from 'react'
+import debounce from 'lodash/debounce'
 import axios from 'axios'
+import CircularProgress from '@mui/material/CircularProgress'
+import AddIcon from '@mui/icons-material/Add'
+import MoreVertIcon from '@mui/icons-material/MoreVert'
+import Skeleton from '@mui/material/Skeleton'
+import EditIcon from '@mui/icons-material/Edit'
+import SearchIcon from '@mui/icons-material/Search'
+import RefreshIcon from '@mui/icons-material/Refresh'
 import { createClient } from '@supabase/supabase-js'
 import { Database } from '@/lib/database.types'
 import {
@@ -11,25 +22,9 @@ import {
 	sortListByTypeSupabase,
 	sortSymbol
 } from '@/lib/list_methods'
-import { loadingGlimmer } from '@/components/LoadingGlimmer'
-import CircularProgress from '@mui/material/CircularProgress'
 import { useLoading } from '@/components/LoadingContext'
-import AddIcon from '@mui/icons-material/Add'
-import MoreVertIcon from '@mui/icons-material/MoreVert'
-import Image from 'next/image'
-import Link from 'next/link'
-import Skeleton from '@mui/material/Skeleton'
-import { useRouter } from 'next/router'
-import EditIcon from '@mui/icons-material/Edit'
 import EditModal from '@/components/EditModal'
-import SearchIcon from '@mui/icons-material/Search'
-import RefreshIcon from '@mui/icons-material/Refresh'
 import ModalTemplate from '@/components/ModalTemplate'
-import debounce from 'lodash/debounce'
-
-//! Non-null assertion for the response state variable here will throw some errors if it does end up being null, fix maybe.
-//! ISSUES:
-//!   - Fix sort symbol
 
 export default function Completed() {
 	const editModalRef = useRef<HTMLDivElement>(null)
@@ -79,11 +74,6 @@ export default function Completed() {
 	)
 
 	useEffect(() => {
-		//FIXME: Don't expose API key to client side (currently exposing read-only key)
-		const supabase = createClient<Database>(
-			'https://esjopxdrlewtpffznsxh.supabase.co',
-			process.env.NEXT_PUBLIC_SUPABASE_API_KEY!
-		)
 		const getData = async () => {
 			const { data } = await supabase.from('Completed').select().order('id', { ascending: false })
 			setResponse(data!)
@@ -101,23 +91,11 @@ export default function Completed() {
 			.on(
 				'postgres_changes',
 				{ event: '*', schema: 'public', table: 'Completed' },
-				async (payload) => {
+				async () => {
 					const { data } = await supabase
 						.from('Completed')
 						.select()
 						.order('id', { ascending: false })
-
-					//? Meant to provide updates when user is in sort mode, currently non-functional, repeats the sorting 4 to 21 times.
-					/* if (sortMethod) {
-          if (sortMethod.includes('title')) {
-            console.log('title sorted')
-            sortListByNameSupabase('title', data!, sortMethod, setSortMethod, setResponse);
-          } else if (sortMethod.includes('rating')) {
-
-          } else if (sortMethod.includes('date')) {
-
-          }
-        } else setResponse(data!); */
 					sortMethodRef.current = ''
 					setResponse(data!)
 					setResponse1(data!)
@@ -178,6 +156,7 @@ export default function Completed() {
 		window.addEventListener('focusout', resetEditNoFocus)
 		document.addEventListener('keydown', closeKeyboard)
 
+
 		return () => {
 			clearInterval(refresh)
 			databaseChannel.unsubscribe()
@@ -203,7 +182,7 @@ export default function Completed() {
 	return (
 		<>
 			<Head>
-				<title>Cytube Watchlist</title>
+				<title>Watchlist</title>
 				<meta name="description" content="Completed" />
 			</Head>
 
@@ -296,7 +275,7 @@ export default function Completed() {
 								}
 								className="w-32 cursor-pointer"
 							>
-								<span>GoodTaste</span>
+								<span>Rating 1</span>
 								<span className="absolute">{sortSymbol('rating1', sortMethodRef)}</span>
 							</th>
 							<th
@@ -311,7 +290,7 @@ export default function Completed() {
 								}
 								className="w-32 cursor-pointer"
 							>
-								<span>TomoLover</span>
+								<span>Rating 2</span>
 								<span className="absolute">{sortSymbol('rating2', sortMethodRef)}</span>
 							</th>
 							<th
@@ -347,9 +326,7 @@ export default function Completed() {
 						</tr>
 					</thead>
 					<tbody>
-						{isLoadingClient ? 
-						loadingGlimmer(7) : 
-						response?.map((item, index) => (
+						{response?.map((item, index) => (
 							<tr key={item.id} className="relative group">
 								<td
 									style={{
@@ -847,7 +824,6 @@ export default function Completed() {
 				})
 
 				const changed = response?.slice()
-				//FIXME: Issue with changed value always showing in title column
 				if (!changed) return
 				changed.find((item) => item.id === id)![field] = isDate ? dateEntered.toLocaleDateString('en-US', {
 					day: 'numeric',
@@ -910,7 +886,7 @@ export default function Completed() {
 		)
 	}
 
-	async function addRecord(event: React.MouseEvent<HTMLButtonElement, MouseEvent>): Promise<void> {	
+	async function addRecord() {	
 		if (!response?.[0].title) {
 			alert('Insert title for latest row before adding a new one')
 			return

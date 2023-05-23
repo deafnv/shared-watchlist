@@ -1,20 +1,19 @@
-import { createClient } from '@supabase/supabase-js'
-import { GetStaticPropsContext } from 'next'
-import { Database } from '@/lib/database.types'
 import Head from 'next/head'
 import Image from 'next/image'
 import Link from 'next/link'
-import axios from 'axios'
 import { useRouter } from 'next/router'
-import { useLoading } from '@/components/LoadingContext'
-import { BaseSyntheticEvent, useEffect, useState, useRef } from 'react'
-import EditIcon from '@mui/icons-material/Edit'
+import { BaseSyntheticEvent, useEffect, useState, useRef, Dispatch, SetStateAction, RefObject } from 'react'
+import axios from 'axios'
 import CloseIcon from '@mui/icons-material/Close'
+import EditIcon from '@mui/icons-material/Edit'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
+import { createClient } from '@supabase/supabase-js'
+import { Database } from '@/lib/database.types'
+import { useLoading } from '@/components/LoadingContext'
 import ModalTemplate from '@/components/ModalTemplate'
 
 //TODO: Consider adding a soft reload, so that status gets updated when tracking episodes, also handling the end of shows
-export const getStaticProps = async (context: GetStaticPropsContext) => {
+export const getStaticProps = async () => {
 	const supabase = createClient<Database>(
 		'https://esjopxdrlewtpffznsxh.supabase.co',
 		process.env.NEXT_PUBLIC_SUPABASE_API_KEY!
@@ -43,7 +42,6 @@ export default function SeasonalDetails({
 	const refreshReloadMenuButtonRef = useRef<HTMLDivElement>(null)
 
 	const [response, setResponse] = useState(res)
-	const [validateArea, setValidateArea] = useState('')
 	const [editEpisodesCurrent, setEditEpisodesCurrent] = useState<
 		Database['public']['Tables']['SeasonalDetails']['Row'] | null
 	>(null)
@@ -60,11 +58,6 @@ export default function SeasonalDetails({
 
 	const router = useRouter()
 	const { setLoading } = useLoading()
-
-	const supabase = createClient<Database>(
-		'https://esjopxdrlewtpffznsxh.supabase.co',
-		process.env.NEXT_PUBLIC_SUPABASE_API_KEY!
-	)
 
 	useEffect(() => {
 		const closeEditModal = (e: KeyboardEvent) => {
@@ -103,7 +96,7 @@ export default function SeasonalDetails({
 		return (
 			<>
 				<Head>
-					<title>Cytube Watchlist</title>
+					<title>Watchlist</title>
 					<meta name="description" content="Seasonal Details" />
 				</Head>
 
@@ -128,7 +121,7 @@ export default function SeasonalDetails({
 	return (
 		<>
 			<Head>
-				<title>Cytube Watchlist</title>
+				<title>Watchlist</title>
 				<meta name="description" content="Seasonal Details" />
 			</Head>
 
@@ -225,18 +218,32 @@ export default function SeasonalDetails({
 										<EditIcon fontSize="small" className="text-slate-500 hover:text-white" />
 									</div>
 								</div>
-								<EpisodeTable item={item} />
+								<EpisodeTable 
+									item={item}
+									response={response}
+									setResponse={setResponse}
+								/>
 							</div>
 						</article>
 					))}
 				</div>
-				{editEpisodesCurrent && <EditEpisodes />}
-				{contextMenu.currentItem && <ContextMenu />}
+				{editEpisodesCurrent && 
+				<EpisodeCountEditor
+					editEpisodesCurrentRef={editEpisodesCurrentRef}
+					editEpisodesCurrent={editEpisodesCurrent}
+					setEditEpisodesCurrent={setEditEpisodesCurrent}
+				/>}
+				{contextMenu.currentItem && 
+				<ContextMenu 
+					contextMenu={contextMenu} 
+					contextMenuRef={contextMenuButtonRef} 
+				/>}
 				{refreshReloadMenu.display == 'block' && <RefreshReloadMenu />}
 			</main>
 		</>
 	)
 
+	//* Options menu at header
 	function RefreshReloadMenu() {
 		return (
 			<menu
@@ -271,45 +278,6 @@ export default function SeasonalDetails({
 		})
 	}
 
-	function ContextMenu() {
-		async function handleReloadTrack() {
-			try {
-				setLoading(true)
-				await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/seasonal/trackitem`, {
-					id: contextMenu.currentItem?.mal_id
-				})
-				await axios.post('/api/revalidate', {
-					route: '/seasonal/track'
-				})
-				router.reload()
-			} catch (error) {
-				setLoading(false)
-				alert(error)
-			}
-		}
-
-		return (
-			<menu
-				ref={contextMenuRef}
-				style={{
-					top: contextMenu.top,
-					left: contextMenu.left
-				}}
-				className="absolute z-20 p-2 shadow-md shadow-gray-600 bg-slate-200 text-black rounded-sm border-black border-solid border-2 context-menu"
-			>
-				<li className="flex justify-center">
-					<span className="text-center font-semibold line-clamp-2">
-						{contextMenu.currentItem?.mal_title}
-					</span>
-				</li>
-				<hr className="my-2 border-gray-500 border-t-[1px]" />
-				<li className="flex justify-center h-8 rounded-sm hover:bg-slate-500">
-					<button onClick={handleReloadTrack} className="w-full">Reload Episode Tracking</button>
-				</li>
-			</menu>
-		)
-	}
-
 	function handleMenuClick(
 		e: BaseSyntheticEvent,
 		item: Database['public']['Tables']['SeasonalDetails']['Row']
@@ -322,106 +290,6 @@ export default function SeasonalDetails({
 			left: left + window.scrollX - 240,
 			currentItem: item
 		})
-	}
-
-	function EditEpisodes() {
-		async function handleEditSubmit(e: BaseSyntheticEvent) {
-			e.preventDefault()
-			setLoading(true)
-			const editLatestEpisode = parseInt(e.target[0].value)
-			try {
-				await axios.post('/api/updatedb', {
-					content: { 
-						latest_episode: editLatestEpisode, 
-						message: 'Exempt:Manual Edit',
-						last_updated: new Date().getTime()
-					},
-					table: 'SeasonalDetails',
-					id: editEpisodesCurrent?.mal_id,
-					compare: 'mal_id'
-				})
-				router.reload()
-			} catch (error) {
-				setLoading(false)
-				alert(error)
-			}
-		}
-
-		let counter = 1
-		return (
-			<ModalTemplate
-				extraClassname='h-[30rem] w-[50rem]'
-				exitFunction={() => setEditEpisodesCurrent(null)}
-				menuRef={editEpisodesCurrentRef}
-			>
-				<h3 className="font-bold text-2xl">Manual Edit Episodes</h3>
-				<div
-					onClick={() => setEditEpisodesCurrent(null)}
-					className="absolute right-6 flex items-center justify-center h-11 w-11 rounded-full cursor-pointer transition-colors duration-150 hover:bg-slate-500"
-				>
-					<CloseIcon fontSize="large" />
-				</div>
-				<span>{editEpisodesCurrent?.mal_title}</span>
-				<form onSubmit={handleEditSubmit}>
-					<label className="flex flex-col items-center gap-2">
-						Enter latest episode:
-						<input autoFocus type="number" min={-1} max={9999} className="text-center input-text" />
-					</label>
-				</form>
-				<div className="relative grid grid-cols-2 gap-4">
-					{Array(4)
-						.fill('')
-						.map((i, index) => (
-							<table key={index}>
-								<thead>
-									<tr>
-										<th className="w-11">
-											{editEpisodesCurrent?.latest_episode! > 12 ? counter++ + 12 : counter++}
-										</th>
-										<th className="w-11">
-											{editEpisodesCurrent?.latest_episode! > 12 ? counter++ + 12 : counter++}
-										</th>
-										<th className="w-11">
-											{editEpisodesCurrent?.latest_episode! > 12 ? counter++ + 12 : counter++}
-										</th>
-									</tr>
-								</thead>
-								<tbody>
-									<tr>
-										<td
-											style={{
-												background: determineEpisode(
-													editEpisodesCurrent?.latest_episode!,
-													counter - 3
-												)
-											}}
-											className="p-6"
-										/>
-										<td
-											style={{
-												background: determineEpisode(
-													editEpisodesCurrent?.latest_episode!,
-													counter - 2
-												)
-											}}
-											className="p-6"
-										/>
-										<td
-											style={{
-												background: determineEpisode(
-													editEpisodesCurrent?.latest_episode!,
-													counter - 1
-												)
-											}}
-											className="p-6"
-										/>
-									</tr>
-								</tbody>
-							</table>
-						))}
-				</div>
-			</ModalTemplate>
-		)
 	}
 
 	function showTitle(e: BaseSyntheticEvent) {
@@ -454,15 +322,66 @@ export default function SeasonalDetails({
 			alert(error)
 		}
 	}
+}
 
-	function EpisodeTable({
-		item
-	}: {
-		item: Database['public']['Tables']['SeasonalDetails']['Row']
-	}) {
-		let counter = 1
-		return (
-			<div className="relative grid grid-cols-1 min-[390px]:grid-cols-2 gap-4">
+//* Dialog to manually edit aired episode count
+function EpisodeCountEditor({
+	editEpisodesCurrentRef,
+	editEpisodesCurrent,
+	setEditEpisodesCurrent
+}: {
+	editEpisodesCurrentRef: RefObject<HTMLMenuElement>;
+	editEpisodesCurrent: Database['public']['Tables']['SeasonalDetails']['Row'] | null;
+	setEditEpisodesCurrent: Dispatch<SetStateAction<Database['public']['Tables']['SeasonalDetails']['Row'] | null>>;
+}) {
+	const router = useRouter()
+
+	const { setLoading } = useLoading()
+
+	async function handleEditSubmit(e: BaseSyntheticEvent) {
+		e.preventDefault()
+		setLoading(true)
+		const editLatestEpisode = parseInt(e.target[0].value)
+		try {
+			await axios.post('/api/updatedb', {
+				content: { 
+					latest_episode: editLatestEpisode, 
+					message: 'Exempt:Manual Edit',
+					last_updated: new Date().getTime()
+				},
+				table: 'SeasonalDetails',
+				id: editEpisodesCurrent?.mal_id,
+				compare: 'mal_id'
+			})
+			router.reload()
+		} catch (error) {
+			setLoading(false)
+			alert(error)
+		}
+	}
+
+	let counter = 1
+	return (
+		<ModalTemplate
+			extraClassname='h-[30rem] w-[50rem]'
+			exitFunction={() => setEditEpisodesCurrent(null)}
+			menuRef={editEpisodesCurrentRef}
+		>
+			<h3 className="font-bold text-2xl">Manual Edit Episodes</h3>
+			<div
+				onClick={() => setEditEpisodesCurrent(null)}
+				className="absolute right-6 flex items-center justify-center h-11 w-11 rounded-full cursor-pointer transition-colors duration-150 hover:bg-slate-500"
+			>
+				<CloseIcon fontSize="large" />
+			</div>
+			<span>{editEpisodesCurrent?.mal_title}</span>
+			<form onSubmit={handleEditSubmit}>
+				<label className="flex flex-col items-center gap-2">
+					Enter latest episode:
+					<input autoFocus type="number" min={-1} max={9999} className="text-center input-text" />
+				</label>
+			</form>
+			<div className="relative grid grid-cols-2 gap-4">
 				{Array(4)
 					.fill('')
 					.map((i, index) => (
@@ -470,174 +389,315 @@ export default function SeasonalDetails({
 							<thead>
 								<tr>
 									<th className="w-11">
-										{item.latest_episode! > 12 ? counter++ + 12 : counter++}
+										{editEpisodesCurrent?.latest_episode! > 12 ? counter++ + 12 : counter++}
 									</th>
 									<th className="w-11">
-										{item.latest_episode! > 12 ? counter++ + 12 : counter++}
+										{editEpisodesCurrent?.latest_episode! > 12 ? counter++ + 12 : counter++}
 									</th>
 									<th className="w-11">
-										{item.latest_episode! > 12 ? counter++ + 12 : counter++}
+										{editEpisodesCurrent?.latest_episode! > 12 ? counter++ + 12 : counter++}
 									</th>
 								</tr>
 							</thead>
 							<tbody>
 								<tr>
 									<td
-										style={{ background: determineEpisode(item.latest_episode!, counter - 3) }}
+										style={{
+											background: determineEpisode(
+												editEpisodesCurrent?.latest_episode!,
+												counter - 3
+											)
+										}}
 										className="p-6"
 									/>
 									<td
-										style={{ background: determineEpisode(item.latest_episode!, counter - 2) }}
+										style={{
+											background: determineEpisode(
+												editEpisodesCurrent?.latest_episode!,
+												counter - 2
+											)
+										}}
 										className="p-6"
 									/>
 									<td
-										style={{ background: determineEpisode(item.latest_episode!, counter - 1) }}
+										style={{
+											background: determineEpisode(
+												editEpisodesCurrent?.latest_episode!,
+												counter - 1
+											)
+										}}
 										className="p-6"
 									/>
 								</tr>
 							</tbody>
 						</table>
 					))}
-				<Validate item1={item} />
 			</div>
-		)
-	}
+		</ModalTemplate>
+	)
+}
 
-	function determineEpisode(latestEpisode: number, index: number) {
-		const accountFor2Cour = latestEpisode > 12 ? latestEpisode - 12 : latestEpisode
-		if (accountFor2Cour >= index) {
-			return 'red'
-		} else return 'black'
-	}
+function ContextMenu({
+	contextMenu,
+	contextMenuRef
+}: {
+	contextMenu: {
+		top: number
+		left: number
+		currentItem: Database['public']['Tables']['SeasonalDetails']['Row'] | null
+	};
+	contextMenuRef: RefObject<HTMLMenuElement>;
+}) {
+	const router = useRouter()
 
-	function Validate({ item1 }: { item1: Database['public']['Tables']['SeasonalDetails']['Row'] }) {
-		async function handleChange(e: BaseSyntheticEvent) {
-			e.preventDefault()
+	const { setLoading } = useLoading()
+
+	async function handleReloadTrack() {
+		try {
 			setLoading(true)
-
-			const linkInput = e.target[0].value
-			if (
-				!linkInput.match(
-					/https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/gi
-				)
-			) {
-				setLoading(false)
-				return alert('Enter a valid link')
-			}
-
-			const url = new URL(linkInput)
-			if (url.hostname != 'myanimelist.net') {
-				setLoading(false)
-				return alert('Enter a link from myanimelist.net')
-			}
-
-			const idInput = parseInt(url.pathname.split('/')[2])
-			if (!idInput) {
-				setLoading(false)
-				return alert('ID not found. Enter a valid link')
-			}
-
-			try {
-				await axios.post('/api/seasonaldetails/changevalidated', {
-					title: item1.title,
-					mal_id: idInput
-				})
-				router.reload()
-			} catch (error) {
-				setLoading(false)
-				alert(error)
-			}
+			await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/seasonal/trackitem`, {
+				id: contextMenu.currentItem?.mal_id
+			})
+			await axios.post('/api/revalidate', {
+				route: '/seasonal/track'
+			})
+			router.reload()
+		} catch (error) {
+			setLoading(false)
+			alert(error)
 		}
-
-		async function handleIgnore() {
-			try {
-				setLoading(true)
-				await axios.post('/api/updatedb', {
-					content: { message: '' },
-					table: 'SeasonalDetails',
-					id: item1.mal_id,
-					compare: 'mal_id'
-				})
-
-				const changed = response.slice()
-				changed.find((item) => item.title === item1.title)!['message'] = ''
-				setResponse(changed)
-				setLoading(false)
-			} catch (error) {
-				setLoading(false)
-				alert(error)
-			}
-		}
-
-		function validateForm() {
-			switch (validateArea) {
-				case `${item1.mal_id}_change`:
-					return (
-						<div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[55%] h-[125%] w-[105%] flex flex-col justify-center items-center gap-2 glass">
-							<span className="text-center text-lg">Enter correct link: </span>
-							<Link
-								href={item1.message?.split('Validate:')[1] ?? ''}
-								target="_blank"
-								rel='noopener noreferrer'
-								className="link mb-4 col-span-2 text-center"
-							>
-								Search on MAL
-							</Link>
-							<form onSubmit={handleChange} className="col-span-2 grid grid-cols-2 gap-2">
-								<input autoFocus type="text" className="col-span-2 input-text text-center"></input>
-								<button type="submit" className="input-submit w-min mx-auto px-2 p-1">
-									Update
-								</button>
-								<button
-									onClick={() => setValidateArea('')}
-									type="reset"
-									className="input-submit w-min mx-auto px-2 p-1"
-								>
-									Cancel
-								</button>
-							</form>
-						</div>
-					)
-				case `${item1.mal_id}_ignore`:
-					return (
-						<div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[55%] h-[125%] w-[105%] flex flex-col justify-center items-center gap-2 glass">
-							<span className="text-red-500 text-lg">⚠ Are you sure?</span>
-							<div className="flex gap-4">
-								<button onClick={handleIgnore} className="input-submit px-2 p-1">
-									Yes
-								</button>
-								<button
-									onClick={() => setValidateArea('')}
-									className="input-submit px-2 p-1 bg-rose-600 hover:bg-rose"
-								>
-									No
-								</button>
-							</div>
-						</div>
-					)
-				default:
-					return (
-						<div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[55%] h-[125%] w-[105%] flex flex-col justify-center items-center gap-2 glass">
-							<span className="text-red-500 text-lg">⚠ This entry appears to be wrong</span>
-							<div className="flex gap-4">
-								<button
-									onClick={() => setValidateArea(`${item1.mal_id}_change`)}
-									className="input-submit px-2 p-1"
-								>
-									Change
-								</button>
-								<button
-									onClick={() => setValidateArea(`${item1.mal_id}_ignore`)}
-									className="input-submit px-2 p-1 bg-rose-600 hover:bg-rose"
-								>
-									Ignore
-								</button>
-							</div>
-						</div>
-					)
-			}
-		}
-
-		return item1.message?.includes('Validate:') ? validateForm() : null
 	}
+
+	return (
+		<menu
+			ref={contextMenuRef}
+			style={{
+				top: contextMenu.top,
+				left: contextMenu.left
+			}}
+			className="absolute z-20 p-2 shadow-md shadow-gray-600 bg-slate-200 text-black rounded-sm border-black border-solid border-2 context-menu"
+		>
+			<li className="flex justify-center">
+				<span className="text-center font-semibold line-clamp-2">
+					{contextMenu.currentItem?.mal_title}
+				</span>
+			</li>
+			<hr className="my-2 border-gray-500 border-t-[1px]" />
+			<li className="flex justify-center h-8 rounded-sm hover:bg-slate-500">
+				<button onClick={handleReloadTrack} className="w-full">Reload Episode Tracking</button>
+			</li>
+		</menu>
+	)
+}
+
+//* Construct table component showing episodes in threes
+function EpisodeTable({
+	item,
+	response,
+	setResponse
+}: {
+	item: Database['public']['Tables']['SeasonalDetails']['Row'];
+	response: Database['public']['Tables']['SeasonalDetails']['Row'][];
+	setResponse: Dispatch<SetStateAction<Database['public']['Tables']['SeasonalDetails']['Row'][]>>;
+}) {
+	let counter = 1
+
+	return (
+		<div className="relative grid grid-cols-1 min-[390px]:grid-cols-2 gap-4">
+			{Array(4)
+				.fill('')
+				.map((i, index) => (
+					<table key={index}>
+						<thead>
+							<tr>
+								<th className="w-11">
+									{item.latest_episode! > 12 ? counter++ + 12 : counter++}
+								</th>
+								<th className="w-11">
+									{item.latest_episode! > 12 ? counter++ + 12 : counter++}
+								</th>
+								<th className="w-11">
+									{item.latest_episode! > 12 ? counter++ + 12 : counter++}
+								</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td
+									style={{ background: determineEpisode(item.latest_episode!, counter - 3) }}
+									className="p-6"
+								/>
+								<td
+									style={{ background: determineEpisode(item.latest_episode!, counter - 2) }}
+									className="p-6"
+								/>
+								<td
+									style={{ background: determineEpisode(item.latest_episode!, counter - 1) }}
+									className="p-6"
+								/>
+							</tr>
+						</tbody>
+					</table>
+				))}
+			<ValidateErrorDialog 
+				item1={item} 
+				response={response}
+				setResponse={setResponse}
+			/>
+		</div>
+	)
+}
+
+//* Dialog for user to validate any errors (ignore, or fix error)
+function ValidateErrorDialog({ 
+	item1,
+	response, 
+	setResponse 
+}: { 
+	item1: Database['public']['Tables']['SeasonalDetails']['Row'];
+	response: Database['public']['Tables']['SeasonalDetails']['Row'][];
+	setResponse: Dispatch<SetStateAction<Database['public']['Tables']['SeasonalDetails']['Row'][]>>;
+}) {
+	const [validateArea, setValidateArea] = useState('')
+
+	const router = useRouter()
+
+	const { setLoading } = useLoading()
+
+	async function handleChange(e: BaseSyntheticEvent) {
+		e.preventDefault()
+		setLoading(true)
+
+		const linkInput = e.target[0].value
+		if (
+			!linkInput.match(
+				/https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/gi
+			)
+		) {
+			setLoading(false)
+			return alert('Enter a valid link')
+		}
+
+		const url = new URL(linkInput)
+		if (url.hostname != 'myanimelist.net') {
+			setLoading(false)
+			return alert('Enter a link from myanimelist.net')
+		}
+
+		const idInput = parseInt(url.pathname.split('/')[2])
+		if (!idInput) {
+			setLoading(false)
+			return alert('ID not found. Enter a valid link')
+		}
+
+		try {
+			await axios.post('/api/seasonaldetails/changevalidated', {
+				title: item1.title,
+				mal_id: idInput
+			})
+			router.reload()
+		} catch (error) {
+			setLoading(false)
+			alert(error)
+		}
+	}
+
+	async function handleIgnore() {
+		try {
+			setLoading(true)
+			await axios.post('/api/updatedb', {
+				content: { message: '' },
+				table: 'SeasonalDetails',
+				id: item1.mal_id,
+				compare: 'mal_id'
+			})
+
+			const changed = response.slice()
+			changed.find((item) => item.title === item1.title)!['message'] = ''
+			setResponse(changed)
+			setLoading(false)
+		} catch (error) {
+			setLoading(false)
+			alert(error)
+		}
+	}
+
+	function validateForm() {
+		switch (validateArea) {
+			case `${item1.mal_id}_change`:
+				return (
+					<div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[55%] h-[125%] w-[105%] flex flex-col justify-center items-center gap-2 glass">
+						<span className="text-center text-lg">Enter correct link: </span>
+						<Link
+							href={item1.message?.split('Validate:')[1] ?? ''}
+							target="_blank"
+							rel='noopener noreferrer'
+							className="link mb-4 col-span-2 text-center"
+						>
+							Search on MAL
+						</Link>
+						<form onSubmit={handleChange} className="col-span-2 grid grid-cols-2 gap-2">
+							<input autoFocus type="text" className="col-span-2 input-text text-center"></input>
+							<button type="submit" className="input-submit w-min mx-auto px-2 p-1">
+								Update
+							</button>
+							<button
+								onClick={() => setValidateArea('')}
+								type="reset"
+								className="input-submit w-min mx-auto px-2 p-1"
+							>
+								Cancel
+							</button>
+						</form>
+					</div>
+				)
+			case `${item1.mal_id}_ignore`:
+				return (
+					<div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[55%] h-[125%] w-[105%] flex flex-col justify-center items-center gap-2 glass">
+						<span className="text-red-500 text-lg">⚠ Are you sure?</span>
+						<div className="flex gap-4">
+							<button onClick={handleIgnore} className="input-submit px-2 p-1">
+								Yes
+							</button>
+							<button
+								onClick={() => setValidateArea('')}
+								className="input-submit px-2 p-1 bg-rose-600 hover:bg-rose"
+							>
+								No
+							</button>
+						</div>
+					</div>
+				)
+			default:
+				return (
+					<div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[55%] h-[125%] w-[105%] flex flex-col justify-center items-center gap-2 glass">
+						<span className="text-red-500 text-lg">⚠ This entry appears to be wrong</span>
+						<div className="flex gap-4">
+							<button
+								onClick={() => setValidateArea(`${item1.mal_id}_change`)}
+								className="input-submit px-2 p-1"
+							>
+								Change
+							</button>
+							<button
+								onClick={() => setValidateArea(`${item1.mal_id}_ignore`)}
+								className="input-submit px-2 p-1 bg-rose-600 hover:bg-rose"
+							>
+								Ignore
+							</button>
+						</div>
+					</div>
+				)
+		}
+	}
+
+	return item1.message?.includes('Validate:') ? validateForm() : null
+}
+
+//* Utility function to determine if episode has been watched (red -> true)
+function determineEpisode(latestEpisode: number, index: number) {
+	const accountFor2Cour = latestEpisode > 12 ? latestEpisode - 12 : latestEpisode
+	if (accountFor2Cour >= index) {
+		return 'red'
+	} else return 'black'
 }

@@ -1,9 +1,9 @@
 import { GetStaticPropsContext } from 'next'
 import Head from 'next/head'
 import { Dispatch, MutableRefObject, SetStateAction, useRef, useState } from 'react'
+import { Line, Pie } from 'react-chartjs-2'
 import { createClient } from '@supabase/supabase-js'
 import { Database } from '@/lib/database.types'
-import { Line, Pie } from 'react-chartjs-2'
 import {
 	Chart as ChartJS,
 	CategoryScale,
@@ -413,11 +413,11 @@ export default function Statistics({
 		ssr: false
 	})
 
-	const statTable = ['GoodTaste', 'TomoLover', 'MAL Rating']
+	const statTable = ['Rating 1', 'Rating 2', 'MAL Rating']
 	return (
 		<>
 			<Head>
-				<title>Cytube Watchlist</title>
+				<title>Watchlist</title>
 				<meta name="description" content="Watchlist statistics" />
 			</Head>
 
@@ -471,7 +471,7 @@ export default function Statistics({
 					<div className="flex flex-col col-span-2 lg:col-span-1 items-center h-[20rem] w-[97%] border-[1px] border-gray-300 overflow-auto">
 						<div className="sticky top-0 h-16 w-full p-3 bg-black z-10">
 							<h3 className="mb-1 text-xl font-semibold text-center">
-								GoodTaste
+								Rating 1
 							</h3>
 						</div>
 						<div className="flex items-center justify-center w-full bg-sky-600 border-white border-solid border-[1px] border-l-0 border-b-0">
@@ -540,7 +540,7 @@ export default function Statistics({
 					<div className="flex flex-col col-span-2 lg:col-span-1 items-center h-[20rem] w-[97%] border-[1px] border-gray-300 overflow-auto">
 						<div className="sticky top-0 h-16 w-full p-3 bg-black z-10">
 							<h3 className="mb-1 text-xl font-semibold text-center">
-								TomoLover
+								Rating 2
 							</h3>
 						</div>
 						<div className="flex items-center justify-center w-full bg-sky-600 border-white border-solid border-[1px] border-l-0 border-b-0">
@@ -614,7 +614,7 @@ export default function Statistics({
 					<div className="flex flex-col col-span-2 lg:col-span-1 items-center h-[20rem] w-[97%] border-[1px] border-gray-300 overflow-auto">
 						<div className="sticky top-0 h-16 w-full p-3 bg-black z-10">
 							<h3 className="mb-1 text-xl font-semibold text-center">
-								 GoodTaste − MAL
+								 Rating 1 − MAL
 							</h3>
 						</div>
 						<div className="flex items-center justify-center w-full bg-sky-600 border-white border-solid border-[1px] border-l-0 border-b-0">
@@ -661,7 +661,7 @@ export default function Statistics({
 					<div className="flex flex-col col-span-2 lg:col-span-1 items-center h-[20rem] w-[97%] border-[1px] border-gray-300 overflow-auto">
 						<div className="sticky top-0 h-16 w-full p-3 bg-black z-10">
 							<h3 className="mb-1 text-xl font-semibold text-center">
-								TomoLover − MAL
+								Rating 2 − MAL
 							</h3>
 						</div>
 						<div className="flex items-center justify-center w-full bg-sky-600 border-white border-solid border-[1px] border-l-0 border-b-0">
@@ -708,7 +708,7 @@ export default function Statistics({
 					<div className="col-span-2 flex flex-col items-center h-[20rem] w-[97%] md:w-[33rem] border-[1px] border-gray-300 overflow-auto">
 						<div className="sticky top-0 h-16 w-full p-3 bg-black z-10">
 							<h3 className="mb-1 text-xl font-semibold text-center">
-								GoodTaste − TomoLover
+								Rating 1 − Rating 2
 							</h3>
 						</div>
 						<div className="flex items-center justify-center w-full bg-sky-600 border-white border-solid border-[1px] border-l-0 border-b-0">
@@ -892,9 +892,9 @@ export default function Statistics({
 									<th colSpan={3}>Correlation</th>
 								</tr>
 								<tr>
-									<th>GoodTaste & MAL Rating</th>
-									<th>TomoLover & MAL Rating</th>
-									<th>GoodTaste & TomoLover</th>
+									<th>Rating 1 & MAL Rating</th>
+									<th>Rating 2 & MAL Rating</th>
+									<th>Rating 1 & Rating 2</th>
 								</tr>
 							</thead>
 							<tbody>
@@ -911,9 +911,9 @@ export default function Statistics({
 									<th colSpan={3}>Covariance</th>
 								</tr>
 								<tr>
-									<th>GoodTaste & MAL Rating</th>
-									<th>TomoLover & MAL Rating</th>
-									<th>GoodTaste & TomoLover</th>
+									<th>Rating 1 & MAL Rating</th>
+									<th>Rating 2 & MAL Rating</th>
+									<th>Rating 1 & Rating 2</th>
 								</tr>
 							</thead>
 							<tbody>
@@ -981,7 +981,7 @@ export default function Statistics({
 								})),
 								datasets: [
 									{
-										label: 'GoodTaste',
+										label: 'Rating 1',
 										data: rating1FreqArr.map((item) => ({
 											x: Object.keys(item)[0],
 											y: Object.values(item)[0]
@@ -991,7 +991,7 @@ export default function Statistics({
 										tension: 0.2
 									},
 									{
-										label: 'TomoLover',
+										label: 'Rating 2',
 										data: rating2FreqArr.map((item) => ({
 											x: Object.keys(item)[0],
 											y: Object.values(item)[0]

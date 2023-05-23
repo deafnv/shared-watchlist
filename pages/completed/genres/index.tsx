@@ -1,11 +1,11 @@
-import { createClient } from '@supabase/supabase-js'
 import Head from 'next/head'
-import { BaseSyntheticEvent, useEffect, useRef, useState } from 'react'
-import { Database } from '@/lib/database.types'
 import Link from 'next/link'
+import { BaseSyntheticEvent, useEffect, useRef, useState } from 'react'
+import { createClient } from '@supabase/supabase-js'
 import DoneIcon from '@mui/icons-material/Done'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import CloseIcon from '@mui/icons-material/Close'
+import { Database } from '@/lib/database.types'
 
 export default function Genres() {
 	const sortMethodRef = useRef('') 
@@ -35,7 +35,7 @@ export default function Genres() {
 	return (
 		<>
 			<Head>
-				<title>Cytube Watchlist</title>
+				<title>Watchlist</title>
 				<meta name="description" content="Completed Details" />
 			</Head>
 
@@ -52,17 +52,15 @@ export default function Genres() {
 					}}
 					className="grid gap-x-6 md:gap-x-12 gap-y-5 w-3/5"
 				>
-					{response?.map((item, index) => {
-						return (
-							<Link
-								key={index}
-								href={`${location.href}/${item.id}`}
-								className="whitespace-nowrap text-center text-white link"
-							>
-								{item.name}
-							</Link>
-						)
-					})}
+					{response?.map((item, index) => (
+						<Link
+							key={index}
+							href={`${location.href}/${item.id}`}
+							className="whitespace-nowrap text-center text-white link"
+						>
+							{item.name}
+						</Link>
+					))}
 				</div>
 				{advancedSearch == 'block' ? <AdvancedSearchModal /> : null}
 			</main>
@@ -191,7 +189,7 @@ export default function Genres() {
 						onClick={() => handleSort('rating1')}
 						className="relative p-3 min-w-[8rem] text-lg text-center font-semibold cursor-pointer border-l-[1px] border-white"
 					>
-						GoodTaste
+						Rating 1
 						{sortMethodRef.current.includes('rating1') && (
 							<span className="absolute">
 								{sortMethodRef.current.includes('asc') ? '▲' : '▼'}
@@ -202,7 +200,7 @@ export default function Genres() {
 						onClick={() => handleSort('rating2')}
 						className="relative p-3 min-w-[8rem] text-lg text-center font-semibold cursor-pointer border-l-[1px] border-white"
 					>
-						TomoLover
+						Rating 2
 						{sortMethodRef.current.includes('rating2') && (
 							<span className="absolute">
 								{sortMethodRef.current.includes('asc') ? '▲' : '▼'}

@@ -1,11 +1,11 @@
-import { createClient } from '@supabase/supabase-js'
 import { GetStaticPropsContext } from 'next'
-import { Database } from '@/lib/database.types'
-import { useEffect, useState, useRef } from 'react'
 import Head from 'next/head'
 import Image from 'next/image'
 import Link from 'next/link'
+import { useEffect, useState, useRef } from 'react'
+import { createClient } from '@supabase/supabase-js'
 import EditIcon from '@mui/icons-material/Edit'
+import { Database } from '@/lib/database.types'
 import EditModal from '@/components/EditModal'
 import { useLoading } from '@/components/LoadingContext'
 
@@ -83,7 +83,7 @@ export default function CompletedPage({ id }: { id: number }) {
 	return (
 		<>
 			<Head>
-				<title>Cytube Watchlist</title>
+				<title>Watchlist</title>
 				<meta name="description" content={response?.[0].title} />
 			</Head>
 
@@ -119,9 +119,9 @@ export default function CompletedPage({ id }: { id: number }) {
 						<table className="mb-8">
 							<thead>
 								<tr>
-									<th>GoodTaste</th>
-									<th>TomoLover</th>
-									<th>TTAHHP(?)</th>
+									<th>Rating 1</th>
+									<th>Rating 2</th>
+									<th>Rating 3(?)</th>
 								</tr>
 							</thead>
 							<tbody>

@@ -23,9 +23,66 @@ export interface TitleItem {
 	end: WatchDates
 }
 
+export interface PTWRolledTableItemProps {
+	props: {
+		item: Database['public']['Tables']['PTW-Rolled']['Row'],
+		index: number,
+		isLoadingEditForm: string[],
+		setIsEdited: (value: string) => void,
+		isEdited: string,
+		isEditedRef: MutableRefObject<string>,
+		sortMethodRef: MutableRefObject<string>,
+		setContextMenu: Dispatch<SetStateAction<{
+			top: number;
+			left: number;
+			currentItem: Database['public']['Tables']['PTW-Rolled']['Row'] | null;
+		}>>,
+		contextMenuButtonRef: MutableRefObject<any>,
+		responseRolled: Database['public']['Tables']['PTW-Rolled']['Row'][] | undefined,
+		setResponseRolled: Dispatch<SetStateAction<Database['public']['Tables']['PTW-Rolled']['Row'][] | undefined>>,
+		setIsLoadingEditForm: Dispatch<SetStateAction<string[]>>,
+	}
+	editFormParams: EditFormParams
+}
+
+export interface EditFormParams {
+	isLoadingEditForm: string[],
+	setIsLoadingEditForm: Dispatch<SetStateAction<string[]>>,
+	isEditedRef: MutableRefObject<string>,
+	setIsEdited: (value: string) => void,
+	responseRolled: Database['public']['Tables']['PTW-Rolled']['Row'][] | undefined,
+	responseCasual: Database['public']['Tables']['PTW-Casual']['Row'][] | undefined,
+	responseNonCasual: Database['public']['Tables']['PTW-NonCasual']['Row'][] | undefined,
+	responseMovies: Database['public']['Tables']['PTW-Movies']['Row'][] | undefined,
+	setResponseRolled: Dispatch<SetStateAction<Database['public']['Tables']['PTW-Rolled']['Row'][] | undefined>>,
+	setResponseCasual: Dispatch<SetStateAction<Database['public']['Tables']['PTW-Casual']['Row'][] | undefined>>,
+	setResponseNonCasual: Dispatch<SetStateAction<Database['public']['Tables']['PTW-NonCasual']['Row'][] | undefined>>,
+	setResponseMovies: Dispatch<SetStateAction<Database['public']['Tables']['PTW-Movies']['Row'][] | undefined>>
+}
+
 export interface PTWTItem {
 	id: number
 	title: string
+}
+
+export interface SeasonalTableItemProps { 
+	props: {
+		item: any, 
+		index: number,
+		setIsLoadingEditForm: Dispatch<SetStateAction<string[]>>,
+		isLoadingEditForm: string[],
+		setIsEdited: (value: string) => void,
+		isEdited: string,
+		isEditedRef: MutableRefObject<string>,
+		contextMenuButtonRef: MutableRefObject<any>,
+		setContextMenu: Dispatch<SetStateAction<{
+			top: number;
+			left: number;
+			currentItem: any | null;
+		}>>,
+		response: any,
+		setResponse: Dispatch<any>
+	}
 }
 
 export function getRandomInt(max: number) {

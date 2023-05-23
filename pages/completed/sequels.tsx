@@ -1,12 +1,12 @@
 import Head from 'next/head'
 import Link from 'next/link'
-import { useEffect, useState, BaseSyntheticEvent } from 'react'
+import { useRouter } from 'next/router'
+import { Fragment, useEffect, useState } from 'react'
 import axios from 'axios'
-import { createClient } from '@supabase/supabase-js'
 import RefreshIcon from '@mui/icons-material/Refresh'
+import { createClient } from '@supabase/supabase-js'
 import { Database } from '@/lib/database.types'
 import { useLoading } from '@/components/LoadingContext'
-import { useRouter } from 'next/router'
 
 export default function CompleteSequels() {
 	const [isLoadingClient, setIsLoadingClient] = useState(true)
@@ -49,7 +49,7 @@ export default function CompleteSequels() {
 		return (
 			<>
 				<Head>
-					<title>Cytube Watchlist</title>
+					<title>Watchlist</title>
 					<meta name="description" content="Unwatched Sequels" />
 				</Head>
 
@@ -71,7 +71,7 @@ export default function CompleteSequels() {
 	return (
 		<>
 			<Head>
-				<title>Cytube Watchlist</title>
+				<title>Watchlist</title>
 				<meta name="description" content="Unwatched Sequels" />
 			</Head>
 
@@ -103,9 +103,9 @@ export default function CompleteSequels() {
 						</span>
 					</div>
 					<div className="grid grid-cols-[0.6fr_5fr_5fr_0.8fr] xl:grid-cols-[4rem_30rem_30rem_10rem] text-sm md:text-base min-w-[95dvw] xl:min-w-0 sm:w-min border-white border-solid border-[1px] border-t-0">
-						{response?.map((item, index) => {
+						{response?.map(item => {
 							return (
-								<>
+								<Fragment key={item.anime_id}>
                   <span className="flex items-center justify-center p-2 h-full text-xs md:text-base border-white border-b-[1px] text-center">
 										{item.anime_id}
 									</span>
@@ -131,7 +131,7 @@ export default function CompleteSequels() {
 											Ignore
 										</button>
 									</span>
-								</>
+								</Fragment>
 							)
 						})}
 					</div>
