@@ -3,8 +3,11 @@ import axios from 'axios'
 import isEqual from 'lodash/isEqual'
 import { createClient } from '@supabase/supabase-js'
 import { Database } from '@/lib/database.types'
+import { authorizeRequest } from '@/lib/authorize'
 
 export default async function RefreshItem(req: NextApiRequest, res: NextApiResponse) {
+  const authResult = authorizeRequest(req)
+	if (typeof authResult !== 'string') return res.status(authResult.code).send(authResult.message)
   const { body, method } = req
 	const { title } = body
 

@@ -3,9 +3,12 @@ import axios from 'axios'
 import { load } from 'cheerio'
 import { createClient } from '@supabase/supabase-js'
 import { Database } from '@/lib/database.types'
+import { authorizeRequest } from '@/lib/authorize'
 
 //! This batchtrack method uses MAL forums to get latest episode
 export default async function EpisodeTracker(req: NextApiRequest, res: NextApiResponse) {
+  const authResult = authorizeRequest(req)
+	if (typeof authResult !== 'string') return res.status(authResult.code).send(authResult.message)
 	try {
 		//* Through testing, these API routes with restricted queries like UPDATE, DELETE, or INSERT fails silently if the public API key is provided instead of the service key
 		const supabase = createClient<Database>(

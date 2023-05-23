@@ -4,6 +4,7 @@ import { useRouter } from 'next/router'
 import { useEffect } from 'react'
 import { Analytics } from '@vercel/analytics/react'
 import NProgress from 'nprogress'
+import { createTheme, ThemeProvider } from '@mui/material/styles'
 import { LoadingProvider } from '@/components/LoadingContext'
 import Navbar from '@/components/Navbar'
 import '@/styles/globals.css'
@@ -21,6 +22,27 @@ declare module '@mui/material/styles' {
 		}
 	}
 }
+
+const theme = createTheme({
+  palette: {
+    primary: {
+      light: '#e3f2fd',
+      main: '#40a9ff',
+      dark: '#42a5f5',
+      contrastText: '#fff',
+    },
+    secondary: {
+      light: '#ff7961',
+      main: '#60a5fa',
+      dark: '#90c1fc',
+      contrastText: '#000',
+    },
+    mode: 'dark'
+  },
+  typography: {
+    fontFamily: `-apple-system, BlinkMacSystemFont, Quicksand, Segoe UI, Roboto, Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif`
+  }
+});
 
 export default function App({ Component, pageProps }: AppProps) {
 	const router = useRouter()
@@ -59,11 +81,13 @@ export default function App({ Component, pageProps }: AppProps) {
 	return (
 		<>
 			<LoadingProvider>
-				<Head>
-					<meta name="viewport" content="width=device-width, initial-scale=1" />
-				</Head>
-				<Navbar />
-				<Component {...pageProps} />
+				<ThemeProvider theme={theme}>
+					<Head>
+						<meta name="viewport" content="width=device-width, initial-scale=1" />
+					</Head>
+					<Navbar />
+					<Component {...pageProps} />
+				</ThemeProvider>
 			</LoadingProvider>
 			{env && <Analytics />}
 		</>

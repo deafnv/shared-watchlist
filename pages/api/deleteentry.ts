@@ -1,9 +1,11 @@
 import { NextApiRequest, NextApiResponse } from 'next'
-import { createClient } from '@supabase/supabase-js'
-import { Database } from '@/lib/database.types'
 import { google } from 'googleapis'
+import { Database } from '@/lib/database.types'
+import { authorizeRequest } from '@/lib/authorize'
 
 export default async function DeleteEntry(req: NextApiRequest, res: NextApiResponse) {
+	const authResult = authorizeRequest(req)
+	if (typeof authResult !== 'string') return res.status(authResult.code).send(authResult.message)
 	const { body, method } = req
 	const { content, id, tableId, type } = body
 	console.log(id)

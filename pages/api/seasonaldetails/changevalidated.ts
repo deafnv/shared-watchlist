@@ -2,8 +2,11 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import axios from 'axios'
 import { createClient } from '@supabase/supabase-js'
 import { Database } from '@/lib/database.types'
+import { authorizeRequest } from '@/lib/authorize'
 
 export default async function BatchUpdateSheet(req: NextApiRequest, res: NextApiResponse) {
+	const authResult = authorizeRequest(req)
+	if (typeof authResult !== 'string') return res.status(authResult.code).send(authResult.message)
 	const { body, method } = req
 	const { title, mal_id } = body
 

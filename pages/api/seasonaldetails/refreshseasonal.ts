@@ -1,10 +1,13 @@
 import { NextApiRequest, NextApiResponse } from 'next'
-import { createClient } from '@supabase/supabase-js'
-import { Database } from '@/lib/database.types'
 import axios from 'axios'
 import isEqual from 'lodash/isEqual'
+import { createClient } from '@supabase/supabase-js'
+import { Database } from '@/lib/database.types'
+import { authorizeRequest } from '@/lib/authorize'
 
 export default async function RefreshSeasonal(req: NextApiRequest, res: NextApiResponse) {
+	const authResult = authorizeRequest(req)
+	if (typeof authResult !== 'string') return res.status(authResult.code).send(authResult.message)
 	try {
 		//* Through testing, these API routes with restricted queries like UPDATE, DELETE, or INSERT fails silently if the public API key is provided instead of the service key
 		const supabase = createClient<Database>(
