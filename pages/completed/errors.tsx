@@ -4,6 +4,7 @@ import { useRouter } from 'next/router'
 import { useEffect, useState, BaseSyntheticEvent, Fragment } from 'react'
 import axios from 'axios'
 import CloseIcon from '@mui/icons-material/Close'
+import Button from '@mui/material/Button'
 import { createClient } from '@supabase/supabase-js'
 import { levenshtein } from '@/lib/list_methods'
 import { Database } from '@/lib/database.types'
@@ -157,18 +158,20 @@ export default function CompletedErrors() {
 										{item.distance}
 									</span>
 									<span className="flex flex-col xl:flex-row items-center justify-center gap-2 p-1 xl:p-2 h-full text-xs xl:text-base border-white border-b-[1px] text-center">
-										<button
+										<Button
 											onClick={() => handleOpenChangeMenu(item)}
-											className="px-1 xl:px-2 py-1 text-xs xl:text-base input-submit"
+											variant='outlined'
+											size='small'
 										>
 											Change
-										</button>
-										<button
+										</Button>
+										<Button
 											onClick={() => handleIgnore(item)}
-											className="px-1 xl:px-2 py-1 text-xs xl:text-base input-submit"
+											color='error'
+											size='small'
 										>
 											Ignore
-										</button>
+										</Button>
 									</span>
 								</Fragment>
 							)

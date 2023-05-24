@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { BaseSyntheticEvent, useEffect, useState, useRef, Dispatch, SetStateAction, RefObject } from 'react'
 import axios from 'axios'
+import Button from '@mui/material/Button'
 import CloseIcon from '@mui/icons-material/Close'
 import EditIcon from '@mui/icons-material/Edit'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
@@ -75,7 +76,7 @@ export default function SeasonalDetails({
 			}
 			if (
 				e.target.parentNode !== refreshReloadMenuButtonRef.current &&
-				e.target.parentNode.parentNode !== refreshReloadMenuButtonRef.current &&
+				e.target.parentNode?.parentNode !== refreshReloadMenuButtonRef.current &&
 				!refreshReloadMenuRef.current?.contains(e.target) &&
 				refreshReloadMenuRef.current
 			) {
@@ -638,16 +639,21 @@ function ValidateErrorDialog({
 						</Link>
 						<form onSubmit={handleChange} className="col-span-2 grid grid-cols-2 gap-2">
 							<input autoFocus type="text" className="col-span-2 input-text text-center"></input>
-							<button type="submit" className="input-submit w-min mx-auto px-2 p-1">
+							<Button 
+								type="submit" 
+								variant='outlined'
+								className='font-bold border-2 hover:border-2'
+							>
 								Update
-							</button>
-							<button
+							</Button>
+							<Button
 								onClick={() => setValidateArea('')}
 								type="reset"
-								className="input-submit w-min mx-auto px-2 p-1"
+								color='error'
+								className='font-bold'
 							>
 								Cancel
-							</button>
+							</Button>
 						</form>
 					</div>
 				)
@@ -656,15 +662,22 @@ function ValidateErrorDialog({
 					<div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[55%] h-[125%] w-[105%] flex flex-col justify-center items-center gap-2 glass">
 						<span className="text-red-500 text-lg">⚠ Are you sure?</span>
 						<div className="flex gap-4">
-							<button onClick={handleIgnore} className="input-submit px-2 p-1">
+							<Button 
+								onClick={handleIgnore} 
+								variant='outlined'
+								size='large'
+								className='font-bold border-2 hover:border-2'
+							>
 								Yes
-							</button>
-							<button
+							</Button>
+							<Button
 								onClick={() => setValidateArea('')}
-								className="input-submit px-2 p-1 bg-rose-600 hover:bg-rose"
+								color='error'
+								size='large'
+								className='font-bold'
 							>
 								No
-							</button>
+							</Button>
 						</div>
 					</div>
 				)
@@ -673,18 +686,22 @@ function ValidateErrorDialog({
 					<div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[55%] h-[125%] w-[105%] flex flex-col justify-center items-center gap-2 glass">
 						<span className="text-red-500 text-lg">⚠ This entry appears to be wrong</span>
 						<div className="flex gap-4">
-							<button
+							<Button
 								onClick={() => setValidateArea(`${item1.mal_id}_change`)}
-								className="input-submit px-2 p-1"
+								variant='outlined'
+								size='large'
+								className='font-bold border-2 hover:border-2'
 							>
 								Change
-							</button>
-							<button
+							</Button>
+							<Button
 								onClick={() => setValidateArea(`${item1.mal_id}_ignore`)}
-								className="input-submit px-2 p-1 bg-rose-600 hover:bg-rose"
+								color='error'
+								size='large'
+								className='font-bold'
 							>
 								Ignore
-							</button>
+							</Button>
 						</div>
 					</div>
 				)

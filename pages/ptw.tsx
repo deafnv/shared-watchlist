@@ -13,6 +13,7 @@ import AddIcon from '@mui/icons-material/Add'
 import RefreshIcon from '@mui/icons-material/Refresh'
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator'
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
+import Button from '@mui/material/Button'
 import { createClient } from '@supabase/supabase-js'
 import { EditFormParams, PTWRolledTableItemProps, getRandomInt, sortListByNamePTW, sortSymbol } from '@/lib/list_methods'
 import { Database } from '@/lib/database.types'
@@ -364,25 +365,25 @@ export default function PTW() {
 								really)
 							</span> */}
 							<div className="flex gap-2 my-2">
-								<button
-									className="input-submit p-2 rounded-md"
+								<Button
 									onClick={() => saveReorder(
-											responseRolled,
-											setLoading,
-											setReordered
+										responseRolled,
+										setLoading,
+										setReordered
 									)}
+									variant='outlined'
 								>
-									Save Changes
-								</button>
-								<button
-									className="input-submit p-2 rounded-md"
+									Save changes
+								</Button>
+								<Button
 									onClick={() => {
 										setResponseRolled(responseRolled1)
 										setReordered(false)
 									}}
+									color='error'
 								>
 									Cancel
-								</button>
+								</Button>
 							</div>
 						</div>
 					</div>
@@ -459,10 +460,22 @@ export default function PTW() {
 				extraClassname='h-[15rem] w-[30rem] justify-center'
 				exitFunction={() => setConfirmModal(false)}
 			>
-				<h3 className='text-2xl'>Confirm delete entry?</h3>
+				<h3 className='text-2xl mb-4'>Confirm delete entry?</h3>
 				<div className='flex gap-4'>
-					<button onClick={handleDelete} className='px-3 py-1 input-submit'>Yes</button>
-					<button onClick={() => setConfirmModal(false)} className='px-3 py-1 input-submit'>No</button>
+					<Button 
+						onClick={handleDelete} 
+						variant='outlined' 
+						size='large'
+					>
+						Yes
+					</Button>
+					<Button 
+						onClick={() => setConfirmModal(false)} 
+						color='error' 
+						size='large'
+					>
+						No
+					</Button>
 				</div>
 			</ModalTemplate>
 		)
@@ -735,9 +748,9 @@ export default function PTW() {
 					</div>
 				</div>
 				<div ref={addGachaRollRef} className="absolute bottom-36 invisible">
-					<button onClick={addGachaRoll} className="px-2 p-1 input-submit">
+					<Button onClick={addGachaRoll} variant='outlined'>
 						Add to List
-					</button>
+					</Button>
 					<CancelIcon
 						onClick={handleCancel}
 						className="absolute top-2 right-[-32px] cursor-pointer transition-colors duration-100 hover:text-red-500"
@@ -767,7 +780,7 @@ export default function PTW() {
 							Include movies?
 						</label>
 					</div>
-					<input type="submit" value="Roll" className="input-submit px-2 p-1 text-base sm:text-xl" />
+					<Button type='submit' variant='outlined'>Roll</Button>
 				</form>
 			</div>
 		)

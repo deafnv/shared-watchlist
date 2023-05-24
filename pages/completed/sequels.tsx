@@ -4,6 +4,7 @@ import { useRouter } from 'next/router'
 import { Fragment, useEffect, useState } from 'react'
 import axios from 'axios'
 import RefreshIcon from '@mui/icons-material/Refresh'
+import Button from '@mui/material/Button'
 import { createClient } from '@supabase/supabase-js'
 import { Database } from '@/lib/database.types'
 import { useLoading } from '@/components/LoadingContext'
@@ -56,12 +57,12 @@ export default function CompleteSequels() {
 				<main className="flex flex-col items-center justify-center gap-4 h-[100dvh] mb-24 px-1 md:px-0">
 					<h2 className="text-2xl sm:text-3xl">No unwatched sequels found</h2>
 					<span>Check console for details on omitted entries</span>
-					<button
+					<Button
 						onClick={handleLoadSequels}
-						className='link'
+						variant='outlined'
 					>
-						Click to reload sequels
-					</button>
+						Reload sequels
+					</Button>
 				</main>
 			</>
 		)
@@ -124,12 +125,13 @@ export default function CompleteSequels() {
 										{item.seq_title}
 									</Link>
 									<span className="flex flex-col xl:flex-row items-center justify-center gap-2 p-1 xl:p-2 h-full text-xs xl:text-base border-white border-b-[1px] text-center">
-										<button
+										<Button
 											onClick={() => handleIgnore(item)}
-											className="px-1 xl:px-2 py-1 text-xs xl:text-base input-submit"
+											color='error'
+											size='small'
 										>
 											Ignore
-										</button>
+										</Button>
 									</span>
 								</Fragment>
 							)

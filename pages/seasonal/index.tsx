@@ -6,6 +6,7 @@ import axios from 'axios'
 import { Reorder, useDragControls } from 'framer-motion'
 import isEqual from 'lodash/isEqual'
 import CircularProgress from '@mui/material/CircularProgress'
+import Button from '@mui/material/Button'
 import AddIcon from '@mui/icons-material/Add'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
 import CloseIcon from '@mui/icons-material/Close'
@@ -57,6 +58,7 @@ export default function Seasonal() {
 
 	const setConfirmModalDelEntry = () => {
 		entryToDelete.current = contextMenu.currentItem
+		setContextMenu({...contextMenu, currentItem: null})
 		setConfirmModal('DELETE')
 	}
 
@@ -223,24 +225,24 @@ export default function Seasonal() {
 						className="flex flex-col items-center w-[30rem] px-2"
 					>
 						<div className="flex gap-2 my-2">
-							<button
-								className="input-submit p-2 rounded-md"
+							<Button
 								onClick={() => {
 									saveReorder()
 									setReordered(false)
 								}}
+								variant='outlined'
 							>
-								Save Changes
-							</button>
-							<button
-								className="input-submit p-2 rounded-md"
+								Save changes
+							</Button>
+							<Button
 								onClick={() => {
 									setResponse(response1)
 									setReordered(false)
 								}}
+								color='error'
 							>
 								Cancel
-							</button>
+							</Button>
 						</div>
 					</div>
 				</section>
@@ -278,7 +280,7 @@ export default function Seasonal() {
 
 		return (
 			<ModalTemplate
-				extraClassname='h-[15rem] w-[30rem]'
+				extraClassname='h-[15rem] w-[30rem] justify-center'
 				exitFunction={() => setEditModal(false)}
 			>
 				<div
@@ -370,10 +372,23 @@ export default function Seasonal() {
 					extraClassname='h-[15rem] w-[30rem] justify-center'
 					exitFunction={() => setConfirmModal('')}
 				>
-					<h3 className='text-2xl'>Confirm Delete All Entries?</h3>
-					<div className='flex gap-4'>
-						<button onClick={handleDeleteAll} className='px-3 py-1 input-submit'>Yes</button>
-						<button onClick={() => setConfirmModal('')} className='px-3 py-1 input-submit'>No</button>
+					<h3 className='text-2xl mb-4'>Confirm delete all entries?</h3>
+					<div className='flex gap-2'>
+						<Button 
+							onClick={handleDeleteAll} 
+							variant='outlined'
+							size='large'
+						>
+							Yes
+						</Button>
+						<Button 
+							onClick={() => 
+							setConfirmModal('')} 
+							color='error'
+							size='large'
+						>
+							No
+						</Button>
 					</div>
 				</ModalTemplate>
 			)
@@ -383,10 +398,22 @@ export default function Seasonal() {
 					extraClassname='h-[15rem] w-[30rem] justify-center'
 					exitFunction={() => setConfirmModal('')}
 				>
-					<h3 className='text-2xl'>Confirm delete entry?</h3>
-					<div className='flex gap-4'>
-						<button onClick={handleDelete} className='px-3 py-1 input-submit'>Yes</button>
-						<button onClick={() => setConfirmModal('')} className='px-3 py-1 input-submit'>No</button>
+					<h3 className='text-2xl mb-4'>Confirm delete entry?</h3>
+					<div className='flex gap-2'>
+						<Button 
+							onClick={handleDelete} 
+							variant='outlined'
+							size='large'
+						>
+							Yes
+						</Button>
+						<Button 
+							onClick={() => setConfirmModal('')} 
+							color='error'
+							size='large'
+						>
+							No
+						</Button>
 					</div>
 				</ModalTemplate>
 			)

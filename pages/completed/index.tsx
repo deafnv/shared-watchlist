@@ -12,6 +12,8 @@ import Skeleton from '@mui/material/Skeleton'
 import EditIcon from '@mui/icons-material/Edit'
 import SearchIcon from '@mui/icons-material/Search'
 import RefreshIcon from '@mui/icons-material/Refresh'
+import Button from '@mui/material/Button'
+import IconButton from '@mui/material/IconButton'
 import { createClient } from '@supabase/supabase-js'
 import { Database } from '@/lib/database.types'
 import {
@@ -212,23 +214,22 @@ export default function Completed() {
 						<MoreVertIcon sx={{ fontSize: 28 }} />
 					</div>
 				</header>
-				<div className="flex items-center gap-2">
+				<div className="flex items-center justify-center gap-2">
 					<div className="px-3 mb-1 bg-neutral-700 shadow-md shadow-black rounded-md">
 						<SearchIcon />
 						<input
 							onChange={searchTable}
 							type="search"
-							placeholder=" Search Titles"
+							placeholder=" Search titles"
 							className="input-text my-2 p-1 w-[60dvw] md:w-96 text-sm sm:text-lg"
 						/>
 					</div>
-					<button
+					<IconButton
 						onClick={addRecord}
 						title="Add new record to table"
-						className="input-submit h-3/5 mb-1 px-2 py-2 text-lg rounded-md"
 					>
 						<AddIcon sx={{ fontSize: 28 }} />
-					</button>
+					</IconButton>
 				</div>
 				<table>
 					<thead>
