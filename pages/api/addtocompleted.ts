@@ -15,7 +15,7 @@ export default async function AddToCompleted(req: NextApiRequest, res: NextApiRe
 		return res.status(400).send('Invalid content provided')
 	
 	const supabase = createClient<Database>(
-		'https://esjopxdrlewtpffznsxh.supabase.co',
+		process.env.NEXT_PUBLIC_SUPABASE_URL!,
 		process.env.SUPABASE_SERVICE_API_KEY!
 	)
 

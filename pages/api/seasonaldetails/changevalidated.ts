@@ -36,7 +36,7 @@ export default async function BatchUpdateSheet(req: NextApiRequest, res: NextApi
 
 		//* Through testing, these API routes with restricted queries like UPDATE, DELETE, or INSERT fails silently if the public API key is provided instead of the service key
 		const supabase = createClient<Database>(
-			'https://esjopxdrlewtpffznsxh.supabase.co',
+			process.env.NEXT_PUBLIC_SUPABASE_URL!,
 			process.env.SUPABASE_SERVICE_API_KEY!
 		)
 		await supabase.from('SeasonalDetails').delete().eq('title', title)

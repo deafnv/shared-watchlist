@@ -64,7 +64,7 @@ export default function Seasonal() {
 
 	useEffect(() => {
 		const supabase = createClient<Database>(
-			'https://esjopxdrlewtpffznsxh.supabase.co',
+			process.env.NEXT_PUBLIC_SUPABASE_URL!,
 			process.env.NEXT_PUBLIC_SUPABASE_API_KEY!
 		)
 		const getData = async () => {

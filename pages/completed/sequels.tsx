@@ -20,7 +20,7 @@ export default function CompleteSequels() {
 	useEffect(() => {
 		const getData = async () => {
 			const supabase = createClient<Database>(
-				'https://esjopxdrlewtpffznsxh.supabase.co',
+				process.env.NEXT_PUBLIC_SUPABASE_URL!,
 				process.env.NEXT_PUBLIC_SUPABASE_API_KEY!
 			)
 			const sequelsData = await supabase

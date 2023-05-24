@@ -12,7 +12,7 @@ export default async function ChangeDetails(req: NextApiRequest, res: NextApiRes
 		if (type == 'IGNORE_ERROR') {
 			try {
 				const supabase = createClient<Database>(
-					'https://esjopxdrlewtpffznsxh.supabase.co',
+					process.env.NEXT_PUBLIC_SUPABASE_URL!,
 					process.env.SUPABASE_SERVICE_API_KEY!
 				)
 
@@ -30,7 +30,7 @@ export default async function ChangeDetails(req: NextApiRequest, res: NextApiRes
 		else if (type == 'IGNORE_SEQUEL') {
 			try {
 				const supabase = createClient<Database>(
-					'https://esjopxdrlewtpffznsxh.supabase.co',
+					process.env.NEXT_PUBLIC_SUPABASE_URL!,
 					process.env.SUPABASE_SERVICE_API_KEY!
 				)
 
@@ -57,7 +57,7 @@ export default async function ChangeDetails(req: NextApiRequest, res: NextApiRes
 
 				//TODO: Add function here to add new genres if any are available. Later on, also delete genres with no entries.
 				const supabase = createClient<Database>(
-					'https://esjopxdrlewtpffznsxh.supabase.co',
+					process.env.NEXT_PUBLIC_SUPABASE_URL!,
 					process.env.SUPABASE_SERVICE_API_KEY!
 				)
 				await supabase

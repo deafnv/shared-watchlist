@@ -12,7 +12,7 @@ export default async function EpisodeTracker(req: NextApiRequest, res: NextApiRe
 	try {
 		//* Through testing, these API routes with restricted queries like UPDATE, DELETE, or INSERT fails silently if the public API key is provided instead of the service key
 		const supabase = createClient<Database>(
-			'https://esjopxdrlewtpffznsxh.supabase.co',
+			process.env.NEXT_PUBLIC_SUPABASE_URL!,
 			process.env.SUPABASE_SERVICE_API_KEY!
 		)
 		const dataDB = await supabase

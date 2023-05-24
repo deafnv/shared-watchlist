@@ -12,7 +12,7 @@ export default async function UpdateDatabase(req: NextApiRequest, res: NextApiRe
 	if (method === 'POST') {
 		try {
 			const supabase = createClient<Database>(
-				'https://esjopxdrlewtpffznsxh.supabase.co',
+				process.env.NEXT_PUBLIC_SUPABASE_URL!,
 				process.env.SUPABASE_SERVICE_API_KEY!
 			)
 			await supabase.from(table).update(content).eq(compare, id)
