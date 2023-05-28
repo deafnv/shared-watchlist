@@ -79,7 +79,7 @@ export default function EditDialog({
             type="url"
             fullWidth
             variant="outlined"
-            className='w-96'
+            className='w-96 max-w-full'
             onChange={(e) => textValue.current = e.target.value}
           />
         </DialogContent>

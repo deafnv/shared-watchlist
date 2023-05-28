@@ -8,11 +8,9 @@ import axios from 'axios'
 import CircularProgress from '@mui/material/CircularProgress'
 import AddIcon from '@mui/icons-material/Add'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
-import Skeleton from '@mui/material/Skeleton'
 import EditIcon from '@mui/icons-material/Edit'
 import SearchIcon from '@mui/icons-material/Search'
 import RefreshIcon from '@mui/icons-material/Refresh'
-import Button from '@mui/material/Button'
 import IconButton from '@mui/material/IconButton'
 import { createClient } from '@supabase/supabase-js'
 import { Database } from '@/lib/database.types'
@@ -26,7 +24,7 @@ import {
 } from '@/lib/list_methods'
 import { useLoading } from '@/components/LoadingContext'
 import EditDialog from '@/components/dialogs/EditDialog'
-import ModalTemplate from '@/components/ModalTemplate'
+import { Dialog } from '@mui/material'
 
 export default function Completed() {
 	const contextMenuRef = useRef<HTMLDivElement>(null)
@@ -466,12 +464,11 @@ export default function Completed() {
 					</tbody>
 				</table>
 				{contextMenu.currentItem && <ContextMenu />}
-				{detailsModal && 
 				<DetailsModal 
 					detailsModal={detailsModal}
 					setDetailsModal={setDetailsModal}
 					setEditDialog={setEditDialog}
-				/>}
+				/>
 				{settingsMenu.display == 'block' && <SettingsMenu />}
 				<EditDialog
 					editDialog={editDialog}
@@ -801,122 +798,102 @@ function DetailsModal({
 		}
 	}
 
-	if (!loadingDetails && (!details || details.mal_id == -1 || !details.mal_title)) {
+	if (!loadingDetails && (!details || details.mal_id == -1 || !details.mal_title) && detailsModal) {
 		return (
-			<ModalTemplate
-				extraClassname='h-[50rem] w-[60rem]'
-				exitFunction={() => setDetailsModal(null)}
+			<Dialog
+				fullWidth
+				maxWidth="lg"
+				open={!!detailsModal}
+				onClose={() => setDetailsModal(null)}
 			>
-				<h3 className="mb-6 font-bold text-2xl">
-					Details for this title have not been loaded yet.
-				</h3>
-				<span onClick={handleReload} className="cursor-pointer link">
-					Click here to reload database and view details
-				</span>
-			</ModalTemplate>
+				<div className='flex flex-col items-center justify-center p-6 py-24'>
+					<h3 className="mb-6 font-bold text-2xl">
+						Details for this title have not been loaded yet.
+					</h3>
+					<span onClick={handleReload} className="cursor-pointer link">
+						Click here to reload database and view details
+					</span>
+				</div>
+			</Dialog>
 		)
 	}
 
 	return (
-		<ModalTemplate
-			extraClassname='h-[80dvh] w-[80dvw] md:w-[60dvw]'
-			exitFunction={() => setDetailsModal(null)}
-		>	
-			<div>
-				<Link
-					href={`${location.origin}/completed/anime/${details?.id}`}
-					title={details?.mal_title ?? ''}
-					className="px-12 font-bold text-lg sm:text-2xl line-clamp-1 text-center link"
+		<Dialog
+			fullWidth
+			maxWidth="lg"
+			open={!!detailsModal}
+			onClose={() => setDetailsModal(null)}
+		>
+			<div className='flex flex-col items-center p-6'>
+				<div>
+					<Link
+						href={`/completed/anime/${details?.id}`}
+						title={details?.mal_title ?? ''}
+						className="px-12 font-bold text-lg sm:text-2xl line-clamp-1 text-center link"
+					>
+						{details?.mal_title}
+					</Link>
+				</div>
+				<div
+					onClick={() => setEditDialog(true)}
+					className="absolute top-4 sm:top-8 right-4 sm:right-12 flex items-center justify-center h-7 sm:h-11 w-7 sm:w-11 rounded-full cursor-pointer transition-colors duration-150 hover:bg-slate-500"
 				>
-					{details?.mal_title}
-				</Link>
-			</div>
-			<div
-				onClick={() => setEditDialog(true)}
-				className="absolute top-4 sm:top-8 right-4 sm:right-12 flex items-center justify-center h-7 sm:h-11 w-7 sm:w-11 rounded-full cursor-pointer transition-colors duration-150 hover:bg-slate-500"
-			>
-				<EditIcon sx={{
-					fontSize: {
-						sm: 25,
-						lg: 30
-					}
-				}} />
-			</div>
-			{loadingDetails ? (
-				<>
-					<Skeleton
-						animation="wave"
-						variant="rounded"
-						width={350}
-						height={25}
-						className="bg-gray-500"
+					<EditIcon sx={{
+						fontSize: {
+							sm: 25,
+							lg: 30
+						}
+					}} />
+				</div>
+				<span className='hidden lg:block'>{details?.mal_alternative_title}</span>
+				<div className='relative my-5 h-[18rem] sm:h-[20rem] w-[12rem] sm:w-[15rem] overflow-hidden'>
+					<Image
+						src={details?.image_url!}
+						alt="Art"
+						fill
+						sizes="30vw"
+						className="object-contain"
+						draggable={false}
 					/>
-					<Skeleton
-						animation="wave"
-						variant="rounded"
-						width={220}
-						height={310}
-						className="my-5 bg-gray-500"
-					/>
-					<Skeleton
-						animation="wave"
-						variant="rounded"
-						width={'80%'}
-						height={170}
-						className="mb-6 bg-gray-500"
-					/>
-				</>
-			) : (
-				<>
-					<span className='hidden lg:block'>{details?.mal_alternative_title}</span>
-					<div className='relative my-5 h-[18rem] sm:h-[20rem] w-[12rem] sm:w-[15rem] overflow-hidden'>
-						<Image
-							src={details?.image_url!}
-							alt="Art"
-							fill
-							sizes="30vw"
-							className="object-contain"
-							draggable={false}
-						/>
+				</div>
+				<div className="flex mb-6 gap-12">
+					<div className="flex flex-col">
+						<h5 className="mb-2 font-semibold text-center text-lg">Start Date</h5>
+						<span className='text-center'>{details?.start_date}</span>
 					</div>
-				</>
-			)}
-			<div className="flex mb-6 gap-12">
-				<div className="flex flex-col">
-					<h5 className="mb-2 font-semibold text-center text-lg">Start Date</h5>
-					<span className='text-center'>{details?.start_date}</span>
+					<div className="flex flex-col items-center justify-center">
+						<h5 className="mb-2 font-semibold text-center text-lg">End Date</h5>
+						<span className='text-center'>{details?.end_date}</span>
+					</div>
 				</div>
-				<div className="flex flex-col items-center justify-center">
-					<h5 className="mb-2 font-semibold text-center text-lg">End Date</h5>
-					<span className='text-center'>{details?.end_date}</span>
-				</div>
+				<h5 className="font-semibold text-lg">Genres</h5>
+				<span className="mb-2 text-center">
+					{genres?.map((item, index) => {
+						return (
+							<Link
+								href={`${location.origin}/completed/genres/${item.id}`}
+								key={index}
+								className="link"
+							>
+								{item.name}
+								<span className="text-white">{index < genres.length - 1 ? ', ' : null}</span>
+							</Link>
+						)
+					})}
+				</span>
+				<a
+					href={
+						`https://myanimelist.net/anime/${details?.mal_id}` ??
+						'https://via.placeholder.com/400x566'
+					}
+					target="_blank"
+					rel='noopener noreferrer'
+					className="text-base sm:text-lg link"
+				>
+					MyAnimeList
+				</a>
 			</div>
-			<h5 className="font-semibold text-lg">Genres</h5>
-			<span className="mb-2 text-center">
-				{genres?.map((item, index) => {
-					return (
-						<Link
-							href={`${location.origin}/completed/genres/${item.id}`}
-							key={index}
-							className="link"
-						>
-							{item.name}
-							<span className="text-white">{index < genres.length - 1 ? ', ' : null}</span>
-						</Link>
-					)
-				})}
-			</span>
-			<Link
-				href={
-					`https://myanimelist.net/anime/${details?.mal_id}` ??
-					'https://via.placeholder.com/400x566'
-				}
-				target="_blank"
-				rel='noopener noreferrer'
-				className="text-base sm:text-lg link"
-			>
-				MyAnimeList
-			</Link>
-		</ModalTemplate>
+		</Dialog>
 	)
 }
