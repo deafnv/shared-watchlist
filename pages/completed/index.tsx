@@ -872,7 +872,7 @@ function DetailsModal({
 					{genres?.map((item, index) => {
 						return (
 							<Link
-								href={`${location.origin}/completed/genres/${item.id}`}
+								href={`/completed/genres/${item.id}`}
 								key={index}
 								className="link"
 							>

@@ -312,7 +312,7 @@ export default function PTW() {
 									)
 									setReordered(false)
 								}}
-								className='flex items-center justify-center p-2 h-full border-white border-r-[1px] text-center font-bold cursor-pointer'
+								className='relative flex items-center justify-center p-2 h-full border-white border-r-[1px] text-center font-bold cursor-pointer'
 							>
 								Title
 								<span className="absolute left-[54%]">{sortSymbol('title', sortMethodRef)}</span>

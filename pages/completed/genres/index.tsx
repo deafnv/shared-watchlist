@@ -1,5 +1,6 @@
 import Head from 'next/head'
 import Link from 'next/link'
+import { useRouter } from 'next/router'
 import { BaseSyntheticEvent, Dispatch, SetStateAction, useEffect, useRef, useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
 import Dialog from '@mui/material/Dialog'
@@ -13,6 +14,8 @@ export default function Genres() {
 	const [response, setResponse] = useState<Database['public']['Tables']['Genres']['Row'][]>()
 	const [advancedSearch, setAdvancedSearch] = useState(false)
 	const [advancedSearchResult, setAdvancedSearchResult] = useState<any>(null)
+
+	const router = useRouter()
 
 	useEffect(() => {
 		const supabase = createClient<Database>(
@@ -56,7 +59,7 @@ export default function Genres() {
 					{response?.map((item, index) => (
 						<Link
 							key={index}
-							href={`${location.href}/${item.id}`}
+							href={`${router.asPath}/${item.id}`}
 							className="whitespace-nowrap text-center text-white link"
 						>
 							{item.name}
@@ -254,7 +257,7 @@ function AdvancedSearchTable({
 							className="flex items-center justify-center p-0 text-center rounded-md transition-colors duration-75 hover:bg-slate-500"
 						>
 							<Link
-								href={`${location.origin}/completed/anime/${item.id}`}
+								href={`/completed/anime/${item.id}`}
 								className="grow px-5 py-3 h-full w-full"
 							>
 								{item.title}
