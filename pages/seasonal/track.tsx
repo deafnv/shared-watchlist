@@ -90,6 +90,7 @@ export default function SeasonalDetails({
 			document.removeEventListener('keydown', closeEditModal)
 			document.removeEventListener('click', closeMenus)
 		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [])
 
 	if (response.length == 0) {

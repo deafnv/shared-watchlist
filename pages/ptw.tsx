@@ -1,9 +1,12 @@
 import Head from 'next/head'
-import { BaseSyntheticEvent, useEffect, useState, useRef, Dispatch, SetStateAction } from 'react'
+import { BaseSyntheticEvent, useEffect, useState, useRef, Dispatch, SetStateAction, MutableRefObject } from 'react'
 import axios from 'axios'
 import { Reorder, useDragControls } from 'framer-motion'
 import isEqual from 'lodash/isEqual'
 import io, { Socket } from 'socket.io-client'
+import Dialog from '@mui/material/Dialog'
+import DialogTitle from '@mui/material/DialogTitle'
+import DialogActions from '@mui/material/DialogActions'
 import CircularProgress from '@mui/material/CircularProgress'
 import Skeleton from '@mui/material/Skeleton'
 import DoneIcon from '@mui/icons-material/Done'
@@ -19,7 +22,6 @@ import { EditFormParams, PTWRolledTableItemProps, getRandomInt, sortListByNamePT
 import { Database } from '@/lib/database.types'
 import { loadingGlimmer } from '@/components/LoadingGlimmer'
 import { useLoading } from '@/components/LoadingContext'
-import ModalTemplate from '@/components/ModalTemplate'
 
 let socket: Socket
 
@@ -397,89 +399,18 @@ export default function PTW() {
 				<LatencyBadge />
 				{contextMenu.currentItem && <ContextMenu />}
 				{isAdded && <AddRecordMenu />}
-				{confirmModal && <ConfirmModal />}
+				<ConfirmModal 
+					confirmModal={confirmModal}
+					setConfirmModal={setConfirmModal}
+					entryToDelete={entryToDelete}
+					responseCasual={responseCasual}
+					responseNonCasual={responseNonCasual}
+					responseMovies={responseMovies}
+					responseRolled={responseRolled}
+				/>
 			</main>
 		</>
 	)
-
-	function ConfirmModal() {
-		async function handleDelete() {
-			if (entryToDelete.current.tableId) {
-				let responseTable
-				switch (entryToDelete.current.tableId) {
-					case 'casual':
-						responseTable = responseCasual
-						break
-					case 'noncasual':
-						responseTable = responseNonCasual
-						break
-					case 'movies':
-						responseTable = responseMovies
-						break
-					default:
-						break
-				}
-				setLoading(true)
-				try {
-					await axios.delete('/api/deleteentry', {
-						data: {
-							content: responseTable,
-							id: entryToDelete.current.item.id,
-							tableId: entryToDelete.current.tableId,
-							type: 'PTW_UNROLLED'
-						}
-					})
-					setConfirmModal(false)
-					setLoading(false)
-				} catch (error) {
-					setLoading(false)
-					console.log(error)
-					alert(error)
-				}
-			} else {
-				setLoading(true)
-				try {
-					await axios.delete('/api/deleteentry', {
-						data: {
-							content: responseRolled,
-							id: entryToDelete.current.id,
-							type: 'PTW'
-						}
-					})
-					setConfirmModal(false)
-					setLoading(false)
-				} catch (error) {
-					setLoading(false)
-					alert(error)
-				}
-			}
-		}
-
-		return (
-			<ModalTemplate
-				extraClassname='h-[15rem] w-[30rem] justify-center'
-				exitFunction={() => setConfirmModal(false)}
-			>
-				<h3 className='text-2xl mb-4'>Confirm delete entry?</h3>
-				<div className='flex gap-4'>
-					<Button 
-						onClick={handleDelete} 
-						variant='outlined' 
-						size='large'
-					>
-						Yes
-					</Button>
-					<Button 
-						onClick={() => setConfirmModal(false)} 
-						color='error' 
-						size='large'
-					>
-						No
-					</Button>
-				</div>
-			</ModalTemplate>
-		)
-	}
 
 	function ContextMenu() {
 		return (
@@ -957,6 +888,108 @@ export default function PTW() {
 			</section>
 		)
 	}
+}
+
+//* Confirm deletes
+function ConfirmModal({
+	confirmModal,
+	setConfirmModal,
+	entryToDelete,
+	responseCasual,
+	responseNonCasual,
+	responseMovies,
+	responseRolled
+}: {
+	confirmModal: boolean;
+	setConfirmModal: Dispatch<SetStateAction<boolean>>;
+	entryToDelete: MutableRefObject<any>;
+	responseCasual: Database['public']['Tables']['PTW-Casual']['Row'][] | undefined;
+	responseNonCasual: Database['public']['Tables']['PTW-NonCasual']['Row'][] | undefined;
+	responseMovies: Database['public']['Tables']['PTW-Movies']['Row'][] | undefined;
+	responseRolled: Database['public']['Tables']['PTW-Rolled']['Row'][] | undefined;
+}) {
+	const { setLoading } = useLoading()
+
+	async function handleDelete() {
+		if (entryToDelete.current.tableId) {
+			let responseTable
+			switch (entryToDelete.current.tableId) {
+				case 'casual':
+					responseTable = responseCasual
+					break
+				case 'noncasual':
+					responseTable = responseNonCasual
+					break
+				case 'movies':
+					responseTable = responseMovies
+					break
+				default:
+					break
+			}
+			setLoading(true)
+			try {
+				await axios.delete('/api/deleteentry', {
+					data: {
+						content: responseTable,
+						id: entryToDelete.current.item.id,
+						tableId: entryToDelete.current.tableId,
+						type: 'PTW_UNROLLED'
+					}
+				})
+				setConfirmModal(false)
+				setLoading(false)
+			} catch (error) {
+				setLoading(false)
+				console.log(error)
+				alert(error)
+			}
+		} else {
+			setLoading(true)
+			try {
+				await axios.delete('/api/deleteentry', {
+					data: {
+						content: responseRolled,
+						id: entryToDelete.current.id,
+						type: 'PTW'
+					}
+				})
+				setConfirmModal(false)
+				setLoading(false)
+			} catch (error) {
+				setLoading(false)
+				alert(error)
+			}
+		}
+	}
+
+	return (
+		<Dialog
+			fullWidth
+			maxWidth="xs"
+			open={confirmModal}
+			onClose={() => setConfirmModal(false)}
+		>
+			<div className='p-2'>
+				<DialogTitle fontSize='large'>
+					Confirm delete entry?
+				</DialogTitle>
+				<DialogActions>
+					<Button 
+						onClick={handleDelete}
+						variant='outlined' 
+					>
+						Yes
+					</Button>
+					<Button 
+						onClick={() => setConfirmModal(false)}
+						color='error' 
+					>
+						No
+					</Button>
+				</DialogActions>
+			</div>
+		</Dialog>
+	)
 }
 
 function PTWRolledTableItem({ props, editFormParams }: PTWRolledTableItemProps) {

@@ -1,35 +1,27 @@
 import Head from 'next/head'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import { useEffect, useState, BaseSyntheticEvent, Fragment } from 'react'
+import { useEffect, useState, Fragment } from 'react'
 import axios from 'axios'
-import CloseIcon from '@mui/icons-material/Close'
 import Button from '@mui/material/Button'
 import { createClient } from '@supabase/supabase-js'
 import { levenshtein } from '@/lib/list_methods'
 import { Database } from '@/lib/database.types'
 import { useLoading } from '@/components/LoadingContext'
-import ModalTemplate from '@/components/ModalTemplate'
 import EditDialog from '@/components/dialogs/EditDialog'
+
+interface ErrorItem {
+	id: number
+	mal_id: number | null
+	entryTitle: string | null
+	retrievedTitle: string | null
+	distance: number | undefined
+}
 
 export default function CompletedErrors() {
 	const [isLoadingClient, setIsLoadingClient] = useState(true)
-	const [response, setResponse] = useState<
-		{
-			id: number
-			mal_id: number | null
-			entryTitle: string | null
-			retrievedTitle: string | null
-			distance: number | undefined
-		}[]
-	>()
-	const [changed, setChanged] = useState<{
-		id: number
-		mal_id: number | null
-		entryTitle: string | null
-		retrievedTitle: string | null
-		distance: number | undefined
-	} | null>(null)
+	const [response, setResponse] = useState<ErrorItem[]>()
+	const [changed, setChanged] = useState<ErrorItem | null>(null)
 	const { setLoading } = useLoading()
 	const [width, setWidth] = useState<number>(0)
 

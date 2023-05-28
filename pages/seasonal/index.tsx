@@ -1,10 +1,13 @@
 import Head from 'next/head'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import { BaseSyntheticEvent, useEffect, useState, useRef, RefObject } from 'react'
+import { BaseSyntheticEvent, useEffect, useState, useRef, RefObject, Dispatch, SetStateAction, MutableRefObject } from 'react'
 import axios from 'axios'
 import { Reorder, useDragControls } from 'framer-motion'
 import isEqual from 'lodash/isEqual'
+import Dialog from '@mui/material/Dialog'
+import DialogTitle from '@mui/material/DialogTitle'
+import DialogActions from '@mui/material/DialogActions'
 import CircularProgress from '@mui/material/CircularProgress'
 import Button from '@mui/material/Button'
 import AddIcon from '@mui/icons-material/Add'
@@ -15,7 +18,6 @@ import { createClient } from '@supabase/supabase-js'
 import { Database } from '@/lib/database.types'
 import { SeasonalTableItemProps } from '@/lib/list_methods'
 import { useLoading } from '@/components/LoadingContext'
-import ModalTemplate from '@/components/ModalTemplate'
 
 //TODO: Allow sort, and show save changes button to save sort
 
@@ -27,7 +29,7 @@ export default function Seasonal() {
 	const contextMenuRef = useRef<HTMLDivElement>(null)
 	const contextMenuButtonRef = useRef<any>([])
 	const isEditedRef = useRef('')
-	const entryToDelete = useRef<any | null>(null)
+	const entryToDelete = useRef<any>(null)
 
 	const [response, setResponse] = useState<any>()
 	const [response1, setResponse1] = useState<any>()
@@ -47,9 +49,8 @@ export default function Seasonal() {
 	const [confirmModal, setConfirmModal] = useState<'' | 'DELETE' | 'DELETEALL'>('')
 	const [editModal, setEditModal] = useState(false)
 	const [reordered, setReordered] = useState(false)
+	
 	const { setLoading } = useLoading()
-
-	const router = useRouter()
 
 	const setIsEdited = (value: string) => {
 		isEditedRef.current = value
@@ -254,58 +255,20 @@ export default function Seasonal() {
 					setConfirmModalDelEntry={setConfirmModalDelEntry}
 				/>}
 				{settingsMenu.display == 'block' && <SettingsMenu />}
-				{confirmModal && <ConfirmModal />}
-				{editModal && <EditModal />}
+				<ConfirmModal 
+					confirmModal={confirmModal}
+					setConfirmModal={setConfirmModal}
+					entryToDelete={entryToDelete}
+					response1={response1}
+				/>
+				<ChangeStatusAllModal 
+					editModal={editModal}
+					setEditModal={setEditModal}
+					response={response}
+				/>
 			</main>
 		</>
 	)
-
-	function EditModal() {
-		async function handleSubmit(event: BaseSyntheticEvent) {
-			event.preventDefault()
-			const row = response.length + 1
-			try {
-				setLoading(true)
-				await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/updatestatus`, {
-					content: event.target.childNodes[0].value,
-					cells: `P2:P${row}`
-				}, { withCredentials: true })
-				router.reload()
-			} catch (error) {
-				setLoading(false)
-				alert(error)
-				console.log(error)
-			}
-		}
-
-		return (
-			<ModalTemplate
-				extraClassname='h-[15rem] w-[30rem] justify-center'
-				exitFunction={() => setEditModal(false)}
-			>
-				<div
-					tabIndex={0}
-					onClick={() => setEditModal(false)}
-					className="absolute top-6 right-6 flex items-center justify-center h-11 w-11 rounded-full cursor-pointer transition-colors duration-150 hover:bg-slate-500"
-				>
-					<CloseIcon fontSize="large" />
-				</div>
-				<h3 className='text-2xl'>Change status all</h3>
-				<form onSubmit={handleSubmit} className="text-gray-800">
-					<select
-						onChange={(e) => (e.target.parentNode as HTMLFormElement)!.requestSubmit()}
-						className="p-2 h-full w-full select-none text-white bg-[#2e2e2e] rounded-md"
-					>
-						<option>Select status</option>
-						<option>Watched</option>
-						<option>Loaded</option>
-						<option>Not loaded</option>
-						<option>Not aired</option>
-					</select>
-				</form>
-			</ModalTemplate>
-		)
-	}
 
 	async function saveReorder() {
 		if (!response) return
@@ -326,98 +289,6 @@ export default function Seasonal() {
 			console.log(error)
 			return
 		}
-	}
-
-	function ConfirmModal() {
-		async function handleDeleteAll() {
-			setLoading(true)
-		
-			try {
-				await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/update`, {
-					content: '',
-					cell: 'O2:O22',
-					type: 'MULTI',
-					length: 21
-				}, { withCredentials: true })
-				setConfirmModal('')
-				setLoading(false)
-			} catch (error) {
-				setLoading(false)
-				alert(error)
-				return
-			}
-		}
-
-		async function handleDelete() {
-			setLoading(true)
-			try {
-				await axios.delete('/api/deleteentry', {
-					data: {
-						content: response1,
-						id: entryToDelete.current.title,
-						type: 'SEASONAL'
-					}
-				})
-				setConfirmModal('')
-				setLoading(false)
-			} catch (error) {
-				setLoading(false)
-				alert(error)
-			}
-		}
-
-		if (confirmModal === 'DELETEALL') {
-			return (
-				<ModalTemplate
-					extraClassname='h-[15rem] w-[30rem] justify-center'
-					exitFunction={() => setConfirmModal('')}
-				>
-					<h3 className='text-2xl mb-4'>Confirm delete all entries?</h3>
-					<div className='flex gap-2'>
-						<Button 
-							onClick={handleDeleteAll} 
-							variant='outlined'
-							size='large'
-						>
-							Yes
-						</Button>
-						<Button 
-							onClick={() => 
-							setConfirmModal('')} 
-							color='error'
-							size='large'
-						>
-							No
-						</Button>
-					</div>
-				</ModalTemplate>
-			)
-		} else if (confirmModal === 'DELETE') {
-			return (
-				<ModalTemplate
-					extraClassname='h-[15rem] w-[30rem] justify-center'
-					exitFunction={() => setConfirmModal('')}
-				>
-					<h3 className='text-2xl mb-4'>Confirm delete entry?</h3>
-					<div className='flex gap-2'>
-						<Button 
-							onClick={handleDelete} 
-							variant='outlined'
-							size='large'
-						>
-							Yes
-						</Button>
-						<Button 
-							onClick={() => setConfirmModal('')} 
-							color='error'
-							size='large'
-						>
-							No
-						</Button>
-					</div>
-				</ModalTemplate>
-			)
-		} else return null
 	}
 
 	function SettingsMenu() {
@@ -479,6 +350,180 @@ export default function Seasonal() {
 			return
 		}
 	}
+}
+
+//* Confirm delete items
+function ConfirmModal({
+	confirmModal,
+	setConfirmModal,
+	response1,
+	entryToDelete
+}: {
+	confirmModal: "" | "DELETE" | "DELETEALL";
+	setConfirmModal: Dispatch<SetStateAction<"" | "DELETE" | "DELETEALL">>;
+	response1: any;
+	entryToDelete: MutableRefObject<any>;
+}) {
+	const { setLoading } = useLoading()
+	
+	async function handleDeleteAll() {
+		setLoading(true)
+	
+		try {
+			await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/update`, {
+				content: '',
+				cell: 'O2:O22',
+				type: 'MULTI',
+				length: 21
+			}, { withCredentials: true })
+			setConfirmModal('')
+			setLoading(false)
+		} catch (error) {
+			setLoading(false)
+			alert(error)
+			return
+		}
+	}
+
+	async function handleDelete() {
+		setLoading(true)
+		try {
+			await axios.delete('/api/deleteentry', {
+				data: {
+					content: response1,
+					id: entryToDelete.current.title,
+					type: 'SEASONAL'
+				}
+			})
+			setConfirmModal('')
+			setLoading(false)
+		} catch (error) {
+			setLoading(false)
+			alert(error)
+		}
+	}
+
+	if (confirmModal === 'DELETEALL') {
+		return (
+			<Dialog
+				fullWidth
+				maxWidth="xs"
+				open={!!confirmModal}
+				onClose={() => setConfirmModal('')}
+			>
+				<div className='p-2'>
+					<DialogTitle fontSize='large'>
+						Confirm delete all entries?
+					</DialogTitle>
+					<DialogActions>
+						<Button 
+							onClick={handleDeleteAll}
+							variant='outlined' 
+						>
+							Yes
+						</Button>
+						<Button 
+							onClick={() => setConfirmModal('')}
+							color='error' 
+						>
+							No
+						</Button>
+					</DialogActions>
+				</div>
+			</Dialog>
+		)
+	} else if (confirmModal === 'DELETE') {
+		return (
+			<Dialog
+				fullWidth
+				maxWidth="xs"
+				open={!!confirmModal}
+				onClose={() => setConfirmModal('')}
+			>
+				<div className='p-2'>
+					<DialogTitle fontSize='large'>
+						Confirm delete entry?
+					</DialogTitle>
+					<DialogActions>
+						<Button 
+							onClick={handleDelete}
+							variant='outlined' 
+						>
+							Yes
+						</Button>
+						<Button 
+							onClick={() => setConfirmModal('')}
+							color='error' 
+						>
+							No
+						</Button>
+					</DialogActions>
+				</div>
+			</Dialog>
+		)
+	} else return null
+}
+
+//* Change status of all shows
+function ChangeStatusAllModal({
+	editModal,
+	setEditModal,
+	response
+}: {
+	editModal: boolean;
+	setEditModal: Dispatch<SetStateAction<boolean>>;
+	response: any;
+}) {
+	const { setLoading } = useLoading()
+
+	const router = useRouter()
+
+	async function handleSubmit(event: BaseSyntheticEvent) {
+		event.preventDefault()
+		const row = response.length + 1
+		try {
+			setLoading(true)
+			await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/updatestatus`, {
+				content: event.target.childNodes[0].value,
+				cells: `P2:P${row}`
+			}, { withCredentials: true })
+			router.reload()
+		} catch (error) {
+			setLoading(false)
+			alert(error)
+			console.log(error)
+		}
+	}
+
+	return (
+		<Dialog
+			fullWidth
+			maxWidth="xs"
+			open={editModal}
+			onClose={() => setEditModal(false)}
+		>
+			<div className='flex flex-col items-center gap-4 p-6'>
+				<CloseIcon 
+					fontSize="large" 
+					onClick={() => setEditModal(false)}
+					className='absolute top-6 right-6 cursor-pointer hover:fill-red-500'
+				/>
+				<h3 className='text-2xl'>Change status all</h3>
+				<form onSubmit={handleSubmit} className="text-gray-800">
+					<select
+						onChange={(e) => (e.target.parentNode as HTMLFormElement)!.requestSubmit()}
+						className="p-2 h-full w-full select-none text-white bg-[#2e2e2e] rounded-md"
+					>
+						<option>Select status</option>
+						<option>Watched</option>
+						<option>Loaded</option>
+						<option>Not loaded</option>
+						<option>Not aired</option>
+					</select>
+				</form>
+			</div>
+		</Dialog>
+	)
 }
 
 //* Component for each seasonal show in table
