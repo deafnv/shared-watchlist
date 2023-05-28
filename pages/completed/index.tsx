@@ -2,7 +2,7 @@ import Head from 'next/head'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import { BaseSyntheticEvent, useEffect, useRef, useState } from 'react'
+import { BaseSyntheticEvent, useEffect, useRef, useState, Dispatch, SetStateAction } from 'react'
 import debounce from 'lodash/debounce'
 import axios from 'axios'
 import CircularProgress from '@mui/material/CircularProgress'
@@ -25,18 +25,16 @@ import {
 	sortSymbol
 } from '@/lib/list_methods'
 import { useLoading } from '@/components/LoadingContext'
-import EditModal from '@/components/EditModal'
+import EditDialog from '@/components/dialogs/EditDialog'
 import ModalTemplate from '@/components/ModalTemplate'
 
 export default function Completed() {
-	const editModalRef = useRef<HTMLDivElement>(null)
 	const contextMenuRef = useRef<HTMLDivElement>(null)
 	const contextMenuButtonRef = useRef<any>([])
 	const settingsMenuRef = useRef<HTMLDivElement>(null)
 	const settingsMenuButtonRef = useRef<HTMLDivElement>(null)
 	const sortMethodRef = useRef('')
 	const isEditedRef = useRef('')
-	const detailsModalRef = useRef<Database['public']['Tables']['Completed']['Row'] | null>(null)
 
 	const [response, setResponse] = useState<Database['public']['Tables']['Completed']['Row'][]>()
 	const [response1, setResponse1] = useState<Database['public']['Tables']['Completed']['Row'][]>()
@@ -53,21 +51,16 @@ export default function Completed() {
 		left: number
 		display: string
 	}>({ top: 0, left: 0, display: 'none' })
-	const [detailsModal, setDetailsModalState] = useState<
+	const [detailsModal, setDetailsModal] = useState<
 		Database['public']['Tables']['Completed']['Row'] | null
 	>(null)
-	const { setLoading } = useLoading()
+	const [editDialog, setEditDialog] = useState(false)
 
-	const router = useRouter()
+	const { setLoading } = useLoading()
 
 	const setIsEdited = (value: string) => {
 		isEditedRef.current = value
 		setIsEditedState(value)
-	}
-
-	const setDetailsModal = (value: Database['public']['Tables']['Completed']['Row'] | null) => {
-		detailsModalRef.current = value
-		setDetailsModalState(value)
 	}
 
 	const supabase = createClient<Database>(
@@ -138,8 +131,8 @@ export default function Completed() {
 
 		const closeKeyboard = (e: KeyboardEvent) => {
 			if (e.key == 'Escape') {
-				if (detailsModalRef.current && editModalRef.current?.style.display == 'none') setDetailsModal(null)
-				if (editModalRef.current?.style.display == 'block') editModalRef.current.style.display = 'none'
+				if (detailsModal && !editDialog) setDetailsModal(null)
+				if (editDialog) setEditDialog(false)
 				if (isEditedRef.current) setIsEdited('')
 			}
 			if (e.key == 'Tab' && isEditedRef.current) {
@@ -473,12 +466,17 @@ export default function Completed() {
 					</tbody>
 				</table>
 				{contextMenu.currentItem && <ContextMenu />}
-				{detailsModal && <DetailsModal />}
-				{settingsMenu.display == 'block' && <SettingsMenu />}
-				<EditModal
-					editModalRef={editModalRef}
+				{detailsModal && 
+				<DetailsModal 
 					detailsModal={detailsModal}
-					setLoading={setLoading}
+					setDetailsModal={setDetailsModal}
+					setEditDialog={setEditDialog}
+				/>}
+				{settingsMenu.display == 'block' && <SettingsMenu />}
+				<EditDialog
+					editDialog={editDialog}
+					setEditDialog={setEditDialog}
+					details={{ id: detailsModal?.id ?? 0, title: detailsModal?.title ?? '' }}
 				/>
 			</main>
 		</>
@@ -530,168 +528,6 @@ export default function Completed() {
 			left: left + window.scrollX - 160,
 			display: 'block'
 		})
-	}
-
-	function DetailsModal() {
-		const [details, setDetails] = useState<
-			Database['public']['Tables']['CompletedDetails']['Row'] | null
-		>()
-		const [genres, setGenres] = useState<Array<{ id: number; name: string | null }>>()
-		const [loadingDetails, setLoadingDetails] = useState(true)
-
-		useEffect(() => {
-			const getDetails = async () => {
-				const { data } = await supabase.from('CompletedDetails').select().eq('id', detailsModal?.id)
-				const dataGenre = await supabase
-					.from('Genres')
-					.select('*, Completed!inner( id )')
-					.eq('Completed.id', detailsModal?.id)
-
-				const titleGenres = dataGenre.data?.map((item) => {
-					return {
-						id: item.id,
-						name: item.name
-					}
-				})
-				setGenres(titleGenres)
-				setDetails(data?.[0])
-				setLoadingDetails(false)
-			}
-			getDetails()
-		}, [])
-
-		async function handleReload() {
-			try {
-				setLoading(true)
-				await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/completed/loadcompleteddetails`, { withCredentials: true })
-				await axios.post('/api/revalidate', {
-					route: '/completed/statistics'
-				})
-				router.reload()
-			} catch (error) {
-				setLoading(false)
-				alert(error)
-			}
-		}
-
-		if (!loadingDetails && (!details || details.mal_id == -1 || !details.mal_title)) {
-			return (
-				<ModalTemplate
-					extraClassname='h-[50rem] w-[60rem]'
-					exitFunction={() => setDetailsModal(null)}
-				>
-					<h3 className="mb-6 font-bold text-2xl">
-						Details for this title have not been loaded yet.
-					</h3>
-					<span onClick={handleReload} className="cursor-pointer link">
-						Click here to reload database and view details
-					</span>
-				</ModalTemplate>
-			)
-		}
-
-		return (
-			<ModalTemplate
-				extraClassname='h-[80dvh] w-[80dvw] md:w-[60dvw]'
-				exitFunction={() => setDetailsModal(null)}
-			>	
-				<div>
-					<Link
-						href={`${location.origin}/completed/anime/${details?.id}`}
-						title={details?.mal_title ?? ''}
-						className="px-12 font-bold text-lg sm:text-2xl line-clamp-1 text-center link"
-					>
-						{details?.mal_title}
-					</Link>
-				</div>
-				<div
-					onClick={() => (editModalRef.current!.style.display = 'block')}
-					className="absolute top-4 sm:top-8 right-4 sm:right-12 flex items-center justify-center h-7 sm:h-11 w-7 sm:w-11 rounded-full cursor-pointer transition-colors duration-150 hover:bg-slate-500"
-				>
-					<EditIcon sx={{
-						fontSize: {
-							sm: 25,
-							lg: 30
-						}
-					}} />
-				</div>
-				{loadingDetails ? (
-					<>
-						<Skeleton
-							animation="wave"
-							variant="rounded"
-							width={350}
-							height={25}
-							className="bg-gray-500"
-						/>
-						<Skeleton
-							animation="wave"
-							variant="rounded"
-							width={220}
-							height={310}
-							className="my-5 bg-gray-500"
-						/>
-						<Skeleton
-							animation="wave"
-							variant="rounded"
-							width={'80%'}
-							height={170}
-							className="mb-6 bg-gray-500"
-						/>
-					</>
-				) : (
-					<>
-						<span className='hidden lg:block'>{details?.mal_alternative_title}</span>
-						<div className='relative my-5 h-[18rem] sm:h-[20rem] w-[12rem] sm:w-[15rem] overflow-hidden'>
-							<Image
-								src={details?.image_url!}
-								alt="Art"
-								fill
-								sizes="30vw"
-								className="object-contain"
-								draggable={false}
-							/>
-						</div>
-					</>
-				)}
-				<div className="flex mb-6 gap-12">
-					<div className="flex flex-col">
-						<h5 className="mb-2 font-semibold text-center text-lg">Start Date</h5>
-						<span className='text-center'>{details?.start_date}</span>
-					</div>
-					<div className="flex flex-col items-center justify-center">
-						<h5 className="mb-2 font-semibold text-center text-lg">End Date</h5>
-						<span className='text-center'>{details?.end_date}</span>
-					</div>
-				</div>
-				<h5 className="font-semibold text-lg">Genres</h5>
-				<span className="mb-2 text-center">
-					{genres?.map((item, index) => {
-						return (
-							<Link
-								href={`${location.origin}/completed/genres/${item.id}`}
-								key={index}
-								className="link"
-							>
-								{item.name}
-								<span className="text-white">{index < genres.length - 1 ? ', ' : null}</span>
-							</Link>
-						)
-					})}
-				</span>
-				<Link
-					href={
-						`https://myanimelist.net/anime/${details?.mal_id}` ??
-						'https://via.placeholder.com/400x566'
-					}
-					target="_blank"
-					rel='noopener noreferrer'
-					className="text-base sm:text-lg link"
-				>
-					MyAnimeList
-				</Link>
-			</ModalTemplate>
-		)
 	}
 
 	function ContextMenu() {
@@ -904,4 +740,183 @@ export default function Completed() {
 			return
 		}
 	}
+}
+
+function DetailsModal({
+	detailsModal,
+	setDetailsModal,
+	setEditDialog
+}: {
+	detailsModal: Database['public']['Tables']['Completed']['Row'] | null;
+	setDetailsModal: Dispatch<SetStateAction<Database['public']['Tables']['Completed']['Row'] | null>>;
+	setEditDialog: Dispatch<SetStateAction<boolean>>;
+}) {
+	const [details, setDetails] = useState<
+		Database['public']['Tables']['CompletedDetails']['Row'] | null
+	>()
+	const [genres, setGenres] = useState<Array<{ id: number; name: string | null }>>()
+	const [loadingDetails, setLoadingDetails] = useState(true)
+
+	const router = useRouter()
+
+	const { setLoading } = useLoading()
+
+	useEffect(() => {
+		const supabase = createClient<Database>(
+			process.env.NEXT_PUBLIC_SUPABASE_URL!,
+			process.env.NEXT_PUBLIC_SUPABASE_API_KEY!
+		)
+
+		const getDetails = async () => {
+			const { data } = await supabase.from('CompletedDetails').select().eq('id', detailsModal?.id)
+			const dataGenre = await supabase
+				.from('Genres')
+				.select('*, Completed!inner( id )')
+				.eq('Completed.id', detailsModal?.id)
+
+			const titleGenres = dataGenre.data?.map((item) => {
+				return {
+					id: item.id,
+					name: item.name
+				}
+			})
+			setGenres(titleGenres)
+			setDetails(data?.[0])
+			setLoadingDetails(false)
+		}
+		getDetails()
+	}, [detailsModal])
+
+	async function handleReload() {
+		try {
+			setLoading(true)
+			await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/completed/loadcompleteddetails`, { withCredentials: true })
+			await axios.post('/api/revalidate', {
+				route: '/completed/statistics'
+			})
+			router.reload()
+		} catch (error) {
+			setLoading(false)
+			alert(error)
+		}
+	}
+
+	if (!loadingDetails && (!details || details.mal_id == -1 || !details.mal_title)) {
+		return (
+			<ModalTemplate
+				extraClassname='h-[50rem] w-[60rem]'
+				exitFunction={() => setDetailsModal(null)}
+			>
+				<h3 className="mb-6 font-bold text-2xl">
+					Details for this title have not been loaded yet.
+				</h3>
+				<span onClick={handleReload} className="cursor-pointer link">
+					Click here to reload database and view details
+				</span>
+			</ModalTemplate>
+		)
+	}
+
+	return (
+		<ModalTemplate
+			extraClassname='h-[80dvh] w-[80dvw] md:w-[60dvw]'
+			exitFunction={() => setDetailsModal(null)}
+		>	
+			<div>
+				<Link
+					href={`${location.origin}/completed/anime/${details?.id}`}
+					title={details?.mal_title ?? ''}
+					className="px-12 font-bold text-lg sm:text-2xl line-clamp-1 text-center link"
+				>
+					{details?.mal_title}
+				</Link>
+			</div>
+			<div
+				onClick={() => setEditDialog(true)}
+				className="absolute top-4 sm:top-8 right-4 sm:right-12 flex items-center justify-center h-7 sm:h-11 w-7 sm:w-11 rounded-full cursor-pointer transition-colors duration-150 hover:bg-slate-500"
+			>
+				<EditIcon sx={{
+					fontSize: {
+						sm: 25,
+						lg: 30
+					}
+				}} />
+			</div>
+			{loadingDetails ? (
+				<>
+					<Skeleton
+						animation="wave"
+						variant="rounded"
+						width={350}
+						height={25}
+						className="bg-gray-500"
+					/>
+					<Skeleton
+						animation="wave"
+						variant="rounded"
+						width={220}
+						height={310}
+						className="my-5 bg-gray-500"
+					/>
+					<Skeleton
+						animation="wave"
+						variant="rounded"
+						width={'80%'}
+						height={170}
+						className="mb-6 bg-gray-500"
+					/>
+				</>
+			) : (
+				<>
+					<span className='hidden lg:block'>{details?.mal_alternative_title}</span>
+					<div className='relative my-5 h-[18rem] sm:h-[20rem] w-[12rem] sm:w-[15rem] overflow-hidden'>
+						<Image
+							src={details?.image_url!}
+							alt="Art"
+							fill
+							sizes="30vw"
+							className="object-contain"
+							draggable={false}
+						/>
+					</div>
+				</>
+			)}
+			<div className="flex mb-6 gap-12">
+				<div className="flex flex-col">
+					<h5 className="mb-2 font-semibold text-center text-lg">Start Date</h5>
+					<span className='text-center'>{details?.start_date}</span>
+				</div>
+				<div className="flex flex-col items-center justify-center">
+					<h5 className="mb-2 font-semibold text-center text-lg">End Date</h5>
+					<span className='text-center'>{details?.end_date}</span>
+				</div>
+			</div>
+			<h5 className="font-semibold text-lg">Genres</h5>
+			<span className="mb-2 text-center">
+				{genres?.map((item, index) => {
+					return (
+						<Link
+							href={`${location.origin}/completed/genres/${item.id}`}
+							key={index}
+							className="link"
+						>
+							{item.name}
+							<span className="text-white">{index < genres.length - 1 ? ', ' : null}</span>
+						</Link>
+					)
+				})}
+			</span>
+			<Link
+				href={
+					`https://myanimelist.net/anime/${details?.mal_id}` ??
+					'https://via.placeholder.com/400x566'
+				}
+				target="_blank"
+				rel='noopener noreferrer'
+				className="text-base sm:text-lg link"
+			>
+				MyAnimeList
+			</Link>
+		</ModalTemplate>
+	)
 }

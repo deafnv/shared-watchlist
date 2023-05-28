@@ -10,6 +10,7 @@ import { levenshtein } from '@/lib/list_methods'
 import { Database } from '@/lib/database.types'
 import { useLoading } from '@/components/LoadingContext'
 import ModalTemplate from '@/components/ModalTemplate'
+import EditDialog from '@/components/dialogs/EditDialog'
 
 export default function CompletedErrors() {
 	const [isLoadingClient, setIsLoadingClient] = useState(true)
@@ -178,88 +179,14 @@ export default function CompletedErrors() {
 						})}
 					</div>
 				</section>
-				{changed && <ChangeModal />}
+				<EditDialog 
+					editDialog={!!changed}
+					setEditDialog={() => setChanged(null)}
+					details={{ id: changed?.id ?? 0, title: changed?.entryTitle ?? '' }}
+				/>
 			</main>
 		</>
 	)
-
-	function ChangeModal() {
-		async function handleChange(e: BaseSyntheticEvent) {
-			e.preventDefault()
-			if (!changed) return
-			setLoading(true)
-
-			const linkInput = e.target[0].value
-			if (
-				!linkInput.match(
-					/https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/gi
-				)
-			) {
-				setLoading(false)
-				return alert('Enter a valid link')
-			}
-
-			const url = new URL(linkInput)
-			if (url.hostname != 'myanimelist.net') {
-				setLoading(false)
-				return alert('Enter a link from myanimelist.net')
-			}
-
-			const idInput = parseInt(url.pathname.split('/')[2])
-			if (!idInput) {
-				setLoading(false)
-				return alert('ID not found. Enter a valid link')
-			}
-
-			try {
-				await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/changedetails`, {
-					id: changed.id,
-					mal_id: idInput,
-					type: 'CHANGED'
-				}, { withCredentials: true })
-				router.reload()
-			} catch (error) {
-				setLoading(false)
-				alert(error)
-			}
-		}
-
-		return (
-			<ModalTemplate 
-				extraClassname='h-[30rem] w-[50rem]'
-				exitFunction={() => setChanged(null)}
-			>
-				<div
-					tabIndex={0}
-					onClick={() => setChanged(null)}
-					className="absolute right-6 flex items-center justify-center h-11 w-11 rounded-full cursor-pointer transition-colors duration-150 hover:bg-slate-500"
-				>
-					<CloseIcon fontSize="large" />
-				</div>
-				<h3 className="font-bold text-2xl">Edit Details</h3>
-				<form
-					onSubmit={handleChange}
-					className="flex flex-col items-center absolute top-[40%] w-3/5"
-				>
-					<label className="flex flex-col gap-4 items-center mb-6 text-lg">
-						Enter MyAnimeList link:
-						<input type="text" className="input-text" />
-					</label>
-					<Link
-						href={`https://myanimelist.net/anime.php?q=${changed?.entryTitle?.substring(
-							0,
-							64
-						)}`}
-						target="_blank"
-						rel='noopener noreferrer'
-						className="text-lg link"
-					>
-						Search for anime title
-					</Link>
-				</form>
-			</ModalTemplate>
-		)
-	}
 
 	function handleOpenChangeMenu(item: {
 		id: number

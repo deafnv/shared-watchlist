@@ -2,12 +2,11 @@ import { GetStaticPropsContext } from 'next'
 import Head from 'next/head'
 import Image from 'next/image'
 import Link from 'next/link'
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
 import EditIcon from '@mui/icons-material/Edit'
+import EditDialog from '@/components/dialogs/EditDialog'
 import { Database } from '@/lib/database.types'
-import EditModal from '@/components/EditModal'
-import { useLoading } from '@/components/LoadingContext'
 
 export async function getStaticPaths() {
 	const supabase = createClient<Database>(
@@ -36,11 +35,9 @@ export function getStaticProps(context: GetStaticPropsContext) {
 }
 
 export default function CompletedPage({ id }: { id: number }) {
-	const editModalRef = useRef<HTMLDivElement>(null)
-
 	const [response, setResponse] = useState<any>()
 	const [genres, setGenres] = useState<Array<{ id: number; name: string | null }>>()
-	const { setLoading } = useLoading()
+	const [editDialog, setEditDialog] = useState(false)
 
 	useEffect(() => {
 		const supabase = createClient<Database>(
@@ -72,11 +69,13 @@ export default function CompletedPage({ id }: { id: number }) {
 
 		const closeMenu = (e: KeyboardEvent) => {
 			if (e.key == 'Escape') {
-				if (editModalRef.current?.style.display == 'block') editModalRef.current.style.display = 'none'
+				if (editDialog) setEditDialog(false)
 			}
 		}
 
 		document.addEventListener('keydown', closeMenu)
+
+		return () => {document.removeEventListener('keydown', closeMenu)}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [])
 
@@ -91,7 +90,7 @@ export default function CompletedPage({ id }: { id: number }) {
 				<div className="relative h-full">
 					<h3 className="p-2 text-2xl sm:text-2xl font-semibold text-center">{response?.[0].title}</h3>
 					<div
-						onClick={() => (editModalRef.current!.style.display = 'block')}
+						onClick={() => {setEditDialog(true)}}
 						className="absolute -top-2 -right-12 xs:top-0 xs:right-0 sm:right-0 md:top-0 md:-right-12 lg:-right-60 xl:-right-72 flex items-center justify-center h-7 sm:h-11 w-7 sm:w-11 rounded-full cursor-pointer transition-colors duration-150 hover:bg-slate-500"
 					>
 						<EditIcon sx={{
@@ -192,11 +191,10 @@ export default function CompletedPage({ id }: { id: number }) {
 						</div>
 					</div>
 				</div>
-				<EditModal
-					editModalRef={editModalRef}
-					detailsModal={response?.[0]}
-					setLoading={setLoading}
-					isInMainPage
+				<EditDialog
+					editDialog={editDialog}
+					setEditDialog={setEditDialog}
+					details={{ id: response?.[0].id, title: response?.[0].title ?? '' }}
 				/>
 			</main>
 		</>
