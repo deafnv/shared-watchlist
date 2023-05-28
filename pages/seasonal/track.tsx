@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { BaseSyntheticEvent, useEffect, useState, useRef, Dispatch, SetStateAction, RefObject } from 'react'
 import axios from 'axios'
+import Dialog from '@mui/material/Dialog'
 import Button from '@mui/material/Button'
 import CloseIcon from '@mui/icons-material/Close'
 import EditIcon from '@mui/icons-material/Edit'
@@ -11,7 +12,6 @@ import MoreVertIcon from '@mui/icons-material/MoreVert'
 import { createClient } from '@supabase/supabase-js'
 import { Database } from '@/lib/database.types'
 import { useLoading } from '@/components/LoadingContext'
-import ModalTemplate from '@/components/ModalTemplate'
 
 //TODO: Consider adding a soft reload, so that status gets updated when tracking episodes, also handling the end of shows
 export const getStaticProps = async () => {
@@ -36,7 +36,6 @@ export default function SeasonalDetails({
 }: {
 	res: Database['public']['Tables']['SeasonalDetails']['Row'][]
 }) {
-	const editEpisodesCurrentRef = useRef<HTMLMenuElement>(null)
 	const contextMenuRef = useRef<HTMLMenuElement>(null)
 	const contextMenuButtonRef = useRef<any>([])
 	const refreshReloadMenuRef = useRef<HTMLDivElement>(null)
@@ -62,7 +61,7 @@ export default function SeasonalDetails({
 
 	useEffect(() => {
 		const closeEditModal = (e: KeyboardEvent) => {
-			if (e.key == 'Escape' && editEpisodesCurrentRef.current) setEditEpisodesCurrent(null)
+			if (e.key == 'Escape' && editEpisodesCurrent) setEditEpisodesCurrent(null)
 		}
 
 		const closeMenus = (e: any) => {
@@ -228,12 +227,10 @@ export default function SeasonalDetails({
 						</article>
 					))}
 				</div>
-				{editEpisodesCurrent && 
 				<EpisodeCountEditor
-					editEpisodesCurrentRef={editEpisodesCurrentRef}
 					editEpisodesCurrent={editEpisodesCurrent}
 					setEditEpisodesCurrent={setEditEpisodesCurrent}
-				/>}
+				/>
 				{contextMenu.currentItem && 
 				<ContextMenu 
 					contextMenu={contextMenu} 
@@ -327,11 +324,9 @@ export default function SeasonalDetails({
 
 //* Dialog to manually edit aired episode count
 function EpisodeCountEditor({
-	editEpisodesCurrentRef,
 	editEpisodesCurrent,
 	setEditEpisodesCurrent
 }: {
-	editEpisodesCurrentRef: RefObject<HTMLMenuElement>;
 	editEpisodesCurrent: Database['public']['Tables']['SeasonalDetails']['Row'] | null;
 	setEditEpisodesCurrent: Dispatch<SetStateAction<Database['public']['Tables']['SeasonalDetails']['Row'] | null>>;
 }) {
@@ -363,78 +358,80 @@ function EpisodeCountEditor({
 
 	let counter = 1
 	return (
-		<ModalTemplate
-			extraClassname='h-[30rem] w-[50rem]'
-			exitFunction={() => setEditEpisodesCurrent(null)}
-			menuRef={editEpisodesCurrentRef}
+		<Dialog
+			fullWidth
+			maxWidth="md"
+			open={!!editEpisodesCurrent}
+			onClose={() => setEditEpisodesCurrent(null)}
 		>
-			<h3 className="font-bold text-2xl">Manual Edit Episodes</h3>
-			<div
-				onClick={() => setEditEpisodesCurrent(null)}
-				className="absolute right-6 flex items-center justify-center h-11 w-11 rounded-full cursor-pointer transition-colors duration-150 hover:bg-slate-500"
-			>
-				<CloseIcon fontSize="large" />
+			<div className='flex flex-col items-center gap-4 p-6 py-10'>
+				<h3 className="font-bold text-2xl">Manual Edit Episodes</h3>
+				<CloseIcon 
+					fontSize="large" 
+					onClick={() => setEditEpisodesCurrent(null)}
+					className='absolute top-6 right-6 cursor-pointer hover:fill-red-500'
+				/>
+				<span>{editEpisodesCurrent?.mal_title}</span>
+				<form onSubmit={handleEditSubmit}>
+					<label className="flex flex-col items-center gap-2">
+						Enter latest episode:
+						<input autoFocus type="number" min={-1} max={9999} defaultValue={editEpisodesCurrent?.latest_episode ?? 0} className="text-center input-text" />
+					</label>
+				</form>
+				<div className="relative grid grid-cols-2 gap-4">
+					{Array(4)
+						.fill('')
+						.map((i, index) => (
+							<table key={index}>
+								<thead>
+									<tr>
+										<th className="w-11">
+											{editEpisodesCurrent?.latest_episode! > 12 ? counter++ + 12 : counter++}
+										</th>
+										<th className="w-11">
+											{editEpisodesCurrent?.latest_episode! > 12 ? counter++ + 12 : counter++}
+										</th>
+										<th className="w-11">
+											{editEpisodesCurrent?.latest_episode! > 12 ? counter++ + 12 : counter++}
+										</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr>
+										<td
+											style={{
+												background: determineEpisode(
+													editEpisodesCurrent?.latest_episode!,
+													counter - 3
+												)
+											}}
+											className="p-6"
+										/>
+										<td
+											style={{
+												background: determineEpisode(
+													editEpisodesCurrent?.latest_episode!,
+													counter - 2
+												)
+											}}
+											className="p-6"
+										/>
+										<td
+											style={{
+												background: determineEpisode(
+													editEpisodesCurrent?.latest_episode!,
+													counter - 1
+												)
+											}}
+											className="p-6"
+										/>
+									</tr>
+								</tbody>
+							</table>
+						))}
+				</div>
 			</div>
-			<span>{editEpisodesCurrent?.mal_title}</span>
-			<form onSubmit={handleEditSubmit}>
-				<label className="flex flex-col items-center gap-2">
-					Enter latest episode:
-					<input autoFocus type="number" min={-1} max={9999} className="text-center input-text" />
-				</label>
-			</form>
-			<div className="relative grid grid-cols-2 gap-4">
-				{Array(4)
-					.fill('')
-					.map((i, index) => (
-						<table key={index}>
-							<thead>
-								<tr>
-									<th className="w-11">
-										{editEpisodesCurrent?.latest_episode! > 12 ? counter++ + 12 : counter++}
-									</th>
-									<th className="w-11">
-										{editEpisodesCurrent?.latest_episode! > 12 ? counter++ + 12 : counter++}
-									</th>
-									<th className="w-11">
-										{editEpisodesCurrent?.latest_episode! > 12 ? counter++ + 12 : counter++}
-									</th>
-								</tr>
-							</thead>
-							<tbody>
-								<tr>
-									<td
-										style={{
-											background: determineEpisode(
-												editEpisodesCurrent?.latest_episode!,
-												counter - 3
-											)
-										}}
-										className="p-6"
-									/>
-									<td
-										style={{
-											background: determineEpisode(
-												editEpisodesCurrent?.latest_episode!,
-												counter - 2
-											)
-										}}
-										className="p-6"
-									/>
-									<td
-										style={{
-											background: determineEpisode(
-												editEpisodesCurrent?.latest_episode!,
-												counter - 1
-											)
-										}}
-										className="p-6"
-									/>
-								</tr>
-							</tbody>
-						</table>
-					))}
-			</div>
-		</ModalTemplate>
+		</Dialog>
 	)
 }
 
