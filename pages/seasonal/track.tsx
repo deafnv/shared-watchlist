@@ -148,7 +148,7 @@ export default function SeasonalDetails({
 					{response.map((item, index) => (
 						<article
 							key={item.mal_id}
-							className="relative flex flex-col gap-2 p-3 bg-slate-700 shadow-md shadow-black rounded-md group"
+							className="relative flex flex-col gap-2 p-3 bg-neutral-700 shadow-md shadow-black rounded-md group"
 						>
 							<span
 								onClick={showTitle}

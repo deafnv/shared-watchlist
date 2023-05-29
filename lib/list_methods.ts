@@ -361,12 +361,13 @@ export const sortListByNamePTW = (
 		SetStateAction<Database['public']['Tables']['PTW-Rolled']['Row'][] | undefined>
 	>
 ) => {
+	if (!res) return
 	if (sortMethodRef.current === `titleasc_${name}`) {
 		sortMethodRef.current = `titledesc_${name}`
-		setResponse(res?.slice().sort((a, b) => b.title!.localeCompare(a.title!)))
+		setResponse(res.slice().sort((a, b) => b.title!.localeCompare(a.title!)))
 	} else {
 		sortMethodRef.current = `titleasc_${name}`
-		setResponse(res?.slice().sort((a, b) => a.title!.localeCompare(b.title!)))
+		setResponse(res.slice().sort((a, b) => a.title!.localeCompare(b.title!)))
 	}
 }
 

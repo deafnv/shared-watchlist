@@ -8,7 +8,6 @@ import Dialog from '@mui/material/Dialog'
 import DialogTitle from '@mui/material/DialogTitle'
 import DialogActions from '@mui/material/DialogActions'
 import CircularProgress from '@mui/material/CircularProgress'
-import Skeleton from '@mui/material/Skeleton'
 import DoneIcon from '@mui/icons-material/Done'
 import CancelIcon from '@mui/icons-material/Cancel'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
@@ -20,7 +19,6 @@ import Button from '@mui/material/Button'
 import { createClient } from '@supabase/supabase-js'
 import { EditFormParams, PTWRolledTableItemProps, getRandomInt, sortListByNamePTW, sortSymbol } from '@/lib/list_methods'
 import { Database } from '@/lib/database.types'
-import { loadingGlimmer } from '@/components/LoadingGlimmer'
 import { useLoading } from '@/components/LoadingContext'
 
 interface AddRecordPos {
@@ -100,13 +98,11 @@ export default function PTW() {
 		setResponseMovies
 	}
 
-	const supabase = createClient<Database>(
-		process.env.NEXT_PUBLIC_SUPABASE_URL!,
-		process.env.NEXT_PUBLIC_SUPABASE_API_KEY!
-	)
-
-	const channel = supabase.channel('room1')
 	useEffect(() => {
+		const supabase = createClient<Database>(
+			process.env.NEXT_PUBLIC_SUPABASE_URL!,
+			process.env.NEXT_PUBLIC_SUPABASE_API_KEY!
+		)
 		const getData = async () => {
 			const dataRolled = await supabase.from('PTW-Rolled').select().order('id', { ascending: true })
 			const dataCasual = await supabase.from('PTW-Casual').select().order('id', { ascending: true })
@@ -303,41 +299,29 @@ export default function PTW() {
 								Status
 							</span>
 						</div>
-						{isLoadingClient ? (
-							<div className="flex flex-col items-center justify-around h-[448px] w-[80dvw] lg:w-[40rem] border-white border-solid border-[1px] border-t-0">
-								{Array(8)
-									.fill('')
-									.map((item, index) => (
-										<Skeleton
-											key={index}
-											sx={{ backgroundColor: 'grey.700' }}
-											animation="wave"
-											variant="rounded"
-											width={'95%'}
-											height={40}
-										/>
-									))}
-							</div>
-						) : (
-							<Reorder.Group
-								values={responseRolled ?? []}
-								draggable={sortMethodRef.current ? true : false}
-								onReorder={(newOrder) => {
-									setContextMenu({ top: 0, left: 0, currentItem: null })
-									setResponseRolled(newOrder)
-									setReordered(true)
-								}}
-								className="flex flex-col min-w-[80dvw] lg:min-w-full w-min border-white border-[1px] border-t-0"
-							>
-								{responseRolled?.map((item, index) => (
-									!isLoadingClient && 
-									<PTWRolledTableItem
-										key={item.id}
-										props={{ item, index, isLoadingEditForm, setIsEdited, isEdited, isEditedRef, sortMethodRef, setContextMenu, contextMenuButtonRef, responseRolled, setResponseRolled, setIsLoadingEditForm }}
-										editFormParams={editFormParams}
-									/>
-								))}
-							</Reorder.Group>)}
+						{isLoadingClient ? 
+						<div className='flex items-center justify-center h-[34rem]'>
+							<CircularProgress size={42} color="primary" />
+						</div> : (
+						<Reorder.Group
+							values={responseRolled ?? []}
+							draggable={sortMethodRef.current ? true : false}
+							onReorder={(newOrder) => {
+								setContextMenu({ top: 0, left: 0, currentItem: null })
+								setResponseRolled(newOrder)
+								setReordered(true)
+							}}
+							className="flex flex-col min-w-[80dvw] lg:min-w-full w-min border-white border-[1px] border-t-0"
+						>
+							{responseRolled?.map((item, index) => (
+								!isLoadingClient && 
+								<PTWRolledTableItem
+									key={item.id}
+									props={{ item, index, isLoadingEditForm, setIsEdited, isEdited, isEditedRef, sortMethodRef, setContextMenu, contextMenuButtonRef, responseRolled, setResponseRolled, setIsLoadingEditForm }}
+									editFormParams={editFormParams}
+								/>
+							))}
+						</Reorder.Group>)}
 						<div
 							style={{
 								visibility: !sortMethodRef.current && reordered.current && !isEqual(responseRolled, responseRolled1) ? 'visible' : 'hidden'
@@ -495,6 +479,10 @@ function PTWTable({
 					<AddIcon />
 				</div>
 			</header>
+			{isLoadingClient ? 
+			<div className='flex items-center justify-center h-[36rem] w-[100dvw] sm:w-[30rem]'>
+				<CircularProgress size={42} color="primary" />
+			</div> :
 			<table>
 				<thead>
 					<tr>
@@ -504,9 +492,7 @@ function PTWTable({
 					</tr>
 				</thead>
 				<tbody>
-					{isLoadingClient ? 
-					loadingGlimmer(1) : 
-					response?.map((item) => (
+					{response?.map((item) => (
 						<tr key={item.id}>
 							<td
 								style={{
@@ -517,9 +503,9 @@ function PTWTable({
 								onDoubleClick={() => {
 									setIsEdited(`${tableId}_${item.title}_${item.id}`)
 								}}
-								className="relative group"
+								className="relative flex justify-center group"
 							>
-								<span className='pr-4'>
+								<span className='pr-4 w-full'>
 									{isEdited == `${tableId}_${item.title}_${item.id}`
 										? EditForm(`${tableId}_title`, item.id, item.title!, editFormParams)
 										: item.title}
@@ -537,7 +523,7 @@ function PTWTable({
 						</tr>
 					))}
 				</tbody>
-			</table>
+			</table>}
 		</section>
 	)
 }
@@ -776,10 +762,10 @@ function Gacha({
 	}
 
 	return (
-		<div className="relative flex flex-col items-center justify-center gap-4 h-[30rem] w-[80dvw] md:w-[25rem] bg-slate-700 rounded-lg -translate-y-8">
+		<div className="relative flex flex-col items-center justify-center gap-4 h-[30rem] w-[80dvw] md:w-[25rem] bg-neutral-700 rounded-lg -translate-y-8">
 			<h2 className="absolute top-5 p-2 text-2xl sm:text-3xl">Gacha</h2>
 			<div className="absolute top-20 flex items-center justify-center h-52 max-h-52 w-80">
-				<div className="max-h-full max-w-[90%] bg-slate-100 border-black border-solid border-[1px] overflow-auto">
+				<div className="max-h-full max-w-[90%] bg-white/95 border-black border-solid border overflow-auto">
 					<h3 className="p-2 text-black text-xl sm:text-2xl text-center">
 						{rolledTitle}
 					</h3>
@@ -1102,9 +1088,9 @@ function PTWRolledTableItem({ props, editFormParams }: PTWRolledTableItemProps) 
 					opacity: isLoadingEditForm.includes(`rolled_title_${item.id}`) ? 0.5 : 1
 				}}
 				onDoubleClick={() => setIsEdited(`rolled_${item.title}_${item.id}`)}
-				className="relative p-2 text-center group"
+				className="relative flex justify-center p-2 text-center group"
 			>
-				<span className=" cursor-text">
+				<span className="w-full cursor-text">
 					{isEdited == `rolled_${item.title}_${item.id}`
 						? EditForm('rolled_title', item.id, item.title!, editFormParams)
 						: item.title}
@@ -1117,7 +1103,7 @@ function PTWRolledTableItem({ props, editFormParams }: PTWRolledTableItemProps) 
 					onClick={(e) => {
 						handleMenuClick(e, item)
 					}}
-					className="absolute flex items-center justify-center top-1/2 -translate-y-1/2 z-10 h-7 w-7 invisible group-hover:visible cursor-pointer rounded-full hover:bg-gray-500 transition-colors duration-150"
+					className="absolute flex items-center justify-center top-1/2 left-2 -translate-y-1/2 z-10 h-7 w-7 invisible group-hover:visible cursor-pointer rounded-full hover:bg-gray-500 transition-colors duration-150"
 				>
 					<MoreVertIcon />
 				</div>

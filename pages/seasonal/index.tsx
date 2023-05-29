@@ -39,6 +39,7 @@ export default function Seasonal() {
 
 	const [response, setResponse] = useState<any>()
 	const [response1, setResponse1] = useState<any>()
+	const [isLoadingClient, setIsLoadingClient] = useState(true)
 	const [isEdited, setIsEditedState] = useState<string>('')
 	const [isLoadingEditForm, setIsLoadingEditForm] = useState<Array<string>>([])
 	const [isAdded, setIsAdded] = useState(false)
@@ -78,6 +79,7 @@ export default function Seasonal() {
 
 			setResponse(data!)
 			setResponse1(data!)
+			setIsLoadingClient(false)
 
 			await axios
 				.get(`${process.env.NEXT_PUBLIC_UPDATE_URL}/refresh`)
@@ -156,7 +158,6 @@ export default function Seasonal() {
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [])
 
-	if (!response) return null
 	return (
 		<>
 			<Head>
@@ -186,25 +187,29 @@ export default function Seasonal() {
 							<AddIcon />
 						</div>
 					</header>
-					<div className="grid grid-cols-[5fr_1fr] lg:grid-cols-[30rem_10rem_10rem_8rem] min-w-[95dvw] lg:min-w-0 w-min bg-sky-600 border-white border-solid border-[1px]">
-						<span className='flex items-center justify-center p-2 h-full border-white border-r-[1px] text-center font-bold'>
+					<div className="grid grid-cols-[5fr_1fr] lg:grid-cols-[30rem_10rem_10rem_8rem] min-w-[95dvw] lg:min-w-0 w-min bg-sky-600 border-white border-solid border">
+						<span className='flex items-center justify-center p-2 border-white border-r text-center font-bold'>
 							Title
 						</span>
-						<span className='flex items-center justify-center p-2 h-full border-white lg:border-r-[1px] text-center font-bold'>
+						<span className='flex items-center justify-center p-2 border-white lg:border-r text-center font-bold'>
 							Status
 						</span>
-						<span className='hidden lg:flex items-center justify-center p-2 h-full border-white border-r-[1px] text-center font-bold'>
+						<span className='hidden lg:flex items-center justify-center p-2 border-white border-r text-center font-bold'>
 							Start Date
 						</span>
-						<span className='hidden lg:flex items-center justify-center p-2 h-full text-center font-bold'>
+						<span className='hidden lg:flex items-center justify-center p-1 text-center font-bold'>
 							Latest Episode
 						</span>
 					</div>
+					{isLoadingClient ? 
+					<div className='flex items-center justify-center h-[26rem]'>
+						<CircularProgress size={42} color="primary" />
+					</div> : 
 					<Reorder.Group
 						values={response}
 						onReorder={(newOrder) => {
-							if (settingsMenu.display) setSettingsMenu({...settingsMenu, display: false})
-							if (contextMenu.currentItem) setContextMenu({...contextMenu, currentItem: null})
+							if (settingsMenu.display) setSettingsMenu({ ...settingsMenu, display: false })
+							if (contextMenu.currentItem) setContextMenu({ ...contextMenu, currentItem: null })
 							setResponse(newOrder)
 							setReordered(true)
 						}}
@@ -216,7 +221,7 @@ export default function Seasonal() {
 								props={{ item, index, setIsLoadingEditForm, isLoadingEditForm, setIsEdited, isEdited, isEditedRef, contextMenuButtonRef, setContextMenu, response, setResponse }}
 							/>
 						))}
-					</Reorder.Group>
+					</Reorder.Group>}
 					<div
 						style={{
 							visibility: reordered && !isEqual(response, response1) ? 'visible' : 'hidden'
@@ -294,7 +299,7 @@ export default function Seasonal() {
 		} catch (error) {
 			setLoading(false)
 			alert(error)
-			console.log(error)
+			console.error(error)
 			return
 		}
 	}

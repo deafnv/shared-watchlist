@@ -224,9 +224,13 @@ export default function Completed() {
 						onClick={addRecord}
 						title="Add new record to table"
 					>
-						<AddIcon sx={{ fontSize: 28 }} />
+						<AddIcon sx={{ fontSize: 24 }} />
 					</IconButton>
 				</div>
+				{isLoadingClient ? 
+				<div className='flex items-center justify-center h-[36rem]'>
+					<CircularProgress size={50} color="primary" />
+				</div> : 
 				<table>
 					<thead>
 						<tr>
@@ -467,7 +471,7 @@ export default function Completed() {
 							</tr>
 						))}
 					</tbody>
-				</table>
+				</table>}
 				<ContextMenu 
 					contextMenuRef={contextMenuRef}
 					contextMenu={contextMenu}
