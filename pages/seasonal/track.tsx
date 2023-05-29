@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { BaseSyntheticEvent, useEffect, useState, useRef, Dispatch, SetStateAction, RefObject } from 'react'
 import axios from 'axios'
+import { AnimatePresence, motion } from 'framer-motion'
 import Dialog from '@mui/material/Dialog'
 import Button from '@mui/material/Button'
 import CloseIcon from '@mui/icons-material/Close'
@@ -12,6 +13,18 @@ import MoreVertIcon from '@mui/icons-material/MoreVert'
 import { createClient } from '@supabase/supabase-js'
 import { Database } from '@/lib/database.types'
 import { useLoading } from '@/components/LoadingContext'
+
+interface ContextMenuPos {
+	top: number;
+	left: number;
+	currentItem: Database['public']['Tables']['SeasonalDetails']['Row'] | null;
+}
+
+interface SettingsMenuPos {
+	top: number;
+	left: number;
+	display: boolean;
+}
 
 //TODO: Consider adding a soft reload, so that status gets updated when tracking episodes, also handling the end of shows
 export const getStaticProps = async () => {
@@ -45,19 +58,8 @@ export default function SeasonalDetails({
 	const [editEpisodesCurrent, setEditEpisodesCurrent] = useState<
 		Database['public']['Tables']['SeasonalDetails']['Row'] | null
 	>(null)
-	const [contextMenu, setContextMenu] = useState<{
-		top: number
-		left: number
-		currentItem: Database['public']['Tables']['SeasonalDetails']['Row'] | null
-	}>({ top: 0, left: 0, currentItem: null })
-	const [refreshReloadMenu, setRefreshReloadMenu] = useState<{
-		top: number
-		left: number
-		display: string
-	}>({ top: 0, left: 0, display: 'none' })
-
-	const router = useRouter()
-	const { setLoading } = useLoading()
+	const [contextMenu, setContextMenu] = useState<ContextMenuPos>({ top: 0, left: 0, currentItem: null })
+	const [refreshReloadMenu, setRefreshReloadMenu] = useState<SettingsMenuPos>({ top: 0, left: 0, display: false })
 
 	useEffect(() => {
 		const closeEditModal = (e: KeyboardEvent) => {
@@ -71,7 +73,7 @@ export default function SeasonalDetails({
 				!contextMenuRef.current?.contains(e.target) &&
 				contextMenuRef.current
 			) {
-				setContextMenu({ top: 0, left: 0, currentItem: null })
+				setContextMenu({ ...contextMenu, currentItem: null })
 			}
 			if (
 				e.target.parentNode !== refreshReloadMenuButtonRef.current &&
@@ -79,7 +81,7 @@ export default function SeasonalDetails({
 				!refreshReloadMenuRef.current?.contains(e.target) &&
 				refreshReloadMenuRef.current
 			) {
-				setRefreshReloadMenu({ top: 0, left: 0, display: 'none' })
+				setRefreshReloadMenu({ ...refreshReloadMenu, display: false })
 			}
 		}
 
@@ -113,7 +115,11 @@ export default function SeasonalDetails({
 						</div>
 					</div>
 					<span className='absolute font-semibold text-2xl top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2'>No details loaded</span>
-					{refreshReloadMenu.display == 'block' && <RefreshReloadMenu />}
+					<RefreshReloadMenu 
+						refreshReloadMenu={refreshReloadMenu}
+						refreshReloadMenuRef={refreshReloadMenuRef}
+						response={response}
+					/>
 				</main>
 			</>
 		)
@@ -232,40 +238,18 @@ export default function SeasonalDetails({
 					editEpisodesCurrent={editEpisodesCurrent}
 					setEditEpisodesCurrent={setEditEpisodesCurrent}
 				/>
-				{contextMenu.currentItem && 
 				<ContextMenu 
 					contextMenu={contextMenu} 
 					contextMenuRef={contextMenuRef} 
-				/>}
-				{refreshReloadMenu.display == 'block' && <RefreshReloadMenu />}
+				/>
+				<RefreshReloadMenu 
+					refreshReloadMenu={refreshReloadMenu}
+					refreshReloadMenuRef={refreshReloadMenuRef}
+					response={response}
+				/>
 			</main>
 		</>
 	)
-
-	//* Options menu at header
-	function RefreshReloadMenu() {
-		return (
-			<menu
-				ref={refreshReloadMenuRef}
-				style={{
-					top: refreshReloadMenu.top,
-					left: refreshReloadMenu.left
-				}}
-				className="absolute z-20 p-2 shadow-md shadow-black bg-black border-pink-400 border-[1px] rounded-md refresh-reload-menu"
-			>
-				{response.length ? <li className="flex justify-center py-2 h-fit rounded-md hover:bg-pink-400">
-					<button onClick={refresh} className="w-full">
-						Refresh episode tracking
-					</button>
-				</li> : null}
-				<li className="flex justify-center py-2 h-fit rounded-md hover:bg-pink-400">
-					<button onClick={reload} className="w-full">
-						Reload current season data from sheet
-					</button>
-				</li>
-			</menu>
-		)
-	}
 
 	function handleRefreshReloadMenu(e: BaseSyntheticEvent) {
 		const { top, left } = e.target.getBoundingClientRect()
@@ -273,7 +257,7 @@ export default function SeasonalDetails({
 		setRefreshReloadMenu({
 			top: top + window.scrollY,
 			left: left + window.scrollX - 240,
-			display: 'block'
+			display: true
 		})
 	}
 
@@ -284,18 +268,33 @@ export default function SeasonalDetails({
 		const { top, left } = e.target.getBoundingClientRect()
 
 		setContextMenu({
-			...contextMenu,
 			top: top + window.scrollY,
 			left: left + window.scrollX - 240,
 			currentItem: item
 		})
 	}
 
+	//* Show truncated long titles on click
 	function showTitle(e: BaseSyntheticEvent) {
 		const target = e.target as HTMLSpanElement
 		target.style.webkitLineClamp = '100'
 		target.style.overflow = 'auto'
 	}
+}
+
+//* Options menu at header
+function RefreshReloadMenu({
+	refreshReloadMenu,
+	refreshReloadMenuRef,
+	response
+}: {
+	refreshReloadMenu: SettingsMenuPos;
+	refreshReloadMenuRef: RefObject<HTMLDivElement>;
+	response: Database['public']['Tables']['SeasonalDetails']['Row'][];
+}) {
+	const { setLoading } = useLoading()
+
+	const router = useRouter()
 
 	async function refresh() {
 		try {
@@ -321,6 +320,35 @@ export default function SeasonalDetails({
 			alert(error)
 		}
 	}
+
+	return (
+		<AnimatePresence>
+			{refreshReloadMenu.display && 
+			<motion.menu
+				initial={{ height: 0, opacity: 0 }}
+				animate={{ height: '7.6rem', opacity: 1 }}
+				exit={{ height: 0, opacity: 0 }}
+        transition={{ type: 'tween', ease: 'linear', duration: 0.1 }}
+				ref={refreshReloadMenuRef}
+				style={{
+					top: refreshReloadMenu.top,
+					left: refreshReloadMenu.left
+				}}
+				className="absolute z-20 p-2 h-[7.6rem] w-[15rem] shadow-md shadow-black bg-black border-pink-400 border-[1px] rounded-md overflow-hidden"
+			>
+				{response.length ? <li className="flex justify-center h-fit rounded-md hover:bg-pink-400">
+					<button onClick={refresh} className="py-2 w-full">
+						Refresh episode tracking
+					</button>
+				</li> : null}
+				<li className="flex justify-center h-fit rounded-md hover:bg-pink-400">
+					<button onClick={reload} className="py-2 w-full">
+						Reload current season data from sheet
+					</button>
+				</li>
+			</motion.menu>}
+		</AnimatePresence>
+	)
 }
 
 //* Dialog to manually edit aired episode count
@@ -440,11 +468,7 @@ function ContextMenu({
 	contextMenu,
 	contextMenuRef
 }: {
-	contextMenu: {
-		top: number
-		left: number
-		currentItem: Database['public']['Tables']['SeasonalDetails']['Row'] | null
-	};
+	contextMenu: ContextMenuPos;
 	contextMenuRef: RefObject<HTMLMenuElement>;
 }) {
 	const router = useRouter()
@@ -468,24 +492,31 @@ function ContextMenu({
 	}
 
 	return (
-		<menu
-			ref={contextMenuRef}
-			style={{
-				top: contextMenu.top,
-				left: contextMenu.left
-			}}
-			className="absolute z-20 p-2 shadow-md shadow-gray-600 bg-slate-200 text-black rounded-sm border-black border-solid border-2 context-menu"
-		>
-			<li className="flex justify-center">
-				<span className="text-center font-semibold line-clamp-2">
-					{contextMenu.currentItem?.mal_title}
-				</span>
-			</li>
-			<hr className="my-2 border-gray-500 border-t-[1px]" />
-			<li className="flex justify-center h-8 rounded-sm hover:bg-slate-500">
-				<button onClick={handleReloadTrack} className="w-full">Reload Episode Tracking</button>
-			</li>
-		</menu>
+		<AnimatePresence>
+			{contextMenu.currentItem && 
+			<motion.menu
+				initial={{ height: 0, opacity: 0 }}
+				animate={{ height: '7.6rem', opacity: 1 }}
+				exit={{ height: 0, opacity: 0 }}
+				transition={{ type: 'tween', ease: 'linear', duration: 0.1 }}
+				ref={contextMenuRef}
+				style={{
+					top: contextMenu.top,
+					left: contextMenu.left
+				}}
+				className="absolute z-20 p-2 h-[9.5rem] w-[15rem] shadow-md shadow-gray-600 bg-slate-200 text-black rounded-sm border-black border-solid border-2 overflow-hidden"
+			>
+				<li className="flex justify-center">
+					<span className="text-center font-semibold line-clamp-2">
+						{contextMenu.currentItem?.mal_title}
+					</span>
+				</li>
+				<hr className="my-2 border-gray-500 border-t-[1px]" />
+				<li className="flex justify-center h-8 rounded-sm hover:bg-slate-500">
+					<button onClick={handleReloadTrack} className="w-full">Reload Episode Tracking</button>
+				</li>
+			</motion.menu>}
+		</AnimatePresence>
 	)
 }
 

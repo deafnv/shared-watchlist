@@ -2,9 +2,10 @@ import Head from 'next/head'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import { BaseSyntheticEvent, useEffect, useRef, useState, Dispatch, SetStateAction } from 'react'
+import { BaseSyntheticEvent, useEffect, useRef, useState, Dispatch, SetStateAction, RefObject } from 'react'
 import debounce from 'lodash/debounce'
 import axios from 'axios'
+import { AnimatePresence, motion } from 'framer-motion'
 import CircularProgress from '@mui/material/CircularProgress'
 import AddIcon from '@mui/icons-material/Add'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
@@ -26,6 +27,18 @@ import { useLoading } from '@/components/LoadingContext'
 import EditDialog from '@/components/dialogs/EditDialog'
 import { Dialog } from '@mui/material'
 
+interface ContextMenuPos {
+	top: number;
+	left: number;
+	currentItem: Database['public']['Tables']['Completed']['Row'] | null;
+}
+
+interface SettingsMenuPos {
+	top: number;
+	left: number;
+	display: boolean;
+}
+
 export default function Completed() {
 	const contextMenuRef = useRef<HTMLDivElement>(null)
 	const contextMenuButtonRef = useRef<any>([])
@@ -39,16 +52,8 @@ export default function Completed() {
 	const [isEdited, setIsEditedState] = useState<string>('')
 	const [isLoadingClient, setIsLoadingClient] = useState(true)
 	const [isLoadingEditForm, setIsLoadingEditForm] = useState<Array<string>>([])
-	const [contextMenu, setContextMenu] = useState<{
-		top: number
-		left: number
-		currentItem: Database['public']['Tables']['Completed']['Row'] | null
-	}>({ top: 0, left: 0, currentItem: null })
-	const [settingsMenu, setSettingsMenu] = useState<{
-		top: number
-		left: number
-		display: string
-	}>({ top: 0, left: 0, display: 'none' })
+	const [contextMenu, setContextMenu] = useState<ContextMenuPos>({ top: 0, left: 0, currentItem: null })
+	const [settingsMenu, setSettingsMenu] = useState<SettingsMenuPos>({ top: 0, left: 0, display: false })
 	const [detailsModal, setDetailsModal] = useState<
 		Database['public']['Tables']['Completed']['Row'] | null
 	>(null)
@@ -119,7 +124,7 @@ export default function Completed() {
 				!settingsMenuRef.current?.contains(e.target) &&
 				settingsMenuRef.current
 			) {
-				setSettingsMenu({ top: 0, left: 0, display: 'none' })
+				setSettingsMenu({ top: 0, left: 0, display: false })
 			}
 		}
 
@@ -463,13 +468,21 @@ export default function Completed() {
 						))}
 					</tbody>
 				</table>
-				{contextMenu.currentItem && <ContextMenu />}
+				<ContextMenu 
+					contextMenuRef={contextMenuRef}
+					contextMenu={contextMenu}
+					setContextMenu={setContextMenu}
+					setDetailsModal={setDetailsModal}
+				/>
 				<DetailsModal 
 					detailsModal={detailsModal}
 					setDetailsModal={setDetailsModal}
 					setEditDialog={setEditDialog}
 				/>
-				{settingsMenu.display == 'block' && <SettingsMenu />}
+				<SettingsMenu 
+					settingsMenuRef={settingsMenuRef}
+					settingsMenu={settingsMenu}
+				/>
 				<EditDialog
 					editDialog={editDialog}
 					setEditDialog={setEditDialog}
@@ -479,95 +492,14 @@ export default function Completed() {
 		</>
 	)
 
-	function SettingsMenu() {
-		return (
-			<menu
-				ref={settingsMenuRef}
-				style={{
-					top: settingsMenu.top,
-					left: settingsMenu.left
-				}}
-				className="absolute z-20 p-2 shadow-md shadow-black bg-black border-pink-400 border-[1px] rounded-md completed-settings-menu"
-			>
-				<li className="flex justify-center h-fit rounded-md hover:bg-pink-400">
-					<button tabIndex={0} onClick={handleLoadDetails} className="py-2 w-full">
-						Load details
-					</button>
-				</li>
-				<li className="flex justify-center h-fit rounded-md hover:bg-pink-400">
-					<Link href={'/completed/errors'} className="px-1 py-2 w-full text-center">
-						See Potential Errors
-					</Link>
-				</li>
-			</menu>
-		)
-
-		async function handleLoadDetails() {
-			setLoading(true)
-			try {
-				await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/completed/loadcompleteddetails`, { withCredentials: true })
-				await axios.post('/api/revalidate', {
-					route: '/completed/statistics'
-				})
-				setLoading(false)
-			} catch (error) {
-				setLoading(false)
-				alert(error)
-			}
-		}
-	}
-
 	function handleSettingsMenu(e: BaseSyntheticEvent) {
 		const { top, left } = e.target.getBoundingClientRect()
 
 		setSettingsMenu({
 			top: top + window.scrollY,
 			left: left + window.scrollX - 160,
-			display: 'block'
+			display: true
 		})
-	}
-
-	function ContextMenu() {
-		return (
-			<menu
-				ref={contextMenuRef}
-				style={{
-					top: contextMenu.top,
-					left: contextMenu.left
-				}}
-				className="absolute z-10 p-2 shadow-md shadow-gray-600 bg-slate-200 text-black rounded-sm border-black border-solid border-2 context-menu"
-			>
-				<li className="flex justify-center">
-					<span className="text-center font-semibold line-clamp-2">
-						{contextMenu.currentItem?.title}
-					</span>
-				</li>
-				<hr className="my-2 border-gray-500 border-t-[1px]" />
-				<li className="flex justify-center h-8 rounded-sm hover:bg-slate-500">
-					<button onClick={handleDetails} className="w-full">
-						Details
-					</button>
-				</li>
-				<li className="flex justify-center h-8 rounded-sm hover:bg-slate-500">
-					<button onClick={handleVisit} className="w-full">
-						Visit on MAL
-					</button>
-				</li>
-			</menu>
-		)
-
-		function handleDetails() {
-			setDetailsModal(contextMenu.currentItem)
-			setContextMenu({ ...contextMenu, currentItem: null })
-		}
-
-		async function handleVisit() {
-			const malURL = await supabase
-				.from('CompletedDetails')
-				.select('mal_id')
-				.eq('id', contextMenu.currentItem?.id)
-			window.open(`https://myanimelist.net/anime/${malURL.data?.[0]?.mal_id}`, '_blank')
-		}
 	}
 
 	function handleMenuClick(
@@ -736,6 +668,121 @@ export default function Completed() {
 			alert(error)
 			return
 		}
+	}
+}
+
+function SettingsMenu({
+	settingsMenuRef,
+	settingsMenu,
+}: {
+	settingsMenuRef: RefObject<HTMLDivElement>;
+	settingsMenu: SettingsMenuPos;
+}) {
+	const { setLoading } = useLoading()
+
+	async function handleLoadDetails() {
+		setLoading(true)
+		try {
+			await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/completed/loadcompleteddetails`, { withCredentials: true })
+			await axios.post('/api/revalidate', {
+				route: '/completed/statistics'
+			})
+			setLoading(false)
+		} catch (error) {
+			setLoading(false)
+			alert(error)
+		}
+	}
+
+	return (
+		<AnimatePresence>
+			{settingsMenu.display && <motion.menu 
+				initial={{ height: 0, opacity: 0 }}
+				animate={{ height: '7.6rem', opacity: 1 }}
+				exit={{ height: 0, opacity: 0 }}
+				transition={{ type: 'tween', ease: 'linear', duration: 0.1 }}
+				ref={settingsMenuRef}
+				style={{
+					top: settingsMenu.top,
+					left: settingsMenu.left
+				}}
+				className="absolute z-20 p-2 w-[10rem] shadow-md shadow-black bg-black border-pink-400 border-[1px] rounded-md overflow-hidden"
+			>
+				<li className="flex justify-center h-fit rounded-md hover:bg-pink-400">
+					<button tabIndex={0} onClick={handleLoadDetails} className="py-2 w-full">
+						Load details
+					</button>
+				</li>
+				<li className="flex justify-center h-fit rounded-md hover:bg-pink-400">
+					<Link href={'/completed/errors'} className="px-1 py-2 w-full text-center">
+						See Potential Errors
+					</Link>
+				</li>
+			</motion.menu>}
+		</AnimatePresence>
+	)
+}
+
+function ContextMenu({
+	contextMenuRef,
+	contextMenu,
+	setContextMenu,
+	setDetailsModal
+}: {
+	contextMenuRef: RefObject<HTMLDivElement>;
+	contextMenu: ContextMenuPos;
+	setContextMenu: Dispatch<SetStateAction<ContextMenuPos>>;
+	setDetailsModal:Dispatch<SetStateAction<Database['public']['Tables']['Completed']['Row'] | null>>;
+}) {
+	return (
+		<AnimatePresence>
+			{contextMenu.currentItem && <motion.menu 
+				initial={{ height: 0, opacity: 0 }}
+				animate={{ height: '9.5rem', opacity: 1 }}
+				exit={{ height: 0, opacity: 0 }}
+        transition={{ type: 'tween', ease: 'linear', duration: 0.1 }}
+				ref={contextMenuRef}
+				style={{
+					top: contextMenu.top,
+					left: contextMenu.left
+				}}
+				className="absolute z-10 p-2 w-[15rem] shadow-md shadow-gray-600 bg-slate-200 text-black rounded-sm border-black border-solid border-2 overflow-hidden"
+			>
+				<li className="flex justify-center">
+					<span className="text-center font-semibold line-clamp-2">
+						{contextMenu.currentItem?.title}
+					</span>
+				</li>
+				<hr className="my-2 border-gray-500 border-t-[1px]" />
+				<li className="flex justify-center h-8 rounded-sm hover:bg-slate-500">
+					<button onClick={handleDetails} className="w-full">
+						Details
+					</button>
+				</li>
+				<li className="flex justify-center h-8 rounded-sm hover:bg-slate-500">
+					<button onClick={handleVisit} className="w-full">
+						Visit on MAL
+					</button>
+				</li>
+			</motion.menu>}
+		</AnimatePresence>
+	)
+
+	function handleDetails() {
+		setDetailsModal(contextMenu.currentItem)
+		setContextMenu({ ...contextMenu, currentItem: null })
+	}
+
+	async function handleVisit() {
+		const supabase = createClient<Database>(
+			process.env.NEXT_PUBLIC_SUPABASE_URL!,
+			process.env.NEXT_PUBLIC_SUPABASE_API_KEY!
+		)
+		const malURL = await supabase
+			.from('CompletedDetails')
+			.select('mal_id')
+			.eq('id', contextMenu.currentItem?.id)
+		window.open(`https://myanimelist.net/anime/${malURL.data?.[0]?.mal_id}`, '_blank')
 	}
 }
 

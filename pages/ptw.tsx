@@ -1,7 +1,7 @@
 import Head from 'next/head'
-import { BaseSyntheticEvent, useEffect, useState, useRef, Dispatch, SetStateAction, MutableRefObject } from 'react'
+import { BaseSyntheticEvent, useEffect, useState, useRef, Dispatch, SetStateAction, MutableRefObject, RefObject } from 'react'
 import axios from 'axios'
-import { Reorder, useDragControls } from 'framer-motion'
+import { AnimatePresence, motion, Reorder, useDragControls } from 'framer-motion'
 import isEqual from 'lodash/isEqual'
 import io, { Socket } from 'socket.io-client'
 import Dialog from '@mui/material/Dialog'
@@ -22,6 +22,19 @@ import { EditFormParams, PTWRolledTableItemProps, getRandomInt, sortListByNamePT
 import { Database } from '@/lib/database.types'
 import { loadingGlimmer } from '@/components/LoadingGlimmer'
 import { useLoading } from '@/components/LoadingContext'
+
+interface AddRecordPos {
+	top: number;
+	left: number;
+	response: Database['public']['Tables']['PTW-Casual']['Row'][] | undefined;
+	tableId: 'rolled' | 'casual' | 'noncasual' | 'movies';
+}
+
+interface ContextMenuPos {
+	top: number;
+	left: number;
+	currentItem: Database['public']['Tables']['PTW-Rolled']['Row'] | null;
+}
 
 let socket: Socket
 
@@ -55,17 +68,8 @@ export default function PTW() {
 	const [isLoadingClient, setIsLoadingClient] = useState(true)
 	const [isLoadingEditForm, setIsLoadingEditForm] = useState<Array<string>>([])
 	const [confirmModal, setConfirmModal] = useState(false)
-	const [contextMenu, setContextMenu] = useState<{
-		top: number
-		left: number
-		currentItem: Database['public']['Tables']['PTW-Rolled']['Row'] | null
-	}>({ top: 0, left: 0, currentItem: null })
-	const [isAdded, setIsAdded] = useState<{
-		top: number
-		left: number
-		response: Database['public']['Tables']['PTW-Casual']['Row'][] | undefined
-		tableId: 'rolled' | 'casual' | 'noncasual' | 'movies'
-	} | null>(null)
+	const [contextMenu, setContextMenu] = useState<ContextMenuPos>({ top: 0, left: 0, currentItem: null })
+	const [isAdded, setIsAdded] = useState<AddRecordPos | null>(null)
 	const { setLoading } = useLoading()
 
 	const setIsEdited = (value: string) => {
@@ -397,8 +401,16 @@ export default function PTW() {
 					<PTWTable response={responseMovies} tableName="Movies" tableId="movies" />
 				</section>
 				<LatencyBadge />
-				{contextMenu.currentItem && <ContextMenu />}
-				{isAdded && <AddRecordMenu />}
+				<ContextMenu 
+					contextMenuRef={contextMenuRef}
+					contextMenu={contextMenu}
+					responseRolled={responseRolled}
+					setConfirmModalDelEntry={setConfirmModalDelEntry}
+				/>
+				<AddRecordMenu 
+					isAdded={isAdded}
+					setIsAdded={setIsAdded}
+				/>
 				<ConfirmModal 
 					confirmModal={confirmModal}
 					setConfirmModal={setConfirmModal}
@@ -411,51 +423,6 @@ export default function PTW() {
 			</main>
 		</>
 	)
-
-	function ContextMenu() {
-		return (
-			<menu
-				ref={contextMenuRef}
-				style={{
-					top: contextMenu.top,
-					left: contextMenu.left
-				}}
-				className="absolute z-10 p-2 shadow-md shadow-gray-600 bg-slate-200 text-black rounded-sm border-black border-solid border-2 context-menu"
-			>
-				<li className="flex justify-center">
-					<span className="text-center font-semibold line-clamp-2">
-						{contextMenu.currentItem?.title}
-					</span>
-				</li>
-				<hr className="my-2 border-gray-500 border-t-[1px]" />
-				<li className="flex justify-center h-8 rounded-sm hover:bg-slate-500">
-					<button onClick={handleAddToCompleted} className="w-full">
-						Add to Completed
-					</button>
-				</li>
-				<li className="flex justify-center h-8 rounded-sm hover:bg-slate-500">
-					<button onClick={() => setConfirmModalDelEntry()} className="w-full">
-						Delete entry
-					</button>
-				</li>
-			</menu>
-		)
-
-		async function handleAddToCompleted() {
-			setLoading(true)
-			try {
-				await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/addtocompleted`, {
-					content: responseRolled,
-					id: contextMenu.currentItem?.id,
-					type: 'PTW'
-				}, { withCredentials: true })
-				setLoading(false)
-			} catch (error) {
-				setLoading(false)
-				alert(error)
-			}
-		}
-	}
 
 	function LatencyBadge() {
 		function handleOpen(e: BaseSyntheticEvent) {
@@ -717,86 +684,6 @@ export default function PTW() {
 		)
 	}
 
-	function AddRecordMenu() {
-		async function handleAddRecord(e: BaseSyntheticEvent) {
-			e.preventDefault()
-			const enteredTitle = e.target[0].value
-			if (!enteredTitle || !isAdded?.response) return
-
-			let cell = 'L';
-			switch (isAdded.tableId) {
-				case 'rolled':
-					cell = 'N'
-					break
-				case 'movies':
-					cell = 'L'
-				case 'casual':
-					cell = 'L'
-					break
-				case 'noncasual':
-					cell = 'M'
-					break
-			}
-	
-			setLoading(true)
-			
-			try {
-				if (isAdded.tableId == 'movies') {
-					if (isAdded.response.length >= 5) {
-						setLoading(false)
-						alert('No space left')
-						return
-					}
-					await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/update`, {
-						content: enteredTitle,
-						cell: cell + (isAdded.response.length + 22).toString()
-					}, { withCredentials: true })
-				} else if (isAdded.tableId == 'rolled') {
-					if (isAdded.response.length >= 21) {
-						setLoading(false)
-						alert('No space left')
-						return
-					}
-					await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/update`, {
-						content: enteredTitle,
-						cell: cell + (isAdded.response.length + 2).toString()
-					}, { withCredentials: true })
-				} else {
-					if (isAdded.response.length >= 15) {
-						setLoading(false)
-						alert('No space left')
-						return
-					}
-					await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/update`, {
-						content: enteredTitle,
-						cell: cell + (isAdded.response.length + 2).toString()
-					}, { withCredentials: true })
-				}
-				setIsAdded(null)
-				setLoading(false)
-			} catch (error) {
-				setLoading(false)
-				alert(error)
-				return
-			}
-		}
-
-		if (!isAdded) return null
-		return (
-			<menu 
-				style={{
-					top: isAdded.top + 38,
-					left: isAdded.left - (isAdded.tableId == 'rolled' ? 280 : 190)
-				}}
-				className='absolute top-14 z-10 p-1 rounded-lg bg-black border-[1px] border-pink-400'
-			>
-				<form onSubmit={handleAddRecord}>
-					<input placeholder='Insert title' className='w-60 text-lg rounded-sm bg-gray-800 focus:outline-none' />
-				</form>
-			</menu>
-		)
-	}
-
 	function handleAddMenu(
 		e: BaseSyntheticEvent, 
 		response: Database['public']['Tables']['PTW-Casual']['Row'][] | undefined, 
@@ -888,6 +775,164 @@ export default function PTW() {
 			</section>
 		)
 	}
+}
+
+function ContextMenu({
+	contextMenuRef,
+	contextMenu,
+	responseRolled,
+	setConfirmModalDelEntry
+}: {
+	contextMenuRef: RefObject<HTMLDivElement>;
+	contextMenu: ContextMenuPos;
+	responseRolled: Database['public']['Tables']['PTW-Rolled']['Row'][] | undefined;
+	setConfirmModalDelEntry: () => void;
+}) {
+	const { setLoading } = useLoading()
+
+	async function handleAddToCompleted() {
+		setLoading(true)
+		try {
+			await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/addtocompleted`, {
+				content: responseRolled,
+				id: contextMenu.currentItem?.id,
+				type: 'PTW'
+			}, { withCredentials: true })
+			setLoading(false)
+		} catch (error) {
+			setLoading(false)
+			alert(error)
+		}
+	}
+	
+	return (
+		<AnimatePresence>
+			{contextMenu.currentItem && 
+			<motion.menu 
+				initial={{ height: 0, opacity: 0 }}
+				animate={{ height: '9.5rem', opacity: 1 }}
+				exit={{ height: 0, opacity: 0 }}
+				transition={{ type: 'tween', ease: 'linear', duration: 0.1 }}
+				ref={contextMenuRef}
+				style={{
+					top: contextMenu.top,
+					left: contextMenu.left
+				}}
+				className="absolute z-10 p-2 w-[15rem] shadow-md shadow-gray-600 bg-slate-200 text-black rounded-sm border-black border-solid border-2"
+			>
+				<li className="flex justify-center">
+					<span className="text-center font-semibold line-clamp-2">
+						{contextMenu.currentItem?.title}
+					</span>
+				</li>
+				<hr className="my-2 border-gray-500 border-t-[1px]" />
+				<li className="flex justify-center h-8 rounded-sm hover:bg-slate-500">
+					<button onClick={handleAddToCompleted} className="w-full">
+						Add to Completed
+					</button>
+				</li>
+				<li className="flex justify-center h-8 rounded-sm hover:bg-slate-500">
+					<button onClick={() => setConfirmModalDelEntry()} className="w-full">
+						Delete entry
+					</button>
+				</li>
+			</motion.menu>}
+		</AnimatePresence>
+	)
+}
+
+function AddRecordMenu({
+	isAdded,
+	setIsAdded
+}: {
+	isAdded: AddRecordPos | null;
+	setIsAdded: Dispatch<SetStateAction<AddRecordPos | null>>;
+}) {
+	const { setLoading } = useLoading()
+
+	async function handleAddRecord(e: BaseSyntheticEvent) {
+		e.preventDefault()
+		const enteredTitle = e.target[0].value
+		if (!enteredTitle || !isAdded?.response) return
+
+		let cell = 'L';
+		switch (isAdded.tableId) {
+			case 'rolled':
+				cell = 'N'
+				break
+			case 'movies':
+				cell = 'L'
+			case 'casual':
+				cell = 'L'
+				break
+			case 'noncasual':
+				cell = 'M'
+				break
+		}
+
+		setLoading(true)
+		
+		try {
+			if (isAdded.tableId == 'movies') {
+				if (isAdded.response.length >= 5) {
+					setLoading(false)
+					alert('No space left')
+					return
+				}
+				await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/update`, {
+					content: enteredTitle,
+					cell: cell + (isAdded.response.length + 22).toString()
+				}, { withCredentials: true })
+			} else if (isAdded.tableId == 'rolled') {
+				if (isAdded.response.length >= 21) {
+					setLoading(false)
+					alert('No space left')
+					return
+				}
+				await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/update`, {
+					content: enteredTitle,
+					cell: cell + (isAdded.response.length + 2).toString()
+				}, { withCredentials: true })
+			} else {
+				if (isAdded.response.length >= 15) {
+					setLoading(false)
+					alert('No space left')
+					return
+				}
+				await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/update`, {
+					content: enteredTitle,
+					cell: cell + (isAdded.response.length + 2).toString()
+				}, { withCredentials: true })
+			}
+			setIsAdded(null)
+			setLoading(false)
+		} catch (error) {
+			setLoading(false)
+			alert(error)
+			return
+		}
+	}
+
+	if (!isAdded) return null
+	return (
+		<AnimatePresence>
+			{isAdded && <motion.menu 
+				initial={{ y: -10, opacity: 0 }}
+				animate={{ y: 0, opacity: 1 }}
+				exit={{ y: -10, opacity: 0 }}
+				transition={{ type: 'tween', ease: 'linear', duration: 0.1 }}
+				style={{
+					top: isAdded.top + 38,
+					left: isAdded.left - (isAdded.tableId == 'rolled' ? 280 : 190)
+				}}
+				className='absolute top-14 z-10 p-1 rounded-lg bg-black border-[1px] border-pink-400'
+			>
+				<form onSubmit={handleAddRecord}>
+					<input placeholder='Insert title' className='w-60 text-lg rounded-sm bg-gray-800 focus:outline-none' />
+				</form>
+			</motion.menu>}
+		</AnimatePresence>
+	)
 }
 
 //* Confirm deletes

@@ -152,7 +152,7 @@ function AdvancedSearchModal({
 			open={advancedSearch}
 			onClose={() => setAdvancedSearch(false)}
 		>
-			<div className="fixed flex flex-col items-center gap-4 h-[85dvh] w-[45rem] max-w-[95%] px-10 py-6 bg-gray-700 rounded-md shadow-md shadow-black drop-shadow-md top-1/2 left-1/2 -translate-x-1/2 -translate-y-[45%] modal">
+			<div className="fixed flex flex-col items-center gap-4 h-[85dvh] w-[45rem] max-w-[95%] px-10 py-6 bg-neutral-700 rounded-md shadow-md shadow-black drop-shadow-md top-1/2 left-1/2 -translate-x-1/2 -translate-y-[45%]">
 				<h3 className="font-semibold text-2xl">Advanced Search</h3>
 				<div
 					onClick={() => setAdvancedSearch(false)}

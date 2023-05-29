@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { BaseSyntheticEvent, useEffect, useState, useRef, RefObject, Dispatch, SetStateAction, MutableRefObject } from 'react'
 import axios from 'axios'
-import { Reorder, useDragControls } from 'framer-motion'
+import { AnimatePresence, motion, Reorder, useDragControls } from 'framer-motion'
 import isEqual from 'lodash/isEqual'
 import Dialog from '@mui/material/Dialog'
 import DialogTitle from '@mui/material/DialogTitle'
@@ -21,8 +21,14 @@ import { useLoading } from '@/components/LoadingContext'
 
 //TODO: Allow sort, and show save changes button to save sort
 
+interface SettingsMenuPos {
+	top: number;
+	left: number;
+	display: boolean;
+}
+
 export default function Seasonal() {
-	const settingsMenuRef = useRef<HTMLDivElement>(null)
+	const settingsMenuRef = useRef<HTMLMenuElement>(null)
 	const settingsMenuButtonRef = useRef<HTMLDivElement>(null)
 	const addRecordMenuRef = useRef<HTMLMenuElement>(null)
 	const addRecordButtonRef = useRef<HTMLDivElement>(null)
@@ -36,11 +42,7 @@ export default function Seasonal() {
 	const [isEdited, setIsEditedState] = useState<string>('')
 	const [isLoadingEditForm, setIsLoadingEditForm] = useState<Array<string>>([])
 	const [isAdded, setIsAdded] = useState(false)
-	const [settingsMenu, setSettingsMenu] = useState<{
-		top: number
-		left: number
-		display: string
-	}>({ top: 0, left: 0, display: 'none' })
+	const [settingsMenu, setSettingsMenu] = useState<SettingsMenuPos>({ top: 0, left: 0, display: false })
 	const [contextMenu, setContextMenu] = useState<{
 		top: number
 		left: number
@@ -116,10 +118,11 @@ export default function Seasonal() {
 			}
 			if (
 				e.target.parentNode !== settingsMenuButtonRef.current &&
+				e.target.parentNode?.parentNode !== settingsMenuButtonRef.current &&
 				!settingsMenuRef.current?.contains(e.target) &&
 				settingsMenuRef.current
 			) {
-				setSettingsMenu({ top: 0, left: 0, display: 'none' })
+				setSettingsMenu({ ...settingsMenu, display: false })
 			}
 			if (
 				!contextMenuButtonRef.current.includes(e.target.parentNode) &&
@@ -150,6 +153,7 @@ export default function Seasonal() {
 			window.removeEventListener('focusout', closeMenusOnFocusout)
 			window.removeEventListener('keydown', closeMenusOnEscape)
 		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [])
 
 	if (!response) return null
@@ -182,12 +186,6 @@ export default function Seasonal() {
 							<AddIcon />
 						</div>
 					</header>
-					{isAdded && 
-					<menu ref={addRecordMenuRef} className='absolute top-14 z-10 p-1 rounded-lg bg-black border-[1px] border-pink-400'>
-						<form onSubmit={handleAddRecord}>
-							<input placeholder='Insert title' className='w-60 text-lg rounded-sm bg-gray-800 focus:outline-none' />
-						</form>
-					</menu>}
 					<div className="grid grid-cols-[5fr_1fr] lg:grid-cols-[30rem_10rem_10rem_8rem] min-w-[95dvw] lg:min-w-0 w-min bg-sky-600 border-white border-solid border-[1px]">
 						<span className='flex items-center justify-center p-2 h-full border-white border-r-[1px] text-center font-bold'>
 							Title
@@ -205,7 +203,7 @@ export default function Seasonal() {
 					<Reorder.Group
 						values={response}
 						onReorder={(newOrder) => {
-							if (settingsMenu.display == 'block') setSettingsMenu({...settingsMenu, display: 'none'})
+							if (settingsMenu.display) setSettingsMenu({...settingsMenu, display: false})
 							if (contextMenu.currentItem) setContextMenu({...contextMenu, currentItem: null})
 							setResponse(newOrder)
 							setReordered(true)
@@ -247,14 +245,24 @@ export default function Seasonal() {
 						</div>
 					</div>
 				</section>
-				{contextMenu.currentItem && 
+				<AddRecord 
+					addRecordMenuRef={addRecordMenuRef}
+					isAdded={isAdded}
+					setIsAdded={setIsAdded}
+					response={response}
+				/>
 				<ContextMenu 
 					contextMenuRef={contextMenuRef}
 					contextMenu={contextMenu}
 					response1={response1}
 					setConfirmModalDelEntry={setConfirmModalDelEntry}
-				/>}
-				{settingsMenu.display == 'block' && <SettingsMenu />}
+				/>
+				<SettingsMenu 
+					settingsMenuRef={settingsMenuRef}
+					settingsMenu={settingsMenu}
+					setEditModal={setEditModal}
+					setConfirmModal={setConfirmModal}
+				/>
 				<ConfirmModal 
 					confirmModal={confirmModal}
 					setConfirmModal={setConfirmModal}
@@ -291,15 +299,41 @@ export default function Seasonal() {
 		}
 	}
 
-	function SettingsMenu() {
-		return (
-			<menu
+	function handleSettingsMenu(e: BaseSyntheticEvent) {
+		const { top, left } = e.target.getBoundingClientRect()
+
+		setSettingsMenu({
+			top: top + window.scrollY,
+			left: left + window.scrollX - 180,
+			display: true
+		})
+	}
+}
+
+function SettingsMenu({
+	settingsMenuRef,
+	settingsMenu,
+	setEditModal,
+	setConfirmModal
+}: {
+	settingsMenuRef: RefObject<HTMLMenuElement>;
+	settingsMenu: SettingsMenuPos;
+	setEditModal: Dispatch<SetStateAction<boolean>>;
+	setConfirmModal: Dispatch<SetStateAction<"" | "DELETE" | "DELETEALL">>;
+}) {
+	return (
+		<AnimatePresence>
+			{settingsMenu.display && <motion.menu
+				initial={{ height: 0, opacity: 0 }}
+				animate={{ height: '6.2rem', opacity: 1 }}
+				exit={{ height: 0, opacity: 0 }}
+        transition={{ type: 'tween', ease: 'linear', duration: 0.1 }}
 				ref={settingsMenuRef}
 				style={{
 					top: settingsMenu.top,
 					left: settingsMenu.left
 				}}
-				className="absolute z-20 p-2 shadow-md shadow-black bg-black border-pink-400 border-[1px] rounded-md seasonal-settings-menu"
+				className="absolute z-20 p-2 w-[11rem] shadow-md shadow-black bg-black border-pink-400 border-[1px] rounded-md overflow-hidden"
 			>
 				<li className="flex justify-center h-fit rounded-md hover:bg-pink-400">
 					<button onClick={() => setEditModal(true)} className="py-2 w-full">
@@ -311,21 +345,25 @@ export default function Seasonal() {
 						Delete all
 					</button>
 				</li>
-			</menu>
-		)
-	}
+			</motion.menu>}
+		</AnimatePresence>
+	)
+}
 
-	function handleSettingsMenu(e: BaseSyntheticEvent) {
-		const { top, left } = e.target.getBoundingClientRect()
+function AddRecord({
+	addRecordMenuRef,
+	isAdded,
+	setIsAdded,
+	response
+}: {
+	addRecordMenuRef: RefObject<HTMLMenuElement>;
+	isAdded: boolean;
+	setIsAdded: Dispatch<SetStateAction<boolean>>;
+	response: any;
+}) {
+	const { setLoading } = useLoading()
 
-		setSettingsMenu({
-			top: top + window.scrollY,
-			left: left + window.scrollX - 160,
-			display: 'block'
-		})
-	}
-
-	async function handleAddRecord(e: BaseSyntheticEvent) {
+	async	 function handleAddRecord(e: BaseSyntheticEvent) {
 		e.preventDefault()
 		const enteredTitle = e.target[0].value
 		if (!enteredTitle || !response) return
@@ -350,6 +388,23 @@ export default function Seasonal() {
 			return
 		}
 	}
+
+	return (
+		<AnimatePresence>
+			{isAdded && <motion.menu 
+				initial={{ y: -10, opacity: 0 }}
+				animate={{ y: 0, opacity: 1 }}
+				exit={{ y: -10, opacity: 0 }}
+				transition={{ type: 'tween', ease: 'linear', duration: 0.1 }}
+				ref={addRecordMenuRef} 
+				className='absolute top-32 z-10 p-1 rounded-lg bg-black border-[1px] border-pink-400'
+			>
+				<form onSubmit={handleAddRecord}>
+					<input placeholder='Insert title' className='w-60 text-lg rounded-sm bg-gray-800 focus:outline-none' />
+				</form>
+			</motion.menu>}
+		</AnimatePresence>
+	)
 }
 
 //* Confirm delete items
@@ -491,7 +546,7 @@ function ChangeStatusAllModal({
 		} catch (error) {
 			setLoading(false)
 			alert(error)
-			console.log(error)
+			console.error(error)
 		}
 	}
 
@@ -816,46 +871,52 @@ function ContextMenu({
 	}
 
 	return (
-		<menu
-			ref={contextMenuRef}
-			style={{
-				top: contextMenu.top,
-				left: contextMenu.left
-			}}
-			className="absolute z-10 p-2 shadow-md shadow-gray-600 bg-slate-200 text-black rounded-sm border-black border-solid border-2 seasonal-context-menu"
-		>
-			<li className="flex justify-center">
-				<span className="text-center font-semibold line-clamp-2">
-					{contextMenu.currentItem?.title}
-				</span>
-			</li>
-			<hr className="my-2 border-gray-500 border-t-[1px]" />
-			{contextMenu.currentItem.SeasonalDetails?.[0]?.mal_id && 
-			<li className="flex justify-center h-8 rounded-sm hover:bg-slate-500">
-				<Link
-					href={`https://myanimelist.net/anime/${contextMenu.currentItem.SeasonalDetails[0].mal_id}`} 
-					target='_blank' 
-					rel='noopener noreferrer' 
-					className="p-1 w-full text-center"
-				>
-					Visit on MAL
-				</Link>
-			</li>}
-			<li className="flex justify-center h-8 rounded-sm hover:bg-slate-500">
-				<button onClick={loadItemDetails} className="w-full">
-					Load details
-				</button>
-			</li>
-			<li className="flex justify-center h-8 rounded-sm hover:bg-slate-500">
-				<button onClick={handleAddToCompleted} className="w-full">
-					Add to Completed
-				</button>
-			</li>
-			<li className="flex justify-center h-8 rounded-sm hover:bg-slate-500">
-				<button onClick={() => setConfirmModalDelEntry()} className="w-full">
-					Delete entry
-				</button>
-			</li>
-		</menu>
+		<AnimatePresence>
+			{contextMenu.currentItem && <motion.menu
+				initial={{ height: 0, opacity: 0 }}
+				animate={{ height: '13.1rem', opacity: 1 }}
+				exit={{ height: 0, opacity: 0 }}
+        transition={{ type: 'tween', ease: 'linear', duration: 0.1 }}
+				ref={contextMenuRef}
+				style={{
+					top: contextMenu.top,
+					left: contextMenu.left
+				}}
+				className="absolute z-10 p-2 w-[15rem] shadow-md shadow-gray-600 bg-slate-200 text-black rounded-sm border-black border-solid border-2 overflow-hidden"
+			>
+				<li className="flex justify-center">
+					<span className="text-center font-semibold line-clamp-2">
+						{contextMenu.currentItem?.title}
+					</span>
+				</li>
+				<hr className="my-2 border-gray-500 border-t-[1px]" />
+				{contextMenu.currentItem.SeasonalDetails?.[0]?.mal_id && 
+				<li className="flex justify-center h-8 rounded-sm hover:bg-slate-500">
+					<Link
+						href={`https://myanimelist.net/anime/${contextMenu.currentItem.SeasonalDetails[0].mal_id}`} 
+						target='_blank' 
+						rel='noopener noreferrer' 
+						className="p-1 w-full text-center"
+					>
+						Visit on MAL
+					</Link>
+				</li>}
+				<li className="flex justify-center h-8 rounded-sm hover:bg-slate-500">
+					<button onClick={loadItemDetails} className="w-full">
+						Load details
+					</button>
+				</li>
+				<li className="flex justify-center h-8 rounded-sm hover:bg-slate-500">
+					<button onClick={handleAddToCompleted} className="w-full">
+						Add to Completed
+					</button>
+				</li>
+				<li className="flex justify-center h-8 rounded-sm hover:bg-slate-500">
+					<button onClick={() => setConfirmModalDelEntry()} className="w-full">
+						Delete entry
+					</button>
+				</li>
+			</motion.menu>}
+		</AnimatePresence>
 	)
 }
