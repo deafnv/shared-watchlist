@@ -1,6 +1,7 @@
 import Head from 'next/head'
 import type { AppProps } from 'next/app'
 import { useRouter } from 'next/router'
+import { Quicksand } from 'next/font/google'
 import { useEffect } from 'react'
 import { Analytics } from '@vercel/analytics/react'
 import NProgress from 'nprogress'
@@ -9,6 +10,8 @@ import { LoadingProvider } from '@/components/LoadingContext'
 import Navbar from '@/components/Navbar'
 import '@/styles/globals.css'
 import '@/styles/nprogress.css'
+
+const quicksand = Quicksand({ subsets: ['latin'] })
 
 declare module '@mui/material/styles' {
 	interface Theme {
@@ -40,7 +43,7 @@ const theme = createTheme({
     mode: 'dark'
   },
   typography: {
-    fontFamily: `-apple-system, BlinkMacSystemFont, Quicksand, Segoe UI, Roboto, Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif`
+    fontFamily: `-apple-system, BlinkMacSystemFont, ${quicksand.style.fontFamily}, Segoe UI, Roboto, Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif`
   }
 });
 
@@ -68,7 +71,6 @@ export default function App({ Component, pageProps }: AppProps) {
 		})
 
 		return () => {
-			// Make sure to remove the event handler on unmount!
 			router.events.off('routeChangeStart', handleRouteStart)
 			router.events.off('routeChangeComplete', handleRouteDone)
 			router.events.off('routeChangeError', handleRouteDone)
@@ -85,6 +87,11 @@ export default function App({ Component, pageProps }: AppProps) {
 					<Head>
 						<meta name="viewport" content="width=device-width, initial-scale=1" />
 					</Head>
+					<style jsx global>{`
+						html {
+							font-family: ${quicksand.style.fontFamily};
+						}
+					`}</style>
 					<Navbar />
 					<Component {...pageProps} />
 				</ThemeProvider>
