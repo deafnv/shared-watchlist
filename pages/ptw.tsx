@@ -39,13 +39,6 @@ interface ContextMenuPos {
 let socket: Socket
 
 export default function PTW() {
-	const rolledTitleRef = useRef('???')
-	const rolledTitleElementRef = useRef<HTMLHeadingElement>(null)
-	const onlineUsersRef = useRef<number>(0)
-	const onlineUsersElementRef = useRef<HTMLSpanElement>(null)
-	const latencyRef = useRef<HTMLSpanElement>(null)
-	const latencyBadgeRef = useRef<HTMLDivElement>(null)
-	const addGachaRollRef = useRef<HTMLDivElement>(null)
 	const contextMenuRef = useRef<HTMLDivElement>(null)
 	const contextMenuButtonRef = useRef<any>([])
 	const sortMethodRef = useRef('')
@@ -70,6 +63,10 @@ export default function PTW() {
 	const [confirmModal, setConfirmModal] = useState(false)
 	const [contextMenu, setContextMenu] = useState<ContextMenuPos>({ top: 0, left: 0, currentItem: null })
 	const [isAdded, setIsAdded] = useState<AddRecordPos | null>(null)
+	const [rolledTitle, setRolledTitle] = useState('???')
+	const [latency, setLatency] = useState(-1)
+	const [onlineUsers, setOnlineUsersState] = useState(-1)
+
 	const { setLoading } = useLoading()
 
 	const setIsEdited = (value: string) => {
@@ -82,21 +79,10 @@ export default function PTW() {
 		setConfirmModal(true)
 	}
 
-	const setRolledTitle = (value: string) => {
-		if (value == '???') {
-			addGachaRollRef.current!.style.visibility = 'hidden'
-		} else {
-			addGachaRollRef.current!.style.visibility = 'visible'
-		}
-		rolledTitleElementRef.current!.innerHTML = value
-		rolledTitleRef.current = value
-	}
-
 	const setOnlineUsers = (value: any) => {
 		if (!value) return
 		const valueArr = Object.keys(value).map(key => value[key])
-		onlineUsersRef.current = valueArr.length
-		onlineUsersElementRef.current!.innerHTML = `${valueArr.length} user(s) online`
+		setOnlineUsersState(valueArr.length)
 	}
 
 	const editFormParams = {
@@ -112,14 +98,6 @@ export default function PTW() {
 		setResponseCasual,
 		setResponseNonCasual,
 		setResponseMovies
-	}
-
-	useEffect(() => {
-		setRolledTitle(rolledTitleRef.current)
-	})
-
-	const setLatency = (value: number) => {
-		if (latencyRef.current) latencyRef.current.innerHTML = `Latency: ${value.toFixed(1)}ms`
 	}
 
 	const supabase = createClient<Database>(
@@ -286,7 +264,7 @@ export default function PTW() {
 							<div
 						title='Add new entry' 
 						tabIndex={0}
-						onClick={(e) => handleAddMenu(e, responseRolled, 'rolled')} 
+						onClick={(e) => handleAddMenu(e, responseRolled, 'rolled', setIsAdded)} 
 						className='flex items-center justify-center h-7 w-7 cursor-pointer rounded-full hover:bg-gray-500 transition-colors duration-150 sm:translate-y-[2px]'
 					>
 						<AddIcon />
@@ -393,14 +371,60 @@ export default function PTW() {
 							</div>
 						</div>
 					</div>
-					<Gacha />
+					<Gacha 
+						responseCasual={responseCasual}
+						responseNonCasual={responseNonCasual}
+						responseMovies={responseMovies}
+						responseRolled={responseRolled}
+						rolledTitle={rolledTitle}
+						setRolledTitle={setRolledTitle}
+					/>
 				</section>
 				<section className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-					<PTWTable response={responseCasual} tableName="Casual" tableId="casual" />
-					<PTWTable response={responseNonCasual} tableName="Non-Casual" tableId="noncasual" />
-					<PTWTable response={responseMovies} tableName="Movies" tableId="movies" />
+					<PTWTable 
+						isLoadingClient={isLoadingClient}
+						isEdited={isEdited}
+						setIsEdited={setIsEdited}
+						isLoadingEditForm={isLoadingEditForm}
+						editFormParams={editFormParams}
+						entryToDelete={entryToDelete}
+						setConfirmModal={setConfirmModal}
+						response={responseCasual} 
+						tableName="Casual" 
+						tableId="casual" 
+						setIsAdded={setIsAdded}
+					/>
+					<PTWTable 
+						isLoadingClient={isLoadingClient}
+						isEdited={isEdited}
+						setIsEdited={setIsEdited}
+						isLoadingEditForm={isLoadingEditForm}
+						editFormParams={editFormParams}
+						entryToDelete={entryToDelete}
+						setConfirmModal={setConfirmModal}
+						response={responseNonCasual} 
+						tableName="Non-Casual" 
+						tableId="noncasual" 
+						setIsAdded={setIsAdded}
+					/>
+					<PTWTable 
+						isLoadingClient={isLoadingClient}
+						isEdited={isEdited}
+						setIsEdited={setIsEdited}
+						isLoadingEditForm={isLoadingEditForm}
+						editFormParams={editFormParams}
+						entryToDelete={entryToDelete}
+						setConfirmModal={setConfirmModal}
+						response={responseMovies} 
+						tableName="Movies" 
+						tableId="movies" 
+						setIsAdded={setIsAdded}
+					/>
 				</section>
-				<LatencyBadge />
+				<LatencyBadge 
+					latency={latency}
+					onlineUsers={onlineUsers}
+				/>
 				<ContextMenu 
 					contextMenuRef={contextMenuRef}
 					contextMenu={contextMenu}
@@ -423,282 +447,33 @@ export default function PTW() {
 			</main>
 		</>
 	)
+}
 
-	function LatencyBadge() {
-		function handleOpen(e: BaseSyntheticEvent) {
-			if (!latencyBadgeRef.current) return
-			const child = latencyBadgeRef.current.children[1] as HTMLSpanElement
-			if (latencyBadgeRef.current.style.width != '18rem') {
-				latencyBadgeRef.current.style.width = '18rem'
-				child.style.display = 'block'
-			} else {
-				latencyBadgeRef.current.style.width = '8.6rem'
-				child.style.display = 'none'
-			}
-		}
-
-		return (
-			<div
-				onClick={handleOpen}
-				ref={latencyBadgeRef}
-				style={{
-					width: '18rem'
-				}}
-				className="fixed bottom-6 left-6 flex items-center justify-between z-50 p-2 max-h-[2.5rem] max-w-[60vw] rounded-full bg-black border-pink-500 border-[1px] whitespace-nowrap overflow-hidden cursor-pointer ease-out transition-[width]"
-			>
-				<span ref={latencyRef} className="text-gray-300 p-1 pointer-events-none">
-					Latency: -1.0ms
-				</span>
-				<span>
-					<span className="text-gray-300 mx-auto pointer-events-none"> · </span>
-					<span 
-						ref={onlineUsersElementRef}
-						className="text-gray-300 ml-4 pointer-events-none"
-					>
-						{onlineUsersRef.current} user(s) online
-					</span>
-				</span>
-			</div>
-		)
-	}
-
-	function Gacha() {
-		function handleSubmit(e: BaseSyntheticEvent) {
-			e.preventDefault()
-			if (!responseCasual || !responseNonCasual || !responseMovies) return
-
-			const target = e.target as any
-			const categoryCasual = target[0].checked
-			const movies = target[2].checked
-			let concatArr
-			if (movies) {
-				concatArr = responseMovies?.concat(categoryCasual ? responseCasual : responseNonCasual)
-			} else {
-				concatArr = categoryCasual ? responseCasual : responseNonCasual
-			}
-
-			if (categoryCasual) {
-				const randomTitle = concatArr?.[getRandomInt(responseCasual.length)].title!
-				socket.emit('roll', {
-					message: randomTitle
-				})
-				setRolledTitle(randomTitle)
-			} else {
-				const randomTitle = concatArr?.[getRandomInt(responseNonCasual.length)].title!
-				socket.emit('roll', {
-					message: randomTitle
-				})
-				setRolledTitle(randomTitle)
-			}
-		}
-
-		function handleCancel() {
-			socket.emit('roll', {
-				message: '???'
-			})
-			setRolledTitle('???')
-		}
-
-		async function addGachaRoll() {
-			const rolledTitle = rolledTitleElementRef.current?.innerText
-			if (
-				!responseCasual ||
-				!responseNonCasual ||
-				!responseMovies ||
-				!responseRolled ||
-				rolledTitle == '???'
-			)
-				return
-			if (responseRolled.length >= 21) {
-				alert('Unable to add roll to record, insufficient space.')
-				return
-			}
-
-			socket.emit('roll', {
-				message: rolledTitle,
-				isLoading: true
-			})
-			setLoading(true)
-			const isInMovies = responseMovies.find((item) => item.title.trim() == rolledTitle)
-
-			if (isInMovies) {
-				//? If rolled title is a movie
-				const changed = responseMovies.slice().filter((item) => item.title.trim() != rolledTitle)
-
-				const range = `L22:L${22 + responseMovies.length - 1}`
-				const updatePayload = changed.map((item) => item.title)
-				updatePayload.push('')
-
-				const addCell = `N${responseRolled.length + 2}:N${responseRolled.length + 2}`
-				try {
-					await addRolledAPI(range, updatePayload, addCell)
-					setLoading(false)
-					socket.emit('roll', {
-						message: '???',
-						isLoading: false
-					})
-					setRolledTitle('???')
-					return
-				} catch (error) {
-					socket.emit('roll', {
-						message: rolledTitle,
-						isLoading: false
-					})
-					setLoading(false)
-					alert(error)
-					return
-				}
-			}
-
-			const isInCasual = responseCasual.find((item) => item.title.trim() == rolledTitle)
-
-			if (isInCasual) {
-				//? If rolled title is in category casual
-				console.log('CASUAL')
-				const changed = responseCasual.slice().filter((item) => item.title.trim() != rolledTitle)
-
-				const range = `L2:L${responseCasual.length + 1}`
-				const updatePayload = changed.map((item) => item.title)
-				updatePayload.push('')
-
-				const addCell = `N${responseRolled.length + 2}:N${responseRolled.length + 2}`
-				try {
-					await addRolledAPI(range, updatePayload, addCell)
-					socket.emit('roll', {
-						message: '???',
-						isLoading: false
-					})
-					setLoading(false)
-					setRolledTitle('???')
-					return
-				} catch (error) {
-					socket.emit('roll', {
-						message: rolledTitle,
-						isLoading: false
-					})
-					setLoading(false)
-					alert(error)
-					return
-				}
-			} 
-			
-			const isInNonCasual = responseNonCasual.find((item) => item.title.trim() == rolledTitle)
-
-			if (isInNonCasual) { 
-				//? If rolled title is in category non-casual
-				console.log('NONCASUAL')
-				const changed = responseNonCasual.slice().filter((item) => item.title.trim() != rolledTitle)
-
-				const range = `M2:M${responseNonCasual.length + 1}`
-				const updatePayload = changed.map((item) => item.title)
-				updatePayload.push('')
-
-				const addCell = `N${responseRolled.length + 2}:N${responseRolled.length + 2}`
-				try {
-					await addRolledAPI(range, updatePayload, addCell)
-					socket.emit('roll', {
-						message: '???',
-						isLoading: false
-					})
-					setLoading(false)
-					setRolledTitle('???')
-					return
-				} catch (error) {
-					socket.emit('roll', {
-						message: rolledTitle,
-						isLoading: false
-					})
-					setLoading(false)
-					alert(error)
-					return
-				}
-			}
-
-			//? In case title is not found
-			alert('Error: Rolled title not found. Check entries to make sure they have no special characters.')
-
-			async function addRolledAPI(
-				range: string,
-				updatePayload: Array<string | null>,
-				addCell: string
-			) {
-				await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/ptw/addrolled`, {
-					deleteStep: {
-						range: range,
-						content: updatePayload
-					},
-					addStep: {
-						cell: addCell,
-						content: rolledTitle
-					}
-				}, { withCredentials: true })
-			}
-		}
-
-		return (
-			<div className="relative flex flex-col items-center justify-center gap-4 h-[30rem] w-[80dvw] md:w-[25rem] bg-slate-700 rounded-lg -translate-y-8">
-				<h2 className="absolute top-5 p-2 text-2xl sm:text-3xl">Gacha</h2>
-				<div className="absolute top-20 flex items-center justify-center h-52 max-h-52 w-80">
-					<div className="max-h-full max-w-[90%] bg-slate-100 border-black border-solid border-[1px] overflow-auto">
-						<h3 ref={rolledTitleElementRef} className="p-2 text-black text-xl sm:text-2xl text-center">
-							???
-						</h3>
-					</div>
-				</div>
-				<div ref={addGachaRollRef} className="absolute bottom-36 invisible">
-					<Button onClick={addGachaRoll} variant='outlined'>
-						Add to List
-					</Button>
-					<CancelIcon
-						onClick={handleCancel}
-						className="absolute top-2 right-[-32px] cursor-pointer transition-colors duration-100 hover:text-red-500"
-					/>
-				</div>
-				<form
-					onSubmit={handleSubmit}
-					className="absolute flex flex-col items-center gap-2 bottom-6"
-				>
-					<div className="flex">
-						<label className="relative flex gap-1 items-center mr-3 radio-container">
-							<div className="custom-radio" />
-							<input type="radio" name="table_to_roll" value="Casual" defaultChecked />
-							Casual
-						</label>
-						<label className="relative flex gap-1 items-center radio-container">
-							<div className="custom-radio" />
-							<input type="radio" name="table_to_roll" value="NonCasual" />
-							Non-Casual
-						</label>
-					</div>
-					<div className="flex gap-1">
-						<label className="relative flex gap-1 items-center checkbox-container">
-							<div className="custom-checkbox" />
-							<DoneIcon fontSize="inherit" className="absolute checkmark" />
-							<input type="checkbox" value="IncludeMovies" />
-							Include movies?
-						</label>
-					</div>
-					<Button type='submit' variant='outlined'>Roll</Button>
-				</form>
-			</div>
-		)
-	}
-
-	function handleAddMenu(
-		e: BaseSyntheticEvent, 
-		response: Database['public']['Tables']['PTW-Casual']['Row'][] | undefined, 
-		tableId: 'rolled' | 'casual' | 'noncasual' | 'movies'
-	) {
-		const { top, left } = e.target.getBoundingClientRect()
-
-		setIsAdded({ 
-			top: top + window.scrollY,
-			left: left + window.scrollX,
-			response, 
-			tableId 
-		 })
-	}
-
+function PTWTable({
+	isLoadingClient,
+	isEdited,
+	setIsEdited,
+	isLoadingEditForm,
+	editFormParams,
+	entryToDelete,
+	setConfirmModal,
+	response,
+	tableName,
+	tableId,
+	setIsAdded
+}: {
+	isLoadingClient: boolean;
+	isEdited: string;
+	setIsEdited: (value: string) => void;
+	isLoadingEditForm: string[];
+	editFormParams: EditFormParams;
+	entryToDelete: MutableRefObject<any>;
+	setConfirmModal: Dispatch<SetStateAction<boolean>>;
+	response: Database['public']['Tables']['PTW-Casual']['Row'][] | undefined;
+	tableName: string;
+	tableId: 'casual' | 'noncasual' | 'movies';
+	setIsAdded: Dispatch<SetStateAction<AddRecordPos | null>>;
+}) {
 	function handleDeleteUnrolled(
 		tableId: 'casual' | 'noncasual' | 'movies',
 		item: { id: number; title: string; }
@@ -707,74 +482,346 @@ export default function PTW() {
 		setConfirmModal(true)
 	}
 
-	function PTWTable({
-		response,
-		tableName,
-		tableId
-	}: {
-		response: Database['public']['Tables']['PTW-Casual']['Row'][] | undefined
-		tableName: string
-		tableId: 'casual' | 'noncasual' | 'movies'
-	}) {
-		return (
-			<section className="relative flex flex-col items-center">
-				<header className='flex items-center'>
-					<h2 className="p-2 text-2xl sm:text-3xl">{tableName}</h2>
-					<div
-						title='Add new entry' 
-						tabIndex={0}
-						onClick={(e) => handleAddMenu(e, response, tableId)} 
-						className='flex items-center justify-center h-7 w-7 cursor-pointer rounded-full hover:bg-gray-500 transition-colors duration-150 sm:translate-y-[2px]'
-					>
-						<AddIcon />
-					</div>
-				</header>
-				<table>
-					<thead>
-						<tr>
-							<th className="w-[100dvw] sm:w-[30rem]">
-								<span>Title</span>
-							</th>
-						</tr>
-					</thead>
-					<tbody>
-						{isLoadingClient ? 
-						loadingGlimmer(1) : 
-						response?.map((item) => (
-							<tr key={item.id}>
-								<td
-									style={{
-										opacity: isLoadingEditForm.includes(`${tableId}_title_${item.id}`)
-											? 0.5
-											: 1
-									}}
-									onDoubleClick={() => {
-										setIsEdited(`${tableId}_${item.title}_${item.id}`)
-									}}
-									className="relative group"
+	return (
+		<section className="relative flex flex-col items-center">
+			<header className='flex items-center'>
+				<h2 className="p-2 text-2xl sm:text-3xl">{tableName}</h2>
+				<div
+					title='Add new entry' 
+					tabIndex={0}
+					onClick={(e) => handleAddMenu(e, response, tableId, setIsAdded)} 
+					className='flex items-center justify-center h-7 w-7 cursor-pointer rounded-full hover:bg-gray-500 transition-colors duration-150 sm:translate-y-[2px]'
+				>
+					<AddIcon />
+				</div>
+			</header>
+			<table>
+				<thead>
+					<tr>
+						<th className="w-[100dvw] sm:w-[30rem]">
+							<span>Title</span>
+						</th>
+					</tr>
+				</thead>
+				<tbody>
+					{isLoadingClient ? 
+					loadingGlimmer(1) : 
+					response?.map((item) => (
+						<tr key={item.id}>
+							<td
+								style={{
+									opacity: isLoadingEditForm.includes(`${tableId}_title_${item.id}`)
+										? 0.5
+										: 1
+								}}
+								onDoubleClick={() => {
+									setIsEdited(`${tableId}_${item.title}_${item.id}`)
+								}}
+								className="relative group"
+							>
+								<span className='pr-4'>
+									{isEdited == `${tableId}_${item.title}_${item.id}`
+										? EditForm(`${tableId}_title`, item.id, item.title!, editFormParams)
+										: item.title}
+								</span>
+								{isLoadingEditForm.includes(`${tableId}_title_${item.id}`) && (
+									<CircularProgress size={30} className="absolute top-[20%] left-[48%]" />
+								)}
+								<div
+									onClick={() => handleDeleteUnrolled(tableId, item)}
+									className="absolute flex items-center justify-center top-1/2 right-1 -translate-y-1/2 z-10 h-7 w-7 invisible group-hover:visible cursor-pointer rounded-full hover:bg-gray-500 transition-colors duration-150"
 								>
-									<span className='pr-4'>
-										{isEdited == `${tableId}_${item.title}_${item.id}`
-											? EditForm(`${tableId}_title`, item.id, item.title!, editFormParams)
-											: item.title}
-									</span>
-									{isLoadingEditForm.includes(`${tableId}_title_${item.id}`) && (
-										<CircularProgress size={30} className="absolute top-[20%] left-[48%]" />
-									)}
-									<div
-										onClick={() => handleDeleteUnrolled(tableId, item)}
-										className="absolute flex items-center justify-center top-1/2 right-1 -translate-y-1/2 z-10 h-7 w-7 invisible group-hover:visible cursor-pointer rounded-full hover:bg-gray-500 transition-colors duration-150"
-									>
-										<DeleteOutlineIcon />
-									</div>
-								</td>
-							</tr>
-						))}
-					</tbody>
-				</table>
-			</section>
-		)
+									<DeleteOutlineIcon />
+								</div>
+							</td>
+						</tr>
+					))}
+				</tbody>
+			</table>
+		</section>
+	)
+}
+
+//* Shows socket latency
+function LatencyBadge({
+	latency,
+	onlineUsers
+}: {
+	latency: number;
+	onlineUsers: number;
+}) {
+	const latencyBadgeRef = useRef<HTMLDivElement>(null)
+
+	function handleOpen() {
+		if (!latencyBadgeRef.current) return
+		const child = latencyBadgeRef.current.children[1] as HTMLSpanElement
+		if (latencyBadgeRef.current.style.width != '18rem') {
+			latencyBadgeRef.current.style.width = '18rem'
+			child.style.display = 'block'
+		} else {
+			latencyBadgeRef.current.style.width = '8.6rem'
+			child.style.display = 'none'
+		}
 	}
+
+	return (
+		<div
+			onClick={handleOpen}
+			ref={latencyBadgeRef}
+			style={{
+				width: '18rem'
+			}}
+			className="fixed bottom-6 left-6 flex items-center justify-between z-50 p-2 max-h-[2.5rem] max-w-[60vw] rounded-full bg-black border-pink-500 border-[1px] whitespace-nowrap overflow-hidden cursor-pointer ease-out transition-[width]"
+		>
+			<span className="text-gray-300 p-1 pointer-events-none">
+				{`Latency: ${latency}ms`}
+			</span>
+			<span>
+				<span className="text-gray-300 mx-auto pointer-events-none"> · </span>
+				<span className="text-gray-300 ml-4 pointer-events-none">
+					{`${onlineUsers} user(s) online`}
+				</span>
+			</span>
+		</div>
+	)
+}
+
+//* Component to roll show watch order
+function Gacha({
+	responseCasual,
+	responseNonCasual,
+	responseMovies,
+	responseRolled,
+	rolledTitle,
+	setRolledTitle
+}: {
+	responseCasual: Database['public']['Tables']['PTW-Casual']['Row'][] | undefined;
+	responseNonCasual: Database['public']['Tables']['PTW-NonCasual']['Row'][] | undefined;
+	responseMovies: Database['public']['Tables']['PTW-Movies']['Row'][] | undefined;
+	responseRolled: Database['public']['Tables']['PTW-Rolled']['Row'][] | undefined;
+	rolledTitle: string;
+	setRolledTitle: Dispatch<SetStateAction<string>>;
+}) {
+	const { setLoading } = useLoading()
+
+	function handleSubmit(e: BaseSyntheticEvent) {
+		e.preventDefault()
+		if (!responseCasual || !responseNonCasual || !responseMovies) return
+
+		const target = e.target as any
+		const categoryCasual = target[0].checked
+		const movies = target[2].checked
+		let concatArr
+		if (movies) {
+			concatArr = responseMovies?.concat(categoryCasual ? responseCasual : responseNonCasual)
+		} else {
+			concatArr = categoryCasual ? responseCasual : responseNonCasual
+		}
+
+		if (categoryCasual) {
+			const randomTitle = concatArr?.[getRandomInt(responseCasual.length)].title!
+			socket.emit('roll', {
+				message: randomTitle
+			})
+			setRolledTitle(randomTitle)
+		} else {
+			const randomTitle = concatArr?.[getRandomInt(responseNonCasual.length)].title!
+			socket.emit('roll', {
+				message: randomTitle
+			})
+			setRolledTitle(randomTitle)
+		}
+	}
+
+	function handleCancel() {
+		socket.emit('roll', {
+			message: '???'
+		})
+		setRolledTitle('???')
+	}
+
+	async function addGachaRoll() {
+		if (
+			!responseCasual ||
+			!responseNonCasual ||
+			!responseMovies ||
+			!responseRolled ||
+			rolledTitle == '???'
+		)
+			return
+		if (responseRolled.length >= 21) {
+			alert('Unable to add roll to record, insufficient space.')
+			return
+		}
+
+		socket.emit('roll', {
+			message: rolledTitle,
+			isLoading: true
+		})
+		setLoading(true)
+		const isInMovies = responseMovies.find((item) => item.title.trim() == rolledTitle)
+
+		if (isInMovies) {
+			//? If rolled title is a movie
+			const changed = responseMovies.slice().filter((item) => item.title.trim() != rolledTitle)
+
+			const range = `L22:L${22 + responseMovies.length - 1}`
+			const updatePayload = changed.map((item) => item.title)
+			updatePayload.push('')
+
+			const addCell = `N${responseRolled.length + 2}:N${responseRolled.length + 2}`
+			try {
+				await addRolledAPI(range, updatePayload, addCell)
+				setLoading(false)
+				socket.emit('roll', {
+					message: '???',
+					isLoading: false
+				})
+				setRolledTitle('???')
+				return
+			} catch (error) {
+				socket.emit('roll', {
+					message: rolledTitle,
+					isLoading: false
+				})
+				setLoading(false)
+				alert(error)
+				return
+			}
+		}
+
+		const isInCasual = responseCasual.find((item) => item.title.trim() == rolledTitle)
+
+		if (isInCasual) {
+			//? If rolled title is in category casual
+			console.log('CASUAL')
+			const changed = responseCasual.slice().filter((item) => item.title.trim() != rolledTitle)
+
+			const range = `L2:L${responseCasual.length + 1}`
+			const updatePayload = changed.map((item) => item.title)
+			updatePayload.push('')
+
+			const addCell = `N${responseRolled.length + 2}:N${responseRolled.length + 2}`
+			try {
+				await addRolledAPI(range, updatePayload, addCell)
+				socket.emit('roll', {
+					message: '???',
+					isLoading: false
+				})
+				setLoading(false)
+				setRolledTitle('???')
+				return
+			} catch (error) {
+				socket.emit('roll', {
+					message: rolledTitle,
+					isLoading: false
+				})
+				setLoading(false)
+				alert(error)
+				return
+			}
+		} 
+		
+		const isInNonCasual = responseNonCasual.find((item) => item.title.trim() == rolledTitle)
+
+		if (isInNonCasual) { 
+			//? If rolled title is in category non-casual
+			console.log('NONCASUAL')
+			const changed = responseNonCasual.slice().filter((item) => item.title.trim() != rolledTitle)
+
+			const range = `M2:M${responseNonCasual.length + 1}`
+			const updatePayload = changed.map((item) => item.title)
+			updatePayload.push('')
+
+			const addCell = `N${responseRolled.length + 2}:N${responseRolled.length + 2}`
+			try {
+				await addRolledAPI(range, updatePayload, addCell)
+				socket.emit('roll', {
+					message: '???',
+					isLoading: false
+				})
+				setLoading(false)
+				setRolledTitle('???')
+				return
+			} catch (error) {
+				socket.emit('roll', {
+					message: rolledTitle,
+					isLoading: false
+				})
+				setLoading(false)
+				alert(error)
+				return
+			}
+		}
+
+		//? In case title is not found
+		alert('Error: Rolled title not found. Check entries to make sure they have no special characters.')
+
+		async function addRolledAPI(
+			range: string,
+			updatePayload: Array<string | null>,
+			addCell: string
+		) {
+			await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/ptw/addrolled`, {
+				deleteStep: {
+					range: range,
+					content: updatePayload
+				},
+				addStep: {
+					cell: addCell,
+					content: rolledTitle
+				}
+			}, { withCredentials: true })
+		}
+	}
+
+	return (
+		<div className="relative flex flex-col items-center justify-center gap-4 h-[30rem] w-[80dvw] md:w-[25rem] bg-slate-700 rounded-lg -translate-y-8">
+			<h2 className="absolute top-5 p-2 text-2xl sm:text-3xl">Gacha</h2>
+			<div className="absolute top-20 flex items-center justify-center h-52 max-h-52 w-80">
+				<div className="max-h-full max-w-[90%] bg-slate-100 border-black border-solid border-[1px] overflow-auto">
+					<h3 className="p-2 text-black text-xl sm:text-2xl text-center">
+						{rolledTitle}
+					</h3>
+				</div>
+			</div>
+			<div className={`absolute bottom-36 ${rolledTitle == '???' ? 'invisible' : 'visible'}`}>
+				<Button onClick={addGachaRoll} variant='outlined'>
+					Add to List
+				</Button>
+				<CancelIcon
+					onClick={handleCancel}
+					className="absolute top-2 right-[-32px] cursor-pointer transition-colors duration-100 hover:text-red-500"
+				/>
+			</div>
+			<form
+				onSubmit={handleSubmit}
+				className="absolute flex flex-col items-center gap-2 bottom-6"
+			>
+				<div className="flex">
+					<label className="relative flex gap-1 items-center mr-3 radio-container">
+						<div className="custom-radio" />
+						<input type="radio" name="table_to_roll" value="Casual" defaultChecked />
+						Casual
+					</label>
+					<label className="relative flex gap-1 items-center radio-container">
+						<div className="custom-radio" />
+						<input type="radio" name="table_to_roll" value="NonCasual" />
+						Non-Casual
+					</label>
+				</div>
+				<div className="flex gap-1">
+					<label className="relative flex gap-1 items-center checkbox-container">
+						<div className="custom-checkbox" />
+						<DoneIcon fontSize="inherit" className="absolute checkmark" />
+						<input type="checkbox" value="IncludeMovies" />
+						Include movies?
+					</label>
+				</div>
+				<Button type='submit' variant='outlined'>Roll</Button>
+			</form>
+		</div>
+	)
 }
 
 function ContextMenu({
@@ -1331,3 +1378,19 @@ async function saveReorder(
 	}
 }
 
+//* Utility function to add new records
+function handleAddMenu(
+	e: BaseSyntheticEvent, 
+	response: Database['public']['Tables']['PTW-Casual']['Row'][] | undefined, 
+	tableId: 'rolled' | 'casual' | 'noncasual' | 'movies',
+	setIsAdded: Dispatch<SetStateAction<AddRecordPos | null>>
+) {
+	const { top, left } = e.target.getBoundingClientRect()
+
+	setIsAdded({ 
+		top: top + window.scrollY,
+		left: left + window.scrollX,
+		response, 
+		tableId 
+	 })
+}
