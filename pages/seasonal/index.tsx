@@ -16,7 +16,7 @@ import CloseIcon from '@mui/icons-material/Close'
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator'
 import { createClient } from '@supabase/supabase-js'
 import { Database } from '@/lib/database.types'
-import { SeasonalTableItemProps } from '@/lib/list_methods'
+import { SeasonalTableItemProps } from '@/lib/types'
 import { useLoading } from '@/components/LoadingContext'
 
 //TODO: Allow sort, and show save changes button to save sort

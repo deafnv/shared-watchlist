@@ -1,9 +1,9 @@
-import { GetStaticPropsContext } from 'next'
 import Head from 'next/head'
+import Link from 'next/link'
+import dynamic from 'next/dynamic'
 import { Dispatch, MutableRefObject, SetStateAction, useRef, useState } from 'react'
 import { Line, Pie } from 'react-chartjs-2'
 import { createClient } from '@supabase/supabase-js'
-import { Database } from '@/lib/database.types'
 import {
 	Chart as ChartJS,
 	CategoryScale,
@@ -17,7 +17,6 @@ import {
 	ArcElement,
 	TimeScale
 } from 'chart.js'
-import Link from 'next/link'
 import {
 	mean,
 	median,
@@ -28,72 +27,10 @@ import {
 	sampleCovariance
 } from 'simple-statistics'
 import 'chartjs-adapter-date-fns'
-import dynamic from 'next/dynamic'
-interface StatTable {
-	rating1Mean: number
-	rating2Mean: number
-	ratingMalMean: number
-	rating1Median: number
-	rating2Median: number
-	ratingMalMedian: number
-	rating1SD: number
-	rating2SD: number
-	ratingMalSD: number
-	rating1Variance: number
-	rating2Variance: number
-	ratingMalVariance: number
-	rating1MAD: number
-	rating2MAD: number
-	ratingMalMAD: number
-	rating1MalCorrelation: number
-	rating2MalCorrelation: number
-	rating1rating2Correlation: number
-	rating1MalCovariance: number
-	rating2MalCovariance: number
-	rating1rating2Covariance: number
-}
+import { Database } from '@/lib/database.types'
+import { DifferenceRatingData, GenreByRatingData, StatisticsProps } from '@/lib/types'
 
-interface StatisticsProps {
-	titleCount: number
-	totalEpisodes: number
-	totalEpisodesWatched: number
-	totalTimeWatched: number
-	typeFreq: { [key: string]: number }
-	genreFreq: { id: number; name: string | null; count: number }[]
-	genreByRating: {
-		id: number
-		name: string
-		rating1mean: number
-		rating2mean: number
-		rating1median: number | null
-		rating2median: number | null
-		titlecount: number
-	}[]
-	titleByRatingDiff: {
-		id: number
-		title: string | null
-		rating1average: number | null
-		rating2average: number | null
-		rating1MalDiff: number
-		rating2MalDiff: number
-		rating1rating2Diff: number
-	}[]
-	rating1FreqArr: Array<{ [key: number]: number }>
-	rating2FreqArr: Array<{ [key: number]: number }>
-	ratingMalFreqArr: Array<{ [key: number]: number }>
-	dateRatingData: {
-		id: number
-		title: string
-		rating1average: number | null
-		rating2average: number | null
-		malRating: number | null
-		broadcastDate: string | null
-		endWatchDate: number | null
-	}[]
-	ratingStatTable: StatTable
-}
-
-export const getStaticProps = async (context: GetStaticPropsContext) => {
+export const getStaticProps = async () => {
 	const supabase = createClient<Database>(
 		process.env.NEXT_PUBLIC_SUPABASE_URL!,
 		process.env.NEXT_PUBLIC_SUPABASE_API_KEY!
@@ -104,10 +41,10 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
 		.order('id', { ascending: true })
 
 	let totalEpisodes = data?.reduce((acc: any, current: any) => {
-		return acc + current.episode_total!
+		return acc + current.episode_actual!
 	}, 0)
 	let totalEpisodesWatched = data?.reduce((acc: any, current: any) => {
-		return acc + current.episode_actual!
+		return acc + current.episode_total!
 	}, 0)
 	let totalTimeWatched = data?.reduce((acc: any, current: any) => {
 		return acc + current.episode_actual * current.CompletedDetails.average_episode_duration
@@ -424,337 +361,96 @@ export default function Statistics({
 			<main className="flex flex-col items-center justify-center mb-24 px-6 py-2">
 				<h2 className="p-2 text-2xl sm:text-3xl">Statistics</h2>
 				<div className="grid grid-cols-2 gap-4 place-items-center">
-					<section className="flex flex-col col-span-2 md:col-span-1 items-center justify-center px-6 py-4 w-[24rem] border-[1px] border-white rounded-lg">
-						<h3 className="text-2xl font-semibold text-center">Title count</h3>
-						<span className="mb-2 text-2xl">{titleCount}</span>
-						<h3 className="text-2xl font-semibold text-center">Total episodes watched</h3>
-						<span className="mb-2 text-2xl ">{totalEpisodesWatched}</span>
-						<h3 className="text-2xl font-semibold text-center">
+					<section className="flex flex-col col-span-2 md:col-span-1 items-center justify-center px-6 py-4 w-[24rem] bg-neutral-700 shadow-md shadow-black rounded-lg">
+						<h3 className="text-xl sm:text-2xl font-semibold text-center">Title count</h3>
+						<span className="mb-2 text-xl sm:text-2xl">{titleCount}</span>
+						<h3 className="text-xl sm:text-2xl font-semibold text-center">Total episodes watched</h3>
+						<span className="mb-2 text-xl sm:text-2xl ">{totalEpisodesWatched}</span>
+						<h3 className="text-xl sm:text-2xl font-semibold text-center">
 							Total episodes (including unwatched)
 						</h3>
-						<span className="text-2xl">{totalEpisodes}</span>
+						<span className="text-xl sm:text-2xl">{totalEpisodes}</span>
 					</section>
-					<section className="flex flex-col col-span-2 md:col-span-1 items-center justify-center p-4 w-[20rem] border-[1px] border-white rounded-lg">
-						<h3 className="mb-4 text-2xl font-semibold">Total time watched</h3>
-						<span className="mb-1 text-xl">{Math.floor(totalTimeWatched / 60 / 60 / 24)} days</span>
-						<span className="mb-1 text-xl">
+					<section className="flex flex-col col-span-2 md:col-span-1 items-center justify-center p-4 w-[20rem] bg-neutral-700 shadow-md shadow-black rounded-lg">
+						<h3 className="mb-4 text-xl sm:text-2xl font-semibold">Total time watched</h3>
+						<span className="mb-1 text-lg sm:text-xl">{Math.floor(totalTimeWatched / 60 / 60 / 24)} days</span>
+						<span className="mb-1 text-lg sm:text-xl">
 							{Math.floor((totalTimeWatched / 60 / 60) % 24)} hours
 						</span>
-						<span className="mb-1 text-xl">{Math.floor((totalTimeWatched / 60) % 60)} minutes</span>
-						<span className="mb-1 text-xl">{Math.floor(totalTimeWatched % 60)} seconds</span>
+						<span className="mb-1 text-lg sm:text-xl">{Math.floor((totalTimeWatched / 60) % 60)} minutes</span>
+						<span className="mb-1 text-lg sm:text-xl">{Math.floor(totalTimeWatched % 60)} seconds</span>
 					</section>
-					<section className="col-span-2 flex flex-col items-center h-[20rem] w-[20rem] border-[1px] border-white overflow-auto rounded-lg">
-						<div className="sticky top-0 h-16 w-full p-3 bg-black">
-							<h3 className="text-2xl font-semibold text-center">Top Genres by count</h3>
-						</div>
-						{genreFreq.map((item, index) => (
-							<div
-								key={index}
-								className="flex justify-between w-full p-2 border-[1px] border-l-0 border-b-0 border-white"
-							>
-								<Link
-									href={`/completed/genres/${item.id}`}
-									target="_blank"
-									className="p-2 text-lg font-semibold link"
-								>
-									{item.name}
-								</Link>
-								<span className="p-2 text-lg">{item.count}</span>
+					<section className="col-span-2 flex flex-col items-center gap-3 p-6 max-w-full bg-neutral-700 shadow-md shadow-black rounded-lg">
+						<h3 className="col-span-2 mb-1 text-xl sm:text-2xl font-semibold text-center">
+							Top Genres by Count
+						</h3>
+						<div className='flex flex-col col-span-2 lg:col-span-1 items-center px-2 h-[20rem] w-[26rem] max-w-full bg-zinc-800 rounded-md overflow-x-hidden overflow-y-auto'>
+							<div className="sticky top-0 flex items-center justify-center w-full border-b bg-zinc-800">
+								<div className="grow p-4 text-sm sm:text-base font-semibold">Genre Title</div>
+								<div className="relative p-4 w-[24%] text-sm sm:text-base text-center font-semibold">
+									Count
+								</div>
 							</div>
-						))}
+							{genreFreq.map(item => (
+								<Link
+									key={item.id}
+									href={`/completed/genres/${item.id}`}
+									className="flex w-full rounded-md transition-colors duration-75 hover:bg-zinc-500"
+								>
+									<span className="grow px-4 py-2 text-sm sm:text-base">
+										{item.name}
+									</span>
+									<span className="w-[24%] px-4 py-2 text-sm sm:text-base text-center">{item.count}</span>
+								</Link>
+							))}
+						</div>
 					</section>
 				</div>
-				<section className="grid grid-cols-2 gap-3 place-items-center my-6 p-4 w-[70%] border-white border-solid border-[1px] rounded-lg">
-					<h3 className="col-span-2 mb-1 text-2xl font-semibold text-center">
+				<section className="grid grid-cols-2 gap-3 place-items-center my-6 p-4 w-[55rem] max-w-full bg-neutral-700 shadow-md shadow-black rounded-lg">
+					<h3 className="col-span-2 mb-1 text-xl sm:text-2xl font-semibold text-center">
 						Top Genres by Rating
 					</h3>
-					<div className="flex flex-col col-span-2 lg:col-span-1 items-center h-[20rem] w-[97%] border-[1px] border-gray-300 overflow-auto">
-						<div className="sticky top-0 h-16 w-full p-3 bg-black z-10">
-							<h3 className="mb-1 text-xl font-semibold text-center">
-								Rating 1
-							</h3>
-						</div>
-						<div className="flex items-center justify-center w-full bg-sky-600 border-white border-solid border-[1px] border-l-0 border-b-0">
-							<div className="grow p-3 text-lg text-center font-semibold">Genre Title</div>
-							<div
-								tabIndex={0}
-								onClick={() =>
-									handleSort(
-										genreByRating1,
-										'rating1',
-										setRating1ByGenre,
-										sortMethodRating1Ref,
-										'mean'
-									)
-								}
-								className="relative p-3 min-w-[6rem] text-lg text-center font-semibold cursor-pointer border-l-[1px] border-white"
-							>
-								Mean
-								{sortMethodRating1Ref.current.includes('rating1_mean') && (
-									<span className="absolute">
-										{sortMethodRating1Ref.current.includes('asc') ? '▲' : '▼'}
-									</span>
-								)}
-							</div>
-							<div
-								tabIndex={0}
-								onClick={() =>
-									handleSort(
-										genreByRating1,
-										'rating1',
-										setRating1ByGenre,
-										sortMethodRating1Ref,
-										'median'
-									)
-								}
-								className="relative p-3 min-w-[6rem] text-lg text-center font-semibold cursor-pointer border-l-[1px] border-white"
-							>
-								Median
-								{sortMethodRating1Ref.current.includes('rating1_median') && (
-									<span className="absolute">
-										{sortMethodRating1Ref.current.includes('asc') ? '▲' : '▼'}
-									</span>
-								)}
-							</div>
-						</div>
-						{genreByRating1.map((item, index) => (
-							<div
-								key={index}
-								style={{ borderBottomWidth: index >= genreByRating.length - 1 ? 1 : 0 }}
-								className="flex justify-between w-full p-2 border-[1px] border-l-0 border-white"
-							>
-								<Link
-									href={`/completed/genres/${item.id}`}
-									target="_blank"
-									className="grow px-3 py-2 text-lg font-semibold link"
-								>
-									{item.name}
-								</Link>
-								<span className="min-w-[6rem] px-3 py-2 text-lg text-center">
-									{item.rating1mean.toFixed(2)}
-								</span>
-								<span className="min-w-[6rem] px-3 py-2 text-lg text-center">{item.rating1median}</span>
-							</div>
-						))}
-					</div>
-					<div className="flex flex-col col-span-2 lg:col-span-1 items-center h-[20rem] w-[97%] border-[1px] border-gray-300 overflow-auto">
-						<div className="sticky top-0 h-16 w-full p-3 bg-black z-10">
-							<h3 className="mb-1 text-xl font-semibold text-center">
-								Rating 2
-							</h3>
-						</div>
-						<div className="flex items-center justify-center w-full bg-sky-600 border-white border-solid border-[1px] border-l-0 border-b-0">
-							<div className="grow p-3 text-lg text-center font-semibold">Genre Title</div>
-							<div
-								tabIndex={0}
-								onClick={() =>
-									handleSort(
-										genreByRating2,
-										'rating2',
-										setRating2ByGenre,
-										sortMethodRating2Ref,
-										'mean'
-									)
-								}
-								className="relative p-3 min-w-[6rem] text-lg text-center font-semibold cursor-pointer border-l-[1px] border-white"
-							>
-								Mean
-								{sortMethodRating2Ref.current.includes('rating2_mean') && (
-									<span className="absolute">
-										{sortMethodRating2Ref.current.includes('asc') ? '▲' : '▼'}
-									</span>
-								)}
-							</div>
-							<div
-								tabIndex={0}
-								onClick={() =>
-									handleSort(
-										genreByRating2,
-										'rating2',
-										setRating2ByGenre,
-										sortMethodRating2Ref,
-										'median'
-									)
-								}
-								className="relative p-3 min-w-[6rem] text-lg text-center font-semibold cursor-pointer border-l-[1px] border-white"
-							>
-								Median
-								{sortMethodRating2Ref.current.includes('rating2_median') && (
-									<span className="absolute">
-										{sortMethodRating2Ref.current.includes('asc') ? '▲' : '▼'}
-									</span>
-								)}
-							</div>
-						</div>
-						{genreByRating2.map((item, index) => (
-							<div
-								key={index}
-								style={{ borderBottomWidth: index >= genreByRating.length - 1 ? 1 : 0 }}
-								className="flex justify-between w-full p-2 border-[1px] border-l-0 border-white"
-							>
-								<Link
-									href={`/completed/genres/${item.id}`}
-									target="_blank"
-									className="grow px-3 py-2 text-lg font-semibold link"
-								>
-									{item.name}
-								</Link>
-								<span className="min-w-[6rem] px-3 py-2 text-lg text-center">
-									{item.rating2mean.toFixed(2)}
-								</span>
-								<span className="min-w-[6rem] px-3 py-2 text-lg text-center">{item.rating2median}</span>
-							</div>
-						))}
-					</div>
+					<GenreRatingTable 
+						genreByRating={genreByRating1}
+						ratingNum='rating1'
+						reorderFunc={setRating1ByGenre}
+						sortMethodRatingRef={sortMethodRating1Ref}
+					/>
+					<GenreRatingTable 
+						genreByRating={genreByRating2}
+						ratingNum='rating2'
+						reorderFunc={setRating2ByGenre}
+						sortMethodRatingRef={sortMethodRating2Ref}
+					/>
 				</section>
-				<section className="grid grid-cols-2 gap-3 place-items-center my-6 p-4 w-[70%] border-white border-solid border-[1px] rounded-lg">
-					<h3 className="col-span-2 mb-2 text-2xl font-semibold">
+				<section className="grid grid-cols-2 gap-3 place-items-center my-6 p-4 w-[55rem] max-w-full bg-neutral-700 shadow-md shadow-black rounded-lg">
+					<h3 className="col-span-2 mb-2 text-xl sm:text-2xl font-semibold text-center">
 						Top Animes by Difference
 					</h3>
-					<div className="flex flex-col col-span-2 lg:col-span-1 items-center h-[20rem] w-[97%] border-[1px] border-gray-300 overflow-auto">
-						<div className="sticky top-0 h-16 w-full p-3 bg-black z-10">
-							<h3 className="mb-1 text-xl font-semibold text-center">
-								 Rating 1 − MAL
-							</h3>
-						</div>
-						<div className="flex items-center justify-center w-full bg-sky-600 border-white border-solid border-[1px] border-l-0 border-b-0">
-							<div className="grow p-3 text-lg text-center font-semibold">Title</div>
-							<div
-								tabIndex={0}
-								onClick={() =>
-									handleSortTitlesByDiff(
-										titleByRating1MalDiff,
-										'rating1MalDiff',
-										setTitleByRating1MalDiff,
-										sortMethodRating1MalDiff
-									)
-								}
-								className="relative p-3 min-w-[6rem] text-lg text-center font-semibold cursor-pointer border-l-[1px] border-white"
-							>
-								Diff.
-								{sortMethodRating1MalDiff.current.includes('diff') && (
-									<span className="absolute">
-										{sortMethodRating1MalDiff.current.includes('asc') ? '▲' : '▼'}
-									</span>
-								)}
-							</div>
-						</div>
-						{titleByRating1MalDiff.map((item, index) => (
-							<div
-								key={index}
-								style={{ borderBottomWidth: index >= titleByRatingDiff.length - 1 ? 1 : 0 }}
-								className="flex justify-between w-full border-[1px] border-l-0 border-white"
-							>
-								<Link
-									href={`/completed/anime/${item.id}`}
-									target="_blank"
-									className="grow px-3 py-2 text-lg font-semibold link"
-								>
-									{item.title}
-								</Link>
-								<span className="min-w-[6rem] px-3 py-2 text-lg text-center">
-									{item.rating1MalDiff.toFixed(2)}
-								</span>
-							</div>
-						))}
-					</div>
-					<div className="flex flex-col col-span-2 lg:col-span-1 items-center h-[20rem] w-[97%] border-[1px] border-gray-300 overflow-auto">
-						<div className="sticky top-0 h-16 w-full p-3 bg-black z-10">
-							<h3 className="mb-1 text-xl font-semibold text-center">
-								Rating 2 − MAL
-							</h3>
-						</div>
-						<div className="flex items-center justify-center w-full bg-sky-600 border-white border-solid border-[1px] border-l-0 border-b-0">
-							<div className="grow p-3 text-lg text-center font-semibold">Title</div>
-							<div
-								tabIndex={0}
-								onClick={() =>
-									handleSortTitlesByDiff(
-										titleByRating2MalDiff,
-										'rating2MalDiff',
-										setTitleByRating2MalDiff,
-										sortMethodRating2MalDiff
-									)
-								}
-								className="relative p-3 min-w-[6rem] text-lg text-center font-semibold cursor-pointer border-l-[1px] border-white"
-							>
-								Diff.
-								{sortMethodRating2MalDiff.current.includes('diff') && (
-									<span className="absolute">
-										{sortMethodRating2MalDiff.current.includes('asc') ? '▲' : '▼'}
-									</span>
-								)}
-							</div>
-						</div>
-						{titleByRating2MalDiff.map((item, index) => (
-							<div
-								key={index}
-								style={{ borderBottomWidth: index >= titleByRatingDiff.length - 1 ? 1 : 0 }}
-								className="flex justify-between w-full border-[1px] border-l-0 border-white"
-							>
-								<Link
-									href={`/completed/anime/${item.id}`}
-									target="_blank"
-									className="grow px-3 py-2 text-lg font-semibold link"
-								>
-									{item.title}
-								</Link>
-								<span className="min-w-[6rem] px-3 py-2 text-lg text-center">
-									{item.rating2MalDiff.toFixed(2)}
-								</span>
-							</div>
-						))}
-					</div>
-					<div className="col-span-2 flex flex-col items-center h-[20rem] w-[97%] md:w-[33rem] border-[1px] border-gray-300 overflow-auto">
-						<div className="sticky top-0 h-16 w-full p-3 bg-black z-10">
-							<h3 className="mb-1 text-xl font-semibold text-center">
-								Rating 1 − Rating 2
-							</h3>
-						</div>
-						<div className="flex items-center justify-center w-full bg-sky-600 border-white border-solid border-[1px] border-l-0 border-b-0">
-							<div className="grow p-3 text-lg text-center font-semibold">Title</div>
-							<div
-								tabIndex={0}
-								onClick={() =>
-									handleSortTitlesByDiff(
-										titleByRating1Rating2Diff,
-										'rating1rating2Diff',
-										setTitleByRating1Rating2Diff,
-										sortMethodRating1Rating2Diff
-									)
-								}
-								className="relative p-3 min-w-[6rem] text-lg text-center font-semibold cursor-pointer border-l-[1px] border-white"
-							>
-								Diff.
-								{sortMethodRating1Rating2Diff.current.includes('diff') && (
-									<span className="absolute">
-										{sortMethodRating1Rating2Diff.current.includes('asc') ? '▲' : '▼'}
-									</span>
-								)}
-							</div>
-						</div>
-						{titleByRating1Rating2Diff.map((item, index) => (
-							<div
-								key={index}
-								style={{ borderBottomWidth: index >= titleByRatingDiff.length - 1 ? 1 : 0 }}
-								className="flex justify-between w-full border-[1px] border-l-0 border-white"
-							>
-								<Link
-									href={`/completed/anime/${item.id}`}
-									target="_blank"
-									className="grow px-3 py-2 text-lg font-semibold link"
-								>
-									{item.title}
-								</Link>
-								<span className="min-w-[6rem] px-3 py-2 text-lg text-center">
-									{item.rating1rating2Diff.toFixed(2)}
-								</span>
-							</div>
-						))}
-					</div>
+					<DifferenceRatingTable 
+						tableName='Rating 1 − MAL'
+						titleByRatingDiff={titleByRating1MalDiff}
+						ratingDiff='rating1MalDiff'
+						setTitleByDiff={setTitleByRating1MalDiff}
+						sortMethodDiff={sortMethodRating1MalDiff}
+					/>
+					<DifferenceRatingTable 
+						tableName='Rating 2 − MAL'
+						titleByRatingDiff={titleByRating2MalDiff}
+						ratingDiff='rating2MalDiff'
+						setTitleByDiff={setTitleByRating2MalDiff}
+						sortMethodDiff={sortMethodRating2MalDiff}
+					/>
+					<DifferenceRatingTable 
+						tableName='Rating 1 − Rating 2'
+						titleByRatingDiff={titleByRating1Rating2Diff}
+						ratingDiff='rating1rating2Diff'
+						setTitleByDiff={setTitleByRating1Rating2Diff}
+						sortMethodDiff={sortMethodRating1Rating2Diff}
+					/>
 				</section>
-				<section className="flex flex-col items-center justify-center h-[30rem] w-[30rem] col-span-2 p-4 mb-6 border-[1px] border-white rounded-lg">
-					<h3 className="mb-2 text-2xl font-semibold">Types</h3>
+				<section className="flex flex-col items-center justify-center gap-3 h-[30rem] w-[30rem] max-w-full col-span-2 p-4 mb-6 bg-neutral-700 shadow-md shadow-black	 rounded-lg">
+					<h3 className="mb-2 text-xl sm:text-2xl font-semibold">Types</h3>
 					<div className="p-4 h-full w-full bg-gray-400 rounded-lg">
 						<Pie
 							options={pieOptions}
@@ -781,151 +477,225 @@ export default function Statistics({
 						/>
 					</div>
 				</section>
-				<section className="flex flex-col items-center justify-center gap-4 p-4 w-[52rem] border-[1px] border-b-0 border-white rounded-lg rounded-b-none">
-					<h3 className="mb-1 text-2xl font-semibold">Ratings</h3>
-					<h4 className="mt-2 text-xl font-semibold">Central Tendency</h4>
-					<div className="flex flex-col md:flex-row">
-						<table>
-							<thead>
-								<tr>
-									<th colSpan={3}>Mean</th>
-								</tr>
-								<tr>
-									{statTable.map((item) => (
-										<th key={item + 'a'}>{item}</th>
-									))}
-								</tr>
-							</thead>
-							<tbody>
-								<tr>
-									<td>{ratingStatTable.rating1Mean.toFixed(2)}</td>
-									<td>{ratingStatTable.rating2Mean.toFixed(2)}</td>
-									<td>{ratingStatTable.ratingMalMean.toFixed(2)}</td>
-								</tr>
-							</tbody>
-						</table>
-						<table>
-							<thead>
-								<tr>
-									<th colSpan={3}>Median</th>
-								</tr>
-								<tr>
-									{statTable.map((item) => (
-										<th key={item + 'b'}>{item}</th>
-									))}
-								</tr>
-							</thead>
-							<tbody>
-								<tr>
-									<td>{ratingStatTable.rating1Median.toFixed(2)}</td>
-									<td>{ratingStatTable.rating2Median.toFixed(2)}</td>
-									<td>{ratingStatTable.ratingMalMedian.toFixed(2)}</td>
-								</tr>
-							</tbody>
-						</table>
+				<section className="flex flex-col items-center justify-center gap-2 p-4 w-[56rem] max-w-full bg-neutral-700 shadow-md shadow-black rounded-lg rounded-b-none">
+					<h3 className="text-xl sm:text-2xl font-semibold">Ratings</h3>
+					<h4 className="mt-2 text-lg sm:text-xl font-semibold">Central Tendency</h4>
+					<div className="flex flex-col md:flex-row gap-2">
+						<div className='p-2 bg-zinc-800 rounded-md'>
+							<table>
+								<thead>
+									<tr className='border-b'>
+										<th 
+											className='pb-1 text-base'
+											colSpan={3}
+										>
+											Mean
+										</th>
+									</tr>
+									<tr className='border-b'>
+										{statTable.map((item) => (
+											<th 
+												className='p-2'
+												key={item + 'a'}
+											>
+												{item}
+											</th>
+										))}
+									</tr>
+								</thead>
+								<tbody>
+									<tr>
+										<td className='text-center'>{ratingStatTable.rating1Mean.toFixed(2)}</td>
+										<td className='text-center'>{ratingStatTable.rating2Mean.toFixed(2)}</td>
+										<td className='text-center'>{ratingStatTable.ratingMalMean.toFixed(2)}</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+						<div className='p-2 bg-zinc-800 rounded-md'>
+							<table>
+								<thead>
+									<tr className='border-b'>
+										<th 
+											className='pb-1 text-base'
+											colSpan={3}
+										>
+											Median
+										</th>
+									</tr>
+									<tr className='border-b'>
+										{statTable.map((item) => (
+											<th 
+												className='p-2'
+												key={item + 'b'}
+											>
+												{item}
+											</th>
+										))}
+									</tr>
+								</thead>
+								<tbody>
+									<tr>
+										<td className='text-center'>{ratingStatTable.rating1Median.toFixed(2)}</td>
+										<td className='text-center'>{ratingStatTable.rating2Median.toFixed(2)}</td>
+										<td className='text-center'>{ratingStatTable.ratingMalMedian.toFixed(2)}</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
 					</div>
-					<h4 className="mt-2 text-xl font-semibold">Dispersion</h4>
-					<div className="flex flex-col md:flex-row">
-						<table>
-							<thead>
-								<tr>
-									<th colSpan={3}>Standard Deviation</th>
-								</tr>
-								<tr>
-									{statTable.map((item) => (
-										<th key={item + 'a'}>{item}</th>
-									))}
-								</tr>
-							</thead>
-							<tbody>
-								<tr>
-									<td>{ratingStatTable.rating1SD.toFixed(4)}</td>
-									<td>{ratingStatTable.rating2SD.toFixed(4)}</td>
-									<td>{ratingStatTable.ratingMalSD.toFixed(4)}</td>
-								</tr>
-							</tbody>
-						</table>
-						<table>
-							<thead>
-								<tr>
-									<th colSpan={3}>Median Absolute Deviation</th>
-								</tr>
-								<tr>
-									{statTable.map((item) => (
-										<th key={item + 'b'}>{item}</th>
-									))}
-								</tr>
-							</thead>
-							<tbody>
-								<tr>
-									<td>{ratingStatTable.rating1MAD.toFixed(4)}</td>
-									<td>{ratingStatTable.rating2MAD.toFixed(4)}</td>
-									<td>{ratingStatTable.ratingMalMAD.toFixed(4)}</td>
-								</tr>
-							</tbody>
-						</table>
-						<table>
-							<thead>
-								<tr>
-									<th colSpan={3}>Variance</th>
-								</tr>
-								<tr>
-									{statTable.map((item) => (
-										<th key={item + 'b'}>{item}</th>
-									))}
-								</tr>
-							</thead>
-							<tbody>
-								<tr>
-									<td>{ratingStatTable.rating1Variance.toFixed(4)}</td>
-									<td>{ratingStatTable.rating2Variance.toFixed(4)}</td>
-									<td>{ratingStatTable.ratingMalVariance.toFixed(4)}</td>
-								</tr>
-							</tbody>
-						</table>
+					<h4 className="mt-2 text-lg sm:text-xl font-semibold">Dispersion</h4>
+					<div className="flex flex-col md:flex-row gap-2">
+						<div className='p-2 bg-zinc-800 rounded-md'>
+							<table>
+								<thead>
+									<tr className='border-b'>
+										<th 
+											className='pb-1 text-base'
+											colSpan={3}
+										>
+											Standard Deviation
+										</th>
+									</tr>
+									<tr className='border-b'>
+										{statTable.map((item) => (
+											<th 
+												className='p-2'
+												key={item + 'a'}
+											>
+												{item}
+											</th>
+										))}
+									</tr>
+								</thead>
+								<tbody>
+									<tr>
+										<td className='pt-1 text-center'>{ratingStatTable.rating1SD.toFixed(4)}</td>
+										<td className='pt-1 text-center'>{ratingStatTable.rating2SD.toFixed(4)}</td>
+										<td className='pt-1 text-center'>{ratingStatTable.ratingMalSD.toFixed(4)}</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+						<div className='p-2 bg-zinc-800 rounded-md'>
+							<table>
+								<thead>
+									<tr className='border-b'>
+										<th 
+											className='pb-1 text-base'
+											colSpan={3}
+										>
+											Median Absolute Deviation
+										</th>
+									</tr>
+									<tr className='border-b'>
+										{statTable.map((item) => (
+											<th 
+												className='p-2'
+												key={item + 'b'}
+											>
+												{item}
+											</th>
+										))}
+									</tr>
+								</thead>
+								<tbody>
+									<tr>
+										<td className='pt-1 text-center'>{ratingStatTable.rating1MAD.toFixed(4)}</td>
+										<td className='pt-1 text-center'>{ratingStatTable.rating2MAD.toFixed(4)}</td>
+										<td className='pt-1 text-center'>{ratingStatTable.ratingMalMAD.toFixed(4)}</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+						<div className='p-2 bg-zinc-800 rounded-md'>
+							<table>
+								<thead>
+									<tr className='border-b'>
+										<th 
+											className='pb-1 text-base'
+											colSpan={3}
+										>
+											Variance
+										</th>
+									</tr>
+									<tr className='border-b'>
+										{statTable.map((item) => (
+											<th 
+												className='p-2'
+												key={item + 'b'}
+											>
+												{item}
+											</th>
+										))}
+									</tr>
+								</thead>
+								<tbody>
+									<tr>
+										<td className='pt-1 text-center'>{ratingStatTable.rating1Variance.toFixed(4)}</td>
+										<td className='pt-1 text-center'>{ratingStatTable.rating2Variance.toFixed(4)}</td>
+										<td className='pt-1 text-center'>{ratingStatTable.ratingMalVariance.toFixed(4)}</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
 					</div>
-					<h4 className="mt-2 text-xl font-semibold">Similarity</h4>
-					<div>
-						<table>
-							<thead>
-								<tr>
-									<th colSpan={3}>Correlation</th>
-								</tr>
-								<tr>
-									<th>Rating 1 & MAL Rating</th>
-									<th>Rating 2 & MAL Rating</th>
-									<th>Rating 1 & Rating 2</th>
-								</tr>
-							</thead>
-							<tbody>
-								<tr>
-									<td>{ratingStatTable.rating1MalCorrelation.toFixed(4)}</td>
-									<td>{ratingStatTable.rating2MalCorrelation.toFixed(4)}</td>
-									<td>{ratingStatTable.rating1rating2Correlation.toFixed(4)}</td>
-								</tr>
-							</tbody>
-						</table>
-						<table>
-							<thead>
-								<tr>
-									<th colSpan={3}>Covariance</th>
-								</tr>
-								<tr>
-									<th>Rating 1 & MAL Rating</th>
-									<th>Rating 2 & MAL Rating</th>
-									<th>Rating 1 & Rating 2</th>
-								</tr>
-							</thead>
-							<tbody>
-								<tr>
-									<td>{ratingStatTable.rating1MalCovariance.toFixed(4)}</td>
-									<td>{ratingStatTable.rating2MalCovariance.toFixed(4)}</td>
-									<td>{ratingStatTable.rating1rating2Covariance.toFixed(4)}</td>
-								</tr>
-							</tbody>
-						</table>
+					<h4 className="mt-2 text-lg sm:text-xl font-semibold">Similarity</h4>
+					<div className='flex flex-col gap-2'>
+						<div className='p-2 bg-zinc-800 rounded-md'>
+							<table>
+								<thead>
+									<tr className='border-b'>
+										<th 
+											className='pb-1 text-base'
+											colSpan={3}
+										>
+											Correlation
+										</th>
+									</tr>
+									<tr className='border-b'>
+										<th className='p-2'>Rating 1 & MAL Rating</th>
+										<th className='p-2'>Rating 2 & MAL Rating</th>
+										<th className='p-2'>Rating 1 & Rating 2</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr>
+										<td className='pt-1 text-center'>{ratingStatTable.rating1MalCorrelation.toFixed(4)}</td>
+										<td className='pt-1 text-center'>{ratingStatTable.rating2MalCorrelation.toFixed(4)}</td>
+										<td className='pt-1 text-center'>{ratingStatTable.rating1rating2Correlation.toFixed(4)}</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+						<div className='p-2 bg-zinc-800 rounded-md'>
+							<table>
+								<thead>
+									<tr className='border-b'>
+										<th 
+											className='pb-1 text-base'
+											colSpan={3}
+										>
+											Covariance
+										</th>
+									</tr>
+									<tr className='border-b'>
+										<th className='p-2'>Rating 1 & MAL Rating</th>
+										<th className='p-2'>Rating 2 & MAL Rating</th>
+										<th className='p-2'>Rating 1 & Rating 2</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr>
+										<td className='pt-1 text-center'>{ratingStatTable.rating1MalCovariance.toFixed(4)}</td>
+										<td className='pt-1 text-center'>{ratingStatTable.rating2MalCovariance.toFixed(4)}</td>
+										<td className='pt-1 text-center'>{ratingStatTable.rating1rating2Covariance.toFixed(4)}</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
 					</div>
-					<div className="relative h-[20rem] w-[40rem]">
+					<div className="relative h-[20rem] w-[40rem] max-w-full">
 						<Line
 							options={{
 								responsive: true,
@@ -1016,85 +786,36 @@ export default function Statistics({
 						/>
 					</div>
 				</section>
-				<section className="flex flex-col items-center justify-center gap-4 p-4 w-[52rem] border-[1px] border-b-0 border-white">
-					<div className="relative h-[27rem] w-[47rem]">
+				<section className="flex flex-col items-center justify-center gap-4 p-4 w-[56rem] max-w-full bg-neutral-700 shadow-md shadow-black">
+					<div className="relative h-[27rem] w-[47rem] max-w-full">
 						<RatingBroadcastScatter dateRatingData={dateRatingData} />
 					</div>
 				</section>
-				<section className="flex flex-col items-center justify-center gap-4 p-4 w-[52rem] border-[1px] border-white rounded-lg rounded-t-none">
-					<div className="relative h-[27rem] w-[47rem]">
+				<section className="flex flex-col items-center justify-center gap-4 p-4 w-[56rem] max-w-full bg-neutral-700 shadow-md shadow-black rounded-lg rounded-t-none">
+					<div className="relative h-[27rem] w-[47rem] max-w-full">
 						<RatingEndScatter dateRatingData={dateRatingData} />
 					</div>
 				</section>
 			</main>
 		</>
 	)
+}
 
-	function handleSortTitlesByDiff(
-		toReorderArr: {
-			id: number;
-			title: string | null;
-			rating1average: number | null;
-			rating2average: number | null;
-			rating1MalDiff: number;
-			rating2MalDiff: number;
-			rating1rating2Diff: number;
-		}[],
-		toReorder: 'rating1MalDiff' | 'rating2MalDiff' | 'rating1rating2Diff',
-		setReorderFunc: Dispatch<
-			SetStateAction<
-				{
-					id: number;
-					title: string | null;
-					rating1average: number | null;
-					rating2average: number | null;
-					rating1MalDiff: number;
-					rating2MalDiff: number;
-					rating1rating2Diff: number;
-				}[]
-			>
-		>,
-		sortMethodRef: MutableRefObject<string>
-	) {
-		if (sortMethodRef.current == `${toReorder}_diff_asc`) {
-			const reordered = toReorderArr
-				.slice()
-				.sort((a, b) => b[toReorder] - a[toReorder])
-			sortMethodRef.current = `${toReorder}_diff_desc`
-			setReorderFunc(reordered)
-		} else {
-			const reordered = toReorderArr
-				.slice()
-				.sort((a, b) => a[toReorder] - b[toReorder])
-			sortMethodRef.current = `${toReorder}_diff_asc`
-			setReorderFunc(reordered)
-		}
-	}
-
+function GenreRatingTable({
+	genreByRating,
+	ratingNum,
+	reorderFunc,
+	sortMethodRatingRef
+}: {
+	genreByRating: GenreByRatingData[]
+	ratingNum: 'rating1' | 'rating2'
+	reorderFunc: Dispatch<SetStateAction<GenreByRatingData[]>>
+	sortMethodRatingRef: MutableRefObject<string>
+}) {
 	function handleSort(
-		toReorderArr: {
-			id: number
-			name: string
-			rating1mean: number
-			rating2mean: number
-			rating1median: number | null
-			rating2median: number | null
-			titlecount: number
-		}[],
+		toReorderArr: GenreByRatingData[],
 		toReorder: 'rating1' | 'rating2',
-		setReorderFunc: Dispatch<
-			SetStateAction<
-				{
-					id: number
-					name: string
-					rating1mean: number
-					rating2mean: number
-					rating1median: number | null
-					rating2median: number | null
-					titlecount: number
-				}[]
-			>
-		>,
+		setReorderFunc: Dispatch<SetStateAction<GenreByRatingData[]>>,
 		sortMethodRef: MutableRefObject<string>,
 		field: 'mean' | 'median'
 	) {
@@ -1128,4 +849,153 @@ export default function Statistics({
 			}
 		}
 	}
+
+	return (
+		<div className="flex flex-col col-span-2 lg:col-span-1 items-center px-2 h-[24rem] w-[97%] bg-zinc-800 rounded-md overflow-x-hidden overflow-y-auto">
+			<div className="w-full p-3">
+				<h3 className="mb-1 text-lg sm:text-xl font-semibold text-center">
+					{ratingNum == 'rating1' ? 'Rating 1' : 'Rating 2'}
+				</h3>
+			</div>
+			<div className="sticky top-0 flex items-center justify-center px-2 w-full border-b bg-zinc-800">
+				<div className="w-2/4 px-2 py-4 text-sm sm:text-base font-semibold">Genre Title</div>
+				<div
+					tabIndex={0}
+					onClick={() =>
+						handleSort(
+							genreByRating,
+							ratingNum,
+							reorderFunc,
+							sortMethodRatingRef,
+							'mean'
+						)
+					}
+					className="relative p-4 w-1/4 text-sm sm:text-base text-center font-semibold cursor-pointer"
+				>
+					Mean
+					{sortMethodRatingRef.current.includes(`${ratingNum}_mean`) && (
+						<span className="absolute top-1/2 -translate-y-1/2 text-xs">
+							{sortMethodRatingRef.current.includes('asc') ? '▲' : '▼'}
+						</span>
+					)}
+				</div>
+				<div
+					tabIndex={0}
+					onClick={() =>
+						handleSort(
+							genreByRating,
+							ratingNum,
+							reorderFunc,
+							sortMethodRatingRef,
+							'median'
+						)
+					}
+					className="relative p-4 w-1/4 text-sm sm:text-base text-center font-semibold cursor-pointer"
+				>
+					Median
+					{sortMethodRatingRef.current.includes(`${ratingNum}_median`) && (
+						<span className="absolute top-1/2 -translate-y-1/2 text-xs">
+							{sortMethodRatingRef.current.includes('asc') ? '▲' : '▼'}
+						</span>
+					)}
+				</div>
+			</div>
+			{genreByRating.map(item => (
+				<Link
+					key={item.id}
+					href={`/completed/genres/${item.id}`}
+					className="flex items-center justify-between w-full p-2 rounded-md transition-colors duration-75 hover:bg-zinc-500"
+				>
+					<span className="w-2/4 px-2 text-sm sm:text-base">
+						{item.name}
+					</span>
+					<span className="w-1/4 px-2 text-sm sm:text-base text-center">
+						{item[`${ratingNum}mean`].toFixed(2)}
+					</span>
+					<span className="w-1/4 px-2 text-sm sm:text-base text-center">{item[`${ratingNum}median`]}</span>
+				</Link>
+			))}
+		</div>
+	)
+}
+
+function DifferenceRatingTable({
+	tableName,
+	titleByRatingDiff,
+	ratingDiff,
+	setTitleByDiff,
+	sortMethodDiff
+}: {
+	tableName: 'Rating 1 − MAL' | 'Rating 2 − MAL' | 'Rating 1 − Rating 2'
+	titleByRatingDiff: DifferenceRatingData[]
+	ratingDiff: 'rating1MalDiff' | 'rating2MalDiff' | 'rating1rating2Diff'
+	setTitleByDiff: Dispatch<SetStateAction<DifferenceRatingData[]>>
+	sortMethodDiff: MutableRefObject<string>
+}) {
+	function handleSortTitlesByDiff(
+		toReorderArr: DifferenceRatingData[],
+		toReorder: 'rating1MalDiff' | 'rating2MalDiff' | 'rating1rating2Diff',
+		setReorderFunc: Dispatch<SetStateAction<DifferenceRatingData[]>>,
+		sortMethodRef: MutableRefObject<string>
+	) {
+		if (sortMethodRef.current == `${toReorder}_diff_asc`) {
+			const reordered = toReorderArr
+				.slice()
+				.sort((a, b) => b[toReorder] - a[toReorder])
+			sortMethodRef.current = `${toReorder}_diff_desc`
+			setReorderFunc(reordered)
+		} else {
+			const reordered = toReorderArr
+				.slice()
+				.sort((a, b) => a[toReorder] - b[toReorder])
+			sortMethodRef.current = `${toReorder}_diff_asc`
+			setReorderFunc(reordered)
+		}
+	}
+
+	return (
+		<div className={`flex flex-col col-span-2 ${ratingDiff != 'rating1rating2Diff' ? 'lg:col-span-1' : 'md:w-[33rem]'} items-center px-2 h-[24rem] w-[97%] bg-zinc-800 rounded-md overflow-x-hidden overflow-y-auto`}>
+			<div className="sticky top-0 p-3 z-10">
+				<h3 className="mb-1 text-lg sm:text-xl font-semibold text-center">
+					{tableName}
+				</h3>
+			</div>
+			<div className="sticky top-0 flex items-center justify-center px-2 w-full border-b bg-zinc-800">
+				<div className="w-3/4 px-2 py-4 text-sm sm:text-base font-semibold">Title</div>
+				<div
+					tabIndex={0}
+					onClick={() =>
+						handleSortTitlesByDiff(
+							titleByRatingDiff,
+							ratingDiff,
+							setTitleByDiff,
+							sortMethodDiff
+						)
+					}
+					className="relative px-2 py-4 w-1/4 text-sm sm:text-base text-center font-semibold cursor-pointer"
+				>
+					Diff.
+					{sortMethodDiff.current.includes('diff') && (
+						<span className="absolute top-1/2 -translate-y-1/2 text-xs">
+							{sortMethodDiff.current.includes('asc') ? '▲' : '▼'}
+						</span>
+					)}
+				</div>
+			</div>
+			{titleByRatingDiff.map(item => (
+				<Link
+					key={item.id}
+					href={`/completed/anime/${item.id}`}
+					className="flex items-center justify-between w-full px-2 rounded-md transition-colors duration-75 hover:bg-zinc-500"
+				>
+					<span className="w-3/4 p-2 text-sm sm:text-base">
+						{item.title}
+					</span>
+					<span className="w-1/4 p-2 text-sm sm:text-base text-center">
+						{item[ratingDiff].toFixed(2)}
+					</span>
+				</Link>
+			))}
+		</div>
+	)
 }

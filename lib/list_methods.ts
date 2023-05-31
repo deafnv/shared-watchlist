@@ -1,96 +1,12 @@
 import { Dispatch, MutableRefObject, SetStateAction } from 'react'
 import { Database } from './database.types'
-
-export interface Rating {
-	actual: string | undefined
-	average: number | undefined
-}
-
-export interface WatchDates {
-	original: string | undefined
-	converted: number | undefined
-}
-
-export interface TitleItem {
-	id: number
-	title: string | undefined
-	type: string | undefined
-	episode: string | undefined
-	rating1: Rating
-	rating2: Rating
-	rating3: Rating
-	start: WatchDates
-	end: WatchDates
-}
-
-export interface PTWRolledTableItemProps {
-	props: {
-		item: Database['public']['Tables']['PTW-Rolled']['Row'],
-		index: number,
-		isLoadingEditForm: string[],
-		setIsEdited: (value: string) => void,
-		isEdited: string,
-		isEditedRef: MutableRefObject<string>,
-		sortMethodRef: MutableRefObject<string>,
-		setContextMenu: Dispatch<SetStateAction<{
-			top: number;
-			left: number;
-			currentItem: Database['public']['Tables']['PTW-Rolled']['Row'] | null;
-		}>>,
-		contextMenuButtonRef: MutableRefObject<any>,
-		responseRolled: Database['public']['Tables']['PTW-Rolled']['Row'][] | undefined,
-		setResponseRolled: Dispatch<SetStateAction<Database['public']['Tables']['PTW-Rolled']['Row'][] | undefined>>,
-		setIsLoadingEditForm: Dispatch<SetStateAction<string[]>>,
-	}
-	editFormParams: EditFormParams
-}
-
-export interface EditFormParams {
-	isLoadingEditForm: string[],
-	setIsLoadingEditForm: Dispatch<SetStateAction<string[]>>,
-	isEditedRef: MutableRefObject<string>,
-	setIsEdited: (value: string) => void,
-	responseRolled: Database['public']['Tables']['PTW-Rolled']['Row'][] | undefined,
-	responseCasual: Database['public']['Tables']['PTW-Casual']['Row'][] | undefined,
-	responseNonCasual: Database['public']['Tables']['PTW-NonCasual']['Row'][] | undefined,
-	responseMovies: Database['public']['Tables']['PTW-Movies']['Row'][] | undefined,
-	setResponseRolled: Dispatch<SetStateAction<Database['public']['Tables']['PTW-Rolled']['Row'][] | undefined>>,
-	setResponseCasual: Dispatch<SetStateAction<Database['public']['Tables']['PTW-Casual']['Row'][] | undefined>>,
-	setResponseNonCasual: Dispatch<SetStateAction<Database['public']['Tables']['PTW-NonCasual']['Row'][] | undefined>>,
-	setResponseMovies: Dispatch<SetStateAction<Database['public']['Tables']['PTW-Movies']['Row'][] | undefined>>
-}
-
-export interface PTWTItem {
-	id: number
-	title: string
-}
-
-export interface SeasonalTableItemProps { 
-	props: {
-		item: any, 
-		index: number,
-		setIsLoadingEditForm: Dispatch<SetStateAction<string[]>>,
-		isLoadingEditForm: string[],
-		setIsEdited: (value: string) => void,
-		isEdited: string,
-		isEditedRef: MutableRefObject<string>,
-		contextMenuButtonRef: MutableRefObject<any>,
-		setContextMenu: Dispatch<SetStateAction<{
-			top: number;
-			left: number;
-			currentItem: any | null;
-		}>>,
-		response: any,
-		setResponse: Dispatch<any>
-	}
-}
+import { TitleItem } from '@/lib/types'
 
 export function getRandomInt(max: number) {
 	return Math.floor(Math.random() * max)
 }
 
 //* COMPLETED LIST METHODS
-
 export const initialTitleItem: TitleItem = {
 	id: 0,
 	title: undefined,
