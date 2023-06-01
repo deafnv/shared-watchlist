@@ -28,8 +28,8 @@ export interface PTWRolledTableItemProps {
 		item: Database['public']['Tables']['PTW-Rolled']['Row']
 		index: number
 		isLoadingEditForm: string[]
-		setIsEdited: (value: string) => void
-		isEdited: string
+		setIsEdited: (value: PTWEdited) => void
+		isEdited: PTWEdited
 		isEditedRef: MutableRefObject<string>
 		sortMethodRef: MutableRefObject<string>
 		setContextMenu: Dispatch<SetStateAction<{
@@ -49,7 +49,7 @@ export interface EditFormParams {
 	isLoadingEditForm: string[]
 	setIsLoadingEditForm: Dispatch<SetStateAction<string[]>>
 	isEditedRef: MutableRefObject<string>
-	setIsEdited: (value: string) => void
+	setIsEdited: (value: PTWEdited) => void
 	responseRolled: Database['public']['Tables']['PTW-Rolled']['Row'][] | undefined
 	responseCasual: Database['public']['Tables']['PTW-Casual']['Row'][] | undefined
 	responseNonCasual: Database['public']['Tables']['PTW-NonCasual']['Row'][] | undefined
@@ -60,10 +60,14 @@ export interface EditFormParams {
 	setResponseMovies: Dispatch<SetStateAction<Database['public']['Tables']['PTW-Movies']['Row'][] | undefined>>
 }
 
-export interface PTWTItem {
+export interface PTWItem {
 	id: number
 	title: string
 }
+
+export type PTWTables = "rolled" | "casual" | "noncasual" | "movies"
+
+export type PTWEdited = `${PTWTables}_${string}_${number}` | ''
 
 export interface SeasonalTableItemProps { 
 	props: {

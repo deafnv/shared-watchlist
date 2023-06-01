@@ -17,7 +17,7 @@ import DragIndicatorIcon from '@mui/icons-material/DragIndicator'
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
 import Button from '@mui/material/Button'
 import { createClient } from '@supabase/supabase-js'
-import { EditFormParams, PTWRolledTableItemProps } from '@/lib/types'
+import { EditFormParams, PTWEdited, PTWRolledTableItemProps, PTWItem, PTWTables } from '@/lib/types'
 import { getRandomInt, sortListByNamePTW, sortSymbol } from '@/lib/list_methods'
 import { Database } from '@/lib/database.types'
 import { useLoading } from '@/components/LoadingContext'
@@ -26,7 +26,7 @@ interface AddRecordPos {
 	top: number;
 	left: number;
 	response: Database['public']['Tables']['PTW-Casual']['Row'][] | undefined;
-	tableId: 'rolled' | 'casual' | 'noncasual' | 'movies';
+	tableId: PTWTables | null;
 }
 
 interface ContextMenuPos {
@@ -56,19 +56,19 @@ export default function PTW() {
 		useState<Database['public']['Tables']['PTW-NonCasual']['Row'][]>()
 	const [responseMovies, setResponseMovies] =
 		useState<Database['public']['Tables']['PTW-Movies']['Row'][]>()
-	const [isEdited, setIsEditedState] = useState<string>('')
+	const [isEdited, setIsEditedState] = useState<PTWEdited>('')
 	const [isLoadingClient, setIsLoadingClient] = useState(true)
-	const [isLoadingEditForm, setIsLoadingEditForm] = useState<Array<string>>([])
+	const [isLoadingEditForm, setIsLoadingEditForm] = useState<string[]>([])
 	const [confirmModal, setConfirmModal] = useState(false)
 	const [contextMenu, setContextMenu] = useState<ContextMenuPos>({ top: 0, left: 0, currentItem: null })
-	const [isAdded, setIsAdded] = useState<AddRecordPos | null>(null)
+	const [isAdded, setIsAdded] = useState<AddRecordPos>({ top: 0, left: 0, response: undefined, tableId: null })
 	const [rolledTitle, setRolledTitle] = useState('???')
 	const [latency, setLatency] = useState(-1)
 	const [onlineUsers, setOnlineUsersState] = useState(-1)
 
 	const { setLoading } = useLoading()
 
-	const setIsEdited = (value: string) => {
+	const setIsEdited = (value: PTWEdited) => {
 		isEditedRef.current = value
 		setIsEditedState(value)
 	}
@@ -215,7 +215,7 @@ export default function PTW() {
 				setContextMenu({ top: 0, left: 0, currentItem: null })
 			}
 			if (e.target?.tagName !== 'INPUT' && e.target?.tagName !== 'svg' && e.target?.tagName !== 'path') {
-				setIsAdded(null)
+				setIsAdded({ ...isAdded, tableId: null })
 			}
 		}
 
@@ -279,50 +279,54 @@ export default function PTW() {
 								<RefreshIcon sx={{ fontSize: 28 }} />
 							</div>}
 						</header>
-						<div className="grid grid-cols-[4fr_1.1fr] min-w-0 w-[80dvw] lg:w-[40rem] bg-sky-600 border-white border-solid border-[1px]">
-							<span 
-								tabIndex={0}
-								onClick={() => {
-									sortListByNamePTW(
-										'title',
-										responseRolled,
-										sortMethodRef,
-										setResponseRolled
-									)
-									setReordered(false)
+						<div className='p-2 bg-neutral-700 rounded-md'>
+							<div className="grid grid-cols-[4fr_1.1fr] min-w-0 w-[80dvw] lg:w-[40rem] border-b">
+								<span 
+									tabIndex={0}
+									onClick={() => {
+										sortListByNamePTW(
+											'title',
+											responseRolled,
+											sortMethodRef,
+											setResponseRolled
+										)
+										setReordered(false)
+									}}
+									className='flex items-center justify-center p-2 pt-1 h-full text-center font-bold cursor-pointer'
+								>
+									<span className='relative'>
+										Title
+										<span className="absolute -right-6">{sortSymbol('title', sortMethodRef)}</span>
+									</span>
+								</span>
+								<span className='flex items-center justify-center p-2 pt-1 h-full text-center font-bold'>
+									Status
+								</span>
+							</div>
+							{isLoadingClient ? 
+							<div className='flex items-center justify-center h-[34rem]'>
+								<CircularProgress size={42} color="primary" />
+							</div> :
+							<Reorder.Group
+								values={responseRolled ?? []}
+								draggable={sortMethodRef.current ? true : false}
+								onReorder={(newOrder) => {
+									setContextMenu({ top: 0, left: 0, currentItem: null })
+									setResponseRolled(newOrder)
+									setReordered(true)
 								}}
-								className='relative flex items-center justify-center p-2 h-full border-white border-r-[1px] text-center font-bold cursor-pointer'
+								className="flex flex-col min-w-[80dvw] lg:min-w-full w-min"
 							>
-								Title
-								<span className="absolute left-[54%]">{sortSymbol('title', sortMethodRef)}</span>
-							</span>
-							<span className='flex items-center justify-center p-2 h-full text-center font-bold'>
-								Status
-							</span>
+								{responseRolled?.map((item, index) => (
+									!isLoadingClient && 
+									<PTWRolledTableItem
+										key={item.id}
+										props={{ item, index, isLoadingEditForm, setIsEdited, isEdited, isEditedRef, sortMethodRef, setContextMenu, contextMenuButtonRef, responseRolled, setResponseRolled, setIsLoadingEditForm }}
+										editFormParams={editFormParams}
+									/>
+								))}
+							</Reorder.Group>}
 						</div>
-						{isLoadingClient ? 
-						<div className='flex items-center justify-center h-[34rem]'>
-							<CircularProgress size={42} color="primary" />
-						</div> : (
-						<Reorder.Group
-							values={responseRolled ?? []}
-							draggable={sortMethodRef.current ? true : false}
-							onReorder={(newOrder) => {
-								setContextMenu({ top: 0, left: 0, currentItem: null })
-								setResponseRolled(newOrder)
-								setReordered(true)
-							}}
-							className="flex flex-col min-w-[80dvw] lg:min-w-full w-min border-white border-[1px] border-t-0"
-						>
-							{responseRolled?.map((item, index) => (
-								!isLoadingClient && 
-								<PTWRolledTableItem
-									key={item.id}
-									props={{ item, index, isLoadingEditForm, setIsEdited, isEdited, isEditedRef, sortMethodRef, setContextMenu, contextMenuButtonRef, responseRolled, setResponseRolled, setIsLoadingEditForm }}
-									editFormParams={editFormParams}
-								/>
-							))}
-						</Reorder.Group>)}
 						<div
 							style={{
 								visibility: !sortMethodRef.current && reordered.current && !isEqual(responseRolled, responseRolled1) ? 'visible' : 'hidden'
@@ -448,20 +452,20 @@ function PTWTable({
 	setIsAdded
 }: {
 	isLoadingClient: boolean;
-	isEdited: string;
-	setIsEdited: (value: string) => void;
+	isEdited: PTWEdited;
+	setIsEdited: (value: PTWEdited) => void;
 	isLoadingEditForm: string[];
 	editFormParams: EditFormParams;
 	entryToDelete: MutableRefObject<any>;
 	setConfirmModal: Dispatch<SetStateAction<boolean>>;
 	response: Database['public']['Tables']['PTW-Casual']['Row'][] | undefined;
 	tableName: string;
-	tableId: 'casual' | 'noncasual' | 'movies';
-	setIsAdded: Dispatch<SetStateAction<AddRecordPos | null>>;
+	tableId: Exclude<PTWTables, 'rolled'>;
+	setIsAdded: Dispatch<SetStateAction<AddRecordPos>>;
 }) {
 	function handleDeleteUnrolled(
-		tableId: 'casual' | 'noncasual' | 'movies',
-		item: { id: number; title: string; }
+		tableId: Exclude<PTWTables, 'rolled'>,
+		item: PTWItem
 	) {
 		entryToDelete.current = { tableId, item }
 		setConfirmModal(true)
@@ -484,47 +488,47 @@ function PTWTable({
 			<div className='flex items-center justify-center h-[36rem] w-[100dvw] sm:w-[30rem]'>
 				<CircularProgress size={42} color="primary" />
 			</div> :
-			<table>
-				<thead>
-					<tr>
-						<th className="w-[100dvw] sm:w-[30rem]">
-							<span>Title</span>
-						</th>
-					</tr>
-				</thead>
-				<tbody>
-					{response?.map((item) => (
-						<tr key={item.id}>
-							<td
-								style={{
-									opacity: isLoadingEditForm.includes(`${tableId}_title_${item.id}`)
-										? 0.5
-										: 1
-								}}
-								onDoubleClick={() => {
-									setIsEdited(`${tableId}_${item.title}_${item.id}`)
-								}}
-								className="relative flex justify-center group"
-							>
-								<span className='pr-4 w-full'>
-									{isEdited == `${tableId}_${item.title}_${item.id}`
-										? EditForm(`${tableId}_title`, item.id, item.title!, editFormParams)
-										: item.title}
-								</span>
-								{isLoadingEditForm.includes(`${tableId}_title_${item.id}`) && (
-									<CircularProgress size={30} className="absolute top-[20%] left-[48%]" />
-								)}
-								<div
-									onClick={() => handleDeleteUnrolled(tableId, item)}
-									className="absolute flex items-center justify-center top-1/2 right-1 -translate-y-1/2 z-10 h-7 w-7 invisible group-hover:visible cursor-pointer rounded-full hover:bg-gray-500 transition-colors duration-150"
-								>
-									<DeleteOutlineIcon />
-								</div>
-							</td>
+			<div className='p-2 bg-neutral-700 rounded-md'>
+				<table>
+					<thead className='border-b'>
+						<tr>
+							<th className="p-2 pt-1 w-[100dvw] sm:w-[30rem]">
+								<span>Title</span>
+							</th>
 						</tr>
-					))}
-				</tbody>
-			</table>}
+					</thead>
+					<tbody>
+						{response?.map((item) => (
+							<tr key={item.id}>
+								<td
+									style={{
+										opacity: isLoadingEditForm.includes(`${tableId}_title_${item.id}`)
+											? 0.5
+											: 1
+									}}
+									onDoubleClick={() => setIsEdited(`${tableId}_${item.title}_${item.id}`)}
+									className="relative flex justify-center items-center p-2 hover:bg-zinc-800 rounded-md group"
+								>
+									<span className='pr-4 w-full'>
+										{isEdited == `${tableId}_${item.title}_${item.id}`
+											? EditForm(`${tableId}_title`, item.id, item.title!, editFormParams)
+											: item.title}
+									</span>
+									{isLoadingEditForm.includes(`${tableId}_title_${item.id}`) && (
+										<CircularProgress size={30} className="absolute top-[20%] left-[48%]" />
+									)}
+									<div
+										onClick={() => handleDeleteUnrolled(tableId, item)}
+										className="absolute flex items-center justify-center top-1/2 right-1 -translate-y-1/2 z-10 h-7 w-7 invisible group-hover:visible cursor-pointer rounded-full hover:bg-gray-500 transition-colors duration-150"
+									>
+										<DeleteOutlineIcon />
+									</div>
+								</td>
+							</tr>
+						))}
+					</tbody>
+				</table>
+			</div>}
 		</section>
 	)
 }
@@ -844,7 +848,7 @@ function ContextMenu({
 			{contextMenu.currentItem && 
 			<motion.menu 
 				initial={{ height: 0, opacity: 0 }}
-				animate={{ height: '9.5rem', opacity: 1 }}
+				animate={{ height: '7.6rem', opacity: 1 }}
 				exit={{ height: 0, opacity: 0 }}
 				transition={{ type: 'tween', ease: 'linear', duration: 0.1 }}
 				ref={contextMenuRef}
@@ -852,20 +856,20 @@ function ContextMenu({
 					top: contextMenu.top,
 					left: contextMenu.left
 				}}
-				className="absolute z-10 p-2 w-[15rem] shadow-md shadow-gray-600 bg-slate-200 text-black rounded-sm border-black border-solid border-2"
+				className="absolute z-10 p-2 w-[15rem] shadow-md shadow-gray-600 bg-black border border-pink-400 rounded-md"
 			>
 				<li className="flex justify-center">
-					<span className="text-center font-semibold line-clamp-2">
+					<span className="text-center font-semibold line-clamp-1">
 						{contextMenu.currentItem?.title}
 					</span>
 				</li>
-				<hr className="my-2 border-gray-500 border-t-[1px]" />
-				<li className="flex justify-center h-8 rounded-sm hover:bg-slate-500">
+				<hr className="my-2 border-t" />
+				<li className="flex justify-center h-8 rounded-sm hover:bg-pink-400">
 					<button onClick={handleAddToCompleted} className="w-full">
 						Add to Completed
 					</button>
 				</li>
-				<li className="flex justify-center h-8 rounded-sm hover:bg-slate-500">
+				<li className="flex justify-center h-8 rounded-sm hover:bg-pink-400">
 					<button onClick={() => setConfirmModalDelEntry()} className="w-full">
 						Delete entry
 					</button>
@@ -880,7 +884,7 @@ function AddRecordMenu({
 	setIsAdded
 }: {
 	isAdded: AddRecordPos | null;
-	setIsAdded: Dispatch<SetStateAction<AddRecordPos | null>>;
+	setIsAdded: Dispatch<SetStateAction<AddRecordPos>>;
 }) {
 	const { setLoading } = useLoading()
 
@@ -938,7 +942,7 @@ function AddRecordMenu({
 					cell: cell + (isAdded.response.length + 2).toString()
 				}, { withCredentials: true })
 			}
-			setIsAdded(null)
+			setIsAdded({ ...isAdded, tableId: null })
 			setLoading(false)
 		} catch (error) {
 			setLoading(false)
@@ -950,19 +954,20 @@ function AddRecordMenu({
 	if (!isAdded) return null
 	return (
 		<AnimatePresence>
-			{isAdded && <motion.menu 
-				initial={{ y: -10, opacity: 0 }}
+			{isAdded.tableId && 
+			<motion.menu 
+				initial={{ y: -5, opacity: 0 }}
 				animate={{ y: 0, opacity: 1 }}
-				exit={{ y: -10, opacity: 0 }}
+				exit={{ y: -5, opacity: 0 }}
 				transition={{ type: 'tween', ease: 'linear', duration: 0.1 }}
 				style={{
 					top: isAdded.top + 38,
 					left: isAdded.left - (isAdded.tableId == 'rolled' ? 280 : 190)
 				}}
-				className='absolute top-14 z-10 p-1 rounded-lg bg-black border-[1px] border-pink-400'
+				className='absolute top-14 z-10 p-1 rounded-md bg-black border border-pink-400'
 			>
 				<form onSubmit={handleAddRecord}>
-					<input placeholder='Insert title' className='w-60 text-lg rounded-sm bg-gray-800 focus:outline-none' />
+					<input placeholder='Add title' className='w-60 text-lg rounded-sm bg-black focus:outline-none' />
 				</form>
 			</motion.menu>}
 		</AnimatePresence>
@@ -1082,7 +1087,7 @@ function PTWRolledTableItem({ props, editFormParams }: PTWRolledTableItemProps) 
 			dragControls={controls}
 			dragConstraints={{ top: -25, bottom: 25 }}
 			dragElastic={0.15}
-			className="grid grid-cols-[4fr_1.1fr] p-0 bg-[#2e2e2e] hover:bg-neutral-700"
+			className="grid grid-cols-[4fr_1.1fr] p-0 bg-neutral-700 hover:bg-zinc-800 rounded-md"
 		>
 			<div
 				style={{
@@ -1124,7 +1129,7 @@ function PTWRolledTableItem({ props, editFormParams }: PTWRolledTableItemProps) 
 				onDoubleClick={() => {
 					setIsEdited(`rolled_status_${item.id}`)
 				}}
-				className="relative flex items-center justify-center"
+				className="relative flex items-center justify-center bg-zinc-800 rounded-e-md"
 			>
 				<span className='flex items-center justify-center'>
 					{isEdited == `rolled_status_${item.id}`
@@ -1234,7 +1239,7 @@ function PTWRolledTableItem({ props, editFormParams }: PTWRolledTableItemProps) 
 
 //* Input field for editing any table items
 function EditForm(
-	field: 'rolled_title' | 'casual_title' | 'noncasual_title' | 'movies_title',
+	field: `${PTWTables}_title`,
 	id: number,
 	ogvalue: string,
 	{
@@ -1326,14 +1331,14 @@ function EditForm(
 					opacity: isLoadingEditForm.includes(`${field}_${id}`) ? 0.5 : 1,
 					pointerEvents: isLoadingEditForm.includes(`${field}_${id}`) ? 'none' : 'unset'
 				}}
-				className="w-[85%]"
+				className={`w-full ${field == 'rolled_title' ? 'px-8' : 'pr-6'}`}
 			>
 				<form onSubmit={handleSubmit}>
 					<input
 						autoFocus
 						type="text"
 						defaultValue={ogvalue}
-						className="input-text text-center w-full"
+						className={`input-text w-full ${field == 'rolled_title' ? 'text-center' : 'text-start'}`}
 					/>
 				</form>
 			</div>
@@ -1369,8 +1374,8 @@ async function saveReorder(
 function handleAddMenu(
 	e: BaseSyntheticEvent, 
 	response: Database['public']['Tables']['PTW-Casual']['Row'][] | undefined, 
-	tableId: 'rolled' | 'casual' | 'noncasual' | 'movies',
-	setIsAdded: Dispatch<SetStateAction<AddRecordPos | null>>
+	tableId: PTWTables,
+	setIsAdded: Dispatch<SetStateAction<AddRecordPos>>
 ) {
 	const { top, left } = e.target.getBoundingClientRect()
 

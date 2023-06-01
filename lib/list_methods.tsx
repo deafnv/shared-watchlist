@@ -161,12 +161,12 @@ export const sortListByNameSupabase = (
 		SetStateAction<Database['public']['Tables']['Completed']['Row'][] | undefined>
 	>
 ) => {
-	if (sortMethodRef.current === `asc_title`) {
-		sortMethodRef.current = 'desc_title'
-		setResponse(res?.slice().sort((a, b) => a.title!.localeCompare(b.title!)))
-	} else {
+	if (sortMethodRef.current === `desc_title`) {
 		sortMethodRef.current = 'asc_title'
 		setResponse(res?.slice().sort((a, b) => b.title!.localeCompare(a.title!)))
+	} else {
+		sortMethodRef.current = 'desc_title'
+		setResponse(res?.slice().sort((a, b) => a.title!.localeCompare(b.title!)))
 	}
 }
 
@@ -177,12 +177,12 @@ export const sortListByTypeSupabase = (
 		SetStateAction<Database['public']['Tables']['Completed']['Row'][] | undefined>
 	>
 ) => {
-	if (sortMethodRef.current === `asc_type`) {
-		sortMethodRef.current = 'desc_type'
-		setResponse(res?.slice().sort((a, b) => a.type!.localeCompare(b.type!)))
-	} else {
+	if (sortMethodRef.current === `desc_type`) {
 		sortMethodRef.current = 'asc_type'
 		setResponse(res?.slice().sort((a, b) => b.type!.localeCompare(a.type!)))
+	} else {
+		sortMethodRef.current = 'desc_type'
+		setResponse(res?.slice().sort((a, b) => a.type!.localeCompare(b.type!)))
 	}
 }
 
@@ -197,20 +197,20 @@ export const sortListByEpisodeSupabase = (
 		sortMethodRef.current = `asc_episode`
 		setResponse(
 			res?.slice().sort((a, b) => {
-				if (a.episode_actual == null) {
+				if (b.episode_actual == null) {
 					return -1
 				}
-				return a.episode_actual! - b.episode_actual!
+				return b.episode_actual! - a.episode_actual!
 			})
 		)
 	} else {
 		sortMethodRef.current = `desc_episode`
 		setResponse(
 			res?.slice().sort((a, b) => {
-				if (b.episode_actual == null) {
+				if (a.episode_actual == null) {
 					return -1
 				}
-				return b.episode_actual! - a.episode_actual!
+				return a.episode_actual! - b.episode_actual!
 			})
 		)
 	}
@@ -224,8 +224,8 @@ export const sortListByRatingSupabase = (
 		SetStateAction<Database['public']['Tables']['Completed']['Row'][] | undefined>
 	>
 ) => {
-	if (sortMethodRef.current === `ratingdesc_${rating}`) {
-		sortMethodRef.current = `ratingasc_${rating}`
+	if (sortMethodRef.current === `ratingasc_${rating}`) {
+		sortMethodRef.current = `ratingdesc_${rating}`
 		setResponse(
 			res?.slice().sort((a, b) => {
 				if (a[`${rating}average`] == null) {
@@ -235,7 +235,7 @@ export const sortListByRatingSupabase = (
 			})
 		)
 	} else {
-		sortMethodRef.current = `ratingdesc_${rating}`
+		sortMethodRef.current = `ratingasc_${rating}`
 		setResponse(
 			res?.slice().sort((a, b) => {
 				if (b[`${rating}average`] == null) {
@@ -255,15 +255,15 @@ export const sortListByDateSupabase = (
 		SetStateAction<Database['public']['Tables']['Completed']['Row'][] | undefined>
 	>
 ) => {
-	if (sortMethodRef.current === `dateasc_${date}`) {
-		sortMethodRef.current = `datedesc_${date}`
+	if (sortMethodRef.current === `datedesc_${date}`) {
+		sortMethodRef.current = `dateasc_${date}`
 		setResponse(
 			res?.slice().sort((a, b) => {
 				return b[date]! - a[date]!
 			})
 		)
 	} else {
-		sortMethodRef.current = `dateasc_${date}`
+		sortMethodRef.current = `datedesc_${date}`
 		setResponse(
 			res?.slice().sort((a, b) => {
 				return a[date]! - b[date]!
@@ -283,11 +283,11 @@ export const sortListByNamePTW = (
 	>
 ) => {
 	if (!res) return
-	if (sortMethodRef.current === `titleasc_${name}`) {
-		sortMethodRef.current = `titledesc_${name}`
+	if (sortMethodRef.current === `titledesc_${name}`) {
+		sortMethodRef.current = `titleasc_${name}`
 		setResponse(res.slice().sort((a, b) => b.title!.localeCompare(a.title!)))
 	} else {
-		sortMethodRef.current = `titleasc_${name}`
+		sortMethodRef.current = `titledesc_${name}`
 		setResponse(res.slice().sort((a, b) => a.title!.localeCompare(b.title!)))
 	}
 }
