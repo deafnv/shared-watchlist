@@ -187,41 +187,43 @@ export default function Seasonal() {
 							<AddIcon />
 						</div>
 					</header>
-					<div className="grid grid-cols-[5fr_1fr] lg:grid-cols-[30rem_10rem_10rem_8rem] min-w-[95dvw] lg:min-w-0 w-min bg-sky-600 border-white border-solid border">
-						<span className='flex items-center justify-center p-2 border-white border-r text-center font-bold'>
-							Title
-						</span>
-						<span className='flex items-center justify-center p-2 border-white lg:border-r text-center font-bold'>
-							Status
-						</span>
-						<span className='hidden lg:flex items-center justify-center p-2 border-white border-r text-center font-bold'>
-							Start Date
-						</span>
-						<span className='hidden lg:flex items-center justify-center p-1 text-center font-bold'>
-							Latest Episode
-						</span>
+					<div className='p-2 bg-neutral-700 rounded-md'>
+						<div className="grid grid-cols-[5fr_1fr] lg:grid-cols-[30rem_10rem_10rem_8rem] min-w-[95dvw] lg:min-w-0 w-min border-b">
+							<span className='flex items-center justify-center p-2 pt-1 text-center font-bold'>
+								Title
+							</span>
+							<span className='flex items-center justify-center p-2 pt-1 text-center font-bold'>
+								Status
+							</span>
+							<span className='hidden lg:flex items-center justify-center p-2 pt-1 text-center font-bold'>
+								Start Date
+							</span>
+							<span className='hidden lg:flex items-center justify-center p-1 text-center font-bold'>
+								Latest Episode
+							</span>
+						</div>
+						{isLoadingClient ? 
+						<div className='flex items-center justify-center h-[26rem]'>
+							<CircularProgress size={42} color="primary" />
+						</div> : 
+						<Reorder.Group
+							values={response}
+							onReorder={(newOrder) => {
+								if (settingsMenu.display) setSettingsMenu({ ...settingsMenu, display: false })
+								if (contextMenu.currentItem) setContextMenu({ ...contextMenu, currentItem: null })
+								setResponse(newOrder)
+								setReordered(true)
+							}}
+							className="flex flex-col lg:w-[40rem] min-w-[95dvw] lg:min-w-full w-min"
+						>
+							{response?.map((item: any, index: any) => (
+								<SeasonalTableItem 
+									key={item.order} 
+									props={{ item, index, setIsLoadingEditForm, isLoadingEditForm, setIsEdited, isEdited, isEditedRef, contextMenuButtonRef, setContextMenu, response, setResponse }}
+								/>
+							))}
+						</Reorder.Group>}
 					</div>
-					{isLoadingClient ? 
-					<div className='flex items-center justify-center h-[26rem]'>
-						<CircularProgress size={42} color="primary" />
-					</div> : 
-					<Reorder.Group
-						values={response}
-						onReorder={(newOrder) => {
-							if (settingsMenu.display) setSettingsMenu({ ...settingsMenu, display: false })
-							if (contextMenu.currentItem) setContextMenu({ ...contextMenu, currentItem: null })
-							setResponse(newOrder)
-							setReordered(true)
-						}}
-						className="flex flex-col lg:w-[40rem] min-w-[95dvw] lg:min-w-full w-min border-white border-[1px] border-t-0"
-					>
-						{response?.map((item: any, index: any) => (
-							<SeasonalTableItem 
-								key={item.order} 
-								props={{ item, index, setIsLoadingEditForm, isLoadingEditForm, setIsEdited, isEdited, isEditedRef, contextMenuButtonRef, setContextMenu, response, setResponse }}
-							/>
-						))}
-					</Reorder.Group>}
 					<div
 						style={{
 							visibility: reordered && !isEqual(response, response1) ? 'visible' : 'hidden'
@@ -250,7 +252,7 @@ export default function Seasonal() {
 						</div>
 					</div>
 				</section>
-				<AddRecord 
+				<AddRecordMenu 
 					addRecordMenuRef={addRecordMenuRef}
 					isAdded={isAdded}
 					setIsAdded={setIsAdded}
@@ -355,7 +357,7 @@ function SettingsMenu({
 	)
 }
 
-function AddRecord({
+function AddRecordMenu({
 	addRecordMenuRef,
 	isAdded,
 	setIsAdded,
@@ -397,15 +399,15 @@ function AddRecord({
 	return (
 		<AnimatePresence>
 			{isAdded && <motion.menu 
-				initial={{ y: -10, opacity: 0 }}
+				initial={{ y: -5, opacity: 0 }}
 				animate={{ y: 0, opacity: 1 }}
-				exit={{ y: -10, opacity: 0 }}
+				exit={{ y: -5, opacity: 0 }}
 				transition={{ type: 'tween', ease: 'linear', duration: 0.1 }}
 				ref={addRecordMenuRef} 
-				className='absolute top-32 z-10 p-1 rounded-lg bg-black border-[1px] border-pink-400'
+				className='absolute top-32 z-10 p-1 rounded-md bg-black border border-pink-400'
 			>
 				<form onSubmit={handleAddRecord}>
-					<input placeholder='Insert title' className='w-60 text-lg rounded-sm bg-gray-800 focus:outline-none' />
+					<input placeholder='Add title' className='w-60 text-lg rounded-sm bg-black focus:outline-none' />
 				</form>
 			</motion.menu>}
 		</AnimatePresence>
@@ -599,7 +601,7 @@ function SeasonalTableItem({ props }: SeasonalTableItemProps) {
       dragControls={controls}
 			dragConstraints={{ top: -25, bottom: 25 }}
 			dragElastic={0.15}
-			className="grid grid-cols-[5fr_1fr] lg:grid-cols-[30rem_10rem_10rem_8rem] p-0 bg-[#2e2e2e] hover:bg-neutral-700"
+			className="grid grid-cols-[5fr_1fr] lg:grid-cols-[30rem_10rem_10rem_8rem] p-0 bg-neutral-700 hover:bg-zinc-800 rounded-md"
 		>
 			<div
 				style={{
@@ -879,7 +881,7 @@ function ContextMenu({
 		<AnimatePresence>
 			{contextMenu.currentItem && <motion.menu
 				initial={{ height: 0, opacity: 0 }}
-				animate={{ height: '13.1rem', opacity: 1 }}
+				animate={{ height: '11.6rem', opacity: 1 }}
 				exit={{ height: 0, opacity: 0 }}
         transition={{ type: 'tween', ease: 'linear', duration: 0.1 }}
 				ref={contextMenuRef}
@@ -887,16 +889,16 @@ function ContextMenu({
 					top: contextMenu.top,
 					left: contextMenu.left
 				}}
-				className="absolute z-10 p-2 w-[15rem] shadow-md shadow-gray-600 bg-slate-200 text-black rounded-sm border-black border-solid border-2 overflow-hidden"
+				className="absolute z-10 p-2 w-[15rem] shadow-md shadow-gray-600 bg-black border border-pink-400 rounded-md overflow-hidden"
 			>
 				<li className="flex justify-center">
-					<span className="text-center font-semibold line-clamp-2">
+					<span className="text-center font-semibold line-clamp-1">
 						{contextMenu.currentItem?.title}
 					</span>
 				</li>
-				<hr className="my-2 border-gray-500 border-t-[1px]" />
+				<hr className="my-2 border-t" />
 				{contextMenu.currentItem.SeasonalDetails?.[0]?.mal_id && 
-				<li className="flex justify-center h-8 rounded-sm hover:bg-slate-500">
+				<li className="flex justify-center h-8 rounded-sm hover:bg-pink-400">
 					<Link
 						href={`https://myanimelist.net/anime/${contextMenu.currentItem.SeasonalDetails[0].mal_id}`} 
 						target='_blank' 
@@ -906,17 +908,17 @@ function ContextMenu({
 						Visit on MAL
 					</Link>
 				</li>}
-				<li className="flex justify-center h-8 rounded-sm hover:bg-slate-500">
+				<li className="flex justify-center h-8 rounded-sm hover:bg-pink-400">
 					<button onClick={loadItemDetails} className="w-full">
 						Load details
 					</button>
 				</li>
-				<li className="flex justify-center h-8 rounded-sm hover:bg-slate-500">
+				<li className="flex justify-center h-8 rounded-sm hover:bg-pink-400">
 					<button onClick={handleAddToCompleted} className="w-full">
 						Add to Completed
 					</button>
 				</li>
-				<li className="flex justify-center h-8 rounded-sm hover:bg-slate-500">
+				<li className="flex justify-center h-8 rounded-sm hover:bg-pink-400">
 					<button onClick={() => setConfirmModalDelEntry()} className="w-full">
 						Delete entry
 					</button>
