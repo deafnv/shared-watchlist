@@ -407,58 +407,7 @@ function EpisodeCountEditor({
 						<input autoFocus type="number" min={-1} max={9999} defaultValue={editEpisodesCurrent?.latest_episode ?? 0} className="text-center input-text" />
 					</label>
 				</form>
-				<div className="relative grid grid-cols-2 gap-4">
-					{Array(4)
-						.fill('')
-						.map((i, index) => (
-							<table key={index}>
-								<thead>
-									<tr>
-										<th className="w-11">
-											{editEpisodesCurrent?.latest_episode! > 12 ? counter++ + 12 : counter++}
-										</th>
-										<th className="w-11">
-											{editEpisodesCurrent?.latest_episode! > 12 ? counter++ + 12 : counter++}
-										</th>
-										<th className="w-11">
-											{editEpisodesCurrent?.latest_episode! > 12 ? counter++ + 12 : counter++}
-										</th>
-									</tr>
-								</thead>
-								<tbody>
-									<tr>
-										<td
-											style={{
-												background: determineEpisode(
-													editEpisodesCurrent?.latest_episode!,
-													counter - 3
-												)
-											}}
-											className="p-6"
-										/>
-										<td
-											style={{
-												background: determineEpisode(
-													editEpisodesCurrent?.latest_episode!,
-													counter - 2
-												)
-											}}
-											className="p-6"
-										/>
-										<td
-											style={{
-												background: determineEpisode(
-													editEpisodesCurrent?.latest_episode!,
-													counter - 1
-												)
-											}}
-											className="p-6"
-										/>
-									</tr>
-								</tbody>
-							</table>
-						))}
-				</div>
+				<EpisodeTable item={editEpisodesCurrent} />
 			</div>
 		</Dialog>
 	)
@@ -496,7 +445,7 @@ function ContextMenu({
 			{contextMenu.currentItem && 
 			<motion.menu
 				initial={{ height: 0, opacity: 0 }}
-				animate={{ height: '7.6rem', opacity: 1 }}
+				animate={{ height: '5.6rem', opacity: 1 }}
 				exit={{ height: 0, opacity: 0 }}
 				transition={{ type: 'tween', ease: 'linear', duration: 0.1 }}
 				ref={contextMenuRef}
@@ -504,15 +453,15 @@ function ContextMenu({
 					top: contextMenu.top,
 					left: contextMenu.left
 				}}
-				className="absolute z-20 p-2 h-[9.5rem] w-[15rem] shadow-md shadow-gray-600 bg-slate-200 text-black rounded-sm border-black border-solid border-2 overflow-hidden"
+				className="absolute z-20 p-2 h-[9.5rem] w-[15rem] shadow-md shadow-gray-600 bg-black border border-pink-400 rounded-md overflow-hidden"
 			>
 				<li className="flex justify-center">
-					<span className="text-center font-semibold line-clamp-2">
+					<span className="text-center font-semibold line-clamp-1">
 						{contextMenu.currentItem?.mal_title}
 					</span>
 				</li>
-				<hr className="my-2 border-gray-500 border-t-[1px]" />
-				<li className="flex justify-center h-8 rounded-sm hover:bg-slate-500">
+				<hr className="my-2 border-t" />
+				<li className="flex justify-center h-8 rounded-sm hover:bg-pink-400">
 					<button onClick={handleReloadTrack} className="w-full">Reload Episode Tracking</button>
 				</li>
 			</motion.menu>}
@@ -526,54 +475,60 @@ function EpisodeTable({
 	response,
 	setResponse
 }: {
-	item: Database['public']['Tables']['SeasonalDetails']['Row'];
-	response: Database['public']['Tables']['SeasonalDetails']['Row'][];
-	setResponse: Dispatch<SetStateAction<Database['public']['Tables']['SeasonalDetails']['Row'][]>>;
+	item: Database['public']['Tables']['SeasonalDetails']['Row'] | null;
+	response?: Database['public']['Tables']['SeasonalDetails']['Row'][];
+	setResponse?: Dispatch<SetStateAction<Database['public']['Tables']['SeasonalDetails']['Row'][]>>;
 }) {
 	let counter = 1
 
 	return (
-		<div className="relative grid grid-cols-1 min-[390px]:grid-cols-2 gap-4">
+		<div className="relative grid grid-cols-1 min-[390px]:grid-cols-2 gap-2">
 			{Array(4)
 				.fill('')
 				.map((i, index) => (
-					<table key={index}>
-						<thead>
-							<tr>
-								<th className="w-11">
-									{item.latest_episode! > 12 ? counter++ + 12 : counter++}
-								</th>
-								<th className="w-11">
-									{item.latest_episode! > 12 ? counter++ + 12 : counter++}
-								</th>
-								<th className="w-11">
-									{item.latest_episode! > 12 ? counter++ + 12 : counter++}
-								</th>
-							</tr>
-						</thead>
-						<tbody>
-							<tr>
-								<td
-									style={{ background: determineEpisode(item.latest_episode!, counter - 3) }}
-									className="p-6"
-								/>
-								<td
-									style={{ background: determineEpisode(item.latest_episode!, counter - 2) }}
-									className="p-6"
-								/>
-								<td
-									style={{ background: determineEpisode(item.latest_episode!, counter - 1) }}
-									className="p-6"
-								/>
-							</tr>
-						</tbody>
-					</table>
+					<div className='p-2 bg-neutral-800 rounded-md'>
+						<table 
+							key={index} 
+							className='w-full'
+						>
+							<thead>
+								<tr>
+									<th className="w-11">
+										{item?.latest_episode ?? 0 > 12 ? counter++ + 12 : counter++}
+									</th>
+									<th className="w-11">
+										{item?.latest_episode ?? 0 > 12 ? counter++ + 12 : counter++}
+									</th>
+									<th className="w-11">
+										{item?.latest_episode ?? 0 > 12 ? counter++ + 12 : counter++}
+									</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr>
+									<td
+										style={{ background: determineEpisode(item?.latest_episode ?? 0, counter - 3) }}
+										className="p-6 rounded-s-md"
+									/>
+									<td
+										style={{ background: determineEpisode(item?.latest_episode ?? 0, counter - 2) }}
+										className="p-6"
+									/>
+									<td
+										style={{ background: determineEpisode(item?.latest_episode ?? 0, counter - 1) }}
+										className="p-6 rounded-e-md"
+									/>
+								</tr>
+							</tbody>
+						</table>
+					</div>
 				))}
+			{response && setResponse && item &&
 			<ValidateErrorDialog 
 				item1={item} 
 				response={response}
 				setResponse={setResponse}
-			/>
+			/>}
 		</div>
 	)
 }
