@@ -10,7 +10,6 @@ import CircularProgress from '@mui/material/CircularProgress'
 import AddIcon from '@mui/icons-material/Add'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
-import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown'
 import EditIcon from '@mui/icons-material/Edit'
 import SearchIcon from '@mui/icons-material/Search'
 import RefreshIcon from '@mui/icons-material/Refresh'
@@ -27,12 +26,6 @@ import {
 } from '@/lib/list_methods'
 import { useLoading } from '@/components/LoadingContext'
 import EditDialog from '@/components/dialogs/EditDialog'
-
-interface ContextMenuPos {
-	top: number;
-	left: number;
-	currentItem: Database['public']['Tables']['Completed']['Row'] | null;
-}
 
 interface SettingsMenuPos {
 	top: number;
