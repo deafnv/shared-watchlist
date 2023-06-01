@@ -2,13 +2,15 @@ import Head from 'next/head'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import { BaseSyntheticEvent, useEffect, useRef, useState, Dispatch, SetStateAction, RefObject } from 'react'
+import { BaseSyntheticEvent, useEffect, useRef, useState, Dispatch, SetStateAction, RefObject, Fragment } from 'react'
 import debounce from 'lodash/debounce'
 import axios from 'axios'
 import { AnimatePresence, motion } from 'framer-motion'
 import CircularProgress from '@mui/material/CircularProgress'
 import AddIcon from '@mui/icons-material/Add'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown'
 import EditIcon from '@mui/icons-material/Edit'
 import SearchIcon from '@mui/icons-material/Search'
 import RefreshIcon from '@mui/icons-material/Refresh'
@@ -25,7 +27,6 @@ import {
 } from '@/lib/list_methods'
 import { useLoading } from '@/components/LoadingContext'
 import EditDialog from '@/components/dialogs/EditDialog'
-import { Dialog } from '@mui/material'
 
 interface ContextMenuPos {
 	top: number;
@@ -40,8 +41,6 @@ interface SettingsMenuPos {
 }
 
 export default function Completed() {
-	const contextMenuRef = useRef<HTMLDivElement>(null)
-	const contextMenuButtonRef = useRef<any>([])
 	const settingsMenuRef = useRef<HTMLDivElement>(null)
 	const settingsMenuButtonRef = useRef<HTMLDivElement>(null)
 	const sortMethodRef = useRef('')
@@ -52,12 +51,9 @@ export default function Completed() {
 	const [isEdited, setIsEditedState] = useState<string>('')
 	const [isLoadingClient, setIsLoadingClient] = useState(true)
 	const [isLoadingEditForm, setIsLoadingEditForm] = useState<Array<string>>([])
-	const [contextMenu, setContextMenu] = useState<ContextMenuPos>({ top: 0, left: 0, currentItem: null })
 	const [settingsMenu, setSettingsMenu] = useState<SettingsMenuPos>({ top: 0, left: 0, display: false })
-	const [detailsModal, setDetailsModal] = useState<
-		Database['public']['Tables']['Completed']['Row'] | null
-	>(null)
-	const [editDialog, setEditDialog] = useState(false)
+	const [detailsOpen, setDetailsOpen] = useState<number[]>([])
+	const [editDialog, setEditDialog] = useState<{ id: number; title: string; }>()
 
 	const { setLoading } = useLoading()
 
@@ -111,14 +107,6 @@ export default function Completed() {
 				setIsEdited('')
 			}
 			if (
-				!contextMenuButtonRef.current.includes(e.target.parentNode) &&
-				!contextMenuButtonRef.current.includes(e.target.parentNode?.parentNode) &&
-				!contextMenuRef.current?.contains(e.target) &&
-				contextMenuRef.current
-			) {
-				setContextMenu({ top: 0, left: 0, currentItem: null })
-			}
-			if (
 				e.target.parentNode !== settingsMenuButtonRef.current &&
 				e.target.parentNode?.parentNode !== settingsMenuButtonRef.current &&
 				!settingsMenuRef.current?.contains(e.target) &&
@@ -134,8 +122,7 @@ export default function Completed() {
 
 		const closeKeyboard = (e: KeyboardEvent) => {
 			if (e.key == 'Escape') {
-				if (detailsModal && !editDialog) setDetailsModal(null)
-				if (editDialog) setEditDialog(false)
+				if (editDialog) setEditDialog(undefined)
 				if (isEditedRef.current) setIsEdited('')
 			}
 			if (e.key == 'Tab' && isEditedRef.current) {
@@ -184,7 +171,7 @@ export default function Completed() {
 				<meta name="description" content="Completed" />
 			</Head>
 
-			<main className="flex flex-col items-center justify-center mb-24 px-0 sm:px-6 py-2">
+			<main className="flex flex-col items-center justify-center gap-2 mb-24 px-0 sm:px-6 py-2">
 				<header className='flex items-center'>
 					<h2 className="p-2 text-2xl sm:text-3xl">
 						Completed
@@ -231,266 +218,289 @@ export default function Completed() {
 				<div className='flex items-center justify-center h-[36rem]'>
 					<CircularProgress size={50} color="primary" />
 				</div> : 
-				<table>
-					<thead>
-						<tr>
-						<th
-								tabIndex={0}
-								onClick={() =>
-									sortListByNameSupabase(response, sortMethodRef, setResponse)
-								}
-								className="min-w-[1rem] sm:min-w-0 w-[48rem] cursor-pointer"
-							>
-								<span>Title</span>
-								<span className="absolute">{sortSymbol('title', sortMethodRef)}</span>
-							</th>
-							<th
-								tabIndex={0}
-								onClick={() =>
-									sortListByTypeSupabase(response, sortMethodRef, setResponse)
-								}
-								className="w-32 hidden md:table-cell cursor-pointer"
-							>
-								<span>Type</span>
-								<span className="absolute">{sortSymbol('type', sortMethodRef)}</span>
-							</th>
-							<th 
-								tabIndex={0}
-								onClick={() =>
-									sortListByEpisodeSupabase(response, sortMethodRef, setResponse)
-								}
-								className="w-36 hidden md:table-cell cursor-pointer"
-							>
-								<span>Episode(s)</span>
-								<span className="absolute">{sortSymbol('episode', sortMethodRef)}</span>
-							</th>
-							<th
-								tabIndex={0}
-								onClick={() =>
-									sortListByRatingSupabase(
-										'rating1',
-										response,
-										sortMethodRef,
-										setResponse
-									)
-								}
-								className="w-32 cursor-pointer"
-							>
-								<span>Rating 1</span>
-								<span className="absolute">{sortSymbol('rating1', sortMethodRef)}</span>
-							</th>
-							<th
-								tabIndex={0}
-								onClick={() =>
-									sortListByRatingSupabase(
-										'rating2',
-										response,
-										sortMethodRef,
-										setResponse
-									)
-								}
-								className="w-32 cursor-pointer"
-							>
-								<span>Rating 2</span>
-								<span className="absolute">{sortSymbol('rating2', sortMethodRef)}</span>
-							</th>
-							<th
-								tabIndex={0}
-								onClick={() =>
-									sortListByDateSupabase(
-										'startconv',
-										response,
-										sortMethodRef,
-										setResponse
-									)
-								}
-								className="w-40 cursor-pointer hidden md:table-cell"
-							>
-								<span>Start Date</span>
-								<span className="absolute">{sortSymbol('start', sortMethodRef)}</span>
-							</th>
-							<th
-								tabIndex={0}
-								onClick={() =>
-									sortListByDateSupabase(
-										'endconv',
-										response,
-										sortMethodRef,
-										setResponse
-									)
-								}
-								className="w-40 cursor-pointer hidden md:table-cell"
-							>
-								<span>End Date</span>
-								<span className="absolute">{sortSymbol('end', sortMethodRef)}</span>
-							</th>
-						</tr>
-					</thead>
-					<tbody>
-						{response?.map((item, index) => (
-							<tr key={item.id} className="relative group">
-								<td
-									style={{
-										opacity: isLoadingEditForm.includes(`title_${item.id}`) ? 0.5 : 1
-									}}
-									onDoubleClick={() => {
-										setIsEdited(`title_${item.id}`)
-									}}
-									className="relative min-w-[1rem]"
+				<div className='p-2 bg-neutral-700 rounded-md'>
+					<table>
+						<thead className='border-b'>
+							<tr>
+								<th
+									tabIndex={0}
+									onClick={() =>
+										sortListByNameSupabase(response, sortMethodRef, setResponse)
+									}
+									className="p-2 min-w-[1rem] sm:min-w-0 w-[42rem] cursor-pointer"
 								>
-									<span>
-										{isEdited == `title_${item.id}` ? (
-											editForm('title', item.id, item.title!)
-										) : item.title ? (
-											item.title
-										) : (
-											<span className="italic text-gray-400">Untitled</span>
-										)}
-										<div
-											ref={element => (contextMenuButtonRef.current[index] = element)}
-											onClick={(e) => {
-												handleMenuClick(e, item)
-											}}
-											className="absolute flex items-center justify-center top-1/2 -translate-y-1/2 z-10 h-7 w-7 invisible group-hover:visible cursor-pointer rounded-full hover:bg-gray-500 transition-colors duration-150"
-										>
-											<MoreVertIcon />
-										</div>
+									<span className='relative'>
+										Title
+										<span className="absolute -right-6">{sortSymbol('title', sortMethodRef)}</span>
 									</span>
-									{isLoadingEditForm.includes(`title_${item.id}`) && (
-										<CircularProgress size={30} className="absolute top-[20%] left-[48%]" />
-									)}
-								</td>
-								<td
-									style={{
-										opacity: isLoadingEditForm.includes(`type_${item.id}`) ? 0.5 : 1
-									}}
-									onDoubleClick={() => {
-										setIsEdited(`type_${item.id}`)
-									}}
-									className="relative hidden md:table-cell"
+								</th>
+								<th
+									tabIndex={0}
+									onClick={() =>
+										sortListByTypeSupabase(response, sortMethodRef, setResponse)
+									}
+									className="p-2 w-32 hidden md:table-cell cursor-pointer"
 								>
-									<span>
-										{isEdited == `type_${item.id}`
-											? editForm('type', item.id, item.type ?? '')
-											: item.type}
+									<span className='relative'>
+										Type
+										<span className="absolute -right-6">{sortSymbol('type', sortMethodRef)}</span>
 									</span>
-									{isLoadingEditForm.includes(`type_${item.id}`) && (
-										<CircularProgress size={30} className="absolute top-[20%] left-[40%]" />
-									)}
-								</td>
-								<td
-									style={{
-										opacity: isLoadingEditForm.includes(`episode_${item.id}`) ? 0.5 : 1
-									}}
-									onDoubleClick={() => {
-										setIsEdited(`episode_${item.id}`)
-									}}
-									className="relative hidden md:table-cell"
+								</th>
+								<th 
+									tabIndex={0}
+									onClick={() =>
+										sortListByEpisodeSupabase(response, sortMethodRef, setResponse)
+									}
+									className="p-2 w-36 hidden md:table-cell cursor-pointer"
 								>
-									<span>
-										{isEdited == `episode_${item.id}`
-											? editForm('episode', item.id, item.episode ?? '')
-											: item.episode}
+									<span className='relative'>
+										Episode(s)
+										<span className="absolute -right-6">{sortSymbol('episode', sortMethodRef)}</span>
 									</span>
-									{isLoadingEditForm.includes(`episode_${item.id}`) && (
-										<CircularProgress size={30} className="absolute top-[20%] left-[40%]" />
-									)}
-								</td>
-								<td
-									style={{
-										opacity: isLoadingEditForm.includes(`rating1_${item.id}`) ? 0.5 : 1
-									}}
-									onDoubleClick={() => {
-										setIsEdited(`rating1_${item.id}`)
-									}}
-									className="relative"
+								</th>
+								<th
+									tabIndex={0}
+									onClick={() =>
+										sortListByRatingSupabase(
+											'rating1',
+											response,
+											sortMethodRef,
+											setResponse
+										)
+									}
+									className="p-2 w-32 cursor-pointer"
 								>
-									<span>
-										{isEdited == `rating1_${item.id}`
-											? editForm('rating1', item.id, item.rating1 ?? '')
-											: item.rating1}
+									<span className='relative'>
+										Rating 1
+										<span className="absolute -right-6">{sortSymbol('rating1', sortMethodRef)}</span>
 									</span>
-									{isLoadingEditForm.includes(`rating1_${item.id}`) && (
-										<CircularProgress size={30} className="absolute top-[20%] left-[40%]" />
-									)}
-								</td>
-								<td
-									style={{
-										opacity: isLoadingEditForm.includes(`rating2_${item.id}`) ? 0.5 : 1
-									}}
-									onDoubleClick={() => {
-										setIsEdited(`rating2_${item.id}`)
-									}}
-									className="relative"
+								</th>
+								<th
+									tabIndex={0}
+									onClick={() =>
+										sortListByRatingSupabase(
+											'rating2',
+											response,
+											sortMethodRef,
+											setResponse
+										)
+									}
+									className="p-2 w-32 cursor-pointer"
 								>
-									<span>
-										{isEdited == `rating2_${item.id}`
-											? editForm('rating2', item.id, item.rating2 ?? '')
-											: item.rating2}
+									<span className='relative'>
+										Rating 2
+										<span className="absolute -right-6">{sortSymbol('rating2', sortMethodRef)}</span>
 									</span>
-									{isLoadingEditForm.includes(`rating2_${item.id}`) && (
-										<CircularProgress size={30} className="absolute top-[20%] left-[40%]" />
-									)}
-								</td>
-								<td
-									style={{
-										opacity: isLoadingEditForm.includes(`start_${item.id}`) ? 0.5 : 1
-									}}
-									onDoubleClick={() => {
-										setIsEdited(`start_${item.id}`)
-									}}
-									className="relative hidden md:table-cell"
+								</th>
+								<th
+									tabIndex={0}
+									onClick={() =>
+										sortListByDateSupabase(
+											'startconv',
+											response,
+											sortMethodRef,
+											setResponse
+										)
+									}
+									className="p-2 w-40 cursor-pointer hidden md:table-cell"
 								>
-									<span>
-										{isEdited == `start_${item.id}`
-											? editForm('start', item.id, item.start ?? '')
-											: item.start}
+									<span className='relative'>
+										Start Date
+										<span className="absolute -right-6">{sortSymbol('start', sortMethodRef)}</span>
 									</span>
-									{isLoadingEditForm.includes(`start_${item.id}`) && (
-										<CircularProgress size={30} className="absolute top-[20%] left-[40%]" />
-									)}
-								</td>
-								<td
-									style={{
-										opacity: isLoadingEditForm.includes(`end_${item.id}`) ? 0.5 : 1
-									}}
-									onDoubleClick={() => {
-										setIsEdited(`end_${item.id}`)
-									}}
-									className="relative hidden md:table-cell"
+								</th>
+								<th
+									tabIndex={0}
+									onClick={() =>
+										sortListByDateSupabase(
+											'endconv',
+											response,
+											sortMethodRef,
+											setResponse
+										)
+									}
+									className="p-2 w-40 cursor-pointer hidden md:table-cell"
 								>
-									<span>
-										{isEdited == `end_${item.id}`
-											? editForm('end', item.id, item.end ?? '')
-											: item.end}
+									<span className='relative'>
+										End Date
+										<span className="absolute -right-6">{sortSymbol('end', sortMethodRef)}</span>
 									</span>
-									{isLoadingEditForm.includes(`end_${item.id}`) && (
-										<CircularProgress size={30} className="absolute top-[20%] left-[40%]" />
-									)}
-								</td>
+								</th>
 							</tr>
-						))}
-					</tbody>
-				</table>}
-				<ContextMenu 
-					contextMenuRef={contextMenuRef}
-					contextMenu={contextMenu}
-					setContextMenu={setContextMenu}
-					setDetailsModal={setDetailsModal}
-				/>
-				<DetailsModal 
-					detailsModal={detailsModal}
-					setDetailsModal={setDetailsModal}
-					setEditDialog={setEditDialog}
-				/>
+						</thead>
+						<tbody>
+							{response?.map(item => (
+								<Fragment key={item.id}>
+									<tr className="relative group">
+										<td
+											style={{
+												opacity: isLoadingEditForm.includes(`title_${item.id}`) ? 0.5 : 1
+											}}
+											className="relative flex items-center py-2 min-w-[1rem] group-hover:bg-zinc-800 rounded-s-md"
+										>
+											<div
+												onClick={(e) => {
+													if (detailsOpen.includes(item.id)) setDetailsOpen(vals => vals.filter(val => val != item.id))
+													else setDetailsOpen(val => [...val, item.id])
+												}}
+												className="flex items-center justify-center h-7 w-7 cursor-pointer rounded-full transition-colors duration-150"
+											>
+												<ExpandMoreIcon className={`fill-gray-500 group-hover:fill-white ${detailsOpen.includes(item.id) ? '' : '-rotate-90'} transition-transform`} />
+											</div>
+											<span 
+												onDoubleClick={() => setIsEdited(`title_${item.id}`)}
+												className={`w-full ${item.title ? '' : 'italic text-gray-400'}`}
+											>
+												{isEdited == `title_${item.id}` ? editForm('title', item.id, item.title!) : (item.title ? item.title : 'Untitled')}
+											</span>
+											{isLoadingEditForm.includes(`title_${item.id}`) && (
+												<CircularProgress size={30} className="absolute top-[20%] left-[48%]" />
+											)}
+										</td>
+										<td
+											style={{
+												opacity: isLoadingEditForm.includes(`type_${item.id}`) ? 0.5 : 1
+											}}
+											onDoubleClick={() => {
+												setIsEdited(`type_${item.id}`)
+											}}
+											className="relative hidden md:table-cell text-center group-hover:bg-zinc-800"
+										>
+											<span>
+												{isEdited == `type_${item.id}`
+													? editForm('type', item.id, item.type ?? '')
+													: item.type}
+											</span>
+											{isLoadingEditForm.includes(`type_${item.id}`) && (
+												<CircularProgress size={30} className="absolute top-[20%] left-[40%]" />
+											)}
+										</td>
+										<td
+											style={{
+												opacity: isLoadingEditForm.includes(`episode_${item.id}`) ? 0.5 : 1
+											}}
+											onDoubleClick={() => {
+												setIsEdited(`episode_${item.id}`)
+											}}
+											className="relative hidden md:table-cell text-center group-hover:bg-zinc-800"
+										>
+											<span>
+												{isEdited == `episode_${item.id}`
+													? editForm('episode', item.id, item.episode ?? '')
+													: item.episode}
+											</span>
+											{isLoadingEditForm.includes(`episode_${item.id}`) && (
+												<CircularProgress size={30} className="absolute top-[20%] left-[40%]" />
+											)}
+										</td>
+										<td
+											style={{
+												opacity: isLoadingEditForm.includes(`rating1_${item.id}`) ? 0.5 : 1
+											}}
+											onDoubleClick={() => {
+												setIsEdited(`rating1_${item.id}`)
+											}}
+											className="relative group-hover:bg-zinc-800 text-center"
+										>
+											<span>
+												{isEdited == `rating1_${item.id}`
+													? editForm('rating1', item.id, item.rating1 ?? '')
+													: item.rating1}
+											</span>
+											{isLoadingEditForm.includes(`rating1_${item.id}`) && (
+												<CircularProgress size={30} className="absolute top-[20%] left-[40%]" />
+											)}
+										</td>
+										<td
+											style={{
+												opacity: isLoadingEditForm.includes(`rating2_${item.id}`) ? 0.5 : 1
+											}}
+											onDoubleClick={() => {
+												setIsEdited(`rating2_${item.id}`)
+											}}
+											className="relative text-center group-hover:bg-zinc-800"
+										>
+											<span>
+												{isEdited == `rating2_${item.id}`
+													? editForm('rating2', item.id, item.rating2 ?? '')
+													: item.rating2}
+											</span>
+											{isLoadingEditForm.includes(`rating2_${item.id}`) && (
+												<CircularProgress size={30} className="absolute top-[20%] left-[40%]" />
+											)}
+										</td>
+										<td
+											style={{
+												opacity: isLoadingEditForm.includes(`start_${item.id}`) ? 0.5 : 1
+											}}
+											onDoubleClick={() => {
+												setIsEdited(`start_${item.id}`)
+											}}
+											className="relative hidden md:table-cell text-center group-hover:bg-zinc-800"
+										>
+											<span>
+												{isEdited == `start_${item.id}`
+													? editForm('start', item.id, item.start ?? '')
+													: item.start}
+											</span>
+											{isLoadingEditForm.includes(`start_${item.id}`) && (
+												<CircularProgress size={30} className="absolute top-[20%] left-[40%]" />
+											)}
+										</td>
+										<td
+											style={{
+												opacity: isLoadingEditForm.includes(`end_${item.id}`) ? 0.5 : 1
+											}}
+											onDoubleClick={() => {
+												setIsEdited(`end_${item.id}`)
+											}}
+											className="relative hidden md:table-cell text-center group-hover:bg-zinc-800 rounded-e-md"
+										>
+											<span>
+												{isEdited == `end_${item.id}`
+													? editForm('end', item.id, item.end ?? '')
+													: item.end}
+											</span>
+											{isLoadingEditForm.includes(`end_${item.id}`) && (
+												<CircularProgress size={30} className="absolute top-[20%] left-[40%]" />
+											)}
+										</td>
+									</tr>
+									<tr>
+										<td
+											colSpan={7}
+											className='table-cell bg-black rounded-md p-0'
+										>
+											<AnimatePresence>
+												{detailsOpen.includes(item.id) && 
+												<motion.div 
+													initial={{ height: 0, opacity: 0 }}
+													animate={{ height: '18rem', opacity: 1 }}
+													exit={{ height: 0, opacity: 0 }}
+													transition={{ type: 'tween', ease: 'easeOut', duration: 0.1 }}
+													className='relative flex p-5 h-72 sm:h-80 overflow-hidden'
+												>
+													<CompletedItemDetails 
+														item={item} 
+														setEditDialog={setEditDialog}
+													/>
+												</motion.div>}
+											</AnimatePresence>
+										</td>
+									</tr>
+								</Fragment>
+							))}
+						</tbody>
+					</table>
+				</div>}
 				<SettingsMenu 
 					settingsMenuRef={settingsMenuRef}
 					settingsMenu={settingsMenu}
 				/>
 				<EditDialog
-					editDialog={editDialog}
-					setEditDialog={setEditDialog}
-					details={{ id: detailsModal?.id ?? 0, title: detailsModal?.title ?? '' }}
+					editDialog={!!editDialog}
+					setEditDialog={() => setEditDialog(undefined)}
+					details={editDialog ?? { id: -1, title: '' }}
 				/>
 			</main>
 		</>
@@ -503,19 +513,6 @@ export default function Completed() {
 			top: top + window.scrollY,
 			left: left + window.scrollX - 160,
 			display: true
-		})
-	}
-
-	function handleMenuClick(
-		e: BaseSyntheticEvent,
-		item: Database['public']['Tables']['Completed']['Row']
-	) {
-		const { top, left } = e.target.getBoundingClientRect()
-
-		setContextMenu({
-			top: top + window.scrollY,
-			left: left + window.scrollX + 25,
-			currentItem: item
 		})
 	}
 
@@ -637,14 +634,14 @@ export default function Completed() {
 						opacity: isLoadingEditForm.includes(`${field}_${id}`) ? 0.5 : 1,
 						pointerEvents: isLoadingEditForm.includes(`${field}_${id}`) ? 'none' : 'unset',
 					}}
-					className="w-[90%]"
+					className="w-full"
 				>
 					<form onSubmit={handleSubmit}>
 						<input
 							autoFocus
 							type="text"
 							defaultValue={ogvalue}
-							className="input-text text-center w-full"
+							className={`input-text w-full ${field == 'title' ? 'text-left' : 'text-center'}`}
 						/>
 					</form>
 				</div>
@@ -700,7 +697,8 @@ function SettingsMenu({
 
 	return (
 		<AnimatePresence>
-			{settingsMenu.display && <motion.menu 
+			{settingsMenu.display && 
+			<motion.menu 
 				initial={{ height: 0, opacity: 0 }}
 				animate={{ height: '7.6rem', opacity: 1 }}
 				exit={{ height: 0, opacity: 0 }}
@@ -727,83 +725,19 @@ function SettingsMenu({
 	)
 }
 
-function ContextMenu({
-	contextMenuRef,
-	contextMenu,
-	setContextMenu,
-	setDetailsModal
-}: {
-	contextMenuRef: RefObject<HTMLDivElement>;
-	contextMenu: ContextMenuPos;
-	setContextMenu: Dispatch<SetStateAction<ContextMenuPos>>;
-	setDetailsModal:Dispatch<SetStateAction<Database['public']['Tables']['Completed']['Row'] | null>>;
-}) {
-	return (
-		<AnimatePresence>
-			{contextMenu.currentItem && <motion.menu 
-				initial={{ height: 0, opacity: 0 }}
-				animate={{ height: '9.5rem', opacity: 1 }}
-				exit={{ height: 0, opacity: 0 }}
-        transition={{ type: 'tween', ease: 'linear', duration: 0.1 }}
-				ref={contextMenuRef}
-				style={{
-					top: contextMenu.top,
-					left: contextMenu.left
-				}}
-				className="absolute z-10 p-2 w-[15rem] shadow-md shadow-gray-600 bg-slate-200 text-black rounded-sm border-black border-solid border-2 overflow-hidden"
-			>
-				<li className="flex justify-center">
-					<span className="text-center font-semibold line-clamp-2">
-						{contextMenu.currentItem?.title}
-					</span>
-				</li>
-				<hr className="my-2 border-gray-500 border-t-[1px]" />
-				<li className="flex justify-center h-8 rounded-sm hover:bg-slate-500">
-					<button onClick={handleDetails} className="w-full">
-						Details
-					</button>
-				</li>
-				<li className="flex justify-center h-8 rounded-sm hover:bg-slate-500">
-					<button onClick={handleVisit} className="w-full">
-						Visit on MAL
-					</button>
-				</li>
-			</motion.menu>}
-		</AnimatePresence>
-	)
-
-	function handleDetails() {
-		setDetailsModal(contextMenu.currentItem)
-		setContextMenu({ ...contextMenu, currentItem: null })
-	}
-
-	async function handleVisit() {
-		const supabase = createClient<Database>(
-			process.env.NEXT_PUBLIC_SUPABASE_URL!,
-			process.env.NEXT_PUBLIC_SUPABASE_API_KEY!
-		)
-		const malURL = await supabase
-			.from('CompletedDetails')
-			.select('mal_id')
-			.eq('id', contextMenu.currentItem?.id)
-		window.open(`https://myanimelist.net/anime/${malURL.data?.[0]?.mal_id}`, '_blank')
-	}
-}
-
-function DetailsModal({
-	detailsModal,
-	setDetailsModal,
+function CompletedItemDetails({
+	item,
 	setEditDialog
 }: {
-	detailsModal: Database['public']['Tables']['Completed']['Row'] | null;
-	setDetailsModal: Dispatch<SetStateAction<Database['public']['Tables']['Completed']['Row'] | null>>;
-	setEditDialog: Dispatch<SetStateAction<boolean>>;
+	item: Database['public']['Tables']['Completed']['Row']
+	setEditDialog: Dispatch<SetStateAction<{
+		id: number;
+		title: string;
+	} | undefined>>
 }) {
-	const [details, setDetails] = useState<
-		Database['public']['Tables']['CompletedDetails']['Row'] | null
-	>()
-	const [genres, setGenres] = useState<Array<{ id: number; name: string | null }>>()
-	const [loadingDetails, setLoadingDetails] = useState(true)
+	const [details, setDetails] = useState<Database['public']['Tables']['CompletedDetails']['Row']>()
+	const [genres, setGenres] = useState<{ id: number; name: string | null; }[]>()
+	const [isLoading, setIsLoading] = useState(true)
 
 	const router = useRouter()
 
@@ -816,11 +750,11 @@ function DetailsModal({
 		)
 
 		const getDetails = async () => {
-			const { data } = await supabase.from('CompletedDetails').select().eq('id', detailsModal?.id)
+			const { data } = await supabase.from('CompletedDetails').select().eq('id', item.id)
 			const dataGenre = await supabase
 				.from('Genres')
 				.select('*, Completed!inner( id )')
-				.eq('Completed.id', detailsModal?.id)
+				.eq('Completed.id', item.id)
 
 			const titleGenres = dataGenre.data?.map((item) => {
 				return {
@@ -830,10 +764,11 @@ function DetailsModal({
 			})
 			setGenres(titleGenres)
 			setDetails(data?.[0])
-			setLoadingDetails(false)
+			setIsLoading(false)
 		}
 		getDetails()
-	}, [detailsModal])
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [])
 
 	async function handleReload() {
 		try {
@@ -844,107 +779,105 @@ function DetailsModal({
 			})
 			router.reload()
 		} catch (error) {
-			setLoading(false)
+			console.error(error)
 			alert(error)
+		} finally {
+			setLoading(false)
 		}
 	}
 
-	if (!loadingDetails && (!details || details.mal_id == -1 || !details.mal_title) && detailsModal) {
+	if (isLoading) {
 		return (
-			<Dialog
-				fullWidth
-				maxWidth="lg"
-				open={!!detailsModal}
-				onClose={() => setDetailsModal(null)}
-			>
-				<div className='flex flex-col items-center justify-center p-6 py-24'>
-					<h3 className="mb-6 font-bold text-2xl">
-						Details for this title have not been loaded yet.
-					</h3>
-					<span onClick={handleReload} className="cursor-pointer link">
-						Click here to reload database and view details
-					</span>
-				</div>
-			</Dialog>
+			<div className='flex items-center justify-center self-center mx-auto p-5 h-72 sm:h-80'>
+				<CircularProgress color="primary" />
+			</div>
 		)
-	}
-
-	return (
-		<Dialog
-			fullWidth
-			maxWidth="lg"
-			open={!!detailsModal}
-			onClose={() => setDetailsModal(null)}
-		>
-			<div className='flex flex-col items-center p-6'>
-				<div>
-					<Link
-						href={`/completed/anime/${details?.id}`}
-						title={details?.mal_title ?? ''}
-						className="px-12 font-bold text-lg sm:text-2xl line-clamp-1 text-center link"
-					>
-						{details?.mal_title}
-					</Link>
-				</div>
-				<div
-					onClick={() => setEditDialog(true)}
-					className="absolute top-4 sm:top-8 right-4 sm:right-12 flex items-center justify-center h-7 sm:h-11 w-7 sm:w-11 rounded-full cursor-pointer transition-colors duration-150 hover:bg-slate-500"
-				>
-					<EditIcon sx={{
-						fontSize: {
-							sm: 25,
-							lg: 30
-						}
-					}} />
-				</div>
-				<span className='hidden lg:block'>{details?.mal_alternative_title}</span>
-				<div className='relative my-5 h-[18rem] sm:h-[20rem] w-[12rem] sm:w-[15rem] overflow-hidden'>
+	} if (!details || !genres) {
+		return (
+			<div className='flex flex-col items-center justify-center self-center mx-auto p-5 h-72 sm:h-80'>
+				<h3 className="mb-6 font-bold text-center text-xl sm:text-2xl">
+					Details for this title have not been loaded yet
+				</h3>
+				<span onClick={handleReload} className="cursor-pointer link">
+					Click here to reload database and view details
+				</span>
+			</div>
+		)
+	} else {
+		return (
+			<>
+				<div className='relative w-32 sm:w-60 mr-4 sm:mr-0 overflow-hidden'>
 					<Image
 						src={details?.image_url!}
-						alt="Art"
+						alt={`${item.title} Art`}
 						fill
 						sizes="30vw"
 						className="object-contain"
 						draggable={false}
 					/>
 				</div>
-				<div className="flex mb-6 gap-12">
-					<div className="flex flex-col">
-						<h5 className="mb-2 font-semibold text-center text-lg">Start Date</h5>
-						<span className='text-center'>{details?.start_date}</span>
-					</div>
-					<div className="flex flex-col items-center justify-center">
-						<h5 className="mb-2 font-semibold text-center text-lg">End Date</h5>
-						<span className='text-center'>{details?.end_date}</span>
+				<div className='flex flex-col items-start justify-center gap-4 w-3/5'>
+					<Link
+						href={`/completed/anime/${details?.id}`}
+						title={details?.mal_title ?? ''}
+						className="font-bold text-lg sm:text-xl md:text-2xl line-clamp-2 link"
+					>
+						{details?.mal_title}
+					</Link>
+					<p className='text-sm line-clamp-4'>
+						{details?.mal_synopsis}
+					</p>
+					<div>
+					<h5 className="font-semibold text-lg">Genres</h5>
+						<span className="mb-2 text-center">
+							{genres?.map((item, index) => {
+								return (
+									<Link
+										href={`/completed/genres/${item.id}`}
+										key={index}
+										className="link"
+									>
+										{item.name}
+										<span className="text-white">{index < genres.length - 1 ? ', ' : null}</span>
+									</Link>
+								)
+							})}
+						</span>
 					</div>
 				</div>
-				<h5 className="font-semibold text-lg">Genres</h5>
-				<span className="mb-2 text-center">
-					{genres?.map((item, index) => {
-						return (
-							<Link
-								href={`/completed/genres/${item.id}`}
-								key={index}
-								className="link"
-							>
-								{item.name}
-								<span className="text-white">{index < genres.length - 1 ? ', ' : null}</span>
-							</Link>
-						)
-					})}
-				</span>
-				<a
-					href={
-						`https://myanimelist.net/anime/${details?.mal_id}` ??
-						'https://via.placeholder.com/400x566'
-					}
-					target="_blank"
-					rel='noopener noreferrer'
-					className="text-base sm:text-lg link"
+				<div className="hidden grow md:flex flex-col justify-center gap-3">
+					<h4 className='font-semibold text-center text-lg'>Airing Dates</h4>
+					<div className='flex justify-center gap-4'>
+						<div className="flex flex-col">
+							<h5 className="mb-2 font-semibold text-center text-lg">Start</h5>
+							<span className='text-center'>{details?.start_date ? details.start_date : '–'}</span>
+						</div>
+						<div className="flex flex-col items-center justify-center">
+							<h5 className="mb-2 font-semibold text-center text-lg">End</h5>
+							<span className='text-center'>{details?.end_date ? details.end_date : '–'}</span>
+						</div>
+					</div>
+					<a
+						href={`https://myanimelist.net/anime/${details?.mal_id}`}
+						target="_blank"
+						rel='noopener noreferrer'
+						className="mt-6 text-center link"
+					>
+						MyAnimeList
+					</a>
+				</div>
+				<IconButton
+					sx={{
+						position: 'absolute',
+						top: '0.75rem',
+						right: '1rem'
+					}}
+					onClick={() => setEditDialog({ id: item.id, title: item.title ?? '' })}
+					className='!hidden md:!block'
 				>
-					MyAnimeList
-				</a>
-			</div>
-		</Dialog>
-	)
+					<EditIcon />
+				</IconButton>
+			</>
+		)
+	}
 }

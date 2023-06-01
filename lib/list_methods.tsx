@@ -1,4 +1,5 @@
 import { Dispatch, MutableRefObject, SetStateAction } from 'react'
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown'
 import { Database } from './database.types'
 import { TitleItem } from '@/lib/types'
 
@@ -91,7 +92,11 @@ export const sortListByDate = (
 
 export const sortSymbol = (type: string, sortMethodRef: MutableRefObject<string>) => {
 	if (sortMethodRef.current.includes(type)) {
-		return sortMethodRef.current.includes(`asc_${type}`) ? '▲' : '▼'
+		if (sortMethodRef.current.includes(`asc_${type}`)) {
+			return <ArrowDropDownIcon />
+		} else {
+			return <ArrowDropDownIcon style={{ rotate: '180deg' }} />
+		}
 	} else {
 		return ''
 	}
