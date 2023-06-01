@@ -1,10 +1,11 @@
-import { createClient } from '@supabase/supabase-js'
 import { GetStaticPropsContext } from 'next'
-import { Database } from '@/lib/database.types'
-import { useEffect, useRef, useState } from 'react'
 import Head from 'next/head'
 import Link from 'next/link'
+import { useEffect, useRef, useState } from 'react'
 import RefreshIcon from '@mui/icons-material/Refresh'
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown'
+import { createClient } from '@supabase/supabase-js'
+import { Database } from '@/lib/database.types'
 
 export async function getStaticPaths() {
 	const supabase = createClient<Database>(
@@ -116,7 +117,7 @@ export default function GenrePage({ id }: { id: number }) {
 				/>
 			</Head>
 
-			<main className="flex flex-col items-center justify-center mx-auto md:w-3/5 sm:w-full">
+			<main className="flex flex-col items-center justify-center mx-auto md:w-4/5 sm:w-full">
 				<header className='flex items-center mb-3'>
 					<h2 className="p-2 text-2xl sm:text-3xl">
 						{(response?.[0]?.Genres as { name: string | null }[])?.[0].name}
@@ -134,54 +135,60 @@ export default function GenrePage({ id }: { id: number }) {
 						<RefreshIcon sx={{ fontSize: 28 }} />
 					</div>}
 				</header>
-				<div className="flex items-center justify-center w-[85%] bg-sky-600 border-white border-solid border-[1px] border-b-0 rounded-tl-lg rounded-tr-lg">
-					<div className="grow p-3 text-lg text-center font-semibold">Title</div>
-					<div
-						onClick={() => handleSort('rating1')}
-						className="relative p-3 min-w-[8rem] text-lg text-center font-semibold cursor-pointer border-l-[1px] border-white"
-					>
-						Rating 1
-						{sortMethodRef.current.includes('rating1') && (
-							<span className="absolute">
-								{sortMethodRef.current.includes('asc') ? '▲' : '▼'}
-							</span>
-						)}
+				<section className='p-2 pt-1 bg-neutral-700 rounded-md'>
+					<div className="flex items-center justify-center border-b">
+						<div className="grow p-3 text-lg text-center font-semibold">Title</div>
+						<div
+							onClick={() => handleSort('rating1')}
+							className="relative p-3 min-w-[8rem] text-lg text-center font-semibold cursor-pointer"
+						>
+							Rating 1
+							{sortMethodRef.current.includes('rating1') && (
+								<span className="absolute">
+									<ArrowDropDownIcon sx={{
+										rotate: sortMethodRef.current.includes('asc') ? '180deg' : '0'
+									}} />
+								</span>
+							)}
+						</div>
+						<div
+							onClick={() => handleSort('rating2')}
+							className="relative p-3 min-w-[8rem] text-lg text-center font-semibold cursor-pointer"
+						>
+							Rating 2
+							{sortMethodRef.current.includes('rating2') && (
+								<span className="absolute">
+									<ArrowDropDownIcon sx={{
+										rotate: sortMethodRef.current.includes('asc') ? '180deg' : '0'
+									}} />
+								</span>
+							)}
+						</div>
 					</div>
-					<div
-						onClick={() => handleSort('rating2')}
-						className="relative p-3 min-w-[8rem] text-lg text-center font-semibold cursor-pointer border-l-[1px] border-white"
-					>
-						Rating 2
-						{sortMethodRef.current.includes('rating2') && (
-							<span className="absolute">
-								{sortMethodRef.current.includes('asc') ? '▲' : '▼'}
-							</span>
-						)}
-					</div>
-				</div>
-				<ul className="flex flex-col gap-2 h-[80dvh] w-[85%] overflow-auto border-[1px] border-white rounded-bl-lg rounded-br-lg">
-					{response?.map((item, index) => {
-						return (
-							<li
-								key={index}
-								className="flex items-center justify-center p-0 text-center rounded-md transition-colors duration-75 hover:bg-slate-500"
-							>
-								<Link
-									href={`/completed/anime/${item.id}`}
-									className="grow px-5 py-3 h-full w-full"
+					<ul className="flex flex-col gap-2 h-[75dvh] overflow-auto">
+						{response?.map((item, index) => {
+							return (
+								<li
+									key={index}
+									className="flex items-center justify-center p-0 text-center hover:bg-zinc-800 rounded-md transition-colors duration-75"
 								>
-									{item.title}
-								</Link>
-								<span className='min-w-[8rem] px-3 py-2 text-lg text-center'>
-									{item.rating1}
-								</span>
-								<span className='min-w-[8rem] px-3 py-2 text-lg text-center'>
-									{item.rating2}
-								</span>
-							</li>
-						)
-					})}
-				</ul>
+									<Link
+										href={`/completed/anime/${item.id}`}
+										className="grow px-5 py-3 h-full w-full"
+									>
+										{item.title}
+									</Link>
+									<span className='min-w-[8rem] p-2 text-lg text-center'>
+										{item.rating1}
+									</span>
+									<span className='min-w-[8rem] p-2 text-lg text-center'>
+										{item.rating2}
+									</span>
+								</li>
+							)
+						})}
+					</ul>
+				</section>
 			</main>
 		</>
 	)

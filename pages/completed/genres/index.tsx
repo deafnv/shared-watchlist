@@ -2,12 +2,13 @@ import Head from 'next/head'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { BaseSyntheticEvent, Dispatch, SetStateAction, useEffect, useRef, useState } from 'react'
-import { createClient } from '@supabase/supabase-js'
 import Dialog from '@mui/material/Dialog'
 import Button from '@mui/material/Button'
 import DoneIcon from '@mui/icons-material/Done'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import CloseIcon from '@mui/icons-material/Close'
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown'
+import { createClient } from '@supabase/supabase-js'
 import { Database } from '@/lib/database.types'
 
 export default function Genres() {
@@ -78,7 +79,7 @@ export default function Genres() {
 					open={!!advancedSearchResult}
 					onClose={() => setAdvancedSearchResult(null)}
 				>
-					<div className='flex flex-col items-center p-6'>
+					<div className='flex flex-col items-center p-6 bg-[#2e2e2e]'>
 						<div
 							onClick={() => setAdvancedSearchResult(null)}
 							className="absolute left-6 flex items-center justify-center h-11 w-11 rounded-full cursor-pointer transition-colors duration-150 hover:bg-slate-500"
@@ -152,7 +153,7 @@ function AdvancedSearchModal({
 			open={advancedSearch}
 			onClose={() => setAdvancedSearch(false)}
 		>
-			<div className="fixed flex flex-col items-center gap-4 h-[85dvh] w-[45rem] max-w-[95%] px-10 py-6 bg-neutral-700 rounded-md shadow-md shadow-black drop-shadow-md top-1/2 left-1/2 -translate-x-1/2 -translate-y-[45%]">
+			<div className="fixed flex flex-col items-center gap-4 h-[85dvh] w-[45rem] max-w-[95%] px-10 py-6 bg-[#2e2e2e] rounded-md shadow-md shadow-black drop-shadow-md top-1/2 left-1/2 -translate-x-1/2 -translate-y-[45%]">
 				<h3 className="font-semibold text-2xl">Advanced Search</h3>
 				<div
 					onClick={() => setAdvancedSearch(false)}
@@ -222,39 +223,43 @@ function AdvancedSearchTable({
 	}
 
 	return (
-		<>
-			<div className="flex items-center justify-center w-[85%] bg-sky-600 border-white border-solid border-[1px] border-b-0 rounded-tl-lg rounded-tr-lg">
-				<div className="grow p-3 text-lg text-center font-semibold">Title</div>
+		<div className='p-2 bg-neutral-700 rounded-md'>
+			<div className="flex items-center justify-center border-b">
+				<div className="grow p-2 pt-1 text-lg text-center font-semibold">Title</div>
 				<div
 					onClick={() => handleSort('rating1')}
-					className="relative p-3 min-w-[8rem] text-lg text-center font-semibold cursor-pointer border-l-[1px] border-white"
+					className="relative p-2 pt-1 min-w-[8rem] text-lg text-center font-semibold cursor-pointer"
 				>
 					Rating 1
 					{sortMethodRef.current.includes('rating1') && (
 						<span className="absolute">
-							{sortMethodRef.current.includes('asc') ? '▲' : '▼'}
+							<ArrowDropDownIcon sx={{
+								rotate: sortMethodRef.current.includes('asc') ? '180deg' : '0'
+							}} />
 						</span>
 					)}
 				</div>
 				<div
 					onClick={() => handleSort('rating2')}
-					className="relative p-3 min-w-[8rem] text-lg text-center font-semibold cursor-pointer border-l-[1px] border-white"
+					className="relative p-2 pt-1 min-w-[8rem] text-lg text-center font-semibold cursor-pointer"
 				>
 					Rating 2
 					{sortMethodRef.current.includes('rating2') && (
 						<span className="absolute">
-							{sortMethodRef.current.includes('asc') ? '▲' : '▼'}
+							<ArrowDropDownIcon sx={{
+								rotate: sortMethodRef.current.includes('asc') ? '180deg' : '0'
+							}} />
 						</span>
 					)}
 				</div>
 			</div>
-			<ul className="flex flex-col gap-2 h-[70dvh] w-[85%] overflow-auto border-[1px] border-white rounded-bl-lg rounded-br-lg">
+			<ul className="flex flex-col gap-2 h-[70dvh] overflow-auto">
 				{advancedSearchResult?.length ?
 				advancedSearchResult.map((item: any, index: number) => {
 					return (
 						<li
 							key={index}
-							className="flex items-center justify-center p-0 text-center rounded-md transition-colors duration-75 hover:bg-slate-500"
+							className="flex items-center justify-center p-0 text-center rounded-md transition-colors duration-75 hover:bg-zinc-800"
 						>
 							<Link
 								href={`/completed/anime/${item.id}`}
@@ -276,6 +281,6 @@ function AdvancedSearchTable({
 					No results found.	
 				</span>}
 			</ul>
-		</>
+		</div>
 	)
 }
