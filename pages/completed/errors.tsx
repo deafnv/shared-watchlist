@@ -1,9 +1,12 @@
 import Head from 'next/head'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import { useEffect, useState, Fragment } from 'react'
+import { useEffect, useState, Dispatch, SetStateAction } from 'react'
 import axios from 'axios'
 import Button from '@mui/material/Button'
+import Dialog from '@mui/material/Dialog'
+import DialogTitle from '@mui/material/DialogTitle'
+import DialogActions from '@mui/material/DialogActions'
 import { createClient } from '@supabase/supabase-js'
 import { levenshtein } from '@/lib/list_methods'
 import { Database } from '@/lib/database.types'
@@ -22,10 +25,7 @@ export default function CompletedErrors() {
 	const [isLoadingClient, setIsLoadingClient] = useState(true)
 	const [response, setResponse] = useState<ErrorItem[]>()
 	const [changed, setChanged] = useState<ErrorItem | null>(null)
-	const { setLoading } = useLoading()
-	const [width, setWidth] = useState<number>(0)
-
-	const router = useRouter()
+	const [ignore, setIgnore] = useState<ErrorItem>()
 
 	useEffect(() => {
 		const getData = async () => {
@@ -77,15 +77,6 @@ export default function CompletedErrors() {
 			setIsLoadingClient(false)
 		}
 		getData()
-
-		setWidth(window.innerWidth)
-		const handleWindowResize = () => setWidth(window.innerWidth)
-
-		window.addEventListener('resize', handleWindowResize)
-
-		return () => {
-			window.removeEventListener('resize', handleWindowResize)
-		}
 	}, [])
 
 	if (!response?.length && !isLoadingClient) {
@@ -104,7 +95,6 @@ export default function CompletedErrors() {
 		)
 	}
 
-	//TODO: Add confirm for ignore
 	return (
 		<>
 			<Head>
@@ -114,93 +104,92 @@ export default function CompletedErrors() {
 
 			<main className="flex flex-col items-center justify-center mb-24 px-6 py-2">
 				<h2 className="p-2 text-2xl sm:text-3xl text-center">Potential Errors in Completed</h2>
-				<section>
-					<div className="grid grid-cols-[5fr_5fr_1fr_1fr] xl:grid-cols-[26rem_26rem_10rem_12rem] min-w-[95dvw] xl:min-w-0 sm:w-min bg-sky-600 border-white border-solid border-[1px]">
-						<span className="flex items-center justify-center p-2 h-full text-xs md:text-base border-white border-r-[1px] text-center font-bold">
+				<section className='p-2 bg-neutral-700 rounded-md'>
+					<div className="grid grid-cols-[5fr_5fr_1fr_1fr] xl:grid-cols-[26rem_26rem_10rem_12rem] min-w-[95dvw] xl:min-w-0 sm:w-min border-b">
+						<span className="flex items-center justify-center p-2 pt-1 h-full text-xs md:text-base text-center font-bold">
 							Title
 						</span>
-						<span className="flex items-center justify-center p-2 h-full text-xs md:text-base border-white border-r-[1px] text-center font-bold">
+						<span className="flex items-center justify-center p-2 pt-1 h-full text-xs md:text-base text-center font-bold">
 							Retrieved Title
 						</span>
-						<span
-							style={{ writingMode: width > 1280 ? 'initial' : 'vertical-lr' }}
-							className="flex p-2 h-full text-xs md:text-base border-white border-r-[1px] text-center font-bold"
-						>
+						<span className="flex items-center p-2 pt-1 h-full text-xs md:text-base text-center font-bold [writing-mode:vertical-lr] xl:[writing-mode:initial]">
 							Levenshtein Distance
 						</span>
-						<span className="flex items-center justify-center p-2 h-full text-xs md:text-base text-center font-bold">
+						<span className="flex items-center justify-center p-2 pt-1 h-full text-xs md:text-base text-center font-bold">
 							Options
 						</span>
 					</div>
-					<div className="grid grid-cols-[5fr_5fr_1fr_1fr] xl:grid-cols-[26rem_26rem_10rem_12rem] text-sm md:text-base min-w-[95dvw] xl:min-w-0 sm:w-min border-white border-solid border-[1px] border-t-0">
-						{response?.map(item => {
-							return (
-								<Fragment key={item.mal_id}>
-									<span className="flex items-center justify-center sm:px-3 py-3 h-full text-xs md:text-base border-white border-b-[1px] text-center">
-										{item.entryTitle}
-									</span>
-									<Link
-										href={`https://myanimelist.net/anime/${item.mal_id}`}
-										target="_blank"
-										rel='noopener noreferrer'
-										className="flex items-center justify-center sm:px-3 py-3 h-full text-xs md:text-base border-white border-b-[1px] text-center link"
+					{response?.map(item => {
+						return (
+							<div 
+								key={item.mal_id}
+								className='grid grid-cols-[5fr_5fr_1fr_1fr] xl:grid-cols-[26rem_26rem_10rem_12rem] text-sm md:text-base min-w-[95dvw] xl:min-w-0 sm:w-min group'
+							>
+								<span className="flex items-center justify-center sm:px-3 py-3 h-full text-xs md:text-base text-center group-hover:bg-zinc-800 rounded-s-md">
+									{item.entryTitle}
+								</span>
+								<Link
+									href={`https://myanimelist.net/anime/${item.mal_id}`}
+									target="_blank"
+									rel='noopener noreferrer'
+									className="flex items-center justify-center sm:px-3 py-3 h-full text-xs md:text-base text-center link group-hover:bg-zinc-800"
+								>
+									{item.retrievedTitle}
+								</Link>
+								<span className="flex items-center justify-center p-2 h-full text-xs md:text-base text-center group-hover:bg-zinc-800">
+									{item.distance}
+								</span>
+								<span className="flex flex-col xl:flex-row items-center justify-center gap-2 p-1 xl:p-2 h-full text-xs xl:text-base text-center group-hover:bg-zinc-800 rounded-e-md">
+									<Button
+										onClick={() => setChanged(item)}
+										variant='outlined'
+										size='small'
 									>
-										{item.retrievedTitle}
-									</Link>
-									<span className="flex items-center justify-center p-2 h-full text-xs md:text-base border-white border-b-[1px] text-center">
-										{item.distance}
-									</span>
-									<span className="flex flex-col xl:flex-row items-center justify-center gap-2 p-1 xl:p-2 h-full text-xs xl:text-base border-white border-b-[1px] text-center">
-										<Button
-											onClick={() => handleOpenChangeMenu(item)}
-											variant='outlined'
-											size='small'
-										>
-											Change
-										</Button>
-										<Button
-											onClick={() => handleIgnore(item)}
-											color='error'
-											size='small'
-										>
-											Ignore
-										</Button>
-									</span>
-								</Fragment>
-							)
-						})}
-					</div>
+										Change
+									</Button>
+									<Button
+										onClick={() => setIgnore(item)}
+										color='error'
+										size='small'
+									>
+										Ignore
+									</Button>
+								</span>
+							</div>
+						)
+					})}
 				</section>
 				<EditDialog 
 					editDialog={!!changed}
 					setEditDialog={() => setChanged(null)}
 					details={{ id: changed?.id ?? 0, title: changed?.entryTitle ?? '' }}
 				/>
+				<ConfirmModal 
+					ignore={ignore}
+					setIgnore={setIgnore}
+				/>
 			</main>
 		</>
 	)
+}
 
-	function handleOpenChangeMenu(item: {
-		id: number
-		mal_id: number | null
-		entryTitle: string | null
-		retrievedTitle: string | null
-		distance: number | undefined
-	}) {
-		setChanged(item)
-	}
+function ConfirmModal({
+	ignore,
+	setIgnore
+}: {
+	ignore: ErrorItem | undefined
+	setIgnore: Dispatch<SetStateAction<ErrorItem | undefined>>
+}) {
+	const router = useRouter()
+	
+	const { setLoading } = useLoading()
 
-	async function handleIgnore(item: {
-		id: number
-		mal_id: number | null
-		entryTitle: string | null
-		retrievedTitle: string | null
-		distance: number | undefined
-	}) {
+	async function handleIgnore() {
+		if (!ignore) return
 		setLoading(true)
 		try {
 			await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/changedetails`, {
-				id: item.id,
+				id: ignore.id,
 				mal_id: 0,
 				type: 'IGNORE_ERROR'
 			}, { withCredentials: true })
@@ -210,4 +199,33 @@ export default function CompletedErrors() {
 			alert(error)
 		}
 	}
+
+	return (
+		<Dialog
+			fullWidth
+			maxWidth="xs"
+			open={!!ignore}
+			onClose={() => setIgnore(undefined)}
+		>
+			<div className='p-2'>
+				<DialogTitle fontSize='large'>
+					Confirm ignore error?
+				</DialogTitle>
+				<DialogActions>
+					<Button 
+						onClick={handleIgnore}
+						variant='outlined' 
+					>
+						Yes
+					</Button>
+					<Button 
+						onClick={() => setIgnore(undefined)}
+						color='error' 
+					>
+						No
+					</Button>
+				</DialogActions>
+			</div>
+		</Dialog>
+	)
 }
