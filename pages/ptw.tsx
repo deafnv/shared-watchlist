@@ -484,10 +484,6 @@ function PTWTable({
 					<AddIcon />
 				</div>
 			</header>
-			{isLoadingClient ? 
-			<div className='flex items-center justify-center h-[36rem] w-[100dvw] sm:w-[30rem]'>
-				<CircularProgress size={42} color="primary" />
-			</div> :
 			<div className='p-2 bg-neutral-700 rounded-md'>
 				<table>
 					<thead className='border-b'>
@@ -498,7 +494,13 @@ function PTWTable({
 						</tr>
 					</thead>
 					<tbody>
-						{response?.map((item) => (
+						{isLoadingClient ? 
+						<tr>
+							<td className='py-48 text-center'>
+								<CircularProgress size={42} color="primary" />
+							</td>
+						</tr> : 
+						response?.map(item => (
 							<tr key={item.id}>
 								<td
 									style={{
@@ -528,7 +530,7 @@ function PTWTable({
 						))}
 					</tbody>
 				</table>
-			</div>}
+			</div>
 		</section>
 	)
 }

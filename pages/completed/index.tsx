@@ -210,8 +210,44 @@ export default function Completed() {
 					</IconButton>
 				</div>
 				{isLoadingClient ? 
-				<div className='flex items-center justify-center h-[36rem]'>
-					<CircularProgress size={50} color="primary" />
+				<div className='p-2 bg-neutral-700 rounded-md'>
+					<table>
+						<thead className='border-b'>
+							<tr>
+								<th className="p-2 min-w-[1rem] sm:min-w-0 w-[42rem]">
+									<span>Title</span>
+								</th>
+								<th className="p-2 w-32 hidden md:table-cell">
+									<span>Type</span>
+								</th>
+								<th className="p-2 w-36 hidden md:table-cell">
+									<span>Episode(s)</span>
+								</th>
+								<th className="p-2 w-32">
+									<span>Rating 1</span>
+								</th>
+								<th className="p-2 w-32">
+									<span>Rating 2</span>
+								</th>
+								<th className="p-2 w-40 hidden md:table-cell">
+									<span>Start Date</span>
+								</th>
+								<th className="p-2 w-40 hidden md:table-cell">
+									<span>End Date</span>
+								</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td 
+									colSpan={7}
+									className='py-48 text-center'
+								>
+									<CircularProgress size={50} color="primary" />
+								</td>
+							</tr>
+						</tbody>
+					</table>
 				</div> : 
 				<div className='p-2 bg-neutral-700 rounded-md'>
 					<table>
