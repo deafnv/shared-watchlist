@@ -1,7 +1,7 @@
 import { Dispatch, MutableRefObject, SetStateAction } from 'react'
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown'
 import { Database } from './database.types'
-import { TitleItem } from '@/lib/types'
+import { CompletedFields, TitleItem } from '@/lib/types'
 
 export function getRandomInt(max: number) {
 	return Math.floor(Math.random() * max)
@@ -125,38 +125,9 @@ export const initialTitleItemSupabase = {
 	endconv: 0
 }
 
-/* export const sortBasedOnSortMethod = (res: Database['public']['Tables']['Completed']['Row'][], sortMethod: string) => {
-  if (sortMethod.includes('title')) {
-    if (sortMethod.includes('titleasc')) {
-      return res.slice().sort((a, b) => a.title!.localeCompare(b.title!)); // Ascending title
-    } else {
-      return res.slice().sort((a, b) => b.title!.localeCompare(a.title!)) //Descending title
-    }
-  } else if (sortMethod.includes('rating')) {
-    const rating = sortMethod.match(/(?<=_)[^_]+$/);
-    if (sortMethod.includes('ratingasc')) {
-      return res.slice().sort((a, b) => {
-        if ((a as any)[`${rating}average`] == null) {
-          return -1;
-        }
-        return (b as any)[`${rating}average`] - (a as any)[`${rating}average`];
-      });
-    } else {
-      return res.slice().sort((a, b) => {
-        if ((b as any)[`${rating}average`] == null) {
-          return -1;
-        }
-        return (a as any)[`${rating}average`] - (b as any)[`${rating}average`];
-      });
-    }
-  } else { //!Use this for date sorting
-
-  }
-} */
-
 export const sortListByNameSupabase = (
 	res: Database['public']['Tables']['Completed']['Row'][] | undefined,
-	sortMethodRef: MutableRefObject<string>,
+	sortMethodRef: MutableRefObject<`${'asc' | 'desc'}_${CompletedFields}` | ''>,
 	setResponse: Dispatch<
 		SetStateAction<Database['public']['Tables']['Completed']['Row'][] | undefined>
 	>
@@ -172,7 +143,7 @@ export const sortListByNameSupabase = (
 
 export const sortListByTypeSupabase = (
 	res: Database['public']['Tables']['Completed']['Row'][] | undefined,
-	sortMethodRef: MutableRefObject<string>,
+	sortMethodRef: MutableRefObject<`${'asc' | 'desc'}_${CompletedFields}` | ''>,
 	setResponse: Dispatch<
 		SetStateAction<Database['public']['Tables']['Completed']['Row'][] | undefined>
 	>
@@ -188,7 +159,7 @@ export const sortListByTypeSupabase = (
 
 export const sortListByEpisodeSupabase = (
 	res: Database['public']['Tables']['Completed']['Row'][] | undefined,
-	sortMethodRef: MutableRefObject<string>,
+	sortMethodRef: MutableRefObject<`${'asc' | 'desc'}_${CompletedFields}` | ''>,
 	setResponse: Dispatch<
 		SetStateAction<Database['public']['Tables']['Completed']['Row'][] | undefined>
 	>
@@ -219,13 +190,13 @@ export const sortListByEpisodeSupabase = (
 export const sortListByRatingSupabase = (
 	rating: 'rating1' | 'rating2',
 	res: Database['public']['Tables']['Completed']['Row'][] | undefined,
-	sortMethodRef: MutableRefObject<string>,
+	sortMethodRef: MutableRefObject<`${'asc' | 'desc'}_${CompletedFields}` | ''>,
 	setResponse: Dispatch<
 		SetStateAction<Database['public']['Tables']['Completed']['Row'][] | undefined>
 	>
 ) => {
-	if (sortMethodRef.current === `ratingasc_${rating}`) {
-		sortMethodRef.current = `ratingdesc_${rating}`
+	if (sortMethodRef.current === `asc_${rating}`) {
+		sortMethodRef.current = `desc_${rating}`
 		setResponse(
 			res?.slice().sort((a, b) => {
 				if (a[`${rating}average`] == null) {
@@ -235,7 +206,7 @@ export const sortListByRatingSupabase = (
 			})
 		)
 	} else {
-		sortMethodRef.current = `ratingasc_${rating}`
+		sortMethodRef.current = `asc_${rating}`
 		setResponse(
 			res?.slice().sort((a, b) => {
 				if (b[`${rating}average`] == null) {
@@ -250,20 +221,20 @@ export const sortListByRatingSupabase = (
 export const sortListByDateSupabase = (
 	date: 'startconv' | 'endconv',
 	res: Database['public']['Tables']['Completed']['Row'][] | undefined,
-	sortMethodRef: MutableRefObject<string>,
+	sortMethodRef: MutableRefObject<`${'asc' | 'desc'}_${CompletedFields}` | ''>,
 	setResponse: Dispatch<
 		SetStateAction<Database['public']['Tables']['Completed']['Row'][] | undefined>
 	>
 ) => {
-	if (sortMethodRef.current === `datedesc_${date}`) {
-		sortMethodRef.current = `dateasc_${date}`
+	if (sortMethodRef.current === `desc_${date}`) {
+		sortMethodRef.current = `asc_${date}`
 		setResponse(
 			res?.slice().sort((a, b) => {
 				return b[date]! - a[date]!
 			})
 		)
 	} else {
-		sortMethodRef.current = `datedesc_${date}`
+		sortMethodRef.current = `desc_${date}`
 		setResponse(
 			res?.slice().sort((a, b) => {
 				return a[date]! - b[date]!

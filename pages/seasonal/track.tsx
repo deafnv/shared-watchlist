@@ -485,12 +485,12 @@ function EpisodeTable({
 		<div className="relative grid grid-cols-1 min-[390px]:grid-cols-2 gap-2">
 			{Array(4)
 				.fill('')
-				.map((i, index) => (
-					<div className='p-2 bg-neutral-800 rounded-md'>
-						<table 
-							key={index} 
-							className='w-full'
-						>
+				.map((_, index) => (
+					<div 
+						key={index}
+						className='p-2 bg-neutral-800 rounded-md'
+					>
+						<table className='w-full'>
 							<thead>
 								<tr>
 									<th className="w-11">

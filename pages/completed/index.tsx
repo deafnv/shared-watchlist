@@ -7,15 +7,16 @@ import debounce from 'lodash/debounce'
 import axios from 'axios'
 import { AnimatePresence, motion } from 'framer-motion'
 import CircularProgress from '@mui/material/CircularProgress'
+import IconButton from '@mui/material/IconButton'
 import AddIcon from '@mui/icons-material/Add'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import EditIcon from '@mui/icons-material/Edit'
 import SearchIcon from '@mui/icons-material/Search'
 import RefreshIcon from '@mui/icons-material/Refresh'
-import IconButton from '@mui/material/IconButton'
 import { createClient } from '@supabase/supabase-js'
-import { Database } from '@/lib/database.types'
+import { useLoading } from '@/components/LoadingContext'
+import EditDialog from '@/components/dialogs/EditDialog'
 import {
 	sortListByDateSupabase,
 	sortListByEpisodeSupabase,
@@ -24,8 +25,8 @@ import {
 	sortListByTypeSupabase,
 	sortSymbol
 } from '@/lib/list_methods'
-import { useLoading } from '@/components/LoadingContext'
-import EditDialog from '@/components/dialogs/EditDialog'
+import { Database } from '@/lib/database.types'
+import { CompletedFields } from '@/lib/types'
 
 interface SettingsMenuPos {
 	top: number;
@@ -36,21 +37,21 @@ interface SettingsMenuPos {
 export default function Completed() {
 	const settingsMenuRef = useRef<HTMLDivElement>(null)
 	const settingsMenuButtonRef = useRef<HTMLDivElement>(null)
-	const sortMethodRef = useRef('')
-	const isEditedRef = useRef('')
+	const sortMethodRef = useRef<`${'asc' | 'desc'}_${CompletedFields}` | ''>('')
+	const isEditedRef = useRef<`${CompletedFields}_${number}` | ''>('')
 
 	const [response, setResponse] = useState<Database['public']['Tables']['Completed']['Row'][]>()
 	const [response1, setResponse1] = useState<Database['public']['Tables']['Completed']['Row'][]>()
-	const [isEdited, setIsEditedState] = useState<string>('')
+	const [isEdited, setIsEditedState] = useState<`${CompletedFields}_${number}` | ''>('')
 	const [isLoadingClient, setIsLoadingClient] = useState(true)
-	const [isLoadingEditForm, setIsLoadingEditForm] = useState<Array<string>>([])
+	const [isLoadingEditForm, setIsLoadingEditForm] = useState<`${CompletedFields}_${number}`[]>([])
 	const [settingsMenu, setSettingsMenu] = useState<SettingsMenuPos>({ top: 0, left: 0, display: false })
 	const [detailsOpen, setDetailsOpen] = useState<number[]>([])
 	const [editDialog, setEditDialog] = useState<{ id: number; title: string; }>()
 
 	const { setLoading } = useLoading()
 
-	const setIsEdited = (value: string) => {
+	const setIsEdited = (value: `${CompletedFields}_${number}` | '') => {
 		isEditedRef.current = value
 		setIsEditedState(value)
 	}
@@ -95,14 +96,15 @@ export default function Completed() {
 			3500000
 		)
 
-		const closeMenus = (e: any) => {
-			if (e.target?.tagName !== 'INPUT' && isEdited) {
+		const closeMenus = (e: MouseEvent) => {
+			const target = e.target as HTMLElement
+			if (target?.tagName !== 'INPUT' && isEdited) {
 				setIsEdited('')
 			}
 			if (
-				e.target.parentNode !== settingsMenuButtonRef.current &&
-				e.target.parentNode?.parentNode !== settingsMenuButtonRef.current &&
-				!settingsMenuRef.current?.contains(e.target) &&
+				target.parentNode !== settingsMenuButtonRef.current &&
+				target.parentNode?.parentNode !== settingsMenuButtonRef.current &&
+				!settingsMenuRef.current?.contains(target) &&
 				settingsMenuRef.current
 			) {
 				setSettingsMenu({ top: 0, left: 0, display: false })
@@ -118,12 +120,12 @@ export default function Completed() {
 				if (editDialog) setEditDialog(undefined)
 				if (isEditedRef.current) setIsEdited('')
 			}
-			if (e.key == 'Tab' && isEditedRef.current) {
+			if (e.key == 'Tab' && isEditedRef.current != '') {
 				e.preventDefault()
-				const fields = ['title', 'type', 'episode', 'rating1', 'rating2', 'start', 'end']
-				const split = isEditedRef.current.split('_')
+				const fields: ['title', 'type', 'episode', 'rating1', 'rating2', 'endconv'] = ['title', 'type', 'episode', 'rating1', 'rating2', 'endconv']
+				const split = isEditedRef.current.split('_') as [CompletedFields, string]
 				const nextField = fields.findIndex(item => item == split[0]) + 1
-				const nextIsEdited = nextField < fields.length ? `${fields[nextField]}_${split[1]}` : `title_${parseInt(split[1]) - 1}`;
+				const nextIsEdited: `${CompletedFields}_${number}` = nextField < fields.length ? `${fields[nextField]}_${parseInt(split[1])}` : `title_${parseInt(split[1]) - 1}`;
 				((e.target as HTMLElement).parentNode as HTMLFormElement).requestSubmit()
 				setIsEdited('')
 				setTimeout(() => setIsEdited(nextIsEdited), 100)
@@ -424,37 +426,37 @@ export default function Completed() {
 										</td>
 										<td
 											style={{
-												opacity: isLoadingEditForm.includes(`start_${item.id}`) ? 0.5 : 1
+												opacity: isLoadingEditForm.includes(`startconv_${item.id}`) ? 0.5 : 1
 											}}
 											onDoubleClick={() => {
-												setIsEdited(`start_${item.id}`)
+												setIsEdited(`startconv_${item.id}`)
 											}}
 											className="relative hidden md:table-cell text-center group-hover:bg-zinc-800"
 										>
 											<span>
 												{isEdited == `start_${item.id}`
-													? editForm('start', item.id, item.start ?? '')
+													? editForm('startconv', item.id, item.start ?? '')
 													: item.start}
 											</span>
-											{isLoadingEditForm.includes(`start_${item.id}`) && (
+											{isLoadingEditForm.includes(`startconv_${item.id}`) && (
 												<CircularProgress size={30} className="absolute top-[20%] left-[40%]" />
 											)}
 										</td>
 										<td
 											style={{
-												opacity: isLoadingEditForm.includes(`end_${item.id}`) ? 0.5 : 1
+												opacity: isLoadingEditForm.includes(`endconv_${item.id}`) ? 0.5 : 1
 											}}
 											onDoubleClick={() => {
-												setIsEdited(`end_${item.id}`)
+												setIsEdited(`endconv_${item.id}`)
 											}}
 											className="relative hidden md:table-cell text-center group-hover:bg-zinc-800 rounded-e-md"
 										>
 											<span>
 												{isEdited == `end_${item.id}`
-													? editForm('end', item.id, item.end ?? '')
+													? editForm('endconv', item.id, item.end ?? '')
 													: item.end}
 											</span>
-											{isLoadingEditForm.includes(`end_${item.id}`) && (
+											{isLoadingEditForm.includes(`endconv_${item.id}`) && (
 												<CircularProgress size={30} className="absolute top-[20%] left-[40%]" />
 											)}
 										</td>
@@ -520,7 +522,7 @@ export default function Completed() {
 	}
 
 	function editForm(
-		field: 'title' | 'type' | 'episode' | 'rating1' | 'rating2' | 'start' | 'end',
+		field: CompletedFields,
 		id: number,
 		ogvalue: string
 	): React.ReactNode {
@@ -542,10 +544,10 @@ export default function Completed() {
 			case 'rating2':
 				column = 'F'
 				break
-			case 'start':
+			case 'startconv':
 				column = 'H'
 				break
-			case 'end':
+			case 'endconv':
 				column = 'I'
 				break
 			default:
@@ -554,7 +556,7 @@ export default function Completed() {
 		}
 
 		async function handleSubmit(event: BaseSyntheticEvent): Promise<void> {
-			const isDate = field == 'start' || field == 'end'
+			const isDate = field == 'startconv' || field == 'endconv'
 			const dateEntered = new Date(event.target[0].value)
 			const currentlyProcessedEdit = isEditedRef.current
 			event.preventDefault()
@@ -596,7 +598,7 @@ export default function Completed() {
 			}
 		}
 
-		if (field == 'start' || field == 'end') {
+		if (field == 'startconv' || field == 'endconv') {
 			return (
 				<div className="flex items-center justify-center relative w-full">
 					<div
