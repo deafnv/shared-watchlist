@@ -105,7 +105,7 @@ export default function CompletedErrors() {
 			<main className="flex flex-col items-center justify-center mb-24 px-6 py-2">
 				<h2 className="p-2 text-2xl sm:text-3xl text-center">Potential Errors in Completed</h2>
 				<section className='p-2 bg-neutral-700 rounded-md'>
-					<div className="grid grid-cols-[5fr_5fr_1fr_1fr] xl:grid-cols-[26rem_26rem_10rem_12rem] min-w-[95dvw] xl:min-w-0 sm:w-min border-b">
+					<div className="grid grid-cols-[5fr_5fr_1fr_3fr] xl:grid-cols-[26rem_26rem_10rem_12rem] min-w-[95dvw] xl:min-w-0 sm:w-min border-b">
 						<span className="flex items-center justify-center p-2 pt-1 h-full text-xs md:text-base text-center font-bold">
 							Title
 						</span>
@@ -123,7 +123,7 @@ export default function CompletedErrors() {
 						return (
 							<div 
 								key={item.mal_id}
-								className='grid grid-cols-[5fr_5fr_1fr_1fr] xl:grid-cols-[26rem_26rem_10rem_12rem] text-sm md:text-base min-w-[95dvw] xl:min-w-0 sm:w-min group'
+								className='grid grid-cols-[5fr_5fr_1fr_3fr] xl:grid-cols-[26rem_26rem_10rem_12rem] text-sm md:text-base min-w-[95dvw] xl:min-w-0 sm:w-min group'
 							>
 								<span className="flex items-center justify-center sm:px-3 py-3 h-full text-xs md:text-base text-center group-hover:bg-zinc-800 rounded-s-md">
 									{item.entryTitle}

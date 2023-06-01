@@ -113,25 +113,27 @@ export default function CompletedPage({ id }: { id: number }) {
 				/>
 				<p className="mb-8 text-center">{response?.[0].CompletedDetails.mal_synopsis}</p>
 				<div className="grid md:grid-cols-2 gap-16">
-					<div className="col-span-2 md:col-span-1 flex flex-col items-center px-8 py-4 max-w-[95%] min-w-fit border-[1px] border-white">
+					<div className="col-span-2 md:col-span-1 flex flex-col items-center px-8 py-4 max-w-[95%] min-w-fit bg-neutral-700 rounded-md">
 						<h5 className="self-center mb-4 text-xl font-semibold">Ratings</h5>
-						<table className="mb-8">
-							<thead>
-								<tr>
-									<th>Rating 1</th>
-									<th>Rating 2</th>
-									<th>Rating 3(?)</th>
-								</tr>
-							</thead>
-							<tbody>
-								<tr>
-									<td>{response?.[0].rating1}</td>
-									<td>{response?.[0].rating2}</td>
-									<td>{response?.[0].rating3}</td>
-								</tr>
-							</tbody>
-						</table>
-						<div className="flex mb-6 gap-16">
+						<div className='mb-8 p-2 bg-zinc-800 rounded-md'>
+							<table>
+								<thead className='border-b'>
+									<tr>
+										<th className='p-2 pt-1'>Rating 1</th>
+										<th className='p-2 pt-1'>Rating 2</th>
+										<th className='p-2 pt-1'>Rating 3</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr>
+										<td className='p-2 text-center'>{response?.[0].rating1}</td>
+										<td className='p-2 text-center'>{response?.[0].rating2}</td>
+										<td className='p-2 text-center'>{response?.[0].rating3}</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+						<div className="flex mb-6 gap-8">
 							<div className="flex flex-col items-center">
 								<h6 className="mb-2 font-semibold text-lg">Start</h6>
 								<span className="text-center">{response?.[0].start}</span>
@@ -142,15 +144,15 @@ export default function CompletedPage({ id }: { id: number }) {
 							</div>
 						</div>
 					</div>
-					<div className="col-span-2 md:col-span-1 flex flex-col items-center px-8 py-4 max-w-[95%] min-w-fit border-[1px] border-white">
+					<div className="col-span-2 md:col-span-1 flex flex-col items-center px-8 py-4 max-w-[95%] min-w-fit bg-neutral-700 rounded-md">
 						<h5 className="self-center mb-6 text-xl font-semibold link">
-							<Link
+							<a
 								href={`https://myanimelist.net/anime/${response?.[0].CompletedDetails.mal_id}`}
 								target="_blank"
 								rel='noopener noreferrer'
 							>
 								MyAnimeList
-							</Link>
+							</a>
 						</h5>
 						<h6 className="mb-2 font-semibold text-lg">Genres</h6>
 						<span className="mb-2 text-center">
@@ -167,7 +169,7 @@ export default function CompletedPage({ id }: { id: number }) {
 								)
 							})}
 						</span>
-						<div className="flex flex-grow items-center mb-6 gap-16">
+						<div className="flex flex-grow items-center mb-6 gap-8">
 							<div className="flex flex-col items-center whitespace-nowrap">
 								<h6 className="mb-2 font-semibold text-lg">Start</h6>
 								<span className="text-center">
