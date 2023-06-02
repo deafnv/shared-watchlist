@@ -16,10 +16,11 @@ import CloseIcon from '@mui/icons-material/Close'
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator'
 import { createClient } from '@supabase/supabase-js'
 import { Database } from '@/lib/database.types'
-import { SeasonalTableItemProps } from '@/lib/types'
+import { CurrentSeasonIsEdited, CurrentSeasonIsLoading, CurrentSeasonWithDetails, SeasonalTableItemProps } from '@/lib/types'
 import { useLoading } from '@/components/LoadingContext'
 
 //TODO: Allow sort, and show save changes button to save sort
+//TODO: Show error mesages on failed to load data
 
 interface SettingsMenuPos {
 	top: number;
@@ -34,20 +35,20 @@ export default function Seasonal() {
 	const addRecordButtonRef = useRef<HTMLDivElement>(null)
 	const contextMenuRef = useRef<HTMLDivElement>(null)
 	const contextMenuButtonRef = useRef<any>([])
-	const isEditedRef = useRef('')
-	const entryToDelete = useRef<any>(null)
+	const isEditedRef = useRef<CurrentSeasonIsEdited>('')
+	const entryToDelete = useRef<CurrentSeasonWithDetails | null>(null)
 
-	const [response, setResponse] = useState<any>()
-	const [response1, setResponse1] = useState<any>()
+	const [response, setResponse] = useState<CurrentSeasonWithDetails[]>()
+	const [response1, setResponse1] = useState<CurrentSeasonWithDetails[]>()
 	const [isLoadingClient, setIsLoadingClient] = useState(true)
-	const [isEdited, setIsEditedState] = useState<string>('')
-	const [isLoadingEditForm, setIsLoadingEditForm] = useState<Array<string>>([])
+	const [isEdited, setIsEditedState] = useState<CurrentSeasonIsEdited>('')
+	const [isLoadingEditForm, setIsLoadingEditForm] = useState<CurrentSeasonIsLoading[]>([])
 	const [isAdded, setIsAdded] = useState(false)
 	const [settingsMenu, setSettingsMenu] = useState<SettingsMenuPos>({ top: 0, left: 0, display: false })
 	const [contextMenu, setContextMenu] = useState<{
 		top: number
 		left: number
-		currentItem: any | null
+		currentItem: CurrentSeasonWithDetails | null
 	}>({ top: 0, left: 0, currentItem: null })
 	const [confirmModal, setConfirmModal] = useState<'' | 'DELETE' | 'DELETEALL'>('')
 	const [editModal, setEditModal] = useState(false)
@@ -55,7 +56,7 @@ export default function Seasonal() {
 	
 	const { setLoading } = useLoading()
 
-	const setIsEdited = (value: string) => {
+	const setIsEdited = (value: CurrentSeasonIsEdited) => {
 		isEditedRef.current = value
 		setIsEditedState(value)
 	}
@@ -77,8 +78,8 @@ export default function Seasonal() {
 				.select('*, SeasonalDetails!left( mal_id, start_date, latest_episode )')
 				.order('order', { ascending: true })
 
-			setResponse(data!)
-			setResponse1(data!)
+			setResponse(data as CurrentSeasonWithDetails[])
+			setResponse1(data as CurrentSeasonWithDetails[])
 			setIsLoadingClient(false)
 
 			await axios
@@ -97,7 +98,7 @@ export default function Seasonal() {
 						.from('PTW-CurrentSeason')
 						.select('*, SeasonalDetails!left( mal_id, start_date, latest_episode )')
 						.order('order', { ascending: true })
-					setResponse(data!)
+					setResponse(data as CurrentSeasonWithDetails[])
 				}
 			)
 			.subscribe()
@@ -107,29 +108,30 @@ export default function Seasonal() {
 			3500000
 		)
 		
-		const closeMenusOnClick = (e: any) => {
-			if (e.target?.tagName !== 'INPUT' && e.target?.tagName !== 'SELECT') {
+		const closeMenusOnClick = (e: MouseEvent) => {
+			const target = e.target as HTMLElement
+			if (target?.tagName !== 'INPUT' && target?.tagName !== 'SELECT') {
 				setIsEdited('')
 			}
 			if (
-				e.target.parentNode !== addRecordButtonRef.current &&
-				e.target.parentNode?.parentNode !== addRecordButtonRef.current &&
-				!addRecordMenuRef.current?.contains(e.target)
+				target.parentNode !== addRecordButtonRef.current &&
+				target.parentNode?.parentNode !== addRecordButtonRef.current &&
+				!addRecordMenuRef.current?.contains(target)
 			) {
 				setIsAdded(false)
 			}
 			if (
-				e.target.parentNode !== settingsMenuButtonRef.current &&
-				e.target.parentNode?.parentNode !== settingsMenuButtonRef.current &&
-				!settingsMenuRef.current?.contains(e.target) &&
+				target.parentNode !== settingsMenuButtonRef.current &&
+				target.parentNode?.parentNode !== settingsMenuButtonRef.current &&
+				!settingsMenuRef.current?.contains(target) &&
 				settingsMenuRef.current
 			) {
 				setSettingsMenu({ ...settingsMenu, display: false })
 			}
 			if (
-				!contextMenuButtonRef.current.includes(e.target.parentNode) &&
-				!contextMenuButtonRef.current.includes(e.target.parentNode?.parentNode) &&
-				!contextMenuRef.current?.contains(e.target) &&
+				!contextMenuButtonRef.current.includes(target.parentNode) &&
+				!contextMenuButtonRef.current.includes(target.parentNode?.parentNode) &&
+				!contextMenuRef.current?.contains(target) &&
 				contextMenuRef.current
 			) {
 				setContextMenu({ top: 0, left: 0, currentItem: null })
@@ -202,7 +204,7 @@ export default function Seasonal() {
 								Latest Episode
 							</span>
 						</div>
-						{isLoadingClient ? 
+						{(isLoadingClient || !response) ? 
 						<div className='flex items-center justify-center h-[26rem]'>
 							<CircularProgress size={42} color="primary" />
 						</div> : 
@@ -216,9 +218,9 @@ export default function Seasonal() {
 							}}
 							className="flex flex-col lg:w-[40rem] min-w-[95dvw] lg:min-w-full w-min"
 						>
-							{response?.map((item: any, index: any) => (
+							{response?.map((item, index) => (
 								<SeasonalTableItem 
-									key={item.order} 
+									key={item.title} 
 									props={{ item, index, setIsLoadingEditForm, isLoadingEditForm, setIsEdited, isEdited, isEditedRef, contextMenuButtonRef, setContextMenu, response, setResponse }}
 								/>
 							))}
@@ -366,7 +368,7 @@ function AddRecordMenu({
 	addRecordMenuRef: RefObject<HTMLMenuElement>;
 	isAdded: boolean;
 	setIsAdded: Dispatch<SetStateAction<boolean>>;
-	response: any;
+	response: CurrentSeasonWithDetails[] | undefined;
 }) {
 	const { setLoading } = useLoading()
 
@@ -423,8 +425,8 @@ function ConfirmModal({
 }: {
 	confirmModal: "" | "DELETE" | "DELETEALL";
 	setConfirmModal: Dispatch<SetStateAction<"" | "DELETE" | "DELETEALL">>;
-	response1: any;
-	entryToDelete: MutableRefObject<any>;
+	response1: CurrentSeasonWithDetails[] | undefined;
+	entryToDelete: MutableRefObject<CurrentSeasonWithDetails | null>;
 }) {
 	const { setLoading } = useLoading()
 	
@@ -448,6 +450,7 @@ function ConfirmModal({
 	}
 
 	async function handleDelete() {
+		if (!entryToDelete.current) return
 		setLoading(true)
 		try {
 			await axios.delete('/api/deleteentry', {
@@ -534,7 +537,7 @@ function ChangeStatusAllModal({
 }: {
 	editModal: boolean;
 	setEditModal: Dispatch<SetStateAction<boolean>>;
-	response: any;
+	response: CurrentSeasonWithDetails[] | undefined;
 }) {
 	const { setLoading } = useLoading()
 
@@ -542,6 +545,7 @@ function ChangeStatusAllModal({
 
 	async function handleSubmit(event: BaseSyntheticEvent) {
 		event.preventDefault()
+		if (!response) return
 		const row = response.length + 1
 		try {
 			setLoading(true)
@@ -590,10 +594,22 @@ function ChangeStatusAllModal({
 
 //* Component for each seasonal show in table
 function SeasonalTableItem({ props }: SeasonalTableItemProps) {
+	const [startDate, setStartDate] = useState('Loading...')
+
 	const { item, index, setIsLoadingEditForm, isLoadingEditForm, setIsEdited, isEdited, isEditedRef, contextMenuButtonRef, setContextMenu, response, setResponse } = props
 	const controls = useDragControls()
 	const statusColor = determineStatus(item)
-	const startDate = new Date(item?.SeasonalDetails?.[0]?.start_date).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })
+	
+	useEffect(() => {
+		setStartDate(
+			new Date(item?.SeasonalDetails?.[0]?.start_date ?? '').toLocaleDateString('en-US', { 
+				day: 'numeric', 
+				month: 'long', 
+				year: 'numeric' 
+			})
+		)
+	}, [item.SeasonalDetails])
+
 	return (
 		<Reorder.Item 
 			value={item}
@@ -605,22 +621,22 @@ function SeasonalTableItem({ props }: SeasonalTableItemProps) {
 		>
 			<div
 				style={{
-					opacity: isLoadingEditForm.includes(`seasonal_title_${item.order}`) ? 0.5 : 1
+					opacity: isLoadingEditForm.includes(`seasonal-title_${item.order}`) ? 0.5 : 1
 				}}
 				onDoubleClick={() => {
-					setIsEdited(`seasonal_title_${item.title}_${item.order}`)
+					setIsEdited(`seasonal-title_${item.title}_${item.order}`)
 				}}
 				className="relative p-2 text-center group"
 			>
 				<span 
-					style={{ margin: isEdited == `seasonal_title_${item.title}_${item.order}` ? 0 : '0 1rem' }}
+					style={{ margin: isEdited == `seasonal-title_${item.title}_${item.order}` ? 0 : '0 1rem' }}
 					className='cursor-text'
 				>
-					{isEdited == `seasonal_title_${item.title}_${item.order}`
-						? editForm(`seasonal_title`, item.order, item.title!)
+					{isEdited == `seasonal-title_${item.title}_${item.order}`
+						? editForm(`seasonal-title`, item.order, item.title!)
 						: item.title}
 				</span>
-				{isLoadingEditForm.includes(`seasonal_title_${item.order}`) && (
+				{isLoadingEditForm.includes(`seasonal-title_${item.order}`) && (
 					<CircularProgress size={30} className="absolute top-[20%] left-[48%]" />
 				)}
 				<div
@@ -636,19 +652,19 @@ function SeasonalTableItem({ props }: SeasonalTableItemProps) {
 			<div
 				style={{
 					backgroundColor: statusColor,
-					opacity: isLoadingEditForm.includes(`status_${item.order}`) ? 0.5 : 1
+					opacity: isLoadingEditForm.includes(`seasonal-status_${item.order}`) ? 0.5 : 1
 				}}
 				onDoubleClick={() => {
-					setIsEdited(`seasonal_status_${item.title}_${item.order}`)
+					setIsEdited(`seasonal-status_${item.title}_${item.order}`)
 				}}
 				className="relative flex items-center justify-center"
 			>
 				<span className='flex items-center justify-center'>
-					{isEdited == `seasonal_status_${item.title}_${item.order}` && 
-					<EditStatus order={item.order} ogvalue={item.status} />}
+					{isEdited == `seasonal-status_${item.title}_${item.order}` && 
+					<EditStatus order={item.order} ogvalue={item.status ?? ''} />}
 				</span>
-				{isLoadingEditForm.includes(`status_${item.order}`) && (
-					<CircularProgress size={30} className="absolute top-[20%] left-[48%]" />
+				{isLoadingEditForm.includes(`seasonal-status_${item.order}`) && (
+					<CircularProgress size={30} className="absolute top-[15%] left-[38%]" />
 				)}
 			</div>
 			<div className='hidden lg:flex items-center justify-center'>
@@ -668,7 +684,7 @@ function SeasonalTableItem({ props }: SeasonalTableItemProps) {
 
 	function handleMenuClick(
 		e: BaseSyntheticEvent,
-		item: Database['public']['Tables']['Completed']['Row']
+		item: CurrentSeasonWithDetails
 	) {
 		const { top, left } = e.target.getBoundingClientRect()
 
@@ -679,11 +695,11 @@ function SeasonalTableItem({ props }: SeasonalTableItemProps) {
 		})
 	}
 
-	function editForm(field: 'seasonal_title', order: number, ogvalue: string): React.ReactNode {
+	function editForm(field: 'seasonal-title', order: number, ogvalue: string): React.ReactNode {
 		let column: string
 		let row = (order + 2).toString()
 		switch (field) {
-			case 'seasonal_title':
+			case 'seasonal-title':
 				column = 'O'
 				break
 		}
@@ -718,8 +734,8 @@ function SeasonalTableItem({ props }: SeasonalTableItemProps) {
 			<div className="flex items-center justify-center relative w-full">
 				<div
 					style={{
-						opacity: isLoadingEditForm.includes(`seasonal_title_${order}`) ? 0.5 : 1,
-						pointerEvents: isLoadingEditForm.includes(`seasonal_title_${order}`) ? 'none' : 'unset'
+						opacity: isLoadingEditForm.includes(`seasonal-title_${order}`) ? 0.5 : 1,
+						pointerEvents: isLoadingEditForm.includes(`seasonal-title_${order}`) ? 'none' : 'unset'
 					}}
 					className="w-[85%]"
 				>
@@ -753,7 +769,7 @@ function SeasonalTableItem({ props }: SeasonalTableItemProps) {
 				return
 			}
 
-			setIsLoadingEditForm(isLoadingEditForm.concat(`status_${order}`))
+			setIsLoadingEditForm(isLoadingEditForm.concat(`seasonal-status_${order}`))
 
 			let row = order + 2
 			try {
@@ -764,12 +780,12 @@ function SeasonalTableItem({ props }: SeasonalTableItemProps) {
 
 				const changed = response?.slice()
 				if (!changed) return
-				changed.find((item: any) => item.order === order)!['status'] = event.target.childNodes[0].value
+				changed.find(item => item.order === order)!['status'] = event.target.childNodes[0].value
 				setResponse(changed)
 				if (isEditedRef.current == currentlyProcessedEdit) setIsEdited('')
-				setIsLoadingEditForm(isLoadingEditForm.filter((item) => item == `status_${order}`))
+				setIsLoadingEditForm(isLoadingEditForm.filter((item) => item == `seasonal-status_${order}`))
 			} catch (error) {
-				setIsLoadingEditForm(isLoadingEditForm.filter((item) => item == `status_${order}`))
+				setIsLoadingEditForm(isLoadingEditForm.filter((item) => item == `seasonal-status_${order}`))
 				alert(error)
 				return
 			}
@@ -777,13 +793,13 @@ function SeasonalTableItem({ props }: SeasonalTableItemProps) {
 
 		return (
 			<div
-				style={{ backgroundColor: isLoadingEditForm.includes(`status_${order}`) ? 'black' : 'unset' }}
+				style={{ backgroundColor: isLoadingEditForm.includes(`seasonal-status_${order}`) ? 'black' : 'unset' }}
 				className="flex items-center justify-center relative w-full"
 			>
 				<div
 					style={{
-						opacity: isLoadingEditForm.includes(`status_${order}`) ? 0.5 : 1,
-						pointerEvents: isLoadingEditForm.includes(`status_${order}`) ? 'none' : 'unset'
+						opacity: isLoadingEditForm.includes(`seasonal-status_${order}`) ? 0.5 : 1,
+						pointerEvents: isLoadingEditForm.includes(`seasonal-status_${order}`) ? 'none' : 'unset'
 					}}
 					className="w-full"
 				>
@@ -837,9 +853,9 @@ function ContextMenu({
 	contextMenu: {
     top: number;
     left: number;
-    currentItem: any | null;
+    currentItem: CurrentSeasonWithDetails | null;
 	};
-	response1: any;
+	response1: CurrentSeasonWithDetails[] | undefined;
 	setConfirmModalDelEntry: () => void;
 }) {
 	const router = useRouter()

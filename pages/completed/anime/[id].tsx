@@ -38,6 +38,8 @@ export default function CompletedPage({ id }: { id: number }) {
 	const [response, setResponse] = useState<any>()
 	const [genres, setGenres] = useState<Array<{ id: number; name: string | null }>>()
 	const [editDialog, setEditDialog] = useState(false)
+	const [startDate, setStartDate] = useState('Loading...')
+	const [endDate, setEndDate] = useState('Loading...')
 
 	useEffect(() => {
 		const supabase = createClient<Database>(
@@ -64,6 +66,21 @@ export default function CompletedPage({ id }: { id: number }) {
 
 			setResponse(data!)
 			setGenres(dataGenre.data!)
+			
+			//? Workaround for wrong supabase inner join return type
+			const completedDetails = (data?.[0].CompletedDetails as Database['public']['Tables']['CompletedDetails']['Row'])
+			if (data && data?.[0].CompletedDetails && completedDetails.start_date && completedDetails.end_date) {
+				setStartDate(new Date(completedDetails.start_date).toLocaleDateString('en-US', {
+					year: 'numeric',
+					month: 'long',
+					day: 'numeric'
+				}))
+				setEndDate(new Date(completedDetails.end_date).toLocaleDateString('en-US', {
+					year: 'numeric',
+					month: 'long',
+					day: 'numeric'
+				}))
+			}
 		}
 		getData()
 
@@ -173,21 +190,13 @@ export default function CompletedPage({ id }: { id: number }) {
 							<div className="flex flex-col items-center whitespace-nowrap">
 								<h6 className="mb-2 font-semibold text-lg">Start</h6>
 								<span className="text-center">
-									{new Date(response?.[0].CompletedDetails.start_date).toLocaleDateString('en-US', {
-										year: 'numeric',
-										month: 'long',
-										day: 'numeric'
-									})}
+									{startDate}
 								</span>
 							</div>
 							<div className="flex flex-col items-center whitespace-nowrap">
 								<h6 className="mb-2 font-semibold text-lg">End</h6>
 								<span className="text-center">
-									{new Date(response?.[0].CompletedDetails.end_date).toLocaleDateString('en-US', {
-										year: 'numeric',
-										month: 'long',
-										day: 'numeric'
-									})}
+									{endDate}
 								</span>
 							</div>
 						</div>

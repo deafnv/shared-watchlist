@@ -71,23 +71,32 @@ export type PTWTables = "rolled" | "casual" | "noncasual" | "movies"
 
 export type PTWEdited = `${PTWTables}_${string}_${number}` | ''
 
+//* Seasonal /index page types
+export type CurrentSeasonWithDetails = Database['public']['Tables']['PTW-CurrentSeason']['Row'] & { SeasonalDetails: Pick<Database['public']['Tables']['SeasonalDetails']['Row'], 'mal_id' | 'start_date' | 'latest_episode'>[] }
+
+export type CurrentSeasonField = 'seasonal-title' | 'seasonal-status'
+
+export type CurrentSeasonIsEdited = `${CurrentSeasonField}_${string}_${number}` | ''
+
+export type CurrentSeasonIsLoading = `${CurrentSeasonField}_${number}`
+
 export interface SeasonalTableItemProps { 
 	props: {
-		item: any
+		item: CurrentSeasonWithDetails
 		index: number
-		setIsLoadingEditForm: Dispatch<SetStateAction<string[]>>
-		isLoadingEditForm: string[]
-		setIsEdited: (value: string) => void
-		isEdited: string
-		isEditedRef: MutableRefObject<string>
+		setIsLoadingEditForm: Dispatch<SetStateAction<CurrentSeasonIsLoading[]>>
+		isLoadingEditForm: CurrentSeasonIsLoading[]
+		setIsEdited: (value: CurrentSeasonIsEdited) => void
+		isEdited: CurrentSeasonIsEdited
+		isEditedRef: MutableRefObject<CurrentSeasonIsEdited>
 		contextMenuButtonRef: MutableRefObject<any>
 		setContextMenu: Dispatch<SetStateAction<{
 			top: number
 			left: number
-			currentItem: any | null
+			currentItem: CurrentSeasonWithDetails | null
 		}>>
-		response: any
-		setResponse: Dispatch<any>
+		response: CurrentSeasonWithDetails[] | undefined
+		setResponse: Dispatch<SetStateAction<CurrentSeasonWithDetails[] | undefined>>
 	}
 }
 

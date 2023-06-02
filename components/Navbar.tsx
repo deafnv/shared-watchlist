@@ -58,8 +58,14 @@ export default function Navbar() {
 		async function getTimer() {
 			axios
 				.get(`${process.env.NEXT_PUBLIC_UPDATE_URL}/timer`)
-				.then((response) => setTimer(response.data))
-				.catch((error) => setTimer('Error'))
+				.then((response) => setTimer(new Intl.DateTimeFormat('en-GB', {
+					dateStyle: 'medium',
+					timeStyle: 'long'
+				}).format(new Date(response.data))))
+				.catch((error) => {
+					console.error(error)
+					setTimer('Error')
+				})
 		}
 		getTimer()
 
@@ -88,10 +94,7 @@ export default function Navbar() {
 					<span className="absolute right-8 text-center 2xl:w-max xl:w-40 lg:w-40 lg:visible invisible">
 						{timer == 'Error'
 							? 'Error'
-							: new Intl.DateTimeFormat('en-GB', {
-									dateStyle: 'medium',
-									timeStyle: 'long'
-							  }).format(new Date(timer!))}
+							: timer}
 					</span>
 					<ul className='flex items-center'>
 						{navLinks.map((link, index) => {
@@ -147,19 +150,4 @@ export default function Navbar() {
 			</nav>
 		</>
 	)
-}
-
-{
-	/* <li className="inline mx-2" key={index}>
-			<Link
-				href={link.route}
-				style={{
-					background:
-						link.route == router.pathname ? 'rgb(244 114 182)' : ''
-				}}
-				className="p-4 rounded-lg hover:bg-pink-400 focus:bg-pink-400 transition-colors duration-150"
-			>
-				{link.name}
-			</Link>
-		</li> */
 }

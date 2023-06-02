@@ -55,6 +55,7 @@ export default function SeasonalDetails({
 	const refreshReloadMenuButtonRef = useRef<HTMLDivElement>(null)
 
 	const [response, setResponse] = useState(res)
+	const [lastUpdatedDates, setLastUpdatedDates] = useState<{ [key: number]: string }>()
 	const [editEpisodesCurrent, setEditEpisodesCurrent] = useState<
 		Database['public']['Tables']['SeasonalDetails']['Row'] | null
 	>(null)
@@ -62,6 +63,16 @@ export default function SeasonalDetails({
 	const [refreshReloadMenu, setRefreshReloadMenu] = useState<SettingsMenuPos>({ top: 0, left: 0, display: false })
 
 	useEffect(() => {
+		let obj: { [key: number]: string } = {}
+		response.forEach(item => {
+			obj[item.mal_id] = new Date(item.last_updated ?? '').toLocaleDateString('en-GB', {
+				day: 'numeric', 
+				month: 'numeric', 
+				year: '2-digit'
+			})
+		})
+		setLastUpdatedDates(obj)
+
 		const closeEditModal = (e: KeyboardEvent) => {
 			if (e.key == 'Escape' && editEpisodesCurrent) setEditEpisodesCurrent(null)
 		}
@@ -207,7 +218,7 @@ export default function SeasonalDetails({
 										className="text-center"
 									>
 										<span className="font-semibold">Last updated: </span>
-										{item.last_updated ? new Date(item.last_updated).toLocaleDateString('en-GB', {day: 'numeric', month: 'numeric', year: '2-digit'}) : 'Unknown'}
+										{(item.last_updated && lastUpdatedDates) ? lastUpdatedDates[item.mal_id] : 'Unknown'}
 									</span>
 								</div>
 							</div>
