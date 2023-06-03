@@ -8,103 +8,7 @@ export function getRandomInt(max: number) {
 }
 
 //* COMPLETED LIST METHODS
-export const initialTitleItem: TitleItem = {
-	id: 0,
-	title: undefined,
-	type: undefined,
-	episode: undefined,
-	rating1: { actual: undefined, average: undefined },
-	rating2: { actual: undefined, average: undefined },
-	rating3: { actual: undefined, average: undefined },
-	start: { original: undefined, converted: undefined },
-	end: { original: undefined, converted: undefined }
-}
-
-export const sortListByName = (
-	name: string,
-	res: Array<TitleItem>,
-	sortMethod: string,
-	setSortMethod: Dispatch<SetStateAction<string>>,
-	setResponse: Dispatch<SetStateAction<TitleItem[]>>
-) => {
-	if (sortMethod === `titleasc_${name}`) {
-		setSortMethod(`titledesc_${name}`)
-		setResponse(res.slice().sort((a, b) => b.title!.localeCompare(a.title!)))
-	} else {
-		setSortMethod(`titleasc_${name}`)
-		setResponse(res.slice().sort((a, b) => a.title!.localeCompare(b.title!)))
-	}
-}
-
-export const sortListByRating = (
-	rating: string,
-	res: Array<TitleItem>,
-	sortMethod: string,
-	setSortMethod: Dispatch<SetStateAction<string>>,
-	setResponse: Dispatch<SetStateAction<TitleItem[]>>
-) => {
-	if (sortMethod === `ratingasc_${rating}`) {
-		setSortMethod(`ratingdesc_${rating}`)
-		setResponse(
-			res.slice().sort((a, b) => {
-				if ((b as any)[rating].average! == null) {
-					return -1
-				}
-				return (b as any)[rating].average! - (a as any)[rating].average!
-			})
-		)
-	} else {
-		setSortMethod(`ratingasc_${rating}`)
-		setResponse(
-			res.slice().sort((a, b) => {
-				if ((a as any)[rating].average! == null) {
-					return -1
-				}
-				return (a as any)[rating].average! - (b as any)[rating].average!
-			})
-		)
-	}
-}
-
-export const sortListByDate = (
-	date: string,
-	res: Array<TitleItem>,
-	sortMethod: string,
-	setSortMethod: Dispatch<SetStateAction<string>>,
-	setResponse: Dispatch<SetStateAction<TitleItem[]>>
-) => {
-	if (sortMethod === `dateasc_${date}`) {
-		setSortMethod(`datedesc_${date}`)
-		setResponse(
-			res.slice().sort((a, b) => {
-				return (b as any)[date].converted! - (a as any)[date].converted!
-			})
-		)
-	} else {
-		setSortMethod(`dateasc_${date}`)
-		setResponse(
-			res.slice().sort((a, b) => {
-				return (a as any)[date].converted! - (b as any)[date].converted!
-			})
-		)
-	}
-}
-
-export const sortSymbol = (type: string, sortMethodRef: MutableRefObject<string>) => {
-	if (sortMethodRef.current.includes(type)) {
-		if (sortMethodRef.current.includes(`asc_${type}`)) {
-			return <ArrowDropDownIcon />
-		} else {
-			return <ArrowDropDownIcon style={{ rotate: '180deg' }} />
-		}
-	} else {
-		return ''
-	}
-}
-
-//* SUPABASE LIST METHODS
-
-export const initialTitleItemSupabase = {
+export const initialTitleItemCompleted = {
 	end: '',
 	episode: '',
 	episode_actual: 0,
@@ -125,7 +29,33 @@ export const initialTitleItemSupabase = {
 	endconv: 0
 }
 
-export const sortListByNameSupabase = (
+export function SortSymbol({
+	type,
+	sortMethodRef
+}: {
+	type: CompletedFields
+	sortMethodRef: MutableRefObject<`${'asc' | 'desc'}_${CompletedFields}` | ''> 
+}) {
+	if (sortMethodRef.current.includes(type)) {
+		if (sortMethodRef.current.includes(`asc_${type}`)) {
+			return (
+				<span className="absolute -right-5">
+					<ArrowDropDownIcon />
+				</span>
+			)
+		} else {
+			return (
+				<span className="absolute -right-5">
+					<ArrowDropDownIcon style={{ rotate: '180deg' }} />
+				</span>
+			)
+		}
+	} else {
+		return null
+	}
+}
+
+export const sortListByNameCompleted = (
 	res: Database['public']['Tables']['Completed']['Row'][] | undefined,
 	sortMethodRef: MutableRefObject<`${'asc' | 'desc'}_${CompletedFields}` | ''>,
 	setResponse: Dispatch<
@@ -141,7 +71,7 @@ export const sortListByNameSupabase = (
 	}
 }
 
-export const sortListByTypeSupabase = (
+export const sortListByTypeCompleted = (
 	res: Database['public']['Tables']['Completed']['Row'][] | undefined,
 	sortMethodRef: MutableRefObject<`${'asc' | 'desc'}_${CompletedFields}` | ''>,
 	setResponse: Dispatch<
@@ -157,7 +87,7 @@ export const sortListByTypeSupabase = (
 	}
 }
 
-export const sortListByEpisodeSupabase = (
+export const sortListByEpisodeCompleted = (
 	res: Database['public']['Tables']['Completed']['Row'][] | undefined,
 	sortMethodRef: MutableRefObject<`${'asc' | 'desc'}_${CompletedFields}` | ''>,
 	setResponse: Dispatch<
@@ -187,7 +117,7 @@ export const sortListByEpisodeSupabase = (
 	}
 }
 
-export const sortListByRatingSupabase = (
+export const sortListByRatingCompleted = (
 	rating: 'rating1' | 'rating2',
 	res: Database['public']['Tables']['Completed']['Row'][] | undefined,
 	sortMethodRef: MutableRefObject<`${'asc' | 'desc'}_${CompletedFields}` | ''>,
@@ -218,7 +148,7 @@ export const sortListByRatingSupabase = (
 	}
 }
 
-export const sortListByDateSupabase = (
+export const sortListByDateCompleted = (
 	date: 'startconv' | 'endconv',
 	res: Database['public']['Tables']['Completed']['Row'][] | undefined,
 	sortMethodRef: MutableRefObject<`${'asc' | 'desc'}_${CompletedFields}` | ''>,
@@ -226,15 +156,16 @@ export const sortListByDateSupabase = (
 		SetStateAction<Database['public']['Tables']['Completed']['Row'][] | undefined>
 	>
 ) => {
-	if (sortMethodRef.current === `desc_${date}`) {
-		sortMethodRef.current = `asc_${date}`
+	//* date == 'startconv' ? 'start' : 'end' is a workaround for conflicting types
+	if (sortMethodRef.current === `desc_${date == 'startconv' ? 'start' : 'end'}`) {
+		sortMethodRef.current = `asc_${date == 'startconv' ? 'start' : 'end'}`
 		setResponse(
 			res?.slice().sort((a, b) => {
 				return b[date]! - a[date]!
 			})
 		)
 	} else {
-		sortMethodRef.current = `desc_${date}`
+		sortMethodRef.current = `desc_${date == 'startconv' ? 'start' : 'end'}`
 		setResponse(
 			res?.slice().sort((a, b) => {
 				return a[date]! - b[date]!
@@ -245,20 +176,21 @@ export const sortListByDateSupabase = (
 
 //* PLAN TO WATCH LIST METHODS
 
-export const sortListByNamePTW = (
-	name: string,
+export type PTWRolledFields = 'title'
+
+export const sortListByTitlePTW = (
 	res: Database['public']['Tables']['PTW-Rolled']['Row'][] | undefined,
-	sortMethodRef: MutableRefObject<string>,
+	sortMethodRef: MutableRefObject<`${'asc' | 'desc'}_${PTWRolledFields}` | ''>,
 	setResponse: Dispatch<
 		SetStateAction<Database['public']['Tables']['PTW-Rolled']['Row'][] | undefined>
 	>
 ) => {
 	if (!res) return
-	if (sortMethodRef.current === `titledesc_${name}`) {
-		sortMethodRef.current = `titleasc_${name}`
+	if (sortMethodRef.current === `desc_title`) {
+		sortMethodRef.current = `asc_title`
 		setResponse(res.slice().sort((a, b) => b.title!.localeCompare(a.title!)))
 	} else {
-		sortMethodRef.current = `titledesc_${name}`
+		sortMethodRef.current = `desc_title`
 		setResponse(res.slice().sort((a, b) => a.title!.localeCompare(b.title!)))
 	}
 }

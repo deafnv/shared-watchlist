@@ -2,7 +2,7 @@ import Head from 'next/head'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import { BaseSyntheticEvent, useEffect, useRef, useState, Dispatch, SetStateAction, RefObject, Fragment } from 'react'
+import { BaseSyntheticEvent, FormEvent, useEffect, useRef, useState, Dispatch, SetStateAction, RefObject, Fragment, MutableRefObject } from 'react'
 import debounce from 'lodash/debounce'
 import axios from 'axios'
 import { AnimatePresence, motion } from 'framer-motion'
@@ -18,12 +18,12 @@ import { createClient } from '@supabase/supabase-js'
 import { useLoading } from '@/components/LoadingContext'
 import EditDialog from '@/components/dialogs/EditDialog'
 import {
-	sortListByDateSupabase,
-	sortListByEpisodeSupabase,
-	sortListByNameSupabase,
-	sortListByRatingSupabase,
-	sortListByTypeSupabase,
-	sortSymbol
+	sortListByDateCompleted,
+	sortListByEpisodeCompleted,
+	sortListByNameCompleted,
+	sortListByRatingCompleted,
+	sortListByTypeCompleted,
+	SortSymbol
 } from '@/lib/list_methods'
 import { Database } from '@/lib/database.types'
 import { CompletedFields } from '@/lib/types'
@@ -38,11 +38,11 @@ export default function Completed() {
 	const settingsMenuRef = useRef<HTMLDivElement>(null)
 	const settingsMenuButtonRef = useRef<HTMLDivElement>(null)
 	const sortMethodRef = useRef<`${'asc' | 'desc'}_${CompletedFields}` | ''>('')
-	const isEditedRef = useRef<`${CompletedFields}_${number}` | ''>('')
+	const editInputRef = useRef('')
 
 	const [response, setResponse] = useState<Database['public']['Tables']['Completed']['Row'][]>()
 	const [response1, setResponse1] = useState<Database['public']['Tables']['Completed']['Row'][]>()
-	const [isEdited, setIsEditedState] = useState<`${CompletedFields}_${number}` | ''>('')
+	const [isEdited, setIsEdited] = useState<`${CompletedFields}_${number}` | ''>('')
 	const [isLoadingClient, setIsLoadingClient] = useState(true)
 	const [isLoadingEditForm, setIsLoadingEditForm] = useState<`${CompletedFields}_${number}`[]>([])
 	const [settingsMenu, setSettingsMenu] = useState<SettingsMenuPos>({ top: 0, left: 0, display: false })
@@ -50,11 +50,6 @@ export default function Completed() {
 	const [editDialog, setEditDialog] = useState<{ id: number; title: string; }>()
 
 	const { setLoading } = useLoading()
-
-	const setIsEdited = (value: `${CompletedFields}_${number}` | '') => {
-		isEditedRef.current = value
-		setIsEditedState(value)
-	}
 
 	const supabase = createClient<Database>(
 		process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -96,11 +91,16 @@ export default function Completed() {
 			3500000
 		)
 
+		return () => {
+			clearInterval(refresh)
+			databaseChannel.unsubscribe()
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [])
+
+	useEffect(() => {
 		const closeMenus = (e: MouseEvent) => {
 			const target = e.target as HTMLElement
-			if (target?.tagName !== 'INPUT' && isEdited) {
-				setIsEdited('')
-			}
 			if (
 				target.parentNode !== settingsMenuButtonRef.current &&
 				target.parentNode?.parentNode !== settingsMenuButtonRef.current &&
@@ -112,40 +112,41 @@ export default function Completed() {
 		}
 
 		const resetEditNoFocus = () => {
-			setIsEdited('')
+			if (!response) return
+			const [field, id] = isEdited.split('_')
+			const ogvalue = response.find(item => item.id == parseInt(id))
+			if (!ogvalue) return
+			handleSubmit(parseInt(id), field as CompletedFields, ogvalue[field as CompletedFields])
 		}
 
 		const closeKeyboard = (e: KeyboardEvent) => {
 			if (e.key == 'Escape') {
 				if (editDialog) setEditDialog(undefined)
-				if (isEditedRef.current) setIsEdited('')
+				if (isEdited) setIsEdited('')
 			}
-			if (e.key == 'Tab' && isEditedRef.current != '') {
+			
+			if (e.key == 'Tab' && isEdited != '') {
 				e.preventDefault()
-				const fields: ['title', 'type', 'episode', 'rating1', 'rating2', 'endconv'] = ['title', 'type', 'episode', 'rating1', 'rating2', 'endconv']
-				const split = isEditedRef.current.split('_') as [CompletedFields, string]
+				const fields: ['title', 'type', 'episode', 'rating1', 'rating2', 'start', 'end'] = ['title', 'type', 'episode', 'rating1', 'rating2', 'start', 'end']
+				const split = isEdited.split('_') as [CompletedFields, string]
 				const nextField = fields.findIndex(item => item == split[0]) + 1
 				const nextIsEdited: `${CompletedFields}_${number}` = nextField < fields.length ? `${fields[nextField]}_${parseInt(split[1])}` : `title_${parseInt(split[1]) - 1}`;
 				((e.target as HTMLElement).parentNode as HTMLFormElement).requestSubmit()
-				setIsEdited('')
 				setTimeout(() => setIsEdited(nextIsEdited), 100)
 			}
 		}
 
-		document.addEventListener('click', closeMenus)
 		window.addEventListener('focusout', resetEditNoFocus)
+		document.addEventListener('click', closeMenus)
 		document.addEventListener('keydown', closeKeyboard)
 
-
 		return () => {
-			clearInterval(refresh)
-			databaseChannel.unsubscribe()
-			document.removeEventListener('click', closeMenus)
 			window.removeEventListener('focusout', resetEditNoFocus)
+			document.removeEventListener('click', closeMenus)
 			document.removeEventListener('keydown', closeKeyboard)
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [])
+	}, [isEdited])
 
 	const debouncedSearch = debounce(async function (e: BaseSyntheticEvent) {
 		console.log('Searching...')
@@ -256,43 +257,43 @@ export default function Completed() {
 								<th
 									tabIndex={0}
 									onClick={() =>
-										sortListByNameSupabase(response, sortMethodRef, setResponse)
+										sortListByNameCompleted(response, sortMethodRef, setResponse)
 									}
 									className="p-2 min-w-[1rem] sm:min-w-0 w-[42rem] cursor-pointer"
 								>
 									<span className='relative'>
 										Title
-										<span className="absolute -right-6">{sortSymbol('title', sortMethodRef)}</span>
+										<SortSymbol type='title' sortMethodRef={sortMethodRef} />
 									</span>
 								</th>
 								<th
 									tabIndex={0}
 									onClick={() =>
-										sortListByTypeSupabase(response, sortMethodRef, setResponse)
+										sortListByTypeCompleted(response, sortMethodRef, setResponse)
 									}
 									className="p-2 w-32 hidden md:table-cell cursor-pointer"
 								>
 									<span className='relative'>
 										Type
-										<span className="absolute -right-6">{sortSymbol('type', sortMethodRef)}</span>
+										<SortSymbol type='type' sortMethodRef={sortMethodRef} />
 									</span>
 								</th>
 								<th 
 									tabIndex={0}
 									onClick={() =>
-										sortListByEpisodeSupabase(response, sortMethodRef, setResponse)
+										sortListByEpisodeCompleted(response, sortMethodRef, setResponse)
 									}
 									className="p-2 w-36 hidden md:table-cell cursor-pointer"
 								>
 									<span className='relative'>
 										Episode(s)
-										<span className="absolute -right-6">{sortSymbol('episode', sortMethodRef)}</span>
+										<SortSymbol type='episode' sortMethodRef={sortMethodRef} />
 									</span>
 								</th>
 								<th
 									tabIndex={0}
 									onClick={() =>
-										sortListByRatingSupabase(
+										sortListByRatingCompleted(
 											'rating1',
 											response,
 											sortMethodRef,
@@ -303,13 +304,13 @@ export default function Completed() {
 								>
 									<span className='relative'>
 										Rating 1
-										<span className="absolute -right-6">{sortSymbol('rating1', sortMethodRef)}</span>
+										<SortSymbol type='rating1' sortMethodRef={sortMethodRef} />
 									</span>
 								</th>
 								<th
 									tabIndex={0}
 									onClick={() =>
-										sortListByRatingSupabase(
+										sortListByRatingCompleted(
 											'rating2',
 											response,
 											sortMethodRef,
@@ -320,13 +321,13 @@ export default function Completed() {
 								>
 									<span className='relative'>
 										Rating 2
-										<span className="absolute -right-6">{sortSymbol('rating2', sortMethodRef)}</span>
+										<SortSymbol type='rating2' sortMethodRef={sortMethodRef} />
 									</span>
 								</th>
 								<th
 									tabIndex={0}
 									onClick={() =>
-										sortListByDateSupabase(
+										sortListByDateCompleted(
 											'startconv',
 											response,
 											sortMethodRef,
@@ -337,13 +338,13 @@ export default function Completed() {
 								>
 									<span className='relative'>
 										Start Date
-										<span className="absolute -right-6">{sortSymbol('start', sortMethodRef)}</span>
+										<SortSymbol type='start' sortMethodRef={sortMethodRef} />
 									</span>
 								</th>
 								<th
 									tabIndex={0}
 									onClick={() =>
-										sortListByDateSupabase(
+										sortListByDateCompleted(
 											'endconv',
 											response,
 											sortMethodRef,
@@ -354,7 +355,7 @@ export default function Completed() {
 								>
 									<span className='relative'>
 										End Date
-										<span className="absolute -right-6">{sortSymbol('end', sortMethodRef)}</span>
+										<SortSymbol type='end' sortMethodRef={sortMethodRef} />
 									</span>
 								</th>
 							</tr>
@@ -382,7 +383,16 @@ export default function Completed() {
 												onDoubleClick={() => setIsEdited(`title_${item.id}`)}
 												className={`w-full ${item.title ? '' : 'italic text-gray-400'}`}
 											>
-												{isEdited == `title_${item.id}` ? editForm('title', item.id, item.title!) : (item.title ? item.title : 'Untitled')}
+												{isEdited == `title_${item.id}` ? 
+												<EditForm 
+													editInputRef={editInputRef}
+													id={item.id}
+													field='title'
+													ogvalue={item.title}
+													isLoadingEditForm={isLoadingEditForm}
+													handleSubmit={handleSubmit}
+												/> : 
+												(item.title ? item.title : 'Untitled')}
 											</span>
 											{isLoadingEditForm.includes(`title_${item.id}`) && (
 												<CircularProgress size={30} className="absolute top-[20%] left-[48%]" />
@@ -392,16 +402,19 @@ export default function Completed() {
 											style={{
 												opacity: isLoadingEditForm.includes(`type_${item.id}`) ? 0.5 : 1
 											}}
-											onDoubleClick={() => {
-												setIsEdited(`type_${item.id}`)
-											}}
+											onDoubleClick={() => setIsEdited(`type_${item.id}`)}
 											className="relative hidden md:table-cell text-center group-hover:bg-zinc-800"
 										>
-											<span>
-												{isEdited == `type_${item.id}`
-													? editForm('type', item.id, item.type ?? '')
-													: item.type}
-											</span>
+											{isEdited == `type_${item.id}` ? 
+											<EditForm 
+												editInputRef={editInputRef}
+												id={item.id}
+												field='type'
+												ogvalue={item.type}
+												isLoadingEditForm={isLoadingEditForm}
+												handleSubmit={handleSubmit}
+											/> : 
+											item.type}
 											{isLoadingEditForm.includes(`type_${item.id}`) && (
 												<CircularProgress size={30} className="absolute top-[20%] left-[40%]" />
 											)}
@@ -410,16 +423,19 @@ export default function Completed() {
 											style={{
 												opacity: isLoadingEditForm.includes(`episode_${item.id}`) ? 0.5 : 1
 											}}
-											onDoubleClick={() => {
-												setIsEdited(`episode_${item.id}`)
-											}}
+											onDoubleClick={() => setIsEdited(`episode_${item.id}`)}
 											className="relative hidden md:table-cell text-center group-hover:bg-zinc-800"
 										>
-											<span>
-												{isEdited == `episode_${item.id}`
-													? editForm('episode', item.id, item.episode ?? '')
-													: item.episode}
-											</span>
+											{isEdited == `episode_${item.id}` ? 
+											<EditForm 
+												editInputRef={editInputRef}
+												id={item.id}
+												field='episode'
+												ogvalue={item.episode}
+												isLoadingEditForm={isLoadingEditForm}
+												handleSubmit={handleSubmit}
+											/> : 
+											item.episode}
 											{isLoadingEditForm.includes(`episode_${item.id}`) && (
 												<CircularProgress size={30} className="absolute top-[20%] left-[40%]" />
 											)}
@@ -428,16 +444,19 @@ export default function Completed() {
 											style={{
 												opacity: isLoadingEditForm.includes(`rating1_${item.id}`) ? 0.5 : 1
 											}}
-											onDoubleClick={() => {
-												setIsEdited(`rating1_${item.id}`)
-											}}
+											onDoubleClick={() => setIsEdited(`rating1_${item.id}`)}
 											className="relative group-hover:bg-zinc-800 text-center"
 										>
-											<span>
-												{isEdited == `rating1_${item.id}`
-													? editForm('rating1', item.id, item.rating1 ?? '')
-													: item.rating1}
-											</span>
+											{isEdited == `rating1_${item.id}` ? 
+											<EditForm 
+												editInputRef={editInputRef}
+												id={item.id}
+												field='rating1'
+												ogvalue={item.rating1}
+												isLoadingEditForm={isLoadingEditForm}
+												handleSubmit={handleSubmit}
+											/> : 
+											item.rating1}
 											{isLoadingEditForm.includes(`rating1_${item.id}`) && (
 												<CircularProgress size={30} className="absolute top-[20%] left-[40%]" />
 											)}
@@ -446,53 +465,62 @@ export default function Completed() {
 											style={{
 												opacity: isLoadingEditForm.includes(`rating2_${item.id}`) ? 0.5 : 1
 											}}
-											onDoubleClick={() => {
-												setIsEdited(`rating2_${item.id}`)
-											}}
+											onDoubleClick={() => setIsEdited(`rating2_${item.id}`)}
 											className="relative text-center group-hover:bg-zinc-800"
 										>
-											<span>
-												{isEdited == `rating2_${item.id}`
-													? editForm('rating2', item.id, item.rating2 ?? '')
-													: item.rating2}
-											</span>
+											{isEdited == `rating2_${item.id}` ? 
+											<EditForm 
+												editInputRef={editInputRef}
+												id={item.id}
+												field='rating2'
+												ogvalue={item.rating2}
+												isLoadingEditForm={isLoadingEditForm}
+												handleSubmit={handleSubmit}
+											/> : 
+											item.rating2}
 											{isLoadingEditForm.includes(`rating2_${item.id}`) && (
 												<CircularProgress size={30} className="absolute top-[20%] left-[40%]" />
 											)}
 										</td>
 										<td
 											style={{
-												opacity: isLoadingEditForm.includes(`startconv_${item.id}`) ? 0.5 : 1
+												opacity: isLoadingEditForm.includes(`start_${item.id}`) ? 0.5 : 1
 											}}
-											onDoubleClick={() => {
-												setIsEdited(`startconv_${item.id}`)
-											}}
+											onDoubleClick={() => setIsEdited(`start_${item.id}`)}
 											className="relative hidden md:table-cell text-center group-hover:bg-zinc-800"
 										>
-											<span>
-												{isEdited == `start_${item.id}`
-													? editForm('startconv', item.id, item.start ?? '')
-													: item.start}
-											</span>
-											{isLoadingEditForm.includes(`startconv_${item.id}`) && (
+											{isEdited == `start_${item.id}` ? 
+											<EditForm 
+												editInputRef={editInputRef}
+												id={item.id}
+												field='start'
+												ogvalue={item.start}
+												isLoadingEditForm={isLoadingEditForm}
+												handleSubmit={handleSubmit}
+											/> : 
+											item.start}
+											{isLoadingEditForm.includes(`start_${item.id}`) && (
 												<CircularProgress size={30} className="absolute top-[20%] left-[40%]" />
 											)}
 										</td>
 										<td
 											style={{
-												opacity: isLoadingEditForm.includes(`endconv_${item.id}`) ? 0.5 : 1
+												opacity: isLoadingEditForm.includes(`end_${item.id}`) ? 0.5 : 1
 											}}
-											onDoubleClick={() => {
-												setIsEdited(`endconv_${item.id}`)
-											}}
+											onDoubleClick={() => setIsEdited(`end_${item.id}`)}
 											className="relative hidden md:table-cell text-center group-hover:bg-zinc-800 rounded-e-md"
 										>
-											<span>
-												{isEdited == `end_${item.id}`
-													? editForm('endconv', item.id, item.end ?? '')
-													: item.end}
-											</span>
-											{isLoadingEditForm.includes(`endconv_${item.id}`) && (
+											{isEdited == `end_${item.id}` ? 
+											<EditForm 
+												editInputRef={editInputRef}
+												id={item.id}
+												field='end'
+												ogvalue={item.end}
+												isLoadingEditForm={isLoadingEditForm}
+												handleSubmit={handleSubmit}
+											/> : 
+											item.end}
+											{isLoadingEditForm.includes(`end_${item.id}`) && (
 												<CircularProgress size={30} className="absolute top-[20%] left-[40%]" />
 											)}
 										</td>
@@ -537,6 +565,77 @@ export default function Completed() {
 		</>
 	)
 
+	//* Submit handler for editing fields
+	async function handleSubmit(id: number, field: CompletedFields, ogvalue: string, event?: FormEvent) {
+		const isDate = field == 'start' || field == 'end'
+		let column: string
+		let row = (id + 1).toString()
+		const dateEntered = new Date(editInputRef.current)
+		const currentlyProcessedEdit = isEdited
+		if (event) event.preventDefault()
+
+		switch (field) {
+			case 'title':
+				column = 'B'
+				break
+			case 'type':
+				column = 'C'
+				break
+			case 'episode':
+				column = 'D'
+				break
+			case 'rating1':
+				column = 'E'
+				break
+			case 'rating2':
+				column = 'F'
+				break
+			case 'start':
+				column = 'H'
+				break
+			case 'end':
+				column = 'I'
+				break
+		}
+		
+		if (ogvalue == editInputRef.current || ogvalue == dateEntered.toLocaleDateString('en-US', {
+			day: 'numeric',
+			month: 'long',
+			year: 'numeric'
+		})) {
+			setIsEdited('')
+			return
+		}
+		
+		setIsLoadingEditForm(isLoadingEditForm.concat(`${field}_${id}`))
+		try {
+			await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/update`, {
+				content: isDate ? (dateEntered.toString() == 'Invalid Date' ? 'Unknown' : dateEntered.toLocaleDateString('en-US', {
+					day: 'numeric',
+					month: 'long',
+					year: 'numeric'
+				})) : editInputRef.current,
+				cell: column + row
+			}, { withCredentials: true })
+
+			const changed = response?.slice()
+			if (!changed) return
+			changed.find((item) => item.id === id)![field] = isDate ? dateEntered.toLocaleDateString('en-US', {
+				day: 'numeric',
+				month: 'long',
+				year: 'numeric'
+			}) : editInputRef.current
+			setResponse(changed)
+			setResponse1(changed)
+			if (isEdited == currentlyProcessedEdit) setIsEdited('')
+			setIsLoadingEditForm(isLoadingEditForm.filter((item) => item == `${field}_${id}`))
+		} catch (error) {
+			setIsLoadingEditForm(isLoadingEditForm.filter((item) => item == `${field}_${id}`))
+			alert(error)
+			return
+		}
+	}
+
 	function handleSettingsMenu(e: BaseSyntheticEvent) {
 		const { top, left } = e.target.getBoundingClientRect()
 
@@ -555,129 +654,6 @@ export default function Completed() {
 		}
 		if (!response || !response1) return
 		debouncedSearch(e)
-	}
-
-	function editForm(
-		field: CompletedFields,
-		id: number,
-		ogvalue: string
-	): React.ReactNode {
-		let column: string
-		let row = (id + 1).toString()
-		switch (field) {
-			case 'title':
-				column = 'B'
-				break
-			case 'type':
-				column = 'C'
-				break
-			case 'episode':
-				column = 'D'
-				break
-			case 'rating1':
-				column = 'E'
-				break
-			case 'rating2':
-				column = 'F'
-				break
-			case 'startconv':
-				column = 'H'
-				break
-			case 'endconv':
-				column = 'I'
-				break
-			default:
-				alert('Error: missing field')
-				return
-		}
-
-		async function handleSubmit(event: BaseSyntheticEvent): Promise<void> {
-			const isDate = field == 'startconv' || field == 'endconv'
-			const dateEntered = new Date(event.target[0].value)
-			const currentlyProcessedEdit = isEditedRef.current
-			event.preventDefault()
-			
-			if (ogvalue == event.target[0].value || ogvalue == dateEntered.toLocaleDateString('en-US', {
-				day: 'numeric',
-				month: 'long',
-				year: 'numeric'
-			})) {
-				setIsEdited('')
-				return
-			}
-			
-			setIsLoadingEditForm(isLoadingEditForm.concat(`${field}_${id}`))
-			try {
-				await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/update`, {
-					content: isDate ? (dateEntered.toString() == 'Invalid Date' ? 'Unknown' : dateEntered.toLocaleDateString('en-US', {
-						day: 'numeric',
-						month: 'long',
-						year: 'numeric'
-					})) : event.target[0].value,
-					cell: column + row
-				}, { withCredentials: true })
-
-				const changed = response?.slice()
-				if (!changed) return
-				changed.find((item) => item.id === id)![field] = isDate ? dateEntered.toLocaleDateString('en-US', {
-					day: 'numeric',
-					month: 'long',
-					year: 'numeric'
-				}) : event.target[0].value
-				setResponse(changed)
-				if (isEditedRef.current == currentlyProcessedEdit) setIsEdited('')
-				setIsLoadingEditForm(isLoadingEditForm.filter((item) => item == `${field}_${id}`))
-			} catch (error) {
-				setIsLoadingEditForm(isLoadingEditForm.filter((item) => item == `${field}_${id}`))
-				alert(error)
-				return
-			}
-		}
-
-		if (field == 'startconv' || field == 'endconv') {
-			return (
-				<div className="flex items-center justify-center relative w-full">
-					<div
-						style={{
-							opacity: isLoadingEditForm.includes(`${field}_${id}`) ? 0.5 : 1,
-							pointerEvents: isLoadingEditForm.includes(`${field}_${id}`) ? 'none' : 'unset',
-						}}
-						className="w-[90%]"
-					>
-						<form onChange={(e) => (e.target as HTMLElement).focus()} onSubmit={handleSubmit}>
-							<input
-								autoFocus
-								type="date"
-								defaultValue={new Date(ogvalue).toLocaleDateString('en-CA')}
-								className="input-text text-center w-full"
-							/>
-							<input type='submit' className='hidden' />
-						</form>
-					</div>
-				</div>
-			)
-		}
-
-		return (
-			<div className="flex items-center justify-center relative w-full">
-				<div
-					style={{
-						opacity: isLoadingEditForm.includes(`${field}_${id}`) ? 0.5 : 1,
-						pointerEvents: isLoadingEditForm.includes(`${field}_${id}`) ? 'none' : 'unset',
-					}}
-					className="w-full"
-				>
-					<form onSubmit={handleSubmit}>
-						<input
-							autoFocus
-							type="text"
-							defaultValue={ogvalue}
-							className={`input-text w-full ${field == 'title' ? 'text-left' : 'text-center'}`}
-						/>
-					</form>
-				</div>
-			</div>
-		)
 	}
 
 	async function addRecord() {	
@@ -701,6 +677,72 @@ export default function Completed() {
 			return
 		}
 	}
+}
+
+function EditForm({
+	editInputRef,
+	id,
+	field,
+	ogvalue,
+	isLoadingEditForm,
+	handleSubmit
+}: {
+	editInputRef: MutableRefObject<string>
+	field: CompletedFields
+	id: number
+	ogvalue: string
+	isLoadingEditForm: `${CompletedFields}_${number}`[]
+	handleSubmit: (id: number, field: CompletedFields, ogvalue: string, event?: FormEvent) => Promise<void>
+}) {
+	const isDate = field == 'start' || field == 'end'
+	editInputRef.current = isDate ? new Date(ogvalue).toLocaleDateString('en-CA') : ogvalue
+
+	if (isDate) {
+		return (
+			<div className="flex items-center justify-center relative w-full">
+				<div
+					style={{
+						opacity: isLoadingEditForm.includes(`${field}_${id}`) ? 0.5 : 1,
+						pointerEvents: isLoadingEditForm.includes(`${field}_${id}`) ? 'none' : 'unset',
+					}}
+					className="w-[90%]"
+				>
+					<form onSubmit={(e) => handleSubmit(id, field, ogvalue, e)}>
+						<input
+							autoFocus
+							type="date"
+							defaultValue={new Date(ogvalue).toLocaleDateString('en-CA')}
+							onChange={(e) => {if (e.target.valueAsDate) editInputRef.current = e.target.valueAsDate.toISOString()}}
+							className="input-text text-center w-full"
+						/>
+						<input type='submit' className='hidden' />
+					</form>
+				</div>
+			</div>
+		)
+	}
+
+	return (
+		<div className="flex items-center justify-center relative w-full">
+			<div
+				style={{
+					opacity: isLoadingEditForm.includes(`${field}_${id}`) ? 0.5 : 1,
+					pointerEvents: isLoadingEditForm.includes(`${field}_${id}`) ? 'none' : 'unset',
+				}}
+				className="w-full"
+			>
+				<form onSubmit={(e) => handleSubmit(id, field, ogvalue, e)}>
+					<input
+						autoFocus
+						type="text"
+						defaultValue={ogvalue}
+						onChange={(e) => editInputRef.current = e.target.value}
+						className={`input-text w-full ${field == 'title' ? 'text-left' : 'text-center'}`}
+					/>
+				</form>
+			</div>
+		</div>
+	)
 }
 
 function SettingsMenu({

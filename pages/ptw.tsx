@@ -18,7 +18,7 @@ import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
 import Button from '@mui/material/Button'
 import { createClient } from '@supabase/supabase-js'
 import { EditFormParams, PTWEdited, PTWRolledTableItemProps, PTWItem, PTWTables } from '@/lib/types'
-import { getRandomInt, sortListByNamePTW, sortSymbol } from '@/lib/list_methods'
+import { getRandomInt, PTWRolledFields, sortListByTitlePTW, SortSymbol } from '@/lib/list_methods'
 import { Database } from '@/lib/database.types'
 import { useLoading } from '@/components/LoadingContext'
 
@@ -40,7 +40,7 @@ let socket: Socket
 export default function PTW() {
 	const contextMenuRef = useRef<HTMLDivElement>(null)
 	const contextMenuButtonRef = useRef<any>([])
-	const sortMethodRef = useRef('')
+	const sortMethodRef = useRef<`${'asc' | 'desc'}_${PTWRolledFields}` | ''>('')
 	const isEditedRef = useRef('')
 	const reordered = useRef(false)
 	const entryToDelete = useRef<any | null>(null)
@@ -284,8 +284,7 @@ export default function PTW() {
 								<span 
 									tabIndex={0}
 									onClick={() => {
-										sortListByNamePTW(
-											'title',
+										sortListByTitlePTW(
 											responseRolled,
 											sortMethodRef,
 											setResponseRolled
@@ -296,7 +295,7 @@ export default function PTW() {
 								>
 									<span className='relative'>
 										Title
-										<span className="absolute -right-6">{sortSymbol('title', sortMethodRef)}</span>
+										<SortSymbol type='title' sortMethodRef={sortMethodRef} />
 									</span>
 								</span>
 								<span className='flex items-center justify-center p-2 pt-1 h-full text-center font-bold'>

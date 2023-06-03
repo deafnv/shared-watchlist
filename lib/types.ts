@@ -1,7 +1,7 @@
 import { Dispatch, MutableRefObject, SetStateAction } from 'react'
 import { Database } from './database.types'
 
-export type CompletedFields = 'title' | 'type' | 'episode' | 'rating1' | 'rating2' | 'startconv' | 'endconv'
+export type CompletedFields = 'title' | 'type' | 'episode' | 'rating1' | 'rating2' | 'start' | 'end'
 
 export interface Rating {
 	actual: string | undefined
