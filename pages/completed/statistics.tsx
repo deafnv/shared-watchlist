@@ -3,7 +3,6 @@ import Link from 'next/link'
 import dynamic from 'next/dynamic'
 import { Dispatch, MutableRefObject, SetStateAction, useRef, useState } from 'react'
 import { Line, Pie } from 'react-chartjs-2'
-import { createClient } from '@supabase/supabase-js'
 import {
 	Chart as ChartJS,
 	CategoryScale,
@@ -27,6 +26,8 @@ import {
 	sampleCovariance
 } from 'simple-statistics'
 import 'chartjs-adapter-date-fns'
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown'
+import { createClient } from '@supabase/supabase-js'
 import { Database } from '@/lib/database.types'
 import { DifferenceRatingData, GenreByRatingData, StatisticsProps } from '@/lib/types'
 
@@ -870,14 +871,17 @@ function GenreRatingTable({
 							'mean'
 						)
 					}
-					className="relative p-4 w-1/4 text-sm sm:text-base text-center font-semibold cursor-pointer"
+					className="p-4 w-1/4 text-sm sm:text-base text-center font-semibold cursor-pointer"
 				>
-					Mean
-					{sortMethodRatingRef.current.includes(`${ratingNum}_mean`) && (
-						<span className="absolute top-1/2 -translate-y-1/2 text-xs">
-							{sortMethodRatingRef.current.includes('asc') ? '▲' : '▼'}
-						</span>
-					)}
+					<span className='relative'>
+						Mean
+						{sortMethodRatingRef.current.includes(`${ratingNum}_mean`) && 
+						<span className='absolute top-1/2 -right-5 -translate-y-1/2 text-xs'>
+							{sortMethodRatingRef.current.includes('asc') ? 
+							<ArrowDropDownIcon style={{ rotate: '180deg' }} /> : 
+							<ArrowDropDownIcon />}
+						</span>}
+					</span>
 				</div>
 				<div
 					tabIndex={0}
@@ -890,14 +894,17 @@ function GenreRatingTable({
 							'median'
 						)
 					}
-					className="relative p-4 w-1/4 text-sm sm:text-base text-center font-semibold cursor-pointer"
+					className="p-4 w-1/4 text-sm sm:text-base text-center font-semibold cursor-pointer"
 				>
-					Median
-					{sortMethodRatingRef.current.includes(`${ratingNum}_median`) && (
-						<span className="absolute top-1/2 -translate-y-1/2 text-xs">
-							{sortMethodRatingRef.current.includes('asc') ? '▲' : '▼'}
-						</span>
-					)}
+					<span className='relative'>
+						Median
+						{sortMethodRatingRef.current.includes(`${ratingNum}_median`) && 
+						<span className='absolute top-1/2 -right-5 -translate-y-1/2 text-xs'>
+							{sortMethodRatingRef.current.includes('asc') ? 
+							<ArrowDropDownIcon style={{ rotate: '180deg' }} /> : 
+							<ArrowDropDownIcon />}
+						</span>}
+					</span>
 				</div>
 			</div>
 			{genreByRating.map(item => (
@@ -972,14 +979,17 @@ function DifferenceRatingTable({
 							sortMethodDiff
 						)
 					}
-					className="relative px-2 py-4 w-1/4 text-sm sm:text-base text-center font-semibold cursor-pointer"
+					className="px-2 py-4 w-1/4 text-sm sm:text-base text-center font-semibold cursor-pointer"
 				>
-					Diff.
-					{sortMethodDiff.current.includes('diff') && (
-						<span className="absolute top-1/2 -translate-y-1/2 text-xs">
-							{sortMethodDiff.current.includes('asc') ? '▲' : '▼'}
-						</span>
-					)}
+					<span className="relative">
+						Diff.
+						{sortMethodDiff.current.includes('diff') && 
+						<span className='absolute top-1/2 -right-5 -translate-y-1/2 text-xs'>
+							{sortMethodDiff.current.includes('asc') ? 
+							<ArrowDropDownIcon style={{ rotate: '180deg' }} /> : 
+							<ArrowDropDownIcon />}
+						</span>}
+					</span>
 				</div>
 			</div>
 			{titleByRatingDiff.map(item => (
