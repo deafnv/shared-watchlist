@@ -14,7 +14,6 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import EditIcon from '@mui/icons-material/Edit'
 import SearchIcon from '@mui/icons-material/Search'
 import RefreshIcon from '@mui/icons-material/Refresh'
-import { createClient } from '@supabase/supabase-js'
 import { Completed, CompletedDetails, Genres } from '@prisma/client'
 import { useLoading } from '@/components/LoadingContext'
 import EditDialog from '@/components/dialogs/EditDialog'
@@ -818,8 +817,6 @@ function CompletedItemDetails({
 				}
 			})
 
-			console.log(completedDetails)
-
 			setGenres(completedGenres)
 			setDetails(completedDetails)
 			setIsLoading(false)
@@ -876,7 +873,7 @@ function CompletedItemDetails({
 				</div>
 				<div className='flex flex-col items-start justify-center gap-4 w-3/5'>
 					<Link
-						href={`/completed/anime/${details?.id}`}
+						href={`/completed/anime/${details?.title_id}`}
 						title={details?.mal_title ?? ''}
 						className="font-bold text-lg sm:text-xl md:text-2xl line-clamp-2 link"
 					>

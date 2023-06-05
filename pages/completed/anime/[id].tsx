@@ -39,7 +39,7 @@ export async function getStaticProps(context: GetStaticPropsContext) {
 	const genres = await prisma.genres.findMany({
     where: {
       completeds: {
-        every: {
+        some: {
           completed_id: {
             equals: parseInt(id)
           }
@@ -72,14 +72,15 @@ export default function CompletedPage({
 
 	useEffect(() => {
 		const initialize = async () => {
-			//? Workaround for wrong supabase inner join return type
-			if (response && response.details && response.details.start_date && response.details.end_date) {
-				setStartDate(new Date(response.details.start_date).toLocaleDateString('en-US', {
+			if (response && response.details) {
+				const startDateObj = new Date(response.details.start_date)
+				setStartDate(isNaN(startDateObj.getTime()) ? 'Unknown' : startDateObj.toLocaleDateString('en-US', {
 					year: 'numeric',
 					month: 'long',
 					day: 'numeric'
 				}))
-				setEndDate(new Date(response.details.end_date).toLocaleDateString('en-US', {
+				const endDateObj = new Date(response.details.end_date)
+				setEndDate(isNaN(endDateObj.getTime()) ? 'Unknown' : endDateObj.toLocaleDateString('en-US', {
 					year: 'numeric',
 					month: 'long',
 					day: 'numeric'

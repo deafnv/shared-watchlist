@@ -1,70 +1,61 @@
 import Head from 'next/head'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import { useEffect, useState, Dispatch, SetStateAction } from 'react'
+import { useState, Dispatch, SetStateAction } from 'react'
 import axios from 'axios'
 import RefreshIcon from '@mui/icons-material/Refresh'
 import Button from '@mui/material/Button'
-import CircularProgress from '@mui/material/CircularProgress'
 import Dialog from '@mui/material/Dialog'
 import DialogTitle from '@mui/material/DialogTitle'
 import DialogActions from '@mui/material/DialogActions'
-import { createClient } from '@supabase/supabase-js'
-import { Database } from '@/lib/database.types'
+import { UnwatchedSequels } from '@prisma/client'
+import prisma from '@/lib/prisma'
 import { useLoading } from '@/components/LoadingContext'
 
-type UnwatchedSequel = Database['public']['Tables']['UnwatchedSequels']['Row'] & { Completed: Pick<Database['public']['Tables']['Completed']['Row'], 'title'> }
+type UnwatchedSequel = (UnwatchedSequels & {
+	completed: {
+			title: string;
+	};
+})
 
-export default function CompleteSequels() {
-	const [isLoadingClient, setIsLoadingClient] = useState(true)
-	const [response, setResponse] = useState<UnwatchedSequel[]>()
+export async function getServerSideProps() {
+	const sequelsData = await prisma.unwatchedSequels.findMany({
+		include: {
+			completed: {
+				select: { title: true }
+			}
+		},
+		where: {
+			message: {
+				not: {
+					equals: 'IGNORE'
+				}
+			}
+		},
+		orderBy: {
+			title_id: 'asc'
+		}
+	})
+
+	return {
+		props: {
+			response: sequelsData
+		}
+	}
+}
+
+export default function CompleteSequels({
+	response
+}: {
+	response: UnwatchedSequel[]
+}) {
 	const [ignore, setIgnore] = useState<UnwatchedSequel>()
 	
 	const { setLoading } = useLoading()
 
 	const router = useRouter()
 
-	useEffect(() => {
-		const getData = async () => {
-			const supabase = createClient<Database>(
-				process.env.NEXT_PUBLIC_SUPABASE_URL!,
-				process.env.NEXT_PUBLIC_SUPABASE_API_KEY!
-			)
-			const sequelsData = await supabase
-				.from('UnwatchedSequels')
-				.select('*, Completed!inner( title )')
-        .neq('message', 'IGNORE')
-        .order('anime_id', { ascending: true })
-      console.log(sequelsData.data)
-
-			//@ts-expect-error
-			setResponse(sequelsData.data)
-			setIsLoadingClient(false)
-		}
-		getData()
-	}, [])
-
-	if (isLoadingClient) {
-		return (
-			<>
-				<Head>
-					<title>Watchlist</title>
-					<meta name="description" content="Unwatched Sequels" />
-				</Head>
-
-				<main className="flex flex-col items-center justify-center mb-24 px-6 py-2">
-					<header className='flex items-center'>
-						<h2 className="p-2 text-2xl sm:text-3xl text-center">Unwatched Sequels</h2>
-					</header>
-					<div className='flex items-center justify-center h-[40rem]'>
-						<CircularProgress size={40} />
-					</div>
-				</main>
-			</>
-		)
-	}
-
-	if (!response?.length && !isLoadingClient) {
+	if (!response?.length) {
 		return (
 			<>
 				<Head>
@@ -74,7 +65,7 @@ export default function CompleteSequels() {
 
 				<main className="flex flex-col items-center justify-center gap-4 h-[100dvh] mb-24 px-1 md:px-0">
 					<h2 className="text-2xl sm:text-3xl">No unwatched sequels found</h2>
-					<span>Check console for details on omitted entries</span>
+					{/* <span>Check console for details on omitted entries</span> */}
 					<Button
 						onClick={handleLoadSequels}
 						variant='outlined'
@@ -123,25 +114,25 @@ export default function CompleteSequels() {
 					{response?.map(item => {
 						return (
 							<div 
-								key={item.anime_id}
+								key={item.title_id}
 								className='grid grid-cols-[0.6fr_5fr_5fr_0.8fr] xl:grid-cols-[4rem_30rem_30rem_10rem] text-sm md:text-base min-w-[95dvw] xl:min-w-0 sm:w-min group'
 							>
 								<span className="flex items-center justify-center p-2 h-full text-xs md:text-base text-center group-hover:bg-zinc-800 rounded-md">
-									{item.anime_id}
+									{item.title_id}
 								</span>
 								<Link 
-									href={`/completed/anime/${item.anime_id}`}
+									href={`/completed/anime/${item.title_id}`}
 									className="flex items-center justify-center p-2 h-full text-xs md:text-base text-center link text-blue-200 group-hover:bg-zinc-800 rounded-md"
 								>
-									{item.Completed.title}
+									{item.completed.title}
 								</Link>
 								<a
-									href={`https://myanimelist.net/anime/${item.seq_mal_id}`}
+									href={`https://myanimelist.net/anime/${item.sequel_mal_id}`}
 									target="_blank"
 									rel='noopener noreferrer'
 									className="flex items-center justify-center p-2 h-full text-xs md:text-base text-center link text-blue-200 group-hover:bg-zinc-800 rounded-md"
 								>
-									{item.seq_title}
+									{item.sequel_title}
 								</a>
 								<span className="flex flex-col xl:flex-row items-center justify-center gap-2 p-1 xl:p-2 h-full text-xs xl:text-base text-center group-hover:bg-zinc-800 rounded-md">
 									<Button

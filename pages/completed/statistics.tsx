@@ -27,28 +27,25 @@ import {
 } from 'simple-statistics'
 import 'chartjs-adapter-date-fns'
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown'
-import { createClient } from '@supabase/supabase-js'
-import { Database } from '@/lib/database.types'
+import prisma from '@/lib/prisma'
 import { DifferenceRatingData, GenreByRatingData, StatisticsProps } from '@/lib/types'
 
 export const getStaticProps = async () => {
-	const supabase = createClient<Database>(
-		process.env.NEXT_PUBLIC_SUPABASE_URL!,
-		process.env.NEXT_PUBLIC_SUPABASE_API_KEY!
-	)
-	const { data } = await supabase
-		.from('Completed')
-		.select('*, CompletedDetails!inner( * )')
-		.order('id', { ascending: true })
+	const data = await prisma.completed.findMany({
+		include: { details: true },
+		orderBy: {
+			id: 'asc'
+		}
+	})
 
-	let totalEpisodes = data?.reduce((acc: any, current: any) => {
+	let totalEpisodes = data?.reduce((acc, current) => {
 		return acc + current.episode_actual!
 	}, 0)
-	let totalEpisodesWatched = data?.reduce((acc: any, current: any) => {
+	let totalEpisodesWatched = data?.reduce((acc, current) => {
 		return acc + current.episode_total!
 	}, 0)
-	let totalTimeWatched = data?.reduce((acc: any, current: any) => {
-		return acc + current.episode_actual * current.CompletedDetails.average_episode_duration
+	let totalTimeWatched = data?.reduce((acc, current) => {
+		return acc + current.episode_actual * (current.details?.average_episode_duration ?? 1)
 	}, 0)
 
 	const rating1Freq: { [key: number]: number } = {}
@@ -77,9 +74,7 @@ export const getStaticProps = async () => {
 
 	const ratingMalFreq: { [key: number]: number } = {}
 	data?.forEach((item) => {
-		const malRating = (
-			item.CompletedDetails as Database['public']['Tables']['CompletedDetails']['Row']
-		).mal_rating!
+		const malRating = item.details?.mal_rating!
 		let decimal
 
 		if (parseFloat((malRating % 1).toPrecision(1)) < 0.125) decimal = 0
@@ -103,7 +98,7 @@ export const getStaticProps = async () => {
 
 	const typeFreq: { [key: string]: number } = {}
 	data?.forEach((item) => {
-		item.type_conv?.map((type) => {
+		(item?.type_conv as string[]).map((type) => {
 			if (typeFreq[type]) {
 				typeFreq[type] += 1
 			} else {
@@ -116,10 +111,7 @@ export const getStaticProps = async () => {
 	const rating2AggregateArr = data?.map((item) => item.rating2average)
 	const rating1Mean = mean(rating1AggregateArr as number[])
 	const rating2Mean = mean(rating2AggregateArr as number[])
-	const ratingMalAggregateArr = data?.map(
-		(item) =>
-			(item.CompletedDetails as Database['public']['Tables']['CompletedDetails']['Row']).mal_rating
-	)
+	const ratingMalAggregateArr = data?.map((item) =>item.details?.mal_rating)
 	const ratingMalMean = mean(ratingMalAggregateArr as number[])
 
 	const rating1Median = median(rating1AggregateArr as number[])
@@ -130,18 +122,34 @@ export const getStaticProps = async () => {
 	const rating2SD = standardDeviation(rating2AggregateArr as number[])
 	const ratingMalSD = standardDeviation(ratingMalAggregateArr as number[])
 
-	const dataGenre = await supabase.from('Genres').select('*, Genre_to_Titles!inner (id)')
+	const dataGenre = await prisma.genres.findMany({
+		include: {
+			completeds: {
+				select: {
+					id: true
+				}
+			}
+		}
+	})
 
-	const genreFreq = dataGenre.data?.map((item) => ({
+	const genreFreq = dataGenre?.map((item) => ({
 		id: item.id,
 		name: item.name,
-		count: (item.Genre_to_Titles as Database['public']['Tables']['Genre_to_Titles']['Row'][]).length
+		count: item.completeds.length
 	}))
 	genreFreq?.sort((a, b) => b.count - a.count)
 
-	const dataGenreRating = await supabase
-		.from('Genre_to_Titles')
-		.select('*, Completed!inner (rating1average, rating2average), Genres!inner (*)')
+	const dataGenreRating = await prisma.genresOnCompleted.findMany({
+		include: {
+			completed: {
+				select: {
+					rating1average: true,
+					rating2average: true
+				}
+			},
+			genre: true
+		}
+	})
 
 	const ratingByGenreAgg: {
 		id: number
@@ -150,37 +158,25 @@ export const getStaticProps = async () => {
 		rating2agg: number[]
 		titlecount: number
 	}[] = []
-	dataGenreRating.data?.forEach((relationship) => {
+	dataGenreRating?.forEach((relationship) => {
 		const indexOfGenre = ratingByGenreAgg.findIndex((item) => item.id == relationship.genre_id)
 		if (ratingByGenreAgg[indexOfGenre]) {
 			ratingByGenreAgg[indexOfGenre].rating1agg.push(
-				(relationship.Completed as { rating1average: number | null; rating2average: number | null })
-					.rating1average!
+				relationship.completed.rating1average!
 			)
 			ratingByGenreAgg[indexOfGenre].rating2agg.push(
-				(relationship.Completed as { rating1average: number | null; rating2average: number | null })
-					.rating2average!
+				relationship.completed.rating2average!
 			)
 			ratingByGenreAgg[indexOfGenre].titlecount++
 		} else {
 			ratingByGenreAgg.push({
 				id: relationship.genre_id,
-				name: (relationship.Genres as Database['public']['Tables']['Genres']['Row']).name!,
+				name: relationship.genre.name!,
 				rating1agg: [
-					(
-						relationship.Completed as {
-							rating1average: number | null
-							rating2average: number | null
-						}
-					).rating1average!
+					relationship.completed.rating1average!
 				],
 				rating2agg: [
-					(
-						relationship.Completed as {
-							rating1average: number | null
-							rating2average: number | null
-						}
-					).rating2average!
+					relationship.completed.rating2average!
 				],
 				titlecount: 1
 			})
@@ -207,8 +203,8 @@ export const getStaticProps = async () => {
 				title: item.title,
 				rating1average: item.rating1average,
 				rating2average: item.rating2average,
-				rating1MalDiff: (item.rating1average ?? 0) - ((item.CompletedDetails as Database['public']['Tables']['CompletedDetails']['Row']).mal_rating ?? 0),
-				rating2MalDiff: (item.rating2average ?? 0) - ((item.CompletedDetails as Database['public']['Tables']['CompletedDetails']['Row']).mal_rating ?? 0),
+				rating1MalDiff: (item.rating1average ?? 0) - (item.details?.mal_rating ?? 0),
+				rating2MalDiff: (item.rating2average ?? 0) - (item.details?.mal_rating ?? 0),
 				rating1rating2Diff: (item.rating1average ?? 0) - (item.rating2average ?? 0)
 			}
 		})
@@ -220,12 +216,8 @@ export const getStaticProps = async () => {
 				title: item.title,
 				rating1average: item.rating1average,
 				rating2average: item.rating2average,
-				malRating: (
-					item.CompletedDetails as Database['public']['Tables']['CompletedDetails']['Row']
-				).mal_rating,
-				broadcastDate: (
-					item.CompletedDetails as Database['public']['Tables']['CompletedDetails']['Row']
-				).start_date,
+				malRating: item.details?.mal_rating,
+				broadcastDate: item.details?.start_date,
 				endWatchDate: item.endconv
 			}
 		})

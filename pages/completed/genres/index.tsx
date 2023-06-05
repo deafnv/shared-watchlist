@@ -128,14 +128,14 @@ function AdvancedSearchModal({
 		)
 		const arrIncluded = Object.keys(arr).map((key) => parseInt(arr[key].value))
 
-		const { data } = await axios.get(`${process.env.NEXT_PUBLIC_UPDATE_URL}/table/genreadvancedsearch`, {
+		const { data } = await axios.get(`${process.env.NEXT_PUBLIC_UPDATE_URL}/table/completedsbygenreid`, {
 			params: {
 				id: arrIncluded
 			}
 		})
 
 		const matched = (data as CompletedWithGenre[])?.filter((item) => {
-			return item.genres.length == arrIncluded.length
+			return arrIncluded.every(id => item.genres.map(genre => genre.genre_id).includes(id))
 		})
 
 		setAdvancedSearchResult(matched!)
