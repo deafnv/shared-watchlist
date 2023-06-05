@@ -76,7 +76,7 @@ export default function CompletedPage() {
 
 		const refresh = setInterval(
 			() => axios.get(`${process.env.NEXT_PUBLIC_UPDATE_URL}/refresh`),
-			3500000
+			1700000
 		)
 
 		return () => {

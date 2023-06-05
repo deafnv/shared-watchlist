@@ -10,14 +10,14 @@ import Button from '@mui/material/Button'
 import CloseIcon from '@mui/icons-material/Close'
 import EditIcon from '@mui/icons-material/Edit'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
-import { createClient } from '@supabase/supabase-js'
-import { Database } from '@/lib/database.types'
+import { SeasonalDetails } from '@prisma/client'
+import prisma from '@/lib/prisma'
 import { useLoading } from '@/components/LoadingContext'
 
 interface ContextMenuPos {
 	top: number;
 	left: number;
-	currentItem: Database['public']['Tables']['SeasonalDetails']['Row'] | null;
+	currentItem: SeasonalDetails | null;
 }
 
 interface SettingsMenuPos {
@@ -28,26 +28,23 @@ interface SettingsMenuPos {
 
 //TODO: Consider adding a soft reload, so that status gets updated when tracking episodes, also handling the end of shows
 export const getStaticProps = async () => {
-	const supabase = createClient<Database>(
-		process.env.NEXT_PUBLIC_SUPABASE_URL!,
-		process.env.NEXT_PUBLIC_SUPABASE_API_KEY!
-	)
-	const { data } = await supabase
-		.from('SeasonalDetails')
-		.select()
-		.order('start_date', { ascending: true })
+	const seasonalDetails = await prisma.seasonalDetails.findMany({
+		orderBy: {
+			start_date: 'asc'
+		}
+	})
 
 	return {
 		props: {
-			res: data
+			res: seasonalDetails
 		}
 	}
 }
 
-export default function SeasonalDetails({
+export default function SeasonalDetailsPage({
 	res
 }: {
-	res: Database['public']['Tables']['SeasonalDetails']['Row'][]
+	res: SeasonalDetails[]
 }) {
 	const contextMenuRef = useRef<HTMLMenuElement>(null)
 	const contextMenuButtonRef = useRef<any>([])
@@ -56,16 +53,14 @@ export default function SeasonalDetails({
 
 	const [response, setResponse] = useState(res)
 	const [lastUpdatedDates, setLastUpdatedDates] = useState<{ [key: number]: string }>()
-	const [editEpisodesCurrent, setEditEpisodesCurrent] = useState<
-		Database['public']['Tables']['SeasonalDetails']['Row'] | null
-	>(null)
+	const [editEpisodesCurrent, setEditEpisodesCurrent] = useState<SeasonalDetails | null>(null)
 	const [contextMenu, setContextMenu] = useState<ContextMenuPos>({ top: 0, left: 0, currentItem: null })
 	const [refreshReloadMenu, setRefreshReloadMenu] = useState<SettingsMenuPos>({ top: 0, left: 0, display: false })
 
 	useEffect(() => {
 		let obj: { [key: number]: string } = {}
 		response.forEach(item => {
-			obj[item.mal_id] = new Date(item.last_updated ?? '').toLocaleDateString('en-GB', {
+			obj[item.mal_id] = new Date(Number(item.last_updated)).toLocaleDateString('en-GB', {
 				day: 'numeric', 
 				month: 'numeric', 
 				year: '2-digit'
@@ -191,7 +186,7 @@ export default function SeasonalDetails({
 								<div className="flex flex-col items-center gap-1 justify-center w-full">
 									<span className="text-center">
 										<span className="font-semibold">Episodes: </span>
-										{item.num_episodes ? item.num_episodes : 'Unknown'}
+										{item.num_episode ? item.num_episode : 'Unknown'}
 									</span>
 									<span style={{ textTransform: 'capitalize' }} className="text-center">
 										<span className="font-semibold">Status: </span>
@@ -224,7 +219,7 @@ export default function SeasonalDetails({
 							</div>
 							<div>
 								<div className="relative w-full m-2 flex items-center justify-center">
-									<span className="text-lg font-semibold">Aired Episodes {`(${item.latest_episode ?? '-'}/${item.num_episodes ?? '-'})`}</span>
+									<span className="text-lg font-semibold">Aired Episodes {`(${item.latest_episode ?? '-'}/${item.num_episode ?? '-'})`}</span>
 									{item.message?.includes('Exempt') && (
 										<span className="ml-2 text-lg font-semibold">(Edited)</span>
 									)}
@@ -274,7 +269,7 @@ export default function SeasonalDetails({
 
 	function handleMenuClick(
 		e: BaseSyntheticEvent,
-		item: Database['public']['Tables']['SeasonalDetails']['Row']
+		item: SeasonalDetails
 	) {
 		const { top, left } = e.target.getBoundingClientRect()
 
@@ -301,7 +296,7 @@ function RefreshReloadMenu({
 }: {
 	refreshReloadMenu: SettingsMenuPos;
 	refreshReloadMenuRef: RefObject<HTMLDivElement>;
-	response: Database['public']['Tables']['SeasonalDetails']['Row'][];
+	response: SeasonalDetails[];
 }) {
 	const { setLoading } = useLoading()
 
@@ -367,8 +362,8 @@ function EpisodeCountEditor({
 	editEpisodesCurrent,
 	setEditEpisodesCurrent
 }: {
-	editEpisodesCurrent: Database['public']['Tables']['SeasonalDetails']['Row'] | null;
-	setEditEpisodesCurrent: Dispatch<SetStateAction<Database['public']['Tables']['SeasonalDetails']['Row'] | null>>;
+	editEpisodesCurrent: SeasonalDetails | null;
+	setEditEpisodesCurrent: Dispatch<SetStateAction<SeasonalDetails | null>>;
 }) {
 	const router = useRouter()
 
@@ -486,9 +481,9 @@ function EpisodeTable({
 	response,
 	setResponse
 }: {
-	item: Database['public']['Tables']['SeasonalDetails']['Row'] | null;
-	response?: Database['public']['Tables']['SeasonalDetails']['Row'][];
-	setResponse?: Dispatch<SetStateAction<Database['public']['Tables']['SeasonalDetails']['Row'][]>>;
+	item: SeasonalDetails | null;
+	response?: SeasonalDetails[];
+	setResponse?: Dispatch<SetStateAction<SeasonalDetails[]>>;
 }) {
 	let counter = 1
 
@@ -550,9 +545,9 @@ function ValidateErrorDialog({
 	response, 
 	setResponse 
 }: { 
-	item1: Database['public']['Tables']['SeasonalDetails']['Row'];
-	response: Database['public']['Tables']['SeasonalDetails']['Row'][];
-	setResponse: Dispatch<SetStateAction<Database['public']['Tables']['SeasonalDetails']['Row'][]>>;
+	item1: SeasonalDetails;
+	response: SeasonalDetails[];
+	setResponse: Dispatch<SetStateAction<SeasonalDetails[]>>;
 }) {
 	const [validateArea, setValidateArea] = useState('')
 

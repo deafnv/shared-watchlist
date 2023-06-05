@@ -1,5 +1,5 @@
 import { Dispatch, MutableRefObject, SetStateAction } from 'react'
-import { Database } from './database.types'
+import { PTWCasual, PTWMovies, PTWNonCasual, PTWRolled, Seasonal } from '@prisma/client'
 
 export type CompletedFields = 'title' | 'type' | 'episode' | 'rating1' | 'rating2' | 'start' | 'end'
 
@@ -27,7 +27,7 @@ export interface TitleItem {
 
 export interface PTWRolledTableItemProps {
 	props: {
-		item: Database['public']['Tables']['PTW-Rolled']['Row']
+		item: PTWRolled
 		index: number
 		isLoadingEditForm: string[]
 		setIsEdited: (value: PTWEdited) => void
@@ -37,11 +37,11 @@ export interface PTWRolledTableItemProps {
 		setContextMenu: Dispatch<SetStateAction<{
 			top: number
 			left: number
-			currentItem: Database['public']['Tables']['PTW-Rolled']['Row'] | null
+			currentItem: PTWRolled | null
 		}>>
 		contextMenuButtonRef: MutableRefObject<any>
-		responseRolled: Database['public']['Tables']['PTW-Rolled']['Row'][] | undefined
-		setResponseRolled: Dispatch<SetStateAction<Database['public']['Tables']['PTW-Rolled']['Row'][] | undefined>>
+		responseRolled: PTWRolled[] | undefined
+		setResponseRolled: Dispatch<SetStateAction<PTWRolled[] | undefined>>
 		setIsLoadingEditForm: Dispatch<SetStateAction<string[]>>
 	}
 	editFormParams: EditFormParams
@@ -52,14 +52,14 @@ export interface EditFormParams {
 	setIsLoadingEditForm: Dispatch<SetStateAction<string[]>>
 	isEditedRef: MutableRefObject<string>
 	setIsEdited: (value: PTWEdited) => void
-	responseRolled: Database['public']['Tables']['PTW-Rolled']['Row'][] | undefined
-	responseCasual: Database['public']['Tables']['PTW-Casual']['Row'][] | undefined
-	responseNonCasual: Database['public']['Tables']['PTW-NonCasual']['Row'][] | undefined
-	responseMovies: Database['public']['Tables']['PTW-Movies']['Row'][] | undefined
-	setResponseRolled: Dispatch<SetStateAction<Database['public']['Tables']['PTW-Rolled']['Row'][] | undefined>>
-	setResponseCasual: Dispatch<SetStateAction<Database['public']['Tables']['PTW-Casual']['Row'][] | undefined>>
-	setResponseNonCasual: Dispatch<SetStateAction<Database['public']['Tables']['PTW-NonCasual']['Row'][] | undefined>>
-	setResponseMovies: Dispatch<SetStateAction<Database['public']['Tables']['PTW-Movies']['Row'][] | undefined>>
+	responseRolled: PTWRolled[] | undefined
+	responseCasual: PTWCasual[] | undefined
+	responseNonCasual: PTWNonCasual[] | undefined
+	responseMovies: PTWMovies[] | undefined
+	setResponseRolled: Dispatch<SetStateAction<PTWRolled[] | undefined>>
+	setResponseCasual: Dispatch<SetStateAction<PTWCasual[] | undefined>>
+	setResponseNonCasual: Dispatch<SetStateAction<PTWNonCasual[] | undefined>>
+	setResponseMovies: Dispatch<SetStateAction<PTWMovies[] | undefined>>
 }
 
 export interface PTWItem {
@@ -72,7 +72,13 @@ export type PTWTables = "rolled" | "casual" | "noncasual" | "movies"
 export type PTWEdited = `${PTWTables}_${string}_${number}` | ''
 
 //* Seasonal /index page types
-export type CurrentSeasonWithDetails = Database['public']['Tables']['PTW-CurrentSeason']['Row'] & { SeasonalDetails: Pick<Database['public']['Tables']['SeasonalDetails']['Row'], 'mal_id' | 'start_date' | 'latest_episode'>[] }
+export type SeasonalWithDetails = (Seasonal & {
+	details: {
+			mal_id: number;
+			start_date: string;
+			latest_episode: number;
+	};
+})
 
 export type CurrentSeasonField = 'seasonal-title' | 'seasonal-status'
 
@@ -82,7 +88,7 @@ export type CurrentSeasonIsLoading = `${CurrentSeasonField}_${number}`
 
 export interface SeasonalTableItemProps { 
 	props: {
-		item: CurrentSeasonWithDetails
+		item: SeasonalWithDetails
 		index: number
 		setIsLoadingEditForm: Dispatch<SetStateAction<CurrentSeasonIsLoading[]>>
 		isLoadingEditForm: CurrentSeasonIsLoading[]
@@ -93,10 +99,10 @@ export interface SeasonalTableItemProps {
 		setContextMenu: Dispatch<SetStateAction<{
 			top: number
 			left: number
-			currentItem: CurrentSeasonWithDetails | null
+			currentItem: SeasonalWithDetails | null
 		}>>
-		response: CurrentSeasonWithDetails[] | undefined
-		setResponse: Dispatch<SetStateAction<CurrentSeasonWithDetails[] | undefined>>
+		response: SeasonalWithDetails[] | undefined
+		setResponse: Dispatch<SetStateAction<SeasonalWithDetails[] | undefined>>
 	}
 }
 

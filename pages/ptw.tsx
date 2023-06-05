@@ -15,25 +15,28 @@ import RefreshIcon from '@mui/icons-material/Refresh'
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator'
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
 import Button from '@mui/material/Button'
+import { PTWCasual, PTWMovies, PTWNonCasual, PTWRolled } from '@prisma/client'
 import { createClient } from '@supabase/supabase-js'
 import { EditFormParams, PTWEdited, PTWRolledTableItemProps, PTWItem, PTWTables } from '@/lib/types'
 import { getRandomInt, PTWRolledFields, sortListByTitlePTW, SortSymbol } from '@/lib/list_methods'
 import { Database } from '@/lib/database.types'
-import { apiSocket } from '@/lib/socket'
+import { apiSocket, updaterSocket } from '@/lib/socket'
 import { useLoading } from '@/components/LoadingContext'
 
 interface AddRecordPos {
 	top: number;
 	left: number;
-	response: Database['public']['Tables']['PTW-Casual']['Row'][] | undefined;
+	response: PTWCasual[] | undefined;
 	tableId: PTWTables | null;
 }
 
 interface ContextMenuPos {
 	top: number;
 	left: number;
-	currentItem: Database['public']['Tables']['PTW-Rolled']['Row'] | null;
+	currentItem: PTWRolled | null;
 }
+
+type UpdaterSocketEvents = 'PTWRolled' | 'PTWCasual' | 'PTWNonCasual' | 'PTWMovies'
 
 export default function PTW() {
 	const contextMenuRef = useRef<HTMLDivElement>(null)
@@ -44,18 +47,12 @@ export default function PTW() {
 	const entryToDelete = useRef<any | null>(null)
 	const setReordered = (value: boolean) => reordered.current = value 
 
-	const [responseRolled, setResponseRolled] =
-		useState<Database['public']['Tables']['PTW-Rolled']['Row'][]>()
-	const [responseRolled1, setResponseRolled1] =
-		useState<Database['public']['Tables']['PTW-Rolled']['Row'][]>()
-	const [responseCasual, setResponseCasual] =
-		useState<Database['public']['Tables']['PTW-Casual']['Row'][]>()
-	const [responseNonCasual, setResponseNonCasual] =
-		useState<Database['public']['Tables']['PTW-NonCasual']['Row'][]>()
-	const [responseMovies, setResponseMovies] =
-		useState<Database['public']['Tables']['PTW-Movies']['Row'][]>()
+	const [responseRolled, setResponseRolled] = useState<PTWRolled[]>()
+	const [responseRolled1, setResponseRolled1] = useState<PTWRolled[]>()
+	const [responseCasual, setResponseCasual] = useState<PTWCasual[]>()
+	const [responseNonCasual, setResponseNonCasual] = useState<PTWNonCasual[]>()
+	const [responseMovies, setResponseMovies] = useState<PTWMovies[]>()
 	const [isEdited, setIsEditedState] = useState<PTWEdited>('')
-	const [isLoadingClient, setIsLoadingClient] = useState(true)
 	const [isLoadingEditForm, setIsLoadingEditForm] = useState<string[]>([])
 	const [confirmModal, setConfirmModal] = useState(false)
 	const [contextMenu, setContextMenu] = useState<ContextMenuPos>({ top: 0, left: 0, currentItem: null })
@@ -102,27 +99,34 @@ export default function PTW() {
 			process.env.NEXT_PUBLIC_SUPABASE_URL!,
 			process.env.NEXT_PUBLIC_SUPABASE_API_KEY!
 		)
-		const getData = async () => {
-			const dataRolled = await supabase.from('PTW-Rolled').select().order('id', { ascending: true })
-			const dataCasual = await supabase.from('PTW-Casual').select().order('id', { ascending: true })
-			const dataNonCasual = await supabase
-				.from('PTW-NonCasual')
-				.select()
-				.order('id', { ascending: true })
-			const dataMovies = await supabase.from('PTW-Movies').select().order('id', { ascending: true })
 
-			setResponseRolled(dataRolled.data!)
-			setResponseRolled1(dataRolled.data!)
-			setResponseCasual(dataCasual.data!)
-			setResponseNonCasual(dataNonCasual.data!)
-			setResponseMovies(dataMovies.data!)
-			setIsLoadingClient(false)
+		const getRolled = () => {
+			axios.get(`${process.env.NEXT_PUBLIC_UPDATE_URL}/table/ptwrolled`).then(({ data }) => {
+				setResponseRolled(data)
+				setResponseRolled1(data)
+			})
+		}
+		const getCasual = () => axios.get(`${process.env.NEXT_PUBLIC_UPDATE_URL}/table/ptwcasual`).then(({ data }) => setResponseCasual(data))
+		const getNonCasual = () => axios.get(`${process.env.NEXT_PUBLIC_UPDATE_URL}/table/ptwnoncasual`).then(({ data }) => setResponseNonCasual(data))
+		const getMovies = () => axios.get(`${process.env.NEXT_PUBLIC_UPDATE_URL}/table/ptwmovies`).then(({ data }) => setResponseMovies(data))
 
+		const initializePage = async () => {
+			getRolled()
+			getCasual()
+			getNonCasual()
+			getMovies()
 			await axios
 				.get(`${process.env.NEXT_PUBLIC_UPDATE_URL}/refresh`)
 				.catch((error) => console.log(error))
 		}
-		getData()
+		initializePage()
+
+		const apiSocketRollHandler = (payload: any) => {
+			setRolledTitle(payload.message)
+			if (payload.isLoading) {
+				setLoading(true)
+			} else setLoading(false)
+		}
 
 		const initializeSocket = async () => {
 			apiSocket.connect()
@@ -130,11 +134,28 @@ export default function PTW() {
 				console.log('connected')
 			})
 
-			apiSocket.on('roll', payload => {
-				setRolledTitle(payload.message)
-				if (payload.isLoading) {
-					setLoading(true)
-				} else setLoading(false)
+			apiSocket.on('roll', apiSocketRollHandler)
+
+			updaterSocket.connect()
+			updaterSocket.on('PTWRolled', () => {
+				sortMethodRef.current = ''
+				setReordered(false)
+				getRolled()
+			})
+			updaterSocket.on('PTWCasual', () => {
+				sortMethodRef.current = ''
+				setReordered(false)
+				getCasual()
+			})
+			updaterSocket.on('PTWNonCasual', () => {
+				sortMethodRef.current = ''
+				setReordered(false)
+				getNonCasual()
+			})
+			updaterSocket.on('PTWMovies', () => {
+				sortMethodRef.current = ''
+				setReordered(false)
+				getMovies()
 			})
 		}
 		initializeSocket()
@@ -150,43 +171,8 @@ export default function PTW() {
 
 		const refresh = setInterval(
 			() => axios.get(`${process.env.NEXT_PUBLIC_UPDATE_URL}/refresh`),
-			3500000
+			1700000
 		)
-
-		const databaseChannel = supabase
-			.channel('*')
-			.on('postgres_changes', { event: '*', schema: '*' }, async (payload) => {
-				if (
-					payload.table == 'PTW-Rolled' ||
-					payload.table == 'PTW-Casual' ||
-					payload.table == 'PTW-NonCasual' ||
-					payload.table == 'PTW-Movies'
-				) {
-					const { data } = await supabase
-						.from(payload.table)
-						.select()
-						.order('id', { ascending: true })
-
-					switch (payload.table) {
-						case 'PTW-Rolled':
-							sortMethodRef.current = ''
-							setResponseRolled(data as Database['public']['Tables']['PTW-Rolled']['Row'][])
-							setResponseRolled1(data as Database['public']['Tables']['PTW-Rolled']['Row'][])
-							setReordered(false)
-							break
-						case 'PTW-Casual':
-							setResponseCasual(data!)
-							break
-						case 'PTW-NonCasual':
-							setResponseNonCasual(data!)
-							break
-						case 'PTW-Movies':
-							setResponseMovies(data!)
-							break
-					}
-				}
-			})
-			.subscribe()
 
 		const onlineChannel = supabase
 			.channel('online-users')
@@ -230,9 +216,10 @@ export default function PTW() {
 		window.addEventListener('keydown', resetEditedOnEscape)
 
 		return () => {
-			apiSocket.off('roll')
+			apiSocket.off('roll', apiSocketRollHandler)
 			apiSocket.disconnect()
-			databaseChannel.unsubscribe()
+			//TODO: remove updaterSocket handlers
+			updaterSocket.disconnect()
 			onlineChannel.unsubscribe()
 			clearInterval(refresh)
 			clearInterval(pingInterval)
@@ -301,7 +288,7 @@ export default function PTW() {
 									Status
 								</span>
 							</div>
-							{isLoadingClient ? 
+							{!responseRolled ? 
 							<div className='flex items-center justify-center h-[34rem]'>
 								<CircularProgress size={42} color="primary" />
 							</div> :
@@ -315,14 +302,13 @@ export default function PTW() {
 								}}
 								className="flex flex-col min-w-[80dvw] lg:min-w-full w-min"
 							>
-								{responseRolled?.map((item, index) => (
-									!isLoadingClient && 
+								{responseRolled.map((item, index) => 
 									<PTWRolledTableItem
 										key={item.id}
 										props={{ item, index, isLoadingEditForm, setIsEdited, isEdited, isEditedRef, sortMethodRef, setContextMenu, contextMenuButtonRef, responseRolled, setResponseRolled, setIsLoadingEditForm }}
 										editFormParams={editFormParams}
 									/>
-								))}
+								)}
 							</Reorder.Group>}
 						</div>
 						<div
@@ -369,7 +355,6 @@ export default function PTW() {
 				</section>
 				<section className="grid grid-cols-1 lg:grid-cols-3 gap-4">
 					<PTWTable 
-						isLoadingClient={isLoadingClient}
 						isEdited={isEdited}
 						setIsEdited={setIsEdited}
 						isLoadingEditForm={isLoadingEditForm}
@@ -382,7 +367,6 @@ export default function PTW() {
 						setIsAdded={setIsAdded}
 					/>
 					<PTWTable 
-						isLoadingClient={isLoadingClient}
 						isEdited={isEdited}
 						setIsEdited={setIsEdited}
 						isLoadingEditForm={isLoadingEditForm}
@@ -395,7 +379,6 @@ export default function PTW() {
 						setIsAdded={setIsAdded}
 					/>
 					<PTWTable 
-						isLoadingClient={isLoadingClient}
 						isEdited={isEdited}
 						setIsEdited={setIsEdited}
 						isLoadingEditForm={isLoadingEditForm}
@@ -437,7 +420,6 @@ export default function PTW() {
 }
 
 function PTWTable({
-	isLoadingClient,
 	isEdited,
 	setIsEdited,
 	isLoadingEditForm,
@@ -449,14 +431,13 @@ function PTWTable({
 	tableId,
 	setIsAdded
 }: {
-	isLoadingClient: boolean;
 	isEdited: PTWEdited;
 	setIsEdited: (value: PTWEdited) => void;
 	isLoadingEditForm: string[];
 	editFormParams: EditFormParams;
 	entryToDelete: MutableRefObject<any>;
 	setConfirmModal: Dispatch<SetStateAction<boolean>>;
-	response: Database['public']['Tables']['PTW-Casual']['Row'][] | undefined;
+	response: PTWCasual[] | undefined;
 	tableName: string;
 	tableId: Exclude<PTWTables, 'rolled'>;
 	setIsAdded: Dispatch<SetStateAction<AddRecordPos>>;
@@ -492,13 +473,13 @@ function PTWTable({
 						</tr>
 					</thead>
 					<tbody>
-						{isLoadingClient ? 
+						{!response ? 
 						<tr>
 							<td className='py-48 text-center'>
 								<CircularProgress size={42} color="primary" />
 							</td>
 						</tr> : 
-						response?.map(item => (
+						response.map(item => (
 							<tr key={item.id}>
 								<td
 									style={{
@@ -586,10 +567,10 @@ function Gacha({
 	rolledTitle,
 	setRolledTitle
 }: {
-	responseCasual: Database['public']['Tables']['PTW-Casual']['Row'][] | undefined;
-	responseNonCasual: Database['public']['Tables']['PTW-NonCasual']['Row'][] | undefined;
-	responseMovies: Database['public']['Tables']['PTW-Movies']['Row'][] | undefined;
-	responseRolled: Database['public']['Tables']['PTW-Rolled']['Row'][] | undefined;
+	responseCasual: PTWCasual[] | undefined;
+	responseNonCasual: PTWNonCasual[] | undefined;
+	responseMovies: PTWMovies[] | undefined;
+	responseRolled: PTWRolled[] | undefined;
 	rolledTitle: string;
 	setRolledTitle: Dispatch<SetStateAction<string>>;
 }) {
@@ -823,7 +804,7 @@ function ContextMenu({
 }: {
 	contextMenuRef: RefObject<HTMLDivElement>;
 	contextMenu: ContextMenuPos;
-	responseRolled: Database['public']['Tables']['PTW-Rolled']['Row'][] | undefined;
+	responseRolled: PTWRolled[] | undefined;
 	setConfirmModalDelEntry: () => void;
 }) {
 	const { setLoading } = useLoading()
@@ -987,10 +968,10 @@ function ConfirmModal({
 	confirmModal: boolean;
 	setConfirmModal: Dispatch<SetStateAction<boolean>>;
 	entryToDelete: MutableRefObject<any>;
-	responseCasual: Database['public']['Tables']['PTW-Casual']['Row'][] | undefined;
-	responseNonCasual: Database['public']['Tables']['PTW-NonCasual']['Row'][] | undefined;
-	responseMovies: Database['public']['Tables']['PTW-Movies']['Row'][] | undefined;
-	responseRolled: Database['public']['Tables']['PTW-Rolled']['Row'][] | undefined;
+	responseCasual: PTWCasual[] | undefined;
+	responseNonCasual: PTWNonCasual[] | undefined;
+	responseMovies: PTWMovies[] | undefined;
+	responseRolled: PTWRolled[] | undefined;
 }) {
 	const { setLoading } = useLoading()
 
@@ -1204,7 +1185,7 @@ function PTWRolledTableItem({ props, editFormParams }: PTWRolledTableItemProps) 
 
 	function handleMenuClick(
 		e: BaseSyntheticEvent,
-		item: Database['public']['Tables']['PTW-Rolled']['Row']
+		item: PTWRolled
 	) {
 		const { top, left } = e.target.getBoundingClientRect()
 
@@ -1215,7 +1196,7 @@ function PTWRolledTableItem({ props, editFormParams }: PTWRolledTableItemProps) 
 		})
 	}
 
-	function determineStatus(item: Database['public']['Tables']['PTW-Rolled']['Row']) {
+	function determineStatus(item: PTWRolled) {
 		let status
 		switch (item.status) {
 			case 'Not loaded':
@@ -1347,7 +1328,7 @@ function EditForm(
 }
 
 async function saveReorder(
-	responseRolled: Database['public']['Tables']['PTW-Rolled']['Row'][] | undefined,
+	responseRolled: PTWRolled[] | undefined,
 	setLoading: Dispatch<SetStateAction<boolean>>,
 	setReordered: (value: boolean) => boolean
 ) {
@@ -1373,7 +1354,7 @@ async function saveReorder(
 //* Utility function to add new records
 function handleAddMenu(
 	e: BaseSyntheticEvent, 
-	response: Database['public']['Tables']['PTW-Casual']['Row'][] | undefined, 
+	response: PTWCasual[] | undefined, 
 	tableId: PTWTables,
 	setIsAdded: Dispatch<SetStateAction<AddRecordPos>>
 ) {

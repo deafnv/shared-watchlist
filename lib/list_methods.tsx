@@ -2,7 +2,7 @@ import { Dispatch, MutableRefObject, SetStateAction } from 'react'
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown'
 import { Database } from './database.types'
 import { CompletedFields, TitleItem } from '@/lib/types'
-import { Completed } from '@prisma/client'
+import { Completed, PTWRolled } from '@prisma/client'
 
 export function getRandomInt(max: number) {
 	return Math.floor(Math.random() * max)
@@ -170,11 +170,9 @@ export const sortListByDateCompleted = (
 export type PTWRolledFields = 'title'
 
 export const sortListByTitlePTW = (
-	res: Database['public']['Tables']['PTW-Rolled']['Row'][] | undefined,
+	res: PTWRolled[] | undefined,
 	sortMethodRef: MutableRefObject<`${'asc' | 'desc'}_${PTWRolledFields}` | ''>,
-	setResponse: Dispatch<
-		SetStateAction<Database['public']['Tables']['PTW-Rolled']['Row'][] | undefined>
-	>
+	setResponse: Dispatch<SetStateAction<PTWRolled[] | undefined>>
 ) => {
 	if (!res) return
 	if (sortMethodRef.current === `desc_title`) {
