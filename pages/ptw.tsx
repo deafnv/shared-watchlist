@@ -3,7 +3,6 @@ import { BaseSyntheticEvent, useEffect, useState, useRef, Dispatch, SetStateActi
 import axios from 'axios'
 import { AnimatePresence, motion, Reorder, useDragControls } from 'framer-motion'
 import isEqual from 'lodash/isEqual'
-import io, { Socket } from 'socket.io-client'
 import Dialog from '@mui/material/Dialog'
 import DialogTitle from '@mui/material/DialogTitle'
 import DialogActions from '@mui/material/DialogActions'
@@ -20,6 +19,7 @@ import { createClient } from '@supabase/supabase-js'
 import { EditFormParams, PTWEdited, PTWRolledTableItemProps, PTWItem, PTWTables } from '@/lib/types'
 import { getRandomInt, PTWRolledFields, sortListByTitlePTW, SortSymbol } from '@/lib/list_methods'
 import { Database } from '@/lib/database.types'
+import { apiSocket } from '@/lib/socket'
 import { useLoading } from '@/components/LoadingContext'
 
 interface AddRecordPos {
@@ -34,8 +34,6 @@ interface ContextMenuPos {
 	left: number;
 	currentItem: Database['public']['Tables']['PTW-Rolled']['Row'] | null;
 }
-
-let socket: Socket
 
 export default function PTW() {
 	const contextMenuRef = useRef<HTMLDivElement>(null)
@@ -127,12 +125,12 @@ export default function PTW() {
 		getData()
 
 		const initializeSocket = async () => {
-			socket = io(process.env.NEXT_PUBLIC_API_URL!)
-			socket.on('connect', () => {
+			apiSocket.connect()
+			apiSocket.on('connect', () => {
 				console.log('connected')
 			})
 
-			socket.on('roll', payload => {
+			apiSocket.on('roll', payload => {
 				setRolledTitle(payload.message)
 				if (payload.isLoading) {
 					setLoading(true)
@@ -144,7 +142,7 @@ export default function PTW() {
 		const pingInterval = setInterval(() => {
 			const start = Date.now()
 		
-			socket.emit("ping", () => {
+			apiSocket.emit("ping", () => {
 				const duration = Date.now() - start
 				setLatency(duration)
 			})
@@ -232,7 +230,8 @@ export default function PTW() {
 		window.addEventListener('keydown', resetEditedOnEscape)
 
 		return () => {
-			socket.off('roll')
+			apiSocket.off('roll')
+			apiSocket.disconnect()
 			databaseChannel.unsubscribe()
 			onlineChannel.unsubscribe()
 			clearInterval(refresh)
@@ -612,13 +611,13 @@ function Gacha({
 
 		if (categoryCasual) {
 			const randomTitle = concatArr?.[getRandomInt(responseCasual.length)].title!
-			socket.emit('roll', {
+			apiSocket.emit('roll', {
 				message: randomTitle
 			})
 			setRolledTitle(randomTitle)
 		} else {
 			const randomTitle = concatArr?.[getRandomInt(responseNonCasual.length)].title!
-			socket.emit('roll', {
+			apiSocket.emit('roll', {
 				message: randomTitle
 			})
 			setRolledTitle(randomTitle)
@@ -626,7 +625,7 @@ function Gacha({
 	}
 
 	function handleCancel() {
-		socket.emit('roll', {
+		apiSocket.emit('roll', {
 			message: '???'
 		})
 		setRolledTitle('???')
@@ -646,7 +645,7 @@ function Gacha({
 			return
 		}
 
-		socket.emit('roll', {
+		apiSocket.emit('roll', {
 			message: rolledTitle,
 			isLoading: true
 		})
@@ -665,14 +664,14 @@ function Gacha({
 			try {
 				await addRolledAPI(range, updatePayload, addCell)
 				setLoading(false)
-				socket.emit('roll', {
+				apiSocket.emit('roll', {
 					message: '???',
 					isLoading: false
 				})
 				setRolledTitle('???')
 				return
 			} catch (error) {
-				socket.emit('roll', {
+				apiSocket.emit('roll', {
 					message: rolledTitle,
 					isLoading: false
 				})
@@ -696,7 +695,7 @@ function Gacha({
 			const addCell = `N${responseRolled.length + 2}:N${responseRolled.length + 2}`
 			try {
 				await addRolledAPI(range, updatePayload, addCell)
-				socket.emit('roll', {
+				apiSocket.emit('roll', {
 					message: '???',
 					isLoading: false
 				})
@@ -704,7 +703,7 @@ function Gacha({
 				setRolledTitle('???')
 				return
 			} catch (error) {
-				socket.emit('roll', {
+				apiSocket.emit('roll', {
 					message: rolledTitle,
 					isLoading: false
 				})
@@ -728,7 +727,7 @@ function Gacha({
 			const addCell = `N${responseRolled.length + 2}:N${responseRolled.length + 2}`
 			try {
 				await addRolledAPI(range, updatePayload, addCell)
-				socket.emit('roll', {
+				apiSocket.emit('roll', {
 					message: '???',
 					isLoading: false
 				})
@@ -736,7 +735,7 @@ function Gacha({
 				setRolledTitle('???')
 				return
 			} catch (error) {
-				socket.emit('roll', {
+				apiSocket.emit('roll', {
 					message: rolledTitle,
 					isLoading: false
 				})

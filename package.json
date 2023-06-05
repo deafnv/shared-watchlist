@@ -16,6 +16,7 @@
 		"@mui/material": "^5.11.5",
 		"@next/bundle-analyzer": "^13.1.6",
 		"@popmotion/popcorn": "^0.4.4",
+		"@prisma/client": "^4.15.0",
 		"@supabase/supabase-js": "^2.2.3",
 		"@types/node": "^20.2.5",
 		"@types/react": "^18.2.8",
@@ -53,6 +54,7 @@
 		"autoprefixer": "^10.4.13",
 		"cross-env": "^7.0.3",
 		"postcss": "^8.4.20",
+		"prisma": "^4.15.0",
 		"supabase": "^1.30.0",
 		"tailwindcss": "^3.3.2"
 	}
