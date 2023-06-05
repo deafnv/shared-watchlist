@@ -818,8 +818,10 @@ function CompletedItemDetails({
 				}
 			})
 
+			console.log(completedDetails)
+
 			setGenres(completedGenres)
-			setDetails(completedDetails?.[0])
+			setDetails(completedDetails)
 			setIsLoading(false)
 		}
 		getDetails()
@@ -885,7 +887,8 @@ function CompletedItemDetails({
 					</p>
 					<div>
 					<h5 className="font-semibold text-lg">Genres</h5>
-						<span className="mb-2 text-center">
+						<span className="mb-2 text-center">	
+							{!genres || !genres.length && '–'}
 							{genres?.map((item, index) => {
 								return (
 									<Link

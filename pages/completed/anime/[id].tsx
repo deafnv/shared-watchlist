@@ -3,19 +3,19 @@ import Head from 'next/head'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
-import { createClient } from '@supabase/supabase-js'
 import EditIcon from '@mui/icons-material/Edit'
+import { Completed, CompletedDetails, Genres } from '@prisma/client'
 import EditDialog from '@/components/dialogs/EditDialog'
-import { Database } from '@/lib/database.types'
+import prisma from '@/lib/prisma'
 
 export async function getStaticPaths() {
-	const supabase = createClient<Database>(
-		process.env.NEXT_PUBLIC_SUPABASE_URL!,
-		process.env.NEXT_PUBLIC_SUPABASE_API_KEY!
-	)
-	const { data } = await supabase.from('Completed').select().order('id')
+	const completeds = await prisma.completed.findMany({
+		orderBy: {
+			id:	'asc'
+		}
+	})
 
-	const paths = data?.map((item) => ({
+	const paths = completeds?.map((item) => ({
 		params: { id: item.id.toString() }
 	}))
 
@@ -25,64 +25,68 @@ export async function getStaticPaths() {
 	}
 }
 
-export function getStaticProps(context: GetStaticPropsContext) {
+export async function getStaticProps(context: GetStaticPropsContext) {
+	const id = context.params?.id as string
+	const completed = await prisma.completed.findUnique({
+		where: {
+			id: parseInt(id)
+		},
+		include: {
+			details: true
+		}
+	})
+
+	const genres = await prisma.genres.findMany({
+    where: {
+      completeds: {
+        every: {
+          completed_id: {
+            equals: parseInt(id)
+          }
+        }
+      }
+    }
+  })
+
 	return {
 		props: {
-			id: context.params?.id
+			response: JSON.parse(JSON.stringify(completed)),
+			responseGenres: genres
 		},
 		revalidate: 360
 	}
 }
 
-export default function CompletedPage({ id }: { id: number }) {
-	const [response, setResponse] = useState<any>()
-	const [genres, setGenres] = useState<Array<{ id: number; name: string | null }>>()
+export default function CompletedPage({ 
+	response, 
+	responseGenres 
+}: { 
+	response: (Completed & {
+		details: CompletedDetails | null;
+	}) | null;
+	responseGenres: Genres[];
+}) {
 	const [editDialog, setEditDialog] = useState(false)
 	const [startDate, setStartDate] = useState('Loading...')
 	const [endDate, setEndDate] = useState('Loading...')
 
 	useEffect(() => {
-		const supabase = createClient<Database>(
-			process.env.NEXT_PUBLIC_SUPABASE_URL!,
-			process.env.NEXT_PUBLIC_SUPABASE_API_KEY!
-		)
-		const getData = async () => {
-			const { data } = await supabase
-				.from('Completed')
-				.select(
-					`
-          *,
-          CompletedDetails!inner (
-            *
-          )
-        `
-				)
-				.eq('id', id)
-
-			const dataGenre = await supabase
-				.from('Genres')
-				.select('*, Completed!inner( id )')
-				.eq('Completed.id', id)
-
-			setResponse(data!)
-			setGenres(dataGenre.data!)
-			
+		const initialize = async () => {
 			//? Workaround for wrong supabase inner join return type
-			const completedDetails = (data?.[0].CompletedDetails as Database['public']['Tables']['CompletedDetails']['Row'])
-			if (data && data?.[0].CompletedDetails && completedDetails.start_date && completedDetails.end_date) {
-				setStartDate(new Date(completedDetails.start_date).toLocaleDateString('en-US', {
+			if (response && response.details && response.details.start_date && response.details.end_date) {
+				setStartDate(new Date(response.details.start_date).toLocaleDateString('en-US', {
 					year: 'numeric',
 					month: 'long',
 					day: 'numeric'
 				}))
-				setEndDate(new Date(completedDetails.end_date).toLocaleDateString('en-US', {
+				setEndDate(new Date(response.details.end_date).toLocaleDateString('en-US', {
 					year: 'numeric',
 					month: 'long',
 					day: 'numeric'
 				}))
 			}
 		}
-		getData()
+		initialize()
 
 		const closeMenu = (e: KeyboardEvent) => {
 			if (e.key == 'Escape') {
@@ -100,12 +104,12 @@ export default function CompletedPage({ id }: { id: number }) {
 		<>
 			<Head>
 				<title>Watchlist</title>
-				<meta name="description" content={response?.[0].title} />
+				<meta name="description" content={response?.title} />
 			</Head>
 
 			<main className="flex flex-col items-center justify-center mx-auto mb-16 px-6 sm:px-12 py-6 md:4/5 lg:w-3/5 sm:w-full">
 				<div className="relative h-full">
-					<h3 className="p-2 text-2xl sm:text-2xl font-semibold text-center">{response?.[0].title}</h3>
+					<h3 className="p-2 text-2xl sm:text-2xl font-semibold text-center">{response?.title}</h3>
 					<div
 						onClick={() => {setEditDialog(true)}}
 						className="absolute -top-2 -right-12 xs:top-0 xs:right-0 sm:right-0 md:top-0 md:-right-12 lg:-right-60 xl:-right-72 flex items-center justify-center h-7 sm:h-11 w-7 sm:w-11 rounded-full cursor-pointer transition-colors duration-150 hover:bg-slate-500"
@@ -119,16 +123,16 @@ export default function CompletedPage({ id }: { id: number }) {
 					</div>
 				</div>
 				<h5 className="text-base text-center">
-					{response?.[0].CompletedDetails.mal_alternative_title}
+					{response?.details?.mal_alternative_title}
 				</h5>
 				<Image
-					src={response?.[0].CompletedDetails.image_url}
+					src={response?.details?.image_url ?? ''}
 					height={380}
 					width={280}
 					alt="Art"
 					className="my-4"
 				/>
-				<p className="mb-8 text-center">{response?.[0].CompletedDetails.mal_synopsis}</p>
+				<p className="mb-8 text-center">{response?.details?.mal_synopsis}</p>
 				<div className="grid md:grid-cols-2 gap-16">
 					<div className="col-span-2 md:col-span-1 flex flex-col items-center px-8 py-4 max-w-[95%] min-w-fit bg-neutral-700 rounded-md">
 						<h5 className="self-center mb-4 text-xl font-semibold">Ratings</h5>
@@ -143,9 +147,9 @@ export default function CompletedPage({ id }: { id: number }) {
 								</thead>
 								<tbody>
 									<tr>
-										<td className='p-2 text-center'>{response?.[0].rating1}</td>
-										<td className='p-2 text-center'>{response?.[0].rating2}</td>
-										<td className='p-2 text-center'>{response?.[0].rating3}</td>
+										<td className='p-2 text-center'>{response?.rating1}</td>
+										<td className='p-2 text-center'>{response?.rating2}</td>
+										<td className='p-2 text-center'>{response?.rating3}</td>
 									</tr>
 								</tbody>
 							</table>
@@ -153,18 +157,18 @@ export default function CompletedPage({ id }: { id: number }) {
 						<div className="flex mb-6 gap-8">
 							<div className="flex flex-col items-center">
 								<h6 className="mb-2 font-semibold text-lg">Start</h6>
-								<span className="text-center">{response?.[0].start}</span>
+								<span className="text-center">{response?.start}</span>
 							</div>
 							<div className="flex flex-col items-center">
 								<h6 className="mb-2 font-semibold text-lg">End</h6>
-								<span className="text-center">{response?.[0].end}</span>
+								<span className="text-center">{response?.end}</span>
 							</div>
 						</div>
 					</div>
 					<div className="col-span-2 md:col-span-1 flex flex-col items-center px-8 py-4 max-w-[95%] min-w-fit bg-neutral-700 rounded-md">
 						<h5 className="self-center mb-6 text-xl font-semibold link">
 							<a
-								href={`https://myanimelist.net/anime/${response?.[0].CompletedDetails.mal_id}`}
+								href={`https://myanimelist.net/anime/${response?.details?.mal_id}`}
 								target="_blank"
 								rel='noopener noreferrer'
 							>
@@ -173,7 +177,8 @@ export default function CompletedPage({ id }: { id: number }) {
 						</h5>
 						<h6 className="mb-2 font-semibold text-lg">Genres</h6>
 						<span className="mb-2 text-center">
-							{genres?.map((item, index) => {
+							{!responseGenres || !responseGenres.length && '–'}
+							{responseGenres?.map((item, index) => {
 								return (
 									<Link
 										href={`/completed/genres/${item.id}`}
@@ -181,7 +186,7 @@ export default function CompletedPage({ id }: { id: number }) {
 										className="link"
 									>
 										{item.name}
-										<span className="text-white">{index < genres.length - 1 ? ', ' : null}</span>
+										<span className="text-white">{index < responseGenres?.length - 1 ? ', ' : null}</span>
 									</Link>
 								)
 							})}
@@ -205,7 +210,7 @@ export default function CompletedPage({ id }: { id: number }) {
 				<EditDialog
 					editDialog={editDialog}
 					setEditDialog={setEditDialog}
-					details={{ id: response?.[0].id, title: response?.[0].title ?? '' }}
+					details={{ id: response?.id ?? -1, title: response?.title ?? '' }}
 				/>
 			</main>
 		</>

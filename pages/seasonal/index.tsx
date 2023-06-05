@@ -70,7 +70,6 @@ export default function Seasonal() {
 	useEffect(() => {
 		const getData = async () => {
 			const { data } = await axios.get(`${process.env.NEXT_PUBLIC_UPDATE_URL}/table/seasonal`)
-			console.log(data)
 
 			setResponse(data)
 			setResponse1(data)
