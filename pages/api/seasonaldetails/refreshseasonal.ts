@@ -1,23 +1,18 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import axios from 'axios'
 import isEqual from 'lodash/isEqual'
-import { createClient } from '@supabase/supabase-js'
-import { Database } from '@/lib/database.types'
+import prisma from '@/lib/prisma'
 import { authorizeRequest } from '@/lib/authorize'
 
 export default async function RefreshSeasonal(req: NextApiRequest, res: NextApiResponse) {
 	const authResult = authorizeRequest(req)
 	if (typeof authResult !== 'string') return res.status(authResult.code).send(authResult.message)
 	try {
-		//* Through testing, these API routes with restricted queries like UPDATE, DELETE, or INSERT fails silently if the public API key is provided instead of the service key
-		const supabase = createClient<Database>(
-			process.env.NEXT_PUBLIC_SUPABASE_URL!,
-			process.env.SUPABASE_SERVICE_API_KEY!
-		)
-		const { data } = await supabase
-			.from('PTW-CurrentSeason')
-			.select()
-			.order('order', { ascending: true })
+		const seasonals = await prisma.seasonal.findMany({
+			orderBy: {
+				order: 'asc'
+			}
+		})
 
 		//? Really stupid temp thing
 		const season = Math.floor((new Date().getMonth() / 12) * 4) % 4
@@ -32,7 +27,7 @@ export default async function RefreshSeasonal(req: NextApiRequest, res: NextApiR
 			season: ['winter', 'spring', 'summer', 'fall'][prevSeason]
 		}
 		const malResponse = await Promise.all(
-			data!.map(async (item, index) => {
+			seasonals.map(async (item, index) => {
 				const { data } = await axios.get(`https://api.myanimelist.net/v2/anime`, {
 					headers: { 'X-MAL-CLIENT-ID': process.env.MAL_CLIENT_ID },
 					params: {
@@ -57,8 +52,8 @@ export default async function RefreshSeasonal(req: NextApiRequest, res: NextApiR
 						mal_title: data?.data[0].node.title,
 						image_url: data?.data[0].node.main_picture.large ?? '',
 						start_date: data?.data[0].node.start_date ?? '',
-						broadcast: broadcast,
-						num_episodes: data?.data[0].node.num_episodes,
+						broadcast: broadcast ?? '',
+						num_episode: data?.data[0].node.num_episodes,
 						status: data?.data[0].node.status,
 						message: `Validate:https://myanimelist.net/anime.php?q=${encodeURIComponent(
 							item.title!.substring(0, 64)
@@ -71,22 +66,24 @@ export default async function RefreshSeasonal(req: NextApiRequest, res: NextApiR
 					mal_title: data?.data[0].node.title,
 					image_url: data?.data[0].node.main_picture.large ?? '',
 					start_date: data?.data[0].node.start_date ?? '',
-					broadcast: broadcast,
-					num_episodes: data?.data[0].node.num_episodes,
+					broadcast: broadcast ?? '',
+					num_episode: data?.data[0].node.num_episodes,
 					status: data?.data[0].node.status,
 					message: ''
 				}
 			})
 		)
 
-		await supabase.from('SeasonalDetails').delete().neq('id', -1)
+		await prisma.seasonalDetails.deleteMany()
 
-		await supabase.from('SeasonalDetails').upsert(malResponse)
+		await prisma.seasonalDetails.createMany({
+			data: malResponse
+		})
 
 		await res.revalidate('/seasonal/track')
 		return res.status(200).send(malResponse)
 	} catch (error) {
-		console.log(error)
+		console.error(error)
 		return res.status(500).send(error)
 	}
 }

@@ -41,11 +41,7 @@ export const getStaticProps = async () => {
 	}
 }
 
-export default function SeasonalDetailsPage({
-	res
-}: {
-	res: SeasonalDetails[]
-}) {
+export default function SeasonalDetailsPage({ res }: { res: SeasonalDetails[] }) {
 	const contextMenuRef = useRef<HTMLMenuElement>(null)
 	const contextMenuButtonRef = useRef<any>([])
 	const refreshReloadMenuRef = useRef<HTMLDivElement>(null)
@@ -60,7 +56,7 @@ export default function SeasonalDetailsPage({
 	useEffect(() => {
 		let obj: { [key: number]: string } = {}
 		response.forEach(item => {
-			obj[item.mal_id] = new Date(Number(item.last_updated)).toLocaleDateString('en-GB', {
+			obj[item.mal_id] = new Date(item.last_updated ?? '').toLocaleDateString('en-GB', {
 				day: 'numeric', 
 				month: 'numeric', 
 				year: '2-digit'

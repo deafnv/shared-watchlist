@@ -807,12 +807,12 @@ function CompletedItemDetails({
 
 	useEffect(() => {
 		const getDetails = async () => {
-			const { data: completedDetails } = await axios.get(`${process.env.NEXT_PUBLIC_UPDATE_URL}/table/completed`, {
+			const { data: completedDetails } = await axios.get(`${process.env.NEXT_PUBLIC_UPDATE_URL}/table/completeddetails`, {
 				params: {
 					id: item.id
 				}
 			})
-			const { data: completedGenres } = await axios.get(`${process.env.NEXT_PUBLIC_UPDATE_URL}/table/completed`, {
+			const { data: completedGenres } = await axios.get(`${process.env.NEXT_PUBLIC_UPDATE_URL}/table/genresofid`, {
 				params: {
 					id: item.id
 				}
