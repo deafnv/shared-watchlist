@@ -36,7 +36,7 @@ interface SettingsMenuPos {
 
 export default function CompletedPage() {
 	const settingsMenuRef = useRef<HTMLDivElement>(null)
-	const settingsMenuButtonRef = useRef<HTMLDivElement>(null)
+	const settingsMenuButtonRef = useRef<HTMLButtonElement>(null)
 	const sortMethodRef = useRef<`${'asc' | 'desc'}_${CompletedFields}` | ''>('')
 	const editInputRef = useRef('')
 
@@ -60,7 +60,7 @@ export default function CompletedPage() {
 
 			await axios
 				.get(`${process.env.NEXT_PUBLIC_UPDATE_URL}/refresh`)
-				.catch((error) => console.log(error))
+				.catch((error) => console.error(error))
 		}
 		getData()
 
@@ -172,14 +172,13 @@ export default function CompletedPage() {
 					>
 						<RefreshIcon sx={{ fontSize: 28 }} />
 					</div>}
-					<div
+					<IconButton
 						ref={settingsMenuButtonRef}
-						tabIndex={0}
 						onClick={handleSettingsMenu}
-						className="flex items-center justify-center h-7 w-7 cursor-pointer rounded-full hover:bg-gray-500 transition-colors duration-150 translate-y-[1px]"
+						className="flex items-center justify-center h-7 w-7 cursor-pointer rounded-full translate-y-[1px]"
 					>
 						<MoreVertIcon sx={{ fontSize: 28 }} />
-					</div>
+					</IconButton>
 				</header>
 				<div className="flex items-center justify-center gap-2">
 					<div className="px-3 mb-1 bg-neutral-700 shadow-md shadow-black rounded-md">
@@ -454,7 +453,7 @@ export default function CompletedPage() {
 												opacity: isLoadingEditForm.includes(`rating2_${item.id}`) ? 0.5 : 1
 											}}
 											onDoubleClick={() => setIsEdited(`rating2_${item.id}`)}
-											className="relative text-center group-hover:bg-zinc-800"
+											className="relative text-center group-hover:bg-zinc-800 rounded-e-md md:rounded-none"
 										>
 											{isEdited == `rating2_${item.id}` ? 
 											<EditForm 
@@ -923,13 +922,8 @@ function CompletedItemDetails({
 					</a>
 				</div>
 				<IconButton
-					sx={{
-						position: 'absolute',
-						top: '0.75rem',
-						right: '1rem'
-					}}
 					onClick={() => setEditDialog({ id: item.id, title: item.title ?? '' })}
-					className='!hidden md:!block'
+					className='!hidden md:!inline-flex !absolute top-3 right-4'
 				>
 					<EditIcon />
 				</IconButton>

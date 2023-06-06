@@ -4,12 +4,13 @@ import { useRouter } from 'next/router'
 import { BaseSyntheticEvent, useEffect, useRef, useState, Dispatch, SetStateAction, RefObject } from 'react'
 import axios from 'axios'
 import { AnimatePresence, motion } from 'framer-motion'
-import MoreVertIcon from '@mui/icons-material/MoreVert'
-import RefreshIcon from '@mui/icons-material/Refresh'
-import Button from '@mui/material/Button'
 import Dialog from '@mui/material/Dialog'
 import DialogTitle from '@mui/material/DialogTitle'
 import DialogActions from '@mui/material/DialogActions'
+import Button from '@mui/material/Button'
+import IconButton from '@mui/material/IconButton'
+import MoreVertIcon from '@mui/icons-material/MoreVert'
+import RefreshIcon from '@mui/icons-material/Refresh'
 import { UnwatchedSequels } from '@prisma/client'
 import prisma from '@/lib/prisma'
 import { useLoading } from '@/components/LoadingContext'
@@ -59,7 +60,7 @@ export default function CompleteSequels({
 	res: UnwatchedSequel[]
 }) {
 	const loadSequelsMenuRef = useRef<HTMLMenuElement>(null)
-	const loadSequelsMenuButtonRef = useRef<HTMLDivElement>(null)
+	const loadSequelsMenuButtonRef = useRef<HTMLButtonElement>(null)
 	const sortMethodRef = useRef<`${'asc' | 'desc'}_status` | ''>('')
 
 	const [response, setResponse] = useState(res)
@@ -132,25 +133,24 @@ export default function CompleteSequels({
 			<main className="flex flex-col items-center justify-center mb-24 px-6 py-2">
 				<header className='flex items-center'>
 					<h2 className="p-2 text-2xl sm:text-3xl text-center">Unwatched Sequels</h2>
-					<div
+					<IconButton
 						ref={loadSequelsMenuButtonRef}
 						onClick={handleLoadSequelsMenu}
-						className="flex items-center justify-center h-7 w-7 cursor-pointer rounded-full hover:bg-gray-500 transition-colors duration-150 translate-y-0 sm:translate-y-[2px]"
+						className="flex items-center justify-center h-7 w-7 cursor-pointer rounded-full translate-y-0 sm:translate-y-[2px]"
 					>
 						<MoreVertIcon sx={{ fontSize: 28 }} />
-					</div>
+					</IconButton>
 					{sortMethodRef.current &&
-					<div
+					<IconButton
 						title="Reset sort"
-						tabIndex={0}
 						onClick={() => {
 							sortMethodRef.current = ''
 							setResponse(res)
 						}}
-						className="flex items-center justify-center h-7 w-7 cursor-pointer rounded-full hover:bg-gray-500 transition-colors duration-150 translate-y-[1px]"
+						className="flex items-center justify-center h-7 w-7 cursor-pointer rounded-full translate-y-[1px]"
 					>
 						<RefreshIcon sx={{ fontSize: 28 }} />
-					</div>}
+					</IconButton>}
 				</header>
 				<section className='p-2 bg-neutral-700 rounded-md'>
 					<div className="grid grid-cols-[0.6fr_4fr_4fr_2.4fr] xl:grid-cols-[4rem_30rem_30rem_10rem] min-w-[95dvw] xl:min-w-0 sm:w-min border-b">

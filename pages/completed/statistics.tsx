@@ -32,7 +32,14 @@ import { DifferenceRatingData, GenreByRatingData, StatisticsProps } from '@/lib/
 
 export const getStaticProps = async () => {
 	const data = await prisma.completed.findMany({
-		include: { details: true },
+		where: {
+			details: {
+				isNot: null
+			}
+		},
+		include: { 
+			details: true 
+		},
 		orderBy: {
 			id: 'asc'
 		}

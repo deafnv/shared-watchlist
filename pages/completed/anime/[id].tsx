@@ -3,6 +3,7 @@ import Head from 'next/head'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
+import IconButton from '@mui/material/IconButton'
 import EditIcon from '@mui/icons-material/Edit'
 import { Completed, CompletedDetails, Genres } from '@prisma/client'
 import EditDialog from '@/components/dialogs/EditDialog'
@@ -111,9 +112,9 @@ export default function CompletedPage({
 			<main className="flex flex-col items-center justify-center mx-auto mb-16 px-6 sm:px-12 py-6 md:4/5 lg:w-3/5 sm:w-full">
 				<div className="relative h-full">
 					<h3 className="p-2 text-2xl sm:text-2xl font-semibold text-center">{response?.title}</h3>
-					<div
+					<IconButton
 						onClick={() => {setEditDialog(true)}}
-						className="absolute -top-2 -right-12 xs:top-0 xs:right-0 sm:right-0 md:top-0 md:-right-12 lg:-right-60 xl:-right-72 flex items-center justify-center h-7 sm:h-11 w-7 sm:w-11 rounded-full cursor-pointer transition-colors duration-150 hover:bg-slate-500"
+						className="!absolute -top-2 -right-12 xs:top-0 xs:right-0 sm:right-0 md:top-0 md:-right-12 lg:-right-60 xl:-right-72 flex items-center justify-center h-8 sm:h-11 w-8 sm:w-11 rounded-full cursor-pointer"
 					>
 						<EditIcon sx={{
 							fontSize: {
@@ -121,7 +122,7 @@ export default function CompletedPage({
 								lg: 30	
 							}
 						}} />
-					</div>
+					</IconButton>
 				</div>
 				<h5 className="text-base text-center">
 					{response?.details?.mal_alternative_title}

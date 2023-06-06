@@ -10,6 +10,7 @@ import DialogTitle from '@mui/material/DialogTitle'
 import DialogActions from '@mui/material/DialogActions'
 import CircularProgress from '@mui/material/CircularProgress'
 import Button from '@mui/material/Button'
+import IconButton from '@mui/material/IconButton'
 import AddIcon from '@mui/icons-material/Add'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
 import CloseIcon from '@mui/icons-material/Close'
@@ -30,9 +31,9 @@ interface SettingsMenuPos {
 
 export default function Seasonal() {
 	const settingsMenuRef = useRef<HTMLMenuElement>(null)
-	const settingsMenuButtonRef = useRef<HTMLDivElement>(null)
+	const settingsMenuButtonRef = useRef<HTMLButtonElement>(null)
 	const addRecordMenuRef = useRef<HTMLMenuElement>(null)
-	const addRecordButtonRef = useRef<HTMLDivElement>(null)
+	const addRecordButtonRef = useRef<HTMLButtonElement>(null)
 	const contextMenuRef = useRef<HTMLDivElement>(null)
 	const contextMenuButtonRef = useRef<any>([])
 	const isEditedRef = useRef<CurrentSeasonIsEdited>('')
@@ -77,7 +78,7 @@ export default function Seasonal() {
 
 			await axios
 				.get(`${process.env.NEXT_PUBLIC_UPDATE_URL}/refresh`)
-				.catch((error) => console.log(error))
+				.catch((error) => console.error(error))
 		}
 		getData()
 
@@ -158,23 +159,21 @@ export default function Seasonal() {
 				<section className='relative flex flex-col items-center'>
 					<header className='flex items-center mb-2'>
 						<h2 className="p-2 text-2xl sm:text-3xl">Current Season</h2>
-						<div
+						<IconButton
 							ref={settingsMenuButtonRef}
-							tabIndex={0}
 							onClick={handleSettingsMenu}
-							className="flex items-center justify-center h-7 w-7 cursor-pointer rounded-full hover:bg-gray-500 transition-colors duration-150 translate-y-[2px]"
+							className="flex items-center justify-center h-7 w-7 cursor-pointer rounded-full translate-y-[2px]"
 						>
 							<MoreVertIcon sx={{ fontSize: 28 }} />
-						</div>
-						<div
+						</IconButton>
+						<IconButton
 							ref={addRecordButtonRef}
 						 	title='Add new entry'
-							tabIndex={0}
 							onClick={() => setIsAdded(true)} 
-							className='flex items-center justify-center h-7 w-7 cursor-pointer rounded-full hover:bg-gray-500 transition-colors duration-150 translate-y-[2px]'
+							className='flex items-center justify-center h-7 w-7 cursor-pointer rounded-full translate-y-[2px]'
 						>
 							<AddIcon />
-						</div>
+						</IconButton>
 					</header>
 					<div className='p-2 bg-neutral-700 rounded-md'>
 						<div className="grid grid-cols-[5fr_1fr] lg:grid-cols-[30rem_10rem_10rem_8rem] min-w-[95dvw] lg:min-w-0 w-min border-b">
@@ -585,7 +584,6 @@ function SeasonalTableItem({ props }: SeasonalTableItemProps) {
 
 	const { item, index, setIsLoadingEditForm, isLoadingEditForm, setIsEdited, isEdited, isEditedRef, contextMenuButtonRef, setContextMenu, response, setResponse } = props
 	const controls = useDragControls()
-	const statusColor = determineStatus(item)
 	
 	useEffect(() => {
 		setStartDate(
@@ -626,25 +624,24 @@ function SeasonalTableItem({ props }: SeasonalTableItemProps) {
 				{isLoadingEditForm.includes(`seasonal-title_${item.order}`) && (
 					<CircularProgress size={30} className="absolute top-[20%] left-[48%]" />
 				)}
-				<div
+				<IconButton
 					ref={element => (contextMenuButtonRef.current[index] = element)}
 					onClick={(e) => {
 						handleMenuClick(e, item)
 					}}
-					className="absolute flex items-center justify-center top-1/2 -translate-y-1/2 z-10 h-7 w-7 invisible group-hover:visible cursor-pointer rounded-full hover:bg-gray-500 transition-colors duration-150"
+					className="!absolute flex items-center justify-center top-1/2 left-2 -translate-y-1/2 z-10 h-7 w-7 invisible group-hover:visible cursor-pointer rounded-full"
 				>
 					<MoreVertIcon />
-				</div>
+				</IconButton>
 			</div>
 			<div
 				style={{
-					backgroundColor: statusColor,
 					opacity: isLoadingEditForm.includes(`seasonal-status_${item.order}`) ? 0.5 : 1
 				}}
 				onDoubleClick={() => {
 					setIsEdited(`seasonal-status_${item.title}_${item.order}`)
 				}}
-				className="relative flex items-center justify-center"
+				className={`relative flex items-center justify-center rounded-e-md lg:rounded-none ${determineStatus(item.status)}`}
 			>
 				<span className='flex items-center justify-center'>
 					{isEdited == `seasonal-status_${item.title}_${item.order}` && 
@@ -806,26 +803,15 @@ function SeasonalTableItem({ props }: SeasonalTableItemProps) {
 			</div>
 		)
 	}
+}
 
-	function determineStatus(item: Seasonal) {
-		let status
-		switch (item.status) {
-			case 'Not loaded':
-				status = 'crimson'
-				break
-			case 'Loaded':
-				status = 'orange'
-				break
-			case 'Watched':
-				status = 'green'
-				break
-			case 'Not aired':
-				status = 'black'
-				break
-			default:
-				status = ''
-		}
-		return status
+function determineStatus(status: string) {
+	switch (status) {
+		case 'Not loaded': return 'bg-red-600'
+		case 'Loaded': return 'bg-yellow-600'
+		case 'Watched': return 'bg-green-600'
+		case 'Not aired': return 'bg-black'
+		default: return ''
 	}
 }
 
@@ -860,7 +846,7 @@ function ContextMenu({
 		} catch (error) {
 			setLoading(false)
 			alert(error)
-			console.log(error)
+			console.error(error)
 			return
 		}
 	}

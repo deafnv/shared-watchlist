@@ -5,6 +5,7 @@ import { BaseSyntheticEvent, Dispatch, SetStateAction, useRef, useState } from '
 import axios from 'axios'
 import Dialog from '@mui/material/Dialog'
 import Button from '@mui/material/Button'
+import IconButton from '@mui/material/IconButton'
 import DoneIcon from '@mui/icons-material/Done'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import CloseIcon from '@mui/icons-material/Close'
@@ -88,12 +89,12 @@ export default function Genres({ response }: { response: Genres[] }) {
 					onClose={() => setAdvancedSearchResult(null)}
 				>
 					<div className='flex flex-col items-center p-6 bg-[#2e2e2e]'>
-						<div
+						<IconButton
 							onClick={() => setAdvancedSearchResult(null)}
-							className="absolute left-6 flex items-center justify-center h-11 w-11 rounded-full cursor-pointer transition-colors duration-150 hover:bg-slate-500"
+							className="!absolute top-4 left-6 flex items-center justify-center h-11 w-11 rounded-full cursor-pointer"
 						>
 							<ArrowBackIcon fontSize="large" />
-						</div>
+						</IconButton>
 						<h3 className="mb-4 font-semibold text-2xl">Result</h3>
 						<AdvancedSearchTable 
 							advancedSearchResult={advancedSearchResult} 
@@ -152,12 +153,12 @@ function AdvancedSearchModal({
 		>
 			<div className="fixed flex flex-col items-center gap-4 h-[85dvh] w-[45rem] max-w-[95%] px-10 py-6 bg-[#2e2e2e] rounded-md shadow-md shadow-black drop-shadow-md top-1/2 left-1/2 -translate-x-1/2 -translate-y-[45%]">
 				<h3 className="font-semibold text-2xl">Advanced Search</h3>
-				<div
+				<IconButton
 					onClick={() => setAdvancedSearch(false)}
-					className="absolute top-5 right-6 flex items-center justify-center h-11 w-11 rounded-full cursor-pointer transition-colors duration-150 hover:bg-slate-500"
+					className="!absolute top-5 right-6 flex items-center justify-center h-11 w-11 rounded-full cursor-pointer"
 				>
 					<CloseIcon fontSize="large" />
-				</div>
+				</IconButton>
 				<span>Includes: </span>
 				<hr className="w-full border-white border-t-[1px]" />
 				<form
@@ -223,12 +224,12 @@ function AdvancedSearchTable({
 	}
 
 	return (
-		<div className='p-2 bg-neutral-700 rounded-md'>
-			<div className="flex items-center justify-center border-b">
-				<div className="grow p-2 pt-1 text-lg text-center font-semibold">Title</div>
+		<div className='p-2 w-full bg-neutral-700 rounded-md'>
+			<div className="grid grid-cols-[2fr_1fr_1fr] border-b">
+				<div className="flex items-center justify-center p-2 pt-1 text-lg text-center font-semibold">Title</div>
 				<div
 					onClick={() => handleSort('rating1')}
-					className="relative p-2 pt-1 min-w-[8rem] text-lg text-center font-semibold cursor-pointer"
+					className="relative flex items-center justify-center p-2 pt-1 text-lg text-center font-semibold cursor-pointer"
 				>
 					Rating 1
 					{sortMethodRef.current.includes('rating1') && (
@@ -241,7 +242,7 @@ function AdvancedSearchTable({
 				</div>
 				<div
 					onClick={() => handleSort('rating2')}
-					className="relative p-2 pt-1 min-w-[8rem] text-lg text-center font-semibold cursor-pointer"
+					className="relative flex items-center justify-center p-2 pt-1 text-lg text-center font-semibold cursor-pointer"
 				>
 					Rating 2
 					{sortMethodRef.current.includes('rating2') && (
@@ -259,18 +260,18 @@ function AdvancedSearchTable({
 					return (
 						<li
 							key={index}
-							className="flex items-center justify-center p-0 text-center rounded-md transition-colors duration-75 hover:bg-zinc-800"
+							className="grid grid-cols-[2fr_1fr_1fr] p-0 text-center rounded-md transition-colors duration-75 hover:bg-zinc-800"
 						>
 							<Link
 								href={`/completed/anime/${item.id}`}
-								className="grow px-5 py-3 h-full w-full"
+								className="px-5 py-3 h-full w-full"
 							>
 								{item.title}
 							</Link>
-							<span className='min-w-[8rem] px-3 py-2 text-lg text-center'>
+							<span className='flex items-center justify-center px-3 py-2 text-center'>
 								{item.rating1}
 							</span>
-							<span className='min-w-[8rem] px-3 py-2 text-lg text-center'>
+							<span className='flex items-center justify-center px-3 py-2 text-center'>
 								{item.rating2}
 							</span>
 						</li>

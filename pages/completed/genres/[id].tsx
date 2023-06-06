@@ -120,11 +120,11 @@ export default function GenrePage({ genre, res }: { genre: Genres | null; res: C
 					</div>}
 				</header>
 				<section className='p-2 pt-1 bg-neutral-700 rounded-md'>
-					<div className="flex items-center justify-center border-b">
-						<div className="grow p-3 text-lg text-center font-semibold">Title</div>
+					<div className="grid grid-cols-[2fr_1fr_1fr] border-b">
+						<div className="flex items-center justify-center p-3 text-lg text-center font-semibold">Title</div>
 						<div
 							onClick={() => handleSort('rating1')}
-							className="relative p-3 min-w-[8rem] text-lg text-center font-semibold cursor-pointer"
+							className="relative flex items-center justify-center p-3 text-lg text-center font-semibold cursor-pointer"
 						>
 							Rating 1
 							{sortMethodRef.current.includes('rating1') && (
@@ -137,7 +137,7 @@ export default function GenrePage({ genre, res }: { genre: Genres | null; res: C
 						</div>
 						<div
 							onClick={() => handleSort('rating2')}
-							className="relative p-3 min-w-[8rem] text-lg text-center font-semibold cursor-pointer"
+							className="relative flex items-center justify-center p-3 text-lg text-center font-semibold cursor-pointer"
 						>
 							Rating 2
 							{sortMethodRef.current.includes('rating2') && (
@@ -154,18 +154,18 @@ export default function GenrePage({ genre, res }: { genre: Genres | null; res: C
 							return (
 								<li
 									key={index}
-									className="flex items-center justify-center p-0 text-center hover:bg-zinc-800 rounded-md transition-colors duration-75"
+									className="grid grid-cols-[2fr_1fr_1fr] p-0 text-center hover:bg-zinc-800 rounded-md transition-colors duration-75"
 								>
 									<Link
 										href={`/completed/anime/${item.id}`}
-										className="grow px-5 py-3 h-full w-full"
+										className="px-5 py-3 h-full w-full"
 									>
 										{item.title}
 									</Link>
-									<span className='min-w-[8rem] p-2 text-lg text-center'>
+									<span className='flex items-center justify-center p-2 text-center'>
 										{item.rating1}
 									</span>
-									<span className='min-w-[8rem] p-2 text-lg text-center'>
+									<span className='flex items-center justify-center p-2 text-center'>
 										{item.rating2}
 									</span>
 								</li>

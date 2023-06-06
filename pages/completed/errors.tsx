@@ -22,6 +22,11 @@ interface ErrorItem {
 
 export async function getStaticProps() {
 	const completedWithDetails = await prisma.completed.findMany({
+		where: {
+			details: {
+				isNot: null
+			}
+		},
 		include: {
 			details: true
 		},
@@ -117,17 +122,20 @@ export default function CompletedErrors({ response }: { response: ErrorItem[] })
 								key={item.id}
 								className='grid grid-cols-[5fr_5fr_1fr_3fr] xl:grid-cols-[26rem_26rem_10rem_12rem] text-sm md:text-base min-w-[95dvw] xl:min-w-0 sm:w-min group'
 							>
-								<span className="flex items-center justify-center sm:px-3 py-3 h-full text-xs md:text-base text-center group-hover:bg-zinc-800 rounded-s-md">
+								<Link 
+									href={`/completed/anime/${item.id}`}
+									className="flex items-center justify-center sm:px-3 py-3 h-full text-xs md:text-base text-center text-pink-300 hover:underline group-hover:bg-zinc-800 rounded-s-md"
+								>
 									{item.entryTitle}
-								</span>
-								<Link
+								</Link>
+								<a
 									href={`https://myanimelist.net/anime/${item.mal_id}`}
 									target="_blank"
 									rel='noopener noreferrer'
-									className="flex items-center justify-center sm:px-3 py-3 h-full text-xs md:text-base text-center link group-hover:bg-zinc-800"
+									className="flex items-center justify-center sm:px-3 py-3 h-full text-xs md:text-base text-center text-blue-300 hover:underline group-hover:bg-zinc-800"
 								>
 									{item.retrievedTitle}
-								</Link>
+								</a>
 								<span className="flex items-center justify-center p-2 h-full text-xs md:text-base text-center group-hover:bg-zinc-800">
 									{item.distance}
 								</span>

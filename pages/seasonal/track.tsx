@@ -7,6 +7,7 @@ import axios from 'axios'
 import { AnimatePresence, motion } from 'framer-motion'
 import Dialog from '@mui/material/Dialog'
 import Button from '@mui/material/Button'
+import IconButton from '@mui/material/IconButton'
 import CloseIcon from '@mui/icons-material/Close'
 import EditIcon from '@mui/icons-material/Edit'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
@@ -44,7 +45,7 @@ export default function SeasonalDetailsPage({ res }: { res: SeasonalDetails[] })
 	const contextMenuRef = useRef<HTMLMenuElement>(null)
 	const contextMenuButtonRef = useRef<any>([])
 	const refreshReloadMenuRef = useRef<HTMLDivElement>(null)
-	const refreshReloadMenuButtonRef = useRef<HTMLDivElement>(null)
+	const refreshReloadMenuButtonRef = useRef<HTMLButtonElement>(null)
 
 	const [response, setResponse] = useState(res)
 	const [lastUpdatedDates, setLastUpdatedDates] = useState<{ [key: number]: string }>()
@@ -107,13 +108,13 @@ export default function SeasonalDetailsPage({ res }: { res: SeasonalDetails[] })
 				<main className="flex flex-col items-center justify-center p-6">
 					<div className="relative">
 						<h2 className="mb-6 text-3xl">Episode Tracker</h2>
-						<div
+						<IconButton
 							ref={refreshReloadMenuButtonRef}
 							onClick={handleRefreshReloadMenu}
-							className="absolute top-[0.3rem] -right-10 z-10 flex items-center justify-center h-7 w-7 cursor-pointer rounded-full hover:bg-gray-500"
+							className="!absolute top-[0.3rem] -right-10 z-10 flex items-center justify-center h-7 w-7 cursor-pointer rounded-full"
 						>
 							<MoreVertIcon sx={{ fontSize: 28 }} />
-						</div>
+						</IconButton>
 					</div>
 					<span className='absolute font-semibold text-2xl top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2'>No details loaded</span>
 					<RefreshReloadMenu 
@@ -136,14 +137,13 @@ export default function SeasonalDetailsPage({ res }: { res: SeasonalDetails[] })
 			<main className="flex flex-col items-center justify-center mb-24 px-6 py-2">
 				<header className='flex items-center mb-2'>
 					<h2 className="p-2 text-2xl sm:text-3xl">Episode Tracker</h2>
-					<div
+					<IconButton
 						ref={refreshReloadMenuButtonRef}
-						tabIndex={0}
 						onClick={handleRefreshReloadMenu}
-						className="flex items-center justify-center h-7 w-7 cursor-pointer rounded-full hover:bg-gray-500 transition-colors duration-150 translate-y-0 sm:translate-y-[2px]"
+						className="flex items-center justify-center h-7 w-7 cursor-pointer rounded-full translate-y-0 sm:translate-y-[2px]"
 					>
 						<MoreVertIcon sx={{ fontSize: 28 }} />
-					</div>
+					</IconButton>
 				</header>
 				<div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
 					{response.map((item, index) => (
@@ -157,15 +157,15 @@ export default function SeasonalDetailsPage({ res }: { res: SeasonalDetails[] })
 							>
 								{item.mal_title}
 							</span>
-							<div
+							<IconButton
 								ref={element => (contextMenuButtonRef.current[index] = element)}
 								onClick={(e) => {
 									handleMenuClick(e, item)
 								}}
-								className="absolute top-3 right-3 z-10 flex items-center justify-center h-7 w-7 invisible group-hover:visible cursor-pointer rounded-full hover:bg-gray-500"
+								className="!absolute top-3 right-4 z-10 flex items-center justify-center h-6 w-6 opacity-0 group-hover:opacity-100 cursor-pointer rounded-full transition-opacity duration-75"
 							>
 								<MoreVertIcon />
-							</div>
+							</IconButton>
 							<div className="flex">
 								<div className='relative h-[10rem] sm:h-[13rem] w-[12rem] sm:w-[15rem] overflow-hidden'>
 									<Image
@@ -218,13 +218,13 @@ export default function SeasonalDetailsPage({ res }: { res: SeasonalDetails[] })
 									{item.message?.includes('Exempt') && (
 										<span className="ml-2 text-lg font-semibold">(Edited)</span>
 									)}
-									<div
+									<IconButton
 										title='Edit episode count'
 										onClick={() => setEditEpisodesCurrent(item)}
-										className="absolute right-4 flex items-center justify-center h-6 w-6 rounded-full cursor-pointer transition-colors duration-150 invisible group-hover:visible hover:bg-slate-500"
+										className="!absolute right-4 flex items-center justify-center h-6 w-6 rounded-full cursor-pointer transition-colors invisible group-hover:visible group/icon"
 									>
-										<EditIcon fontSize="small" className="text-slate-500 hover:text-white" />
-									</div>
+										<EditIcon fontSize="small" className="text-white/50 group-hover/icon:text-white transition-colors" />
+									</IconButton>
 								</div>
 								<EpisodeTable 
 									item={item}
@@ -391,11 +391,13 @@ function EpisodeCountEditor({
 		>
 			<div className='flex flex-col items-center gap-4 p-6 py-10'>
 				<h3 className="font-bold text-2xl">Manual Edit Episodes</h3>
-				<CloseIcon 
-					fontSize="large" 
+				<IconButton
+					size='small'
 					onClick={() => setEditEpisodesCurrent(null)}
-					className='absolute top-6 right-6 cursor-pointer hover:fill-red-500'
-				/>
+					className='!absolute top-6 right-6 cursor-pointer'
+				>
+					<CloseIcon fontSize="large" />
+				</IconButton>
 				<span>{editEpisodesCurrent?.mal_title}</span>
 				<form onSubmit={handleEditSubmit}>
 					<label className="flex flex-col items-center gap-2">
@@ -500,18 +502,9 @@ function EpisodeTable({
 							</thead>
 							<tbody>
 								<tr>
-									<td
-										style={{ background: determineEpisode(item?.latest_episode ?? 0, counter - 3) }}
-										className="p-6 rounded-s-md"
-									/>
-									<td
-										style={{ background: determineEpisode(item?.latest_episode ?? 0, counter - 2) }}
-										className="p-6"
-									/>
-									<td
-										style={{ background: determineEpisode(item?.latest_episode ?? 0, counter - 1) }}
-										className="p-6 rounded-e-md"
-									/>
+									<td className={`p-6 rounded-s-md ${determineEpisode(item?.latest_episode ?? 0, counter - 3)}`} />
+									<td className={`p-6 ${determineEpisode(item?.latest_episode ?? 0, counter - 2)}`} />
+									<td className={`p-6 rounded-e-md ${determineEpisode(item?.latest_episode ?? 0, counter - 1)}`} />
 								</tr>
 							</tbody>
 						</table>
@@ -692,6 +685,6 @@ function ValidateErrorDialog({
 function determineEpisode(latestEpisode: number, index: number) {
 	const accountFor2Cour = latestEpisode > 12 ? latestEpisode - 12 : latestEpisode
 	if (accountFor2Cour >= index) {
-		return 'red'
-	} else return 'black'
+		return 'bg-red-600'
+	} else return 'bg-black'
 }

@@ -7,6 +7,7 @@ import Dialog from '@mui/material/Dialog'
 import DialogTitle from '@mui/material/DialogTitle'
 import DialogActions from '@mui/material/DialogActions'
 import CircularProgress from '@mui/material/CircularProgress'
+import IconButton from '@mui/material/IconButton'
 import DoneIcon from '@mui/icons-material/Done'
 import CancelIcon from '@mui/icons-material/Cancel'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
@@ -116,7 +117,7 @@ export default function PTW() {
 			getMovies()
 			await axios
 				.get(`${process.env.NEXT_PUBLIC_UPDATE_URL}/refresh`)
-				.catch((error) => console.log(error))
+				.catch((error) => console.error(error))
 		}
 		initializePage()
 
@@ -243,31 +244,28 @@ export default function PTW() {
 							<h2 className="p-2 text-2xl sm:text-3xl">
 								Plan to Watch (Rolled)
 							</h2>
-							<div
-						title='Add new entry' 
-						tabIndex={0}
-						onClick={(e) => handleAddMenu(e, responseRolled, 'rolled', setIsAdded)} 
-						className='flex items-center justify-center h-7 w-7 cursor-pointer rounded-full hover:bg-gray-500 transition-colors duration-150 sm:translate-y-[2px]'
-					>
-						<AddIcon />
-					</div>
+							<IconButton
+								title='Add new entry' 
+								onClick={(e) => handleAddMenu(e, responseRolled, 'rolled', setIsAdded)} 
+								className='flex items-center justify-center h-7 w-7 cursor-pointer rounded-full sm:translate-y-[2px]'
+							>
+								<AddIcon />
+							</IconButton>
 							{sortMethodRef.current &&
-							<div
+							<IconButton
 								title="Reset sort"
-								tabIndex={0}
 								onClick={() => {
 									sortMethodRef.current = ''
 									setResponseRolled(responseRolled1)
 								}}
-								className="flex items-center justify-center h-7 w-7 cursor-pointer rounded-full hover:bg-gray-500 transition-colors duration-150 translate-y-[1px]"
+								className="flex items-center justify-center h-7 w-7 cursor-pointer rounded-full translate-y-[1px]"
 							>
-								<RefreshIcon sx={{ fontSize: 28 }} />
-							</div>}
+								<RefreshIcon />
+							</IconButton>}
 						</header>
 						<div className='p-2 bg-neutral-700 rounded-md'>
 							<div className="grid grid-cols-[4fr_1.1fr] min-w-0 w-[80dvw] lg:w-[40rem] border-b">
 								<span 
-									tabIndex={0}
 									onClick={() => {
 										sortListByTitlePTW(
 											responseRolled,
@@ -453,14 +451,13 @@ function PTWTable({
 		<section className="relative flex flex-col items-center">
 			<header className='flex items-center'>
 				<h2 className="p-2 text-2xl sm:text-3xl">{tableName}</h2>
-				<div
+				<IconButton
 					title='Add new entry' 
-					tabIndex={0}
 					onClick={(e) => handleAddMenu(e, response, tableId, setIsAdded)} 
-					className='flex items-center justify-center h-7 w-7 cursor-pointer rounded-full hover:bg-gray-500 transition-colors duration-150 sm:translate-y-[2px]'
+					className='flex items-center justify-center h-7 w-7 cursor-pointer rounded-full sm:translate-y-[2px]'
 				>
 					<AddIcon />
-				</div>
+				</IconButton>
 			</header>
 			<div className='p-2 bg-neutral-700 rounded-md'>
 				<table>
@@ -497,12 +494,12 @@ function PTWTable({
 									{isLoadingEditForm.includes(`${tableId}_title_${item.id}`) && (
 										<CircularProgress size={30} className="absolute top-[20%] left-[48%]" />
 									)}
-									<div
+									<IconButton
 										onClick={() => handleDeleteUnrolled(tableId, item)}
-										className="absolute flex items-center justify-center top-1/2 right-1 -translate-y-1/2 z-10 h-7 w-7 invisible group-hover:visible cursor-pointer rounded-full hover:bg-gray-500 transition-colors duration-150"
+										className="!absolute flex items-center justify-center top-1/2 right-1 -translate-y-1/2 z-10 h-7 w-7 invisible group-hover:visible cursor-pointer rounded-full"
 									>
 										<DeleteOutlineIcon />
-									</div>
+									</IconButton>
 								</td>
 							</tr>
 						))}
@@ -1004,7 +1001,7 @@ function ConfirmModal({
 				setLoading(false)
 			} catch (error) {
 				setLoading(false)
-				console.log(error)
+				console.error(error)
 				alert(error)
 			}
 		} else {
@@ -1084,15 +1081,15 @@ function PTWRolledTableItem({ props, editFormParams }: PTWRolledTableItemProps) 
 				{isLoadingEditForm.includes(`rolled_title_${item.id}`) && (
 					<CircularProgress size={30} className="absolute top-[20%] left-[48%]" />
 				)}
-				<div
+				<IconButton
 					ref={element => (contextMenuButtonRef.current[index] = element)}
 					onClick={(e) => {
 						handleMenuClick(e, item)
 					}}
-					className="absolute flex items-center justify-center top-1/2 left-2 -translate-y-1/2 z-10 h-7 w-7 invisible group-hover:visible cursor-pointer rounded-full hover:bg-gray-500 transition-colors duration-150"
+					className="!absolute flex items-center justify-center top-1/2 left-2 -translate-y-1/2 z-10 h-7 w-7 invisible group-hover:visible cursor-pointer rounded-full"
 				>
 					<MoreVertIcon />
-				</div>
+				</IconButton>
 				<div
 					onPointerDown={(e) => controls.start(e)}
 					style={{ visibility: sortMethodRef.current ? 'hidden' : 'visible' }}
@@ -1345,7 +1342,7 @@ async function saveReorder(
 	} catch (error) {
 		setLoading(false)
 		alert(error)
-		console.log(error)
+		console.error(error)
 		return
 	}
 }
