@@ -1,10 +1,9 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import axios from 'axios'
-import { createClient } from '@supabase/supabase-js'
-import { Database } from '@/lib/database.types'
+import prisma from '@/lib/prisma'
 import { authorizeRequest } from '@/lib/authorize'
 
-export default async function BatchUpdateSheet(req: NextApiRequest, res: NextApiResponse) {
+export default async function FixSeasonalError(req: NextApiRequest, res: NextApiResponse) {
 	const authResult = authorizeRequest(req)
 	if (typeof authResult !== 'string') return res.status(authResult.code).send(authResult.message)
 	const { body, method } = req
@@ -29,24 +28,24 @@ export default async function BatchUpdateSheet(req: NextApiRequest, res: NextApi
 			mal_title: data?.title,
 			image_url: data?.main_picture.large ?? '',
 			start_date: data?.start_date ?? '',
-			broadcast: broadcast,
-			num_episodes: data?.num_episodes,
+			broadcast: broadcast ?? '',
+			num_episode: data?.num_episodes,
 			message: ''
 		}
 
-		//* Through testing, these API routes with restricted queries like UPDATE, DELETE, or INSERT fails silently if the public API key is provided instead of the service key
-		const supabase = createClient<Database>(
-			process.env.NEXT_PUBLIC_SUPABASE_URL!,
-			process.env.SUPABASE_SERVICE_API_KEY!
-		)
-		await supabase.from('SeasonalDetails').delete().eq('title', title)
+		await prisma.seasonalDetails.delete({
+			where: {
+				title: title
+			}
+		})
 
-		await supabase.from('SeasonalDetails').upsert(anime)
+		await prisma.seasonalDetails.create({
+			data: anime
+		})
 
-		await res.revalidate('/seasonal/track')
 		return res.status(200).send(anime)
 	} catch (error) {
-		console.log(error)
+		console.error(error)
 		return res.status(500).send(error)
 	}
 }

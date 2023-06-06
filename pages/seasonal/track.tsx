@@ -26,8 +26,7 @@ interface SettingsMenuPos {
 	display: boolean;
 }
 
-//TODO: Consider adding a soft reload, so that status gets updated when tracking episodes, also handling the end of shows
-export const getStaticProps = async () => {
+export const getServerSideProps = async () => {
 	const seasonalDetails = await prisma.seasonalDetails.findMany({
 		orderBy: {
 			start_date: 'asc'
@@ -302,9 +301,6 @@ function RefreshReloadMenu({
 		try {
 			setLoading(true)
 			await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/seasonal/batchtrack`, { withCredentials: true })
-			await axios.post('/api/revalidate', {
-				route: '/seasonal/track'
-			})
 			router.reload()
 		} catch (error) {
 			setLoading(false)
@@ -370,13 +366,12 @@ function EpisodeCountEditor({
 		setLoading(true)
 		const editLatestEpisode = parseInt(e.target[0].value)
 		try {
-			await axios.post('/api/updatedb', {
+			await axios.post('/api/seasonaldetails/changeerror', {
 				content: { 
 					latest_episode: editLatestEpisode, 
 					message: 'Exempt:Manual Edit',
-					last_updated: new Date().getTime()
+					last_updated: new Date().toISOString()
 				},
-				table: 'SeasonalDetails',
 				id: editEpisodesCurrent?.mal_id,
 				compare: 'mal_id'
 			})
@@ -387,7 +382,6 @@ function EpisodeCountEditor({
 		}
 	}
 
-	let counter = 1
 	return (
 		<Dialog
 			fullWidth
@@ -432,9 +426,7 @@ function ContextMenu({
 			await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/seasonal/trackitem`, {
 				id: contextMenu.currentItem?.mal_id
 			}, { withCredentials: true })
-			await axios.post('/api/revalidate', {
-				route: '/seasonal/track'
-			})
+
 			router.reload()
 		} catch (error) {
 			setLoading(false)
@@ -578,7 +570,7 @@ function ValidateErrorDialog({
 		}
 
 		try {
-			await axios.post('/api/seasonaldetails/changevalidated', {
+			await axios.post('/api/seasonaldetails/fixerror', {
 				title: item1.title,
 				mal_id: idInput
 			})
@@ -592,9 +584,8 @@ function ValidateErrorDialog({
 	async function handleIgnore() {
 		try {
 			setLoading(true)
-			await axios.post('/api/updatedb', {
+			await axios.post('/api/seasonaldetails/changeerror', {
 				content: { message: '' },
-				table: 'SeasonalDetails',
 				id: item1.mal_id,
 				compare: 'mal_id'
 			})

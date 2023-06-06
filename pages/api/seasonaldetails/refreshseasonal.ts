@@ -80,7 +80,6 @@ export default async function RefreshSeasonal(req: NextApiRequest, res: NextApiR
 			data: malResponse
 		})
 
-		await res.revalidate('/seasonal/track')
 		return res.status(200).send(malResponse)
 	} catch (error) {
 		console.error(error)
