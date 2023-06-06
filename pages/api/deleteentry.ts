@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import { google } from 'googleapis'
-import { Database } from '@/lib/database.types'
+import { PTWRolled, PTWCasual, Seasonal } from '@prisma/client' 
 import { authorizeRequest } from '@/lib/authorize'
 
 export default async function DeleteEntry(req: NextApiRequest, res: NextApiResponse) {
@@ -19,102 +19,96 @@ export default async function DeleteEntry(req: NextApiRequest, res: NextApiRespo
 
 	if (type === 'PTW') {
 		const toDeletePTWRolled = content.filter(
-			(item: Database['public']['Tables']['PTW-Rolled']['Row']) => item.id != id
+			(item: PTWRolled) => item.id != id
 		)
 		toDeletePTWRolled.push({ id: toDeletePTWRolled.length, status: 'Empty', title: '' })
 		const endRowIndex1 = content.length + 1
 		cells = `N2:N${endRowIndex1}`
 
-		rowsToInsert = toDeletePTWRolled.map(
-			(item: Database['public']['Tables']['PTW-Rolled']['Row']) => {
-				const { red, green, blue } = determineStatus(item)
-				return {
-					values: [
-						{
-							userEnteredValue: {
-								stringValue: item.title
-							},
-							userEnteredFormat: {
-								backgroundColor: {
-									red,
-									green,
-									blue
-								}
+		rowsToInsert = toDeletePTWRolled.map((item: PTWRolled) => {
+			const { red, green, blue } = determineStatus(item)
+			return {
+				values: [
+					{
+						userEnteredValue: {
+							stringValue: item.title
+						},
+						userEnteredFormat: {
+							backgroundColor: {
+								red,
+								green,
+								blue
 							}
 						}
-					]
-				}
+					}
+				]
 			}
-		)
+		})
 	}
 	else if (type === 'PTW_UNROLLED') {
 		const toDeletePTWUnrolled = content.filter(
-			(item: Database['public']['Tables']['PTW-Casual']['Row']) => item.id != id
+			(item: PTWCasual) => item.id != id
 		)
 		toDeletePTWUnrolled.push({ id: toDeletePTWUnrolled.length, title: '' })
 		const { column, startRow } = getColumnRow(tableId)
 		const endRowIndex1 = parseInt(startRow) + content.length - 1
 		cells = `${column}${startRow}:${column}${endRowIndex1}`
 		
-		rowsToInsert = toDeletePTWUnrolled.map(
-			(item: Database['public']['Tables']['PTW-Casual']['Row']) => {
-				return {
-					values: [
-						{
-							userEnteredValue: {
-								stringValue: item.title
-							},
-							userEnteredFormat: {
-								backgroundColor: {
-									red: 0.8,
-									green: 0.8,
-									blue: 0.8
-								}
+		rowsToInsert = toDeletePTWUnrolled.map((item: PTWCasual) => {
+			return {
+				values: [
+					{
+						userEnteredValue: {
+							stringValue: item.title
+						},
+						userEnteredFormat: {
+							backgroundColor: {
+								red: 0.8,
+								green: 0.8,
+								blue: 0.8
 							}
 						}
-					]
-				}
+					}
+				]
 			}
-		)
+		})
 	}
 	else if (type === 'SEASONAL') {
 		const completedSeasonal = content.filter(
-			(item: Database['public']['Tables']['PTW-CurrentSeason']['Row']) => item.title != id //? id here is provided as entry title
+			(item: Seasonal) => item.title != id //? id here is provided as entry title
 		)
 		completedSeasonal.push({ status: '', title: '', order: completedSeasonal.length + 1 })
 		const endRowIndex1 = content.length + 1
 		cells = `O2:P${endRowIndex1}`
 
-		rowsToInsert = completedSeasonal.map(
-			(item: Database['public']['Tables']['PTW-CurrentSeason']['Row']) => {
-				const { red, green, blue } = determineStatus(item)
-				return {
-					values: [
-						{
-							userEnteredValue: {
-								stringValue: item.title
-							},
-							userEnteredFormat: {
-								backgroundColor: {
-									red: 0.8,
-									green: 0.8,
-									blue: 0.8
-								}
-							}
+		rowsToInsert = completedSeasonal.map((item: Seasonal) => {
+			const { red, green, blue } = determineStatus(item)
+			return {
+				values: [
+					{
+						userEnteredValue: {
+							stringValue: item.title
 						},
-						{
-							userEnteredFormat: {
-								backgroundColor: {
-									red,
-									green,
-									blue
-								}
+						userEnteredFormat: {
+							backgroundColor: {
+								red: 0.8,
+								green: 0.8,
+								blue: 0.8
 							}
 						}
-					]
-				}
+					},
+					{
+						userEnteredFormat: {
+							backgroundColor: {
+								red,
+								green,
+								blue
+							}
+						}
+					}
+				]
 			}
-		)
+		})
 	}
 
 	if (!cells || !rowsToInsert) return res.status(500)

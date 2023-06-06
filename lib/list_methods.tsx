@@ -1,7 +1,6 @@
 import { Dispatch, MutableRefObject, SetStateAction } from 'react'
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown'
-import { Database } from './database.types'
-import { CompletedFields, TitleItem } from '@/lib/types'
+import { CompletedFields } from '@/lib/types'
 import { Completed, PTWRolled } from '@prisma/client'
 
 export function getRandomInt(max: number) {
@@ -34,8 +33,8 @@ export function SortSymbol({
 	type,
 	sortMethodRef
 }: {
-	type: CompletedFields
-	sortMethodRef: MutableRefObject<`${'asc' | 'desc'}_${CompletedFields}` | ''> 
+	type: CompletedFields | 'status'
+	sortMethodRef: MutableRefObject<`${'asc' | 'desc'}_${CompletedFields}` | ''> | MutableRefObject<`${'asc' | 'desc'}_status` | ''>
 }) {
 	if (sortMethodRef.current.includes(type)) {
 		if (sortMethodRef.current.includes(`asc_${type}`)) {

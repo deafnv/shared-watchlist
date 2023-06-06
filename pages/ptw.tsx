@@ -19,7 +19,6 @@ import { PTWCasual, PTWMovies, PTWNonCasual, PTWRolled } from '@prisma/client'
 import { createClient } from '@supabase/supabase-js'
 import { EditFormParams, PTWEdited, PTWRolledTableItemProps, PTWItem, PTWTables } from '@/lib/types'
 import { getRandomInt, PTWRolledFields, sortListByTitlePTW, SortSymbol } from '@/lib/list_methods'
-import { Database } from '@/lib/database.types'
 import { apiSocket, updaterSocket } from '@/lib/socket'
 import { useLoading } from '@/components/LoadingContext'
 
@@ -95,7 +94,7 @@ export default function PTW() {
 	}
 
 	useEffect(() => {
-		const supabase = createClient<Database>(
+		const supabase = createClient(
 			process.env.NEXT_PUBLIC_SUPABASE_URL!,
 			process.env.NEXT_PUBLIC_SUPABASE_API_KEY!
 		)
