@@ -4,17 +4,17 @@ import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
 import RefreshIcon from '@mui/icons-material/Refresh'
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown'
-import { createClient } from '@supabase/supabase-js'
-import { Database } from '@/lib/database.types'
+import { Completed, Genres } from '@prisma/client'
+import prisma from '@/lib/prisma'
 
 export async function getStaticPaths() {
-	const supabase = createClient<Database>(
-		process.env.NEXT_PUBLIC_SUPABASE_URL!,
-		process.env.NEXT_PUBLIC_SUPABASE_API_KEY!
-	)
-	const { data } = await supabase.from('Genres').select().order('id')
+	const genres = await prisma.genres.findMany({
+		orderBy: {
+			id: 'asc'
+		}
+	})
 
-	const paths = data?.map((item) => ({
+	const paths = genres?.map((item) => ({
 		params: { id: item.id.toString() }
 	}))
 
@@ -24,61 +24,47 @@ export async function getStaticPaths() {
 	}
 }
 
-export function getStaticProps(context: GetStaticPropsContext) {
+export async function getStaticProps(context: GetStaticPropsContext) {
+	const id = context.params?.id as string
+	const genre = await prisma.genres.findUnique({
+		where: {
+			id: parseInt(id)
+		}
+	})
+	const completedOfGenre = await prisma.completed.findMany({
+		where: {
+			genres: {
+				some: {
+					genre_id: {
+						equals: parseInt(id)
+					}
+				}
+			}
+		}
+	})
+
 	return {
 		props: {
-			id: context.params?.id
+			genre,
+			res: JSON.parse(JSON.stringify(completedOfGenre))
 		},
 		revalidate: 360
 	}
 }
 
-export default function GenrePage({ id }: { id: number }) {
+export default function GenrePage({ genre, res }: { genre: Genres | null; res: Completed[] }) {
 	const sortMethodRef = useRef('')
 
-	const [response, setResponse] = useState<({ id: number } & { title: string | null } & { rating1: string | null } & { rating2: string | null } & { Genres: { name: string | null } | { name: string | null }[] | null })[] | null>()
-	const [response1, setResponse1] = useState<({ id: number } & { title: string | null } & { rating1: string | null } & { rating2: string | null } & { Genres: { name: string | null } | { name: string | null }[] | null })[] | null>()
-
-	useEffect(() => {
-		const supabase = createClient<Database>(
-			process.env.NEXT_PUBLIC_SUPABASE_URL!,
-			process.env.NEXT_PUBLIC_SUPABASE_API_KEY!
-		)
-		const getData = async () => {
-			const { data } = await supabase
-				.from('Completed')
-				.select(
-					`
-          id,
-          title,
-					rating1,
-					rating1average,
-					rating2,
-					rating2average,
-          Genres!inner (
-            name
-          )
-        `
-				)
-				.eq('Genres.id', id)
-
-			setResponse(data!)
-			setResponse1(data!)
-		}
-		getData()
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [])
+	const [response, setResponse] = useState(res)
 
 	if (!response?.[0]) {
 		return (
 			<>
-				<Head>
+				<Head>s
 					<title>Watchlist</title>
 					<meta
 						name="description"
-						content={`${
-							(response?.[0]?.Genres as { name: string | null }[])?.[0].name
-						} animes in Completed`}
+						content={`${genre?.name} animes in Completed`}
 					/>
 				</Head>
 
@@ -111,16 +97,14 @@ export default function GenrePage({ id }: { id: number }) {
 				<title>Watchlist</title>
 				<meta
 					name="description"
-					content={`${
-						(response?.[0]?.Genres as { name: string | null }[])?.[0].name
-					} animes in Completed`}
+					content={`${genre?.name} animes in Completed`}
 				/>
 			</Head>
 
 			<main className="flex flex-col items-center justify-center mx-auto md:w-4/5 sm:w-full">
 				<header className='flex items-center mb-3'>
 					<h2 className="p-2 text-2xl sm:text-3xl">
-						{(response?.[0]?.Genres as { name: string | null }[])?.[0].name}
+						{genre?.name}
 					</h2>
 					{sortMethodRef.current &&
 					<div
@@ -128,7 +112,7 @@ export default function GenrePage({ id }: { id: number }) {
 						tabIndex={0}
 						onClick={() => {
 							sortMethodRef.current = ''
-							setResponse(response1)
+							setResponse(res)
 						}}
 						className="flex items-center justify-center h-7 w-7 cursor-pointer rounded-full hover:bg-gray-500 transition-colors duration-150 translate-y-[1px]"
 					>

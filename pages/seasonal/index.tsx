@@ -14,9 +14,9 @@ import AddIcon from '@mui/icons-material/Add'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
 import CloseIcon from '@mui/icons-material/Close'
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator'
-import { createClient } from '@supabase/supabase-js'
-import { Database } from '@/lib/database.types'
-import { CurrentSeasonIsEdited, CurrentSeasonIsLoading, CurrentSeasonWithDetails, SeasonalTableItemProps } from '@/lib/types'
+import { Seasonal } from '@prisma/client'
+import { CurrentSeasonIsEdited, CurrentSeasonIsLoading, SeasonalWithDetails, SeasonalTableItemProps } from '@/lib/types'
+import { updaterSocket } from '@/lib/socket'
 import { useLoading } from '@/components/LoadingContext'
 
 //TODO: Allow sort, and show save changes button to save sort
@@ -36,10 +36,10 @@ export default function Seasonal() {
 	const contextMenuRef = useRef<HTMLDivElement>(null)
 	const contextMenuButtonRef = useRef<any>([])
 	const isEditedRef = useRef<CurrentSeasonIsEdited>('')
-	const entryToDelete = useRef<CurrentSeasonWithDetails | null>(null)
+	const entryToDelete = useRef<SeasonalWithDetails | null>(null)
 
-	const [response, setResponse] = useState<CurrentSeasonWithDetails[]>()
-	const [response1, setResponse1] = useState<CurrentSeasonWithDetails[]>()
+	const [response, setResponse] = useState<SeasonalWithDetails[]>()
+	const [response1, setResponse1] = useState<SeasonalWithDetails[]>()
 	const [isLoadingClient, setIsLoadingClient] = useState(true)
 	const [isEdited, setIsEditedState] = useState<CurrentSeasonIsEdited>('')
 	const [isLoadingEditForm, setIsLoadingEditForm] = useState<CurrentSeasonIsLoading[]>([])
@@ -48,7 +48,7 @@ export default function Seasonal() {
 	const [contextMenu, setContextMenu] = useState<{
 		top: number
 		left: number
-		currentItem: CurrentSeasonWithDetails | null
+		currentItem: SeasonalWithDetails | null
 	}>({ top: 0, left: 0, currentItem: null })
 	const [confirmModal, setConfirmModal] = useState<'' | 'DELETE' | 'DELETEALL'>('')
 	const [editModal, setEditModal] = useState(false)
@@ -68,18 +68,11 @@ export default function Seasonal() {
 	}
 
 	useEffect(() => {
-		const supabase = createClient<Database>(
-			process.env.NEXT_PUBLIC_SUPABASE_URL!,
-			process.env.NEXT_PUBLIC_SUPABASE_API_KEY!
-		)
 		const getData = async () => {
-			const { data } = await supabase
-				.from('PTW-CurrentSeason')
-				.select('*, SeasonalDetails!left( mal_id, start_date, latest_episode )')
-				.order('order', { ascending: true })
+			const { data } = await axios.get(`${process.env.NEXT_PUBLIC_UPDATE_URL}/table/seasonal`)
 
-			setResponse(data as CurrentSeasonWithDetails[])
-			setResponse1(data as CurrentSeasonWithDetails[])
+			setResponse(data)
+			setResponse1(data)
 			setIsLoadingClient(false)
 
 			await axios
@@ -88,24 +81,17 @@ export default function Seasonal() {
 		}
 		getData()
 
-		const databaseChannel = supabase
-			.channel('public:PTW-CurrentSeason')
-			.on(
-				'postgres_changes',
-				{ event: '*', schema: 'public', table: 'PTW-CurrentSeason' },
-				async (payload) => {
-					const { data } = await supabase
-						.from('PTW-CurrentSeason')
-						.select('*, SeasonalDetails!left( mal_id, start_date, latest_episode )')
-						.order('order', { ascending: true })
-					setResponse(data as CurrentSeasonWithDetails[])
-				}
-			)
-			.subscribe()
+		const updaterSocketHandler = () => getData()
+
+		const initializeSocket = async () => {
+			updaterSocket.connect()
+			updaterSocket.on('Seasonal', updaterSocketHandler)
+		}
+		initializeSocket()
 
 		const refresh = setInterval(
 			() => axios.get(`${process.env.NEXT_PUBLIC_UPDATE_URL}/refresh`),
-			3500000
+			1700000
 		)
 		
 		const closeMenusOnClick = (e: MouseEvent) => {
@@ -151,7 +137,8 @@ export default function Seasonal() {
 		window.addEventListener('keydown', closeMenusOnEscape)
 
 		return () => {
-			databaseChannel.unsubscribe()
+			updaterSocket.off('Seasonal', updaterSocketHandler)
+			updaterSocket.disconnect()
 			clearInterval(refresh)
 			document.removeEventListener('click', closeMenusOnClick)
 			window.removeEventListener('focusout', closeMenusOnFocusout)
@@ -368,7 +355,7 @@ function AddRecordMenu({
 	addRecordMenuRef: RefObject<HTMLMenuElement>;
 	isAdded: boolean;
 	setIsAdded: Dispatch<SetStateAction<boolean>>;
-	response: CurrentSeasonWithDetails[] | undefined;
+	response: SeasonalWithDetails[] | undefined;
 }) {
 	const { setLoading } = useLoading()
 
@@ -425,8 +412,8 @@ function ConfirmModal({
 }: {
 	confirmModal: "" | "DELETE" | "DELETEALL";
 	setConfirmModal: Dispatch<SetStateAction<"" | "DELETE" | "DELETEALL">>;
-	response1: CurrentSeasonWithDetails[] | undefined;
-	entryToDelete: MutableRefObject<CurrentSeasonWithDetails | null>;
+	response1: SeasonalWithDetails[] | undefined;
+	entryToDelete: MutableRefObject<SeasonalWithDetails | null>;
 }) {
 	const { setLoading } = useLoading()
 	
@@ -537,7 +524,7 @@ function ChangeStatusAllModal({
 }: {
 	editModal: boolean;
 	setEditModal: Dispatch<SetStateAction<boolean>>;
-	response: CurrentSeasonWithDetails[] | undefined;
+	response: SeasonalWithDetails[] | undefined;
 }) {
 	const { setLoading } = useLoading()
 
@@ -602,13 +589,13 @@ function SeasonalTableItem({ props }: SeasonalTableItemProps) {
 	
 	useEffect(() => {
 		setStartDate(
-			new Date(item?.SeasonalDetails?.[0]?.start_date ?? '').toLocaleDateString('en-US', { 
+			new Date(item?.details?.start_date ?? '').toLocaleDateString('en-US', { 
 				day: 'numeric', 
 				month: 'long', 
 				year: 'numeric' 
 			})
 		)
-	}, [item.SeasonalDetails])
+	}, [item.details])
 
 	return (
 		<Reorder.Item 
@@ -671,7 +658,7 @@ function SeasonalTableItem({ props }: SeasonalTableItemProps) {
 				{startDate != 'Invalid Date' ? startDate : 'N/A'}
 			</div>
 			<div className='relative hidden lg:flex items-center justify-center'>
-				{item?.SeasonalDetails?.[0]?.latest_episode ?? 'N/A'}
+				{item?.details?.latest_episode ?? 'N/A'}
 				<div
 					onPointerDown={(e) => controls.start(e)}
 					className="absolute top-1/2 right-0 z-10 flex items-center justify-center h-7 w-7 cursor-grab rounded-full transition-colors duration-150 -translate-y-1/2"
@@ -684,7 +671,7 @@ function SeasonalTableItem({ props }: SeasonalTableItemProps) {
 
 	function handleMenuClick(
 		e: BaseSyntheticEvent,
-		item: CurrentSeasonWithDetails
+		item: SeasonalWithDetails
 	) {
 		const { top, left } = e.target.getBoundingClientRect()
 
@@ -820,7 +807,7 @@ function SeasonalTableItem({ props }: SeasonalTableItemProps) {
 		)
 	}
 
-	function determineStatus(item: Database['public']['Tables']['PTW-CurrentSeason']['Row']) {
+	function determineStatus(item: Seasonal) {
 		let status
 		switch (item.status) {
 			case 'Not loaded':
@@ -853,9 +840,9 @@ function ContextMenu({
 	contextMenu: {
     top: number;
     left: number;
-    currentItem: CurrentSeasonWithDetails | null;
+    currentItem: SeasonalWithDetails | null;
 	};
-	response1: CurrentSeasonWithDetails[] | undefined;
+	response1: SeasonalWithDetails[] | undefined;
 	setConfirmModalDelEntry: () => void;
 }) {
 	const router = useRouter()
@@ -913,10 +900,10 @@ function ContextMenu({
 					</span>
 				</li>
 				<hr className="my-2 border-t" />
-				{contextMenu.currentItem.SeasonalDetails?.[0]?.mal_id && 
+				{contextMenu.currentItem.details && 
 				<li className="flex justify-center h-8 rounded-sm hover:bg-pink-400">
 					<Link
-						href={`https://myanimelist.net/anime/${contextMenu.currentItem.SeasonalDetails[0].mal_id}`} 
+						href={`https://myanimelist.net/anime/${contextMenu.currentItem.details.mal_id}`} 
 						target='_blank' 
 						rel='noopener noreferrer' 
 						className="p-1 w-full text-center"

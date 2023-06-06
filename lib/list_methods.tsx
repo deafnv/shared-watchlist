@@ -2,6 +2,7 @@ import { Dispatch, MutableRefObject, SetStateAction } from 'react'
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown'
 import { Database } from './database.types'
 import { CompletedFields, TitleItem } from '@/lib/types'
+import { Completed, PTWRolled } from '@prisma/client'
 
 export function getRandomInt(max: number) {
 	return Math.floor(Math.random() * max)
@@ -56,11 +57,9 @@ export function SortSymbol({
 }
 
 export const sortListByNameCompleted = (
-	res: Database['public']['Tables']['Completed']['Row'][] | undefined,
+	res: Completed[] | undefined,
 	sortMethodRef: MutableRefObject<`${'asc' | 'desc'}_${CompletedFields}` | ''>,
-	setResponse: Dispatch<
-		SetStateAction<Database['public']['Tables']['Completed']['Row'][] | undefined>
-	>
+	setResponse: Dispatch<SetStateAction<Completed[] | undefined>>
 ) => {
 	if (sortMethodRef.current === `desc_title`) {
 		sortMethodRef.current = 'asc_title'
@@ -72,11 +71,9 @@ export const sortListByNameCompleted = (
 }
 
 export const sortListByTypeCompleted = (
-	res: Database['public']['Tables']['Completed']['Row'][] | undefined,
+	res: Completed[] | undefined,
 	sortMethodRef: MutableRefObject<`${'asc' | 'desc'}_${CompletedFields}` | ''>,
-	setResponse: Dispatch<
-		SetStateAction<Database['public']['Tables']['Completed']['Row'][] | undefined>
-	>
+	setResponse: Dispatch<SetStateAction<Completed[] | undefined>>
 ) => {
 	if (sortMethodRef.current === `desc_type`) {
 		sortMethodRef.current = 'asc_type'
@@ -88,11 +85,9 @@ export const sortListByTypeCompleted = (
 }
 
 export const sortListByEpisodeCompleted = (
-	res: Database['public']['Tables']['Completed']['Row'][] | undefined,
+	res: Completed[] | undefined,
 	sortMethodRef: MutableRefObject<`${'asc' | 'desc'}_${CompletedFields}` | ''>,
-	setResponse: Dispatch<
-		SetStateAction<Database['public']['Tables']['Completed']['Row'][] | undefined>
-	>
+	setResponse: Dispatch<SetStateAction<Completed[] | undefined>>
 ) => {
 	if (sortMethodRef.current === `desc_episode`) {
 		sortMethodRef.current = `asc_episode`
@@ -119,11 +114,9 @@ export const sortListByEpisodeCompleted = (
 
 export const sortListByRatingCompleted = (
 	rating: 'rating1' | 'rating2',
-	res: Database['public']['Tables']['Completed']['Row'][] | undefined,
+	res: Completed[] | undefined,
 	sortMethodRef: MutableRefObject<`${'asc' | 'desc'}_${CompletedFields}` | ''>,
-	setResponse: Dispatch<
-		SetStateAction<Database['public']['Tables']['Completed']['Row'][] | undefined>
-	>
+	setResponse: Dispatch<SetStateAction<Completed[] | undefined>>
 ) => {
 	if (sortMethodRef.current === `asc_${rating}`) {
 		sortMethodRef.current = `desc_${rating}`
@@ -150,25 +143,23 @@ export const sortListByRatingCompleted = (
 
 export const sortListByDateCompleted = (
 	date: 'startconv' | 'endconv',
-	res: Database['public']['Tables']['Completed']['Row'][] | undefined,
+	res: Completed[] | undefined,
 	sortMethodRef: MutableRefObject<`${'asc' | 'desc'}_${CompletedFields}` | ''>,
-	setResponse: Dispatch<
-		SetStateAction<Database['public']['Tables']['Completed']['Row'][] | undefined>
-	>
+	setResponse: Dispatch<SetStateAction<Completed[] | undefined>>
 ) => {
 	//* date == 'startconv' ? 'start' : 'end' is a workaround for conflicting types
 	if (sortMethodRef.current === `desc_${date == 'startconv' ? 'start' : 'end'}`) {
 		sortMethodRef.current = `asc_${date == 'startconv' ? 'start' : 'end'}`
 		setResponse(
 			res?.slice().sort((a, b) => {
-				return b[date]! - a[date]!
+				return b[date]!.localeCompare(a[date]!)
 			})
 		)
 	} else {
 		sortMethodRef.current = `desc_${date == 'startconv' ? 'start' : 'end'}`
 		setResponse(
 			res?.slice().sort((a, b) => {
-				return a[date]! - b[date]!
+				return a[date]!.localeCompare(b[date]!)
 			})
 		)
 	}
@@ -179,11 +170,9 @@ export const sortListByDateCompleted = (
 export type PTWRolledFields = 'title'
 
 export const sortListByTitlePTW = (
-	res: Database['public']['Tables']['PTW-Rolled']['Row'][] | undefined,
+	res: PTWRolled[] | undefined,
 	sortMethodRef: MutableRefObject<`${'asc' | 'desc'}_${PTWRolledFields}` | ''>,
-	setResponse: Dispatch<
-		SetStateAction<Database['public']['Tables']['PTW-Rolled']['Row'][] | undefined>
-	>
+	setResponse: Dispatch<SetStateAction<PTWRolled[] | undefined>>
 ) => {
 	if (!res) return
 	if (sortMethodRef.current === `desc_title`) {

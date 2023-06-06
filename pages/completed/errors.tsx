@@ -1,17 +1,16 @@
 import Head from 'next/head'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import { useEffect, useState, Dispatch, SetStateAction } from 'react'
+import { useState, Dispatch, SetStateAction } from 'react'
 import axios from 'axios'
 import Button from '@mui/material/Button'
 import Dialog from '@mui/material/Dialog'
 import DialogTitle from '@mui/material/DialogTitle'
 import DialogActions from '@mui/material/DialogActions'
-import { createClient } from '@supabase/supabase-js'
 import { levenshtein } from '@/lib/list_methods'
-import { Database } from '@/lib/database.types'
 import { useLoading } from '@/components/LoadingContext'
 import EditDialog from '@/components/dialogs/EditDialog'
+import prisma from '@/lib/prisma'
 
 interface ErrorItem {
 	id: number
@@ -21,65 +20,58 @@ interface ErrorItem {
 	distance: number | undefined
 }
 
-export default function CompletedErrors() {
-	const [isLoadingClient, setIsLoadingClient] = useState(true)
-	const [response, setResponse] = useState<ErrorItem[]>()
+export async function getStaticProps() {
+	const completedWithDetails = await prisma.completed.findMany({
+		include: {
+			details: true
+		},
+		orderBy: {
+			id: 'asc'
+		}
+	})
+	
+	const errorTrackData = await prisma.completedErrors.findMany({
+		where: {
+			message: {
+				in: ['IGNORE', 'CHANGED']
+			}
+		}
+	})
+	const errorTrackIgnore = errorTrackData?.map((item) => item.title_id)
+
+	const levenDistance = completedWithDetails.map((item) => {
+			const distance = levenshtein(
+				item.title!,
+				item.details?.mal_title!
+			)
+			if (distance! > 5) {
+				return {
+					id: item.id,
+					mal_id: item.details?.mal_id,
+					entryTitle: item.title,
+					retrievedTitle: item.details?.mal_title,
+					distance: distance
+				}
+			}
+			return null
+		})
+		.filter((item) => item)
+		.filter((item) => !errorTrackIgnore?.includes(item!.id))
+		.sort((a, b) => b?.distance! - a?.distance!)
+
+	return {
+		props: {
+			response: levenDistance
+		},
+		revalidate: 360
+	}
+}
+
+export default function CompletedErrors({ response }: { response: ErrorItem[] }) {
 	const [changed, setChanged] = useState<ErrorItem | null>(null)
 	const [ignore, setIgnore] = useState<ErrorItem>()
 
-	useEffect(() => {
-		const getData = async () => {
-			const supabase = createClient<Database>(
-				process.env.NEXT_PUBLIC_SUPABASE_URL!,
-				process.env.NEXT_PUBLIC_SUPABASE_API_KEY!
-			)
-			const { data } = await supabase
-				.from('Completed')
-				.select('*, CompletedDetails!inner( * )')
-				.order('id', { ascending: true })
-
-			const errorTrackData = await supabase
-				.from('ErrorTrack')
-				.select()
-				.in('message', ['IGNORE', 'CHANGED'])
-
-			const errorTrackIgnore = errorTrackData.data?.map((item) => item.title_id)
-			console.log(errorTrackData.data)
-
-			const levenDistance = data
-				?.map((item) => {
-					const distance = levenshtein(
-						item.title!,
-						(item.CompletedDetails as Database['public']['Tables']['CompletedDetails']['Row'])
-							.mal_title!
-					)
-					if (distance! > 5) {
-						return {
-							id: item.id,
-							mal_id: (
-								item.CompletedDetails as Database['public']['Tables']['CompletedDetails']['Row']
-							).mal_id,
-							entryTitle: item.title,
-							retrievedTitle: (
-								item.CompletedDetails as Database['public']['Tables']['CompletedDetails']['Row']
-							).mal_title,
-							distance: distance
-						}
-					}
-					return null
-				})
-				.filter((item) => item != null)
-				.filter((item) => !errorTrackIgnore?.includes(item!.id))
-				.sort((a, b) => b?.distance! - a?.distance!)
-
-			//@ts-expect-error
-			setResponse(levenDistance)
-			setIsLoadingClient(false)
-		}
-		getData()
-	}, [])
-
-	if (!response?.length && !isLoadingClient) {
+	if (!response?.length) {
 		return (
 			<>
 				<Head>
@@ -89,7 +81,7 @@ export default function CompletedErrors() {
 
 				<main className="flex flex-col items-center justify-center h-[100dvh] mb-24 px-1 md:px-0">
 					<h2 className="p-2 text-2xl sm:text-3xl">No errors found</h2>
-					<span>Check console for details on omitted entries</span>
+					{/* <span>Check console for details on omitted entries</span> */}
 				</main>
 			</>
 		)
@@ -122,7 +114,7 @@ export default function CompletedErrors() {
 					{response?.map(item => {
 						return (
 							<div 
-								key={item.mal_id}
+								key={item.id}
 								className='grid grid-cols-[5fr_5fr_1fr_3fr] xl:grid-cols-[26rem_26rem_10rem_12rem] text-sm md:text-base min-w-[95dvw] xl:min-w-0 sm:w-min group'
 							>
 								<span className="flex items-center justify-center sm:px-3 py-3 h-full text-xs md:text-base text-center group-hover:bg-zinc-800 rounded-s-md">

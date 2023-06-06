@@ -14,7 +14,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import EditIcon from '@mui/icons-material/Edit'
 import SearchIcon from '@mui/icons-material/Search'
 import RefreshIcon from '@mui/icons-material/Refresh'
-import { createClient } from '@supabase/supabase-js'
+import { Completed, CompletedDetails, Genres } from '@prisma/client'
 import { useLoading } from '@/components/LoadingContext'
 import EditDialog from '@/components/dialogs/EditDialog'
 import {
@@ -25,8 +25,8 @@ import {
 	sortListByTypeCompleted,
 	SortSymbol
 } from '@/lib/list_methods'
-import { Database } from '@/lib/database.types'
 import { CompletedFields } from '@/lib/types'
+import { updaterSocket } from '@/lib/socket'
 
 interface SettingsMenuPos {
 	top: number;
@@ -34,14 +34,14 @@ interface SettingsMenuPos {
 	display: boolean;
 }
 
-export default function Completed() {
+export default function CompletedPage() {
 	const settingsMenuRef = useRef<HTMLDivElement>(null)
 	const settingsMenuButtonRef = useRef<HTMLDivElement>(null)
 	const sortMethodRef = useRef<`${'asc' | 'desc'}_${CompletedFields}` | ''>('')
 	const editInputRef = useRef('')
 
-	const [response, setResponse] = useState<Database['public']['Tables']['Completed']['Row'][]>()
-	const [response1, setResponse1] = useState<Database['public']['Tables']['Completed']['Row'][]>()
+	const [response, setResponse] = useState<Completed[]>()
+	const [response1, setResponse1] = useState<Completed[]>()
 	const [isEdited, setIsEdited] = useState<`${CompletedFields}_${number}` | ''>('')
 	const [isLoadingClient, setIsLoadingClient] = useState(true)
 	const [isLoadingEditForm, setIsLoadingEditForm] = useState<`${CompletedFields}_${number}`[]>([])
@@ -51,14 +51,9 @@ export default function Completed() {
 
 	const { setLoading } = useLoading()
 
-	const supabase = createClient<Database>(
-		process.env.NEXT_PUBLIC_SUPABASE_URL!,
-		process.env.NEXT_PUBLIC_SUPABASE_API_KEY!
-	)
-
 	useEffect(() => {
 		const getData = async () => {
-			const { data } = await supabase.from('Completed').select().order('id', { ascending: false })
+			const { data } = await axios.get(`${process.env.NEXT_PUBLIC_UPDATE_URL}/table/completed`)
 			setResponse(data!)
 			setResponse1(data!)
 			setIsLoadingClient(false)
@@ -69,31 +64,24 @@ export default function Completed() {
 		}
 		getData()
 
-		const databaseChannel = supabase
-			.channel('public:Completed')
-			.on(
-				'postgres_changes',
-				{ event: '*', schema: 'public', table: 'Completed' },
-				async () => {
-					const { data } = await supabase
-						.from('Completed')
-						.select()
-						.order('id', { ascending: false })
-					sortMethodRef.current = ''
-					setResponse(data!)
-					setResponse1(data!)
-				}
-			)
-			.subscribe()
+		const initializeSocket = async () => {
+			updaterSocket.connect()
+			updaterSocket.on('Completed', () => {
+				sortMethodRef.current = ''
+				getData()
+			})
+		}
+		initializeSocket()
 
 		const refresh = setInterval(
 			() => axios.get(`${process.env.NEXT_PUBLIC_UPDATE_URL}/refresh`),
-			3500000
+			1700000
 		)
 
 		return () => {
 			clearInterval(refresh)
-			databaseChannel.unsubscribe()
+			updaterSocket.off('Completed')
+			updaterSocket.disconnect()
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [])
@@ -802,14 +790,14 @@ function CompletedItemDetails({
 	item,
 	setEditDialog
 }: {
-	item: Database['public']['Tables']['Completed']['Row']
+	item: Completed
 	setEditDialog: Dispatch<SetStateAction<{
 		id: number;
 		title: string;
 	} | undefined>>
 }) {
-	const [details, setDetails] = useState<Database['public']['Tables']['CompletedDetails']['Row']>()
-	const [genres, setGenres] = useState<{ id: number; name: string | null; }[]>()
+	const [details, setDetails] = useState<CompletedDetails>()
+	const [genres, setGenres] = useState<Genres[]>()
 	const [isLoading, setIsLoading] = useState(true)
 
 	const router = useRouter()
@@ -817,26 +805,20 @@ function CompletedItemDetails({
 	const { setLoading } = useLoading()
 
 	useEffect(() => {
-		const supabase = createClient<Database>(
-			process.env.NEXT_PUBLIC_SUPABASE_URL!,
-			process.env.NEXT_PUBLIC_SUPABASE_API_KEY!
-		)
-
 		const getDetails = async () => {
-			const { data } = await supabase.from('CompletedDetails').select().eq('id', item.id)
-			const dataGenre = await supabase
-				.from('Genres')
-				.select('*, Completed!inner( id )')
-				.eq('Completed.id', item.id)
-
-			const titleGenres = dataGenre.data?.map((item) => {
-				return {
-					id: item.id,
-					name: item.name
+			const { data: completedDetails } = await axios.get(`${process.env.NEXT_PUBLIC_UPDATE_URL}/table/completeddetails`, {
+				params: {
+					id: item.id
 				}
 			})
-			setGenres(titleGenres)
-			setDetails(data?.[0])
+			const { data: completedGenres } = await axios.get(`${process.env.NEXT_PUBLIC_UPDATE_URL}/table/genresofid`, {
+				params: {
+					id: item.id
+				}
+			})
+
+			setGenres(completedGenres)
+			setDetails(completedDetails)
 			setIsLoading(false)
 		}
 		getDetails()
@@ -891,7 +873,7 @@ function CompletedItemDetails({
 				</div>
 				<div className='flex flex-col items-start justify-center gap-4 w-3/5'>
 					<Link
-						href={`/completed/anime/${details?.id}`}
+						href={`/completed/anime/${details?.title_id}`}
 						title={details?.mal_title ?? ''}
 						className="font-bold text-lg sm:text-xl md:text-2xl line-clamp-2 link"
 					>
@@ -902,7 +884,8 @@ function CompletedItemDetails({
 					</p>
 					<div>
 					<h5 className="font-semibold text-lg">Genres</h5>
-						<span className="mb-2 text-center">
+						<span className="mb-2 text-center">	
+							{!genres || !genres.length && '–'}
 							{genres?.map((item, index) => {
 								return (
 									<Link

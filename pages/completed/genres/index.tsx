@@ -1,35 +1,43 @@
 import Head from 'next/head'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import { BaseSyntheticEvent, Dispatch, SetStateAction, useEffect, useRef, useState } from 'react'
+import { BaseSyntheticEvent, Dispatch, SetStateAction, useRef, useState } from 'react'
+import axios from 'axios'
 import Dialog from '@mui/material/Dialog'
 import Button from '@mui/material/Button'
 import DoneIcon from '@mui/icons-material/Done'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import CloseIcon from '@mui/icons-material/Close'
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown'
-import { createClient } from '@supabase/supabase-js'
-import { Database } from '@/lib/database.types'
+import { Completed, Genres, GenresOnCompleted } from '@prisma/client'
+import prisma from '@/lib/prisma'
 
-export default function Genres() {
-	const [response, setResponse] = useState<Database['public']['Tables']['Genres']['Row'][]>()
+type CompletedWithGenre = (Completed & {
+	genres: (GenresOnCompleted & {
+			genre: Genres;
+	})[];
+})
+
+export const getStaticProps = async () => {
+	const genres = await prisma.genres.findMany({
+		orderBy: {
+			name: 'asc'
+		}
+	})
+
+	return {
+		props: {
+			response: genres
+		},
+		revalidate: 360
+	}
+}
+
+export default function Genres({ response }: { response: Genres[] }) {
 	const [advancedSearch, setAdvancedSearch] = useState(false)
-	const [advancedSearchResult, setAdvancedSearchResult] = useState<any>(null)
+	const [advancedSearchResult, setAdvancedSearchResult] = useState<CompletedWithGenre[] | null>(null)
 
 	const router = useRouter()
-
-	useEffect(() => {
-		const supabase = createClient<Database>(
-			process.env.NEXT_PUBLIC_SUPABASE_URL!,
-			process.env.NEXT_PUBLIC_SUPABASE_API_KEY!
-		)
-		const getData = async () => {
-			const { data } = await supabase.from('Genres').select().order('name')
-
-			setResponse(data!)
-		}
-		getData()
-	}, [])
 
 	const noOfRows = Math.ceil(response?.length! / 3)
 
@@ -106,8 +114,8 @@ function AdvancedSearchModal({
 }: {
 	advancedSearch: boolean;
 	setAdvancedSearch: Dispatch<SetStateAction<boolean>>;
-	response: Database['public']['Tables']['Genres']['Row'][] | undefined;
-	setAdvancedSearchResult: Dispatch<any>;
+	response: Genres[] | undefined;
+	setAdvancedSearchResult: Dispatch<SetStateAction<CompletedWithGenre[] | null>>;
 }) {
 	async function handleSubmit(e: BaseSyntheticEvent) {
 		e.preventDefault()
@@ -120,25 +128,14 @@ function AdvancedSearchModal({
 		)
 		const arrIncluded = Object.keys(arr).map((key) => parseInt(arr[key].value))
 
-		const supabase = createClient<Database>(
-			process.env.NEXT_PUBLIC_SUPABASE_URL!,
-			process.env.NEXT_PUBLIC_SUPABASE_API_KEY!
-		)
+		const { data } = await axios.get(`${process.env.NEXT_PUBLIC_UPDATE_URL}/table/completedsbygenreid`, {
+			params: {
+				id: arrIncluded
+			}
+		})
 
-		const { data } = await supabase
-			.from('Completed')
-			.select(
-				`
-				*,
-				Genres!inner (
-					id
-				)
-			`
-			)
-			.in('Genres.id', arrIncluded) //TODO: Look into if it is possible to query by their relationship
-
-		const matched = data?.filter((item) => {
-			return (item.Genres as { id: number }[]).length == arrIncluded.length
+		const matched = (data as CompletedWithGenre[])?.filter((item) => {
+			return arrIncluded.every(id => item.genres.map(genre => genre.genre_id).includes(id))
 		})
 
 		setAdvancedSearchResult(matched!)
@@ -203,22 +200,25 @@ function AdvancedSearchModal({
 function AdvancedSearchTable({ 
 	advancedSearchResult, 
 	setAdvancedSearchResult 
-}: any) {
+}: {
+	advancedSearchResult: CompletedWithGenre[] | null;
+	setAdvancedSearchResult: Dispatch<SetStateAction<CompletedWithGenre[] | null>>
+}) {
 	const sortMethodRef = useRef('') 
 
 	function handleSort(sortBy: 'rating1' | 'rating2') {
 		if (sortMethodRef.current == `${sortBy}_desc`) {
 			const sorted = advancedSearchResult
-				.slice()
+				?.slice()
 				.sort((a: any, b: any) => a[`${sortBy}average`] - b[`${sortBy}average`])
 			sortMethodRef.current = `${sortBy}_asc`
-			setAdvancedSearchResult(sorted)
+			setAdvancedSearchResult(sorted ?? null)
 		} else {
 			const sorted = advancedSearchResult
-				.slice()
+				?.slice()
 				.sort((a: any, b: any) => b[`${sortBy}average`] - a[`${sortBy}average`])
 			sortMethodRef.current = `${sortBy}_desc`
-			setAdvancedSearchResult(sorted)
+			setAdvancedSearchResult(sorted ?? null)
 		}
 	}
 
