@@ -105,7 +105,7 @@ export default async function BatchUpdateSheet(req: NextApiRequest, res: NextApi
 
 			return res.status(200).send('OK')
 		} catch (error) {
-			console.log(error)
+			console.error(error)
 			return res.status(500).send(error)
 		}
 	}
@@ -118,24 +118,34 @@ function determineStatus(item: any) {
 	let blue
 	switch (item.status) {
 		case 'Watched':
-			red = 0.20392157
-			green = 0.65882355
-			blue = 0.3254902
+			red = 0.5764706
+			green = 0.76862746
+			blue = 0.49019608
 			break
 		case 'Not loaded':
 			red = 0.91764706
-			green = 0.2627451
-			blue = 0.20784314
+			green = 0.6
+			blue = 0.6
 			break
 		case 'Loaded':
-			red = 0.9843137
-			green = 0.7372549
-			blue = 0.015686275
+			red = 0.9764706
+			green = 0.79607844
+			blue = 0.6117647
 			break
-		default:
+    case 'Not downloaded':
+      red = 0.8
+			green = 0.8
+			blue = 0.8
+			break
+		case 'Not aired':
 			red = 0
 			green = 0
 			blue = 0
+			break
+		default:
+			red = 1
+			green = 1
+			blue = 1
 	}
 	return {red, green, blue}
 }

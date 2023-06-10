@@ -94,8 +94,8 @@ a {
 } */
 
 ::selection {
-	color: rgb(145, 0, 101);
-	background: rgb(226, 112, 192);
+	color: white;
+	background: rgb(224, 88, 184);
 }
 
 ::-webkit-scrollbar {

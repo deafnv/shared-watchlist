@@ -1,5 +1,5 @@
-import { Dispatch, MutableRefObject, SetStateAction } from 'react'
-import { PTWCasual, PTWMovies, PTWNonCasual, PTWRolled, Seasonal } from '@prisma/client'
+import { BaseSyntheticEvent, Dispatch, MutableRefObject, SetStateAction } from 'react'
+import { PTWCasual, PTWRolled, Seasonal } from '@prisma/client'
 
 export type CompletedFields = 'title' | 'type' | 'episode' | 'rating1' | 'rating2' | 'start' | 'end'
 
@@ -25,41 +25,32 @@ export interface TitleItem {
 	end: WatchDates
 }
 
-export interface PTWRolledTableItemProps {
-	props: {
-		item: PTWRolled
-		index: number
-		isLoadingEditForm: string[]
-		setIsEdited: (value: PTWEdited) => void
-		isEdited: PTWEdited
-		isEditedRef: MutableRefObject<string>
-		sortMethodRef: MutableRefObject<string>
-		setContextMenu: Dispatch<SetStateAction<{
-			top: number
-			left: number
-			currentItem: PTWRolled | null
-		}>>
-		contextMenuButtonRef: MutableRefObject<any>
-		responseRolled: PTWRolled[] | undefined
-		setResponseRolled: Dispatch<SetStateAction<PTWRolled[] | undefined>>
-		setIsLoadingEditForm: Dispatch<SetStateAction<string[]>>
-	}
-	editFormParams: EditFormParams
+//* PTW Types
+export interface AddRecordPos {
+  top: number
+  left: number
+  response: PTWCasual[] | undefined
+  tableId: PTWTables | null
 }
 
-export interface EditFormParams {
+export interface PTWRolledTableItemProps {
+	item: PTWRolled
+	index: number
 	isLoadingEditForm: string[]
-	setIsLoadingEditForm: Dispatch<SetStateAction<string[]>>
-	isEditedRef: MutableRefObject<string>
 	setIsEdited: (value: PTWEdited) => void
+	isEdited: PTWEdited
+	isEditedRef: MutableRefObject<string>
+	sortMethodRef: MutableRefObject<string>
+	setContextMenu: Dispatch<SetStateAction<{
+		top: number
+		left: number
+		currentItem: PTWRolled | null
+	}>>
+	contextMenuButtonRef: MutableRefObject<any>
 	responseRolled: PTWRolled[] | undefined
-	responseCasual: PTWCasual[] | undefined
-	responseNonCasual: PTWNonCasual[] | undefined
-	responseMovies: PTWMovies[] | undefined
 	setResponseRolled: Dispatch<SetStateAction<PTWRolled[] | undefined>>
-	setResponseCasual: Dispatch<SetStateAction<PTWCasual[] | undefined>>
-	setResponseNonCasual: Dispatch<SetStateAction<PTWNonCasual[] | undefined>>
-	setResponseMovies: Dispatch<SetStateAction<PTWMovies[] | undefined>>
+	setIsLoadingEditForm: Dispatch<SetStateAction<string[]>>
+	handleSubmit: (id: number, field: `${PTWTables}_title`, ogvalue: string, event: BaseSyntheticEvent) => Promise<void>
 }
 
 export interface PTWItem {
