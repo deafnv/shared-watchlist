@@ -59,7 +59,7 @@ export default function PTWTable({
           <AddIcon />
         </IconButton>
       </header>
-      <div className='p-2 bg-neutral-700 rounded-md'>
+      <div className='p-2 bg-primary-foreground rounded-md'>
         <table>
           <thead className='border-b'>
             <tr>
@@ -83,7 +83,7 @@ export default function PTWTable({
                       opacity: isLoadingEditForm.includes(`${tableId}_title_${item.id}`) ? 0.5 : 1,
                     }}
                     onDoubleClick={() => setIsEdited(`${tableId}_${item.title}_${item.id}`)}
-                    className='relative flex justify-center items-center p-2 hover:bg-zinc-800 rounded-md group'
+                    className='relative flex justify-center items-center p-2 hover:bg-primary-accent rounded-md group'
                   >
                     <span className='pr-4 w-full'>
                       {isEdited == `${tableId}_${item.title}_${item.id}` ? (

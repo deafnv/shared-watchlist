@@ -204,7 +204,7 @@ export default function Gacha({
   }
 
   return (
-    <div className='relative flex flex-col items-center justify-center gap-4 h-[30rem] w-[80dvw] md:w-[25rem] bg-neutral-700 rounded-lg -translate-y-8'>
+    <div className='relative flex flex-col items-center justify-center gap-4 h-[30rem] w-[80dvw] md:w-[25rem] bg-primary-foreground rounded-lg -translate-y-8'>
       <h2 className='absolute top-5 p-2 text-2xl sm:text-3xl'>Gacha</h2>
       <div className='absolute top-20 flex items-center justify-center h-52 max-h-52 w-80'>
         <div className='max-h-full max-w-[90%] bg-white/95 border-black border-solid border overflow-auto'>

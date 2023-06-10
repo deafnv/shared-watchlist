@@ -194,7 +194,7 @@ export default function Seasonal() {
               <AddIcon />
             </IconButton>
           </header>
-          <div className='p-2 bg-neutral-700 rounded-md'>
+          <div className='p-2 bg-primary-foreground rounded-md'>
             <div className='grid grid-cols-[5fr_1fr] lg:grid-cols-[30rem_10rem_10rem_8rem] min-w-[95dvw] lg:min-w-0 w-min border-b'>
               <span className='flex items-center justify-center p-2 pt-1 text-center font-bold'>
                 Title
@@ -636,7 +636,7 @@ function SeasonalTableItem({ props }: SeasonalTableItemProps) {
       dragControls={controls}
       dragConstraints={{ top: -25, bottom: 25 }}
       dragElastic={0.15}
-      className='grid grid-cols-[5fr_1fr] lg:grid-cols-[30rem_10rem_10rem_8rem] p-0 bg-neutral-700 hover:bg-zinc-800 rounded-md'
+      className='grid grid-cols-[5fr_1fr] lg:grid-cols-[30rem_10rem_10rem_8rem] p-0 bg-primary-foreground hover:bg-primary-accent rounded-md'
     >
       <div
         style={{
@@ -834,7 +834,7 @@ function SeasonalTableItem({ props }: SeasonalTableItemProps) {
           <form onSubmit={handleSubmit} className='text-gray-800'>
             <select
               onChange={(e) => (e.target.parentNode as HTMLFormElement)!.requestSubmit()}
-              className='p-2 h-full w-full select-none text-white bg-[#2e2e2e] rounded-md'
+              className='p-2 h-full w-full select-none text-white bg-background rounded-md'
             >
               <option>Select status</option>
               <option>Watched</option>

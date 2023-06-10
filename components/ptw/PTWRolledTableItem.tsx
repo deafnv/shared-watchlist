@@ -32,7 +32,7 @@ export default function PTWRolledTableItem({
       dragControls={controls}
       dragConstraints={{ top: -25, bottom: 25 }}
       dragElastic={0.15}
-      className='grid grid-cols-[4fr_1.1fr] p-0 bg-neutral-700 hover:bg-zinc-800 rounded-md'
+      className='grid grid-cols-[4fr_1.1fr] p-0 bg-primary-foreground hover:bg-primary-accent rounded-md'
     >
       <div
         style={{

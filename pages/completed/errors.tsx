@@ -99,7 +99,7 @@ export default function CompletedErrors({ response }: { response: ErrorItem[] })
 
       <main className='flex flex-col items-center justify-center mb-24 px-6 py-2'>
         <h2 className='p-2 text-2xl sm:text-3xl text-center'>Potential Errors in Completed</h2>
-        <section className='p-2 bg-neutral-700 rounded-md'>
+        <section className='p-2 bg-primary-foreground rounded-md'>
           <div className='grid grid-cols-[5fr_5fr_1fr_3fr] xl:grid-cols-[26rem_26rem_10rem_12rem] min-w-[95dvw] xl:min-w-0 sm:w-min border-b'>
             <span className='flex items-center justify-center p-2 pt-1 h-full text-xs md:text-base text-center font-bold'>
               Title
@@ -122,7 +122,7 @@ export default function CompletedErrors({ response }: { response: ErrorItem[] })
               >
                 <Link
                   href={`/completed/anime/${item.id}`}
-                  className='flex items-center justify-center sm:px-3 py-3 h-full text-xs md:text-base text-center text-pink-300 hover:underline group-hover:bg-zinc-800 rounded-s-md'
+                  className='flex items-center justify-center sm:px-3 py-3 h-full text-xs md:text-base text-center text-pink-300 hover:underline group-hover:bg-primary-accent rounded-s-md'
                 >
                   {item.entryTitle}
                 </Link>
@@ -130,14 +130,14 @@ export default function CompletedErrors({ response }: { response: ErrorItem[] })
                   href={`https://myanimelist.net/anime/${item.mal_id}`}
                   target='_blank'
                   rel='noopener noreferrer'
-                  className='flex items-center justify-center sm:px-3 py-3 h-full text-xs md:text-base text-center text-blue-300 hover:underline group-hover:bg-zinc-800'
+                  className='flex items-center justify-center sm:px-3 py-3 h-full text-xs md:text-base text-center text-blue-300 hover:underline group-hover:bg-primary-accent'
                 >
                   {item.retrievedTitle}
                 </a>
-                <span className='flex items-center justify-center p-2 h-full text-xs md:text-base text-center group-hover:bg-zinc-800'>
+                <span className='flex items-center justify-center p-2 h-full text-xs md:text-base text-center group-hover:bg-primary-accent'>
                   {item.distance}
                 </span>
-                <span className='flex flex-col xl:flex-row items-center justify-center gap-2 p-1 xl:p-2 h-full text-xs xl:text-base text-center group-hover:bg-zinc-800 rounded-e-md'>
+                <span className='flex flex-col xl:flex-row items-center justify-center gap-2 p-1 xl:p-2 h-full text-xs xl:text-base text-center group-hover:bg-primary-accent rounded-e-md'>
                   <Button onClick={() => setChanged(item)} variant='outlined' size='small'>
                     Change
                   </Button>

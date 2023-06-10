@@ -345,7 +345,7 @@ export default function PTW() {
                 </IconButton>
               )}
             </header>
-            <div className='p-2 bg-neutral-700 rounded-md'>
+            <div className='p-2 bg-primary-foreground rounded-md'>
               <div className='grid grid-cols-[4fr_1.1fr] min-w-0 w-[80dvw] lg:w-[40rem] border-b'>
                 <span
                   onClick={() => {
