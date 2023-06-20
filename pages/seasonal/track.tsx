@@ -508,6 +508,7 @@ function EpisodeTable({
   setResponse?: Dispatch<SetStateAction<SeasonalDetails[]>>
 }) {
   let counter = 1
+  const isTwoCour = (item?.latest_episode ?? 0) > 12
 
   return (
     <div className='relative grid grid-cols-1 min-[390px]:grid-cols-2 gap-2'>
@@ -518,15 +519,9 @@ function EpisodeTable({
             <table className='w-full'>
               <thead>
                 <tr>
-                  <th className='w-11'>
-                    {item?.latest_episode ?? 0 > 12 ? counter++ + 12 : counter++}
-                  </th>
-                  <th className='w-11'>
-                    {item?.latest_episode ?? 0 > 12 ? counter++ + 12 : counter++}
-                  </th>
-                  <th className='w-11'>
-                    {item?.latest_episode ?? 0 > 12 ? counter++ + 12 : counter++}
-                  </th>
+                  <th className='w-11'>{isTwoCour ? counter++ + 12 : counter++}</th>
+                  <th className='w-11'>{isTwoCour ? counter++ + 12 : counter++}</th>
+                  <th className='w-11'>{isTwoCour ? counter++ + 12 : counter++}</th>
                 </tr>
               </thead>
               <tbody>
